@@ -55,7 +55,7 @@ export default function Agents() {
                     : null
                   const displayName = agent.display_name || agent.name || 'Agent'
                   return (
-                    <div key={agent.id} className="bg-white rounded-3xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
+                    <Link key={agent.id} to={`/agents/${agent.id}`} className="block bg-white rounded-3xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
                       <div className="flex flex-col items-center text-center">
                         <div className="relative mb-4">
                           {avatarUrl ? (
@@ -98,7 +98,7 @@ export default function Agents() {
                           Contact
                         </Link>
                       </div>
-                    </div>
+                    </Link>
                   )
                 })}
           </div>

@@ -23,6 +23,7 @@ export default function Properties() {
     if (search) params.search = search
     if (type) params.type = type
     if (searchParams.get('is_featured')) params.is_featured = 1
+    if (searchParams.get('city_id')) params.city_id = searchParams.get('city_id')
 
     propertiesApi.list(params)
       .then((res) => {
@@ -33,7 +34,7 @@ export default function Properties() {
       .finally(() => setLoading(false))
   }, [type, page, searchParams])
 
-  useEffect(() => { fetchProperties() }, [type, page])
+  useEffect(() => { fetchProperties() }, [type, page, searchParams])
 
   const handleSearch = () => {
     setPage(1)

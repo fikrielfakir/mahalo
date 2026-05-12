@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Admin\AdminInvestorController;
 use App\Http\Controllers\Api\Admin\AdminProjectController;
 use App\Http\Controllers\Api\Admin\AdminPropertyController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
+use App\Http\Controllers\Api\Admin\MediaController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -78,6 +79,8 @@ Route::prefix('v1')->group(function () {
     // ── Admin (Sanctum protected) ─────────────────────────────────────────────
     Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::get('/stats',                  [AdminStatsController::class,   'index']);
+        Route::post('/media/upload',          [MediaController::class,        'upload']);
+        Route::delete('/media',               [MediaController::class,        'delete']);
 
         Route::apiResource('properties',      AdminPropertyController::class);
         Route::apiResource('projects',        AdminProjectController::class);

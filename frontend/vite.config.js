@@ -13,11 +13,19 @@ export default defineConfig(({ mode }) => {
       port: 5000,
       allowedHosts: true,
       proxy: {
+        // Media uploads always go to the local Laravel (port 8000) — must be before /api
+        '/api/v1/admin/media': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // All other API calls go to the configured backend (Hostinger)
         '/api': {
           target: apiUrl,
           changeOrigin: true,
           secure: isExternal,
         },
+        // Static storage files served from Hostinger
         '/storage': {
           target: apiUrl,
           changeOrigin: true,

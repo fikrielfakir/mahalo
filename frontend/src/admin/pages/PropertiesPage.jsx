@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { adminProperties, adminCategories, adminFeatures, publicApi } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
+import ImageUploader from '../components/ImageUploader'
 import { Plus, Pencil, Trash2, Building2, Star } from 'lucide-react'
 
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
-  images: '', price: '', number_bedroom: '', number_bathroom: '',
+  images: [], price: '', number_bedroom: '', number_bathroom: '',
   number_floor: '', square: '', city_id: '', status: 'selling',
   is_featured: false, latitude: '', longitude: '',
   category_ids: [], feature_ids: [],
@@ -51,9 +52,9 @@ export default function PropertiesPage() {
     setEditing(row)
     setForm({
       ...row,
-      images: (row.images || []).join('\n'),
-      category_ids: row.category_ids || [],
-      feature_ids:  row.feature_ids  || [],
+      images:       Array.isArray(row.images) ? row.images : [],
+      category_ids: row.category_ids || (row.categories?.map(c => c.id)) || [],
+      feature_ids:  row.feature_ids  || (row.features?.map(f => f.id))  || [],
     })
     setModal(true)
   }
@@ -73,12 +74,12 @@ export default function PropertiesPage() {
     try {
       const payload = {
         ...form,
-        images: form.images ? form.images.split('\n').map((s) => s.trim()).filter(Boolean) : [],
-        price: form.price ? parseFloat(form.price) : null,
-        number_bedroom: form.number_bedroom ? parseFloat(form.number_bedroom) : 0,
+        images:          form.images,
+        price:           form.price           ? parseFloat(form.price)           : null,
+        number_bedroom:  form.number_bedroom  ? parseFloat(form.number_bedroom)  : 0,
         number_bathroom: form.number_bathroom ? parseFloat(form.number_bathroom) : 0,
-        square: form.square ? parseFloat(form.square) : null,
-        city_id: form.city_id || null,
+        square:          form.square          ? parseFloat(form.square)          : null,
+        city_id:         form.city_id         || null,
       }
       if (editing) await adminProperties.update(editing.id, payload)
       else await adminProperties.create(payload)
@@ -101,20 +102,24 @@ export default function PropertiesPage() {
   const cols = [
     { key: 'name', label: 'Property', render: (r) => (
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-[#0B1F3A]/5 flex items-center justify-center shrink-0">
-          <Building2 size={14} className="text-[#0B1F3A]/40" />
-        </div>
+        {r.images?.[0] ? (
+          <img src={`/storage/${r.images[0]}`} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
+        ) : (
+          <div className="w-8 h-8 rounded-xl bg-[#0B1F3A]/5 flex items-center justify-center shrink-0">
+            <Building2 size={14} className="text-[#0B1F3A]/40" />
+          </div>
+        )}
         <div>
           <p className="font-medium text-gray-800 text-sm">{r.name}</p>
           <p className="text-xs text-gray-400">{r.city?.name || '—'}</p>
         </div>
       </div>
     )},
-    { key: 'type',       label: 'Type',   render: (r) => <Badge color={r.type === 'sale' ? 'blue' : 'gold'}>{r.type}</Badge> },
-    { key: 'price',      label: 'Price',  render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
-    { key: 'is_featured',label: 'Featured',render:(r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
-    { key: 'status',     label: 'Status', render: (r) => <Badge color={statusColor(r.status)}>{r.status}</Badge> },
-    { key: 'actions',    label: '',       render: (r) => (
+    { key: 'type',       label: 'Type',    render: (r) => <Badge color={r.type === 'sale' ? 'blue' : 'gold'}>{r.type}</Badge> },
+    { key: 'price',      label: 'Price',   render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
+    { key: 'is_featured',label: 'Featured',render: (r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
+    { key: 'status',     label: 'Status',  render: (r) => <Badge color={statusColor(r.status)}>{r.status}</Badge> },
+    { key: 'actions',    label: '',        render: (r) => (
       <div className="flex gap-1 justify-end">
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         <Btn size="sm" variant="danger" disabled={deleting === r.id} onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
@@ -187,11 +192,17 @@ export default function PropertiesPage() {
                 <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Short description..." />
               </FormField>
             </div>
+
             <div className="col-span-2">
-              <FormField label="Images (one URL per line)" hint="Paste Unsplash or any image URL, one per line">
-                <Textarea value={form.images} onChange={f('images')} rows={3} placeholder="https://images.unsplash.com/..." />
+              <FormField label="Images" hint="Upload files or add URLs — first image is the main photo">
+                <ImageUploader
+                  images={form.images}
+                  onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))}
+                  folder="properties"
+                />
               </FormField>
             </div>
+
             <div className="col-span-2">
               <FormField label="Categories">
                 <div className="flex flex-wrap gap-2 mt-1">
@@ -207,11 +218,11 @@ export default function PropertiesPage() {
             <div className="col-span-2">
               <FormField label="Features">
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {features.map((f) => (
-                    <button key={f.id} type="button"
-                      onClick={() => toggleArr('feature_ids', f.id)}
-                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.feature_ids.includes(f.id) ? 'bg-[#C8A97E] text-white border-[#C8A97E]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#C8A97E]'}`}
-                    >{f.name}</button>
+                  {features.map((feat) => (
+                    <button key={feat.id} type="button"
+                      onClick={() => toggleArr('feature_ids', feat.id)}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.feature_ids.includes(feat.id) ? 'bg-[#C8A97E] text-white border-[#C8A97E]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#C8A97E]'}`}
+                    >{feat.name}</button>
                   ))}
                 </div>
               </FormField>

@@ -52,3 +52,22 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[userenv]
+
+[userenv.shared]
+APP_NAME = "Homzen Real Estate"
+APP_ENV = "local"
+APP_DEBUG = "true"
+APP_URL = "http://localhost:8000"
+LOG_CHANNEL = "stack"
+LOG_LEVEL = "debug"
+DB_CONNECTION = "sqlite"
+DB_DATABASE = "/home/runner/workspace/database/database.sqlite"
+BROADCAST_DRIVER = "log"
+CACHE_STORE = "file"
+QUEUE_CONNECTION = "sync"
+SESSION_DRIVER = "file"
+SESSION_LIFETIME = "120"
+SANCTUM_STATEFUL_DOMAINS = "localhost:5000"
+APP_KEY = "base64:z+8gKxuWtXqBE7eEmAaE+/fvw5e0AQs/qO2ypzYs4m0="

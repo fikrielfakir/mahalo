@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiUrl = env.VITE_API_URL || 'http://localhost:8000'
+  const apiUrl = env.API_BACKEND_URL || 'http://localhost:8000'
+  const isExternal = apiUrl.startsWith('https://')
 
   return {
     plugins: [react()],
@@ -15,12 +16,12 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: apiUrl,
           changeOrigin: true,
-          secure: false,
+          secure: isExternal,
         },
         '/storage': {
           target: apiUrl,
           changeOrigin: true,
-          secure: false,
+          secure: isExternal,
         },
       },
     },

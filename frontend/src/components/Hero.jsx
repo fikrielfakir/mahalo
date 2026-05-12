@@ -1,26 +1,38 @@
-import { useState } from 'react'
-import { Search, MapPin, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, MapPin, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { propertiesApi } from '../api/client'
 
 const tabs = ['Buy', 'Rent', 'New Projects']
-
-const propertyTypes = ['All Types', 'Apartment', 'Villa', 'House', 'Office', 'Land']
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
 
 export default function Hero() {
   const [activeTab, setActiveTab] = useState('Buy')
   const [location, setLocation] = useState('')
-  const [propertyType, setPropertyType] = useState('All Types')
+  const [propertyType, setPropertyType] = useState('')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [bedrooms, setBedrooms] = useState('Any')
+  const [categories, setCategories] = useState([])
+  const [citiesCount, setCitiesCount] = useState(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    propertiesApi.filters()
+      .then((res) => {
+        const data = res?.data
+        if (Array.isArray(data?.categories)) setCategories(data.categories)
+        if (Array.isArray(data?.cities)) setCitiesCount(data.cities.length)
+      })
+      .catch(() => {})
+  }, [])
 
   const handleSearch = () => {
     const params = new URLSearchParams()
     if (activeTab === 'Rent') params.set('type', 'rent')
     else if (activeTab === 'Buy') params.set('type', 'sale')
     if (location) params.set('search', location)
+    if (propertyType) params.set('category_id', propertyType)
     if (minPrice) params.set('min_price', minPrice)
     if (maxPrice) params.set('max_price', maxPrice)
     if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
@@ -30,7 +42,6 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden">
-      {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
@@ -43,9 +54,7 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-r from-navy/30 to-transparent" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-24 pb-16 flex flex-col items-start">
-        {/* Headline */}
         <div className="mb-10 animate-fade-up">
           <p className="text-gold font-medium text-sm tracking-widest uppercase mb-4 opacity-90">
             Premium Real Estate Platform
@@ -61,9 +70,7 @@ export default function Hero() {
           </p>
         </div>
 
-        {/* Search Card */}
         <div className="w-full max-w-4xl glass-white rounded-3xl shadow-glass p-2 animate-fade-up delay-200">
-          {/* Tabs */}
           <div className="flex gap-1 px-2 pt-2 mb-3">
             {tabs.map((tab) => (
               <button
@@ -80,9 +87,7 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Fields */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-2 px-2 pb-2">
-            {/* Location */}
             <div className="md:col-span-2 flex items-center gap-3 bg-surface rounded-2xl px-4 py-3">
               <MapPin size={18} className="text-gold shrink-0" />
               <div className="flex-1 min-w-0">
@@ -98,7 +103,6 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Property Type */}
             <div className="flex items-center gap-3 bg-surface rounded-2xl px-4 py-3">
               <SlidersHorizontal size={18} className="text-gold shrink-0" />
               <div className="flex-1 min-w-0">
@@ -108,14 +112,14 @@ export default function Hero() {
                   onChange={(e) => setPropertyType(e.target.value)}
                   className="w-full text-sm font-medium text-navy bg-transparent outline-none cursor-pointer"
                 >
-                  {propertyTypes.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                  <option value="">All Types</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Price Range */}
             <div className="flex items-center gap-2 bg-surface rounded-2xl px-4 py-3">
               <div className="flex-1 min-w-0">
                 <label className="text-navy/40 text-xs font-medium block mb-0.5">Price Range</label>
@@ -139,7 +143,6 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Bedrooms + Search */}
             <div className="flex gap-2">
               <div className="flex-1 flex items-center gap-2 bg-surface rounded-2xl px-4 py-3">
                 <div className="min-w-0">
@@ -165,13 +168,12 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="flex flex-wrap gap-6 mt-10 animate-fade-up delay-300">
           {[
             { value: '15K+', label: 'Properties' },
             { value: '8K+', label: 'Happy Clients' },
             { value: '200+', label: 'Verified Agents' },
-            { value: '20+', label: 'Cities' },
+            { value: citiesCount ? `${citiesCount}+` : '20+', label: 'Cities' },
           ].map((stat) => (
             <div key={stat.label} className="glass rounded-2xl px-5 py-3 flex flex-col">
               <span className="text-white font-bold text-xl">{stat.value}</span>

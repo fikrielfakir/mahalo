@@ -3,15 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Building } from 'lucide-
 import { Link } from 'react-router-dom'
 import { projectsApi } from '../api/client'
 
-const MOCK_PROJECTS = [
-  { id: 1, name: 'The View Anfa', description: 'Luxury living in Casablanca', price_from: 1450000, investor: { name: 'Horizon Group' }, city: { name: 'Casablanca' } },
-  { id: 2, name: 'Résidences Mascotte', description: 'Premium Apartments — Hivernage, Marrakech', price_from: 980000, investor: { name: 'Addoha' }, city: { name: 'Marrakech' } },
-  { id: 3, name: 'Noria Golf City', description: 'Villas by the Golf Course', price_from: 3900000, investor: { name: 'Noria' }, city: { name: 'Casablanca' } },
-  { id: 4, name: 'Marina Living', description: 'Waterfront Apartments', price_from: 2100000, investor: { name: 'Emaar' }, city: { name: 'Rabat' } },
-  { id: 5, name: 'Palm Heights', description: 'Beachfront luxury residences', price_from: 5200000, investor: { name: 'Alliances' }, city: { name: 'Agadir' } },
-]
-
-const PROJECT_IMAGES = [
+const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=700&q=80&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=700&q=80&auto=format&fit=crop',
@@ -36,22 +28,19 @@ export default function NewProjects() {
     projectsApi.list({ per_page: 5 })
       .then((res) => {
         const data = res?.data
-        if (Array.isArray(data) && data.length > 0) {
-          setProjects(data)
-        } else {
-          setProjects(MOCK_PROJECTS)
-        }
+        setProjects(Array.isArray(data) ? data : [])
       })
-      .catch(() => setProjects(MOCK_PROJECTS))
+      .catch(() => setProjects([]))
       .finally(() => setLoading(false))
   }, [])
 
   const prev = () => setActive((a) => (a - 1 + projects.length) % projects.length)
   const next = () => setActive((a) => (a + 1) % projects.length)
 
+  if (!loading && projects.length === 0) return null
+
   return (
     <section className="py-20 px-6 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
           <p className="text-gold text-xs font-semibold uppercase tracking-widest mb-2">Off-Plan & New</p>
@@ -71,7 +60,6 @@ export default function NewProjects() {
         </div>
       </div>
 
-      {/* Slider */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -84,7 +72,7 @@ export default function NewProjects() {
             const rawImg = Array.isArray(project.images) ? project.images[0] : project.image
             const imgUrl = rawImg
               ? (rawImg.startsWith('http') ? rawImg : `/storage/${rawImg}`)
-              : PROJECT_IMAGES[i % PROJECT_IMAGES.length]
+              : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
             return (
               <Link
                 key={project.id}
@@ -126,7 +114,6 @@ export default function NewProjects() {
         </div>
       )}
 
-      {/* Dots */}
       <div className="flex gap-2 justify-center mt-6">
         {projects.map((_, i) => (
           <button

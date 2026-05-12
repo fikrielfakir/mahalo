@@ -1,17 +1,70 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { Link } from 'react-router-dom'
+import { propertiesApi } from '../api/client'
 
-const NEIGHBORHOODS = [
-  { name: 'Casablanca', count: '1250+ Properties', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80', description: "Morocco's bustling economic capital with world-class amenities." },
-  { name: 'Marrakech', count: '980+ Properties', image: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80', description: 'The Red City with a perfect blend of tradition and luxury.' },
-  { name: 'Rabat', count: '480+ Properties', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&q=80', description: "Morocco's regal capital with prestigious neighborhoods." },
-  { name: 'Tanger', count: '380+ Properties', image: 'https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?w=800&q=80', description: 'Gateway to Europe with stunning sea views.' },
-  { name: 'Agadir', count: '220+ Properties', image: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80', description: 'Atlantic coast paradise with beautiful beaches.' },
-  { name: 'Fès', count: '160+ Properties', image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80', description: 'The cultural capital with ancient medina charm.' },
-]
+const CITY_IMAGES = {
+  'Casablanca':  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop',
+  'Marrakech':   'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80&auto=format&fit=crop',
+  'Rabat':       'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&q=80&auto=format&fit=crop',
+  'Tanger':      'https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?w=800&q=80&auto=format&fit=crop',
+  'Agadir':      'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=800&q=80&auto=format&fit=crop',
+  'Fès':         'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80&auto=format&fit=crop',
+  'Fes':         'https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80&auto=format&fit=crop',
+  'Meknès':      'https://images.unsplash.com/photo-1577948000111-9c970dfe3743?w=800&q=80&auto=format&fit=crop',
+  'Essaouira':   'https://images.unsplash.com/photo-1570213489059-0aac6626cade?w=800&q=80&auto=format&fit=crop',
+  'Ouarzazate':  'https://images.unsplash.com/photo-1548532928-b34e3be62fc3?w=800&q=80&auto=format&fit=crop',
+}
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80&auto=format&fit=crop'
+
+function extractCitiesFromProperties(properties) {
+  const seen = new Set()
+  const cities = []
+  for (const p of properties) {
+    if (p.city && p.city.id && !seen.has(p.city.id)) {
+      seen.add(p.city.id)
+      cities.push(p.city)
+    }
+  }
+  return cities
+}
 
 export default function Neighborhoods() {
+  const [cities, setCities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await propertiesApi.filters()
+        const data = res?.data
+        if (Array.isArray(data?.cities) && data.cities.length > 0) {
+          setCities(data.cities)
+          return
+        }
+        throw new Error('no cities')
+      } catch {
+        try {
+          const res = await propertiesApi.list({ per_page: 100 })
+          const props = Array.isArray(res?.data) ? res.data : []
+          const extracted = extractCitiesFromProperties(props)
+          if (extracted.length > 0) {
+            setCities(extracted)
+          } else {
+            setError(true)
+          }
+        } catch {
+          setError(true)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
@@ -21,23 +74,36 @@ export default function Neighborhoods() {
           <h1 className="text-3xl font-bold text-navy">Explore Neighborhoods</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {NEIGHBORHOODS.map((n) => (
-            <Link
-              key={n.name}
-              to={`/properties?search=${n.name}`}
-              className="group relative rounded-3xl overflow-hidden h-72 cursor-pointer"
-            >
-              <img src={n.image} alt={n.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <h3 className="text-white font-bold text-2xl mb-1">{n.name}</h3>
-                <p className="text-white/60 text-sm mb-2">{n.count}</p>
-                <p className="text-white/40 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">{n.description}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {error ? (
+          <div className="text-center py-24 text-navy/40">Failed to load neighborhoods.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-3xl bg-gray-200 animate-pulse h-72" />
+                ))
+              : cities.length === 0 ? (
+                  <div className="col-span-3 text-center py-24 text-navy/40">No neighborhoods available.</div>
+                )
+              : cities.map((city) => (
+                  <Link
+                    key={city.id}
+                    to={`/properties?city_id=${city.id}`}
+                    className="group relative rounded-3xl overflow-hidden h-72 cursor-pointer"
+                  >
+                    <img
+                      src={CITY_IMAGES[city.name] || DEFAULT_IMAGE}
+                      alt={city.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-white font-bold text-2xl mb-1">{city.name}</h3>
+                    </div>
+                  </Link>
+                ))}
+          </div>
+        )}
       </div>
       <Footer />
     </div>

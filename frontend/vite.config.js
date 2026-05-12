@@ -13,13 +13,7 @@ export default defineConfig(({ mode }) => {
       port: 5000,
       allowedHosts: true,
       proxy: {
-        // Media uploads always go to the local Laravel (port 8000) — must be before /api
-        '/api/v1/admin/media': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false,
-        },
-        // All other API calls go to the configured backend (Hostinger)
+        // All API calls (including media uploads) go to the configured backend (Hostinger)
         '/api': {
           target: apiUrl,
           changeOrigin: true,

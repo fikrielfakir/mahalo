@@ -13,7 +13,7 @@ class AdminAgentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Agent::with('cityRelation');
+        $query = Agent::with('city');
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(fn($q) => $q->where('first_name', 'like', "%$s%")->orWhere('last_name', 'like', "%$s%")->orWhere('email', 'like', "%$s%"));
@@ -47,12 +47,12 @@ class AdminAgentController extends Controller
             'password' => Hash::make($data['password'] ?? Str::random(16)),
         ]);
 
-        return response()->json(['data' => $this->format($agent->fresh('cityRelation')), 'error' => false, 'message' => 'Agent created.'], 201);
+        return response()->json(['data' => $this->format($agent->fresh('city')), 'error' => false, 'message' => 'Agent created.'], 201);
     }
 
     public function show(int $id): JsonResponse
     {
-        $a = Agent::with('cityRelation')->findOrFail($id);
+        $a = Agent::with('city')->findOrFail($id);
         return response()->json(['data' => $this->format($a), 'error' => false, 'message' => null]);
     }
 
@@ -72,7 +72,7 @@ class AdminAgentController extends Controller
         ]);
         $agent->update($data);
 
-        return response()->json(['data' => $this->format($agent->fresh('cityRelation')), 'error' => false, 'message' => 'Agent updated.']);
+        return response()->json(['data' => $this->format($agent->fresh('city')), 'error' => false, 'message' => 'Agent updated.']);
     }
 
     public function destroy(int $id): JsonResponse
@@ -93,7 +93,7 @@ class AdminAgentController extends Controller
             'whatsapp'    => $a->whatsapp,
             'description' => $a->description,
             'city_id'     => $a->city_id,
-            'city'        => $a->cityRelation ? ['id' => $a->cityRelation->id, 'name' => $a->cityRelation->name] : null,
+            'city'        => $a->city ? ['id' => $a->city->id, 'name' => $a->city->name] : null,
             'is_featured' => (bool) $a->is_featured,
             'is_verified' => (bool) $a->is_verified,
             'created_at'  => $a->created_at,

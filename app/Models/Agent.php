@@ -10,12 +10,13 @@ class Agent extends Model
 {
     protected $table = 're_accounts';
 
-    protected $hidden = ['password', 'remember_token', 'email_verify_token'];
+    protected $hidden = ['password', 'remember_token'];
 
     protected $fillable = [
         'first_name', 'last_name', 'description', 'gender', 'email',
-        'username', 'avatar_id', 'phone', 'whatsapp', 'is_featured',
-        'is_verified', 'city_id',
+        'username', 'password', 'avatar_id', 'phone', 'whatsapp',
+        'is_featured', 'is_verified', 'verified_at', 'city_id',
+        'credits', 'package_id', 'package_started_at', 'package_ended_at',
     ];
 
     protected $casts = [
@@ -28,25 +29,18 @@ class Agent extends Model
         return trim($this->first_name . ' ' . $this->last_name);
     }
 
-    public function getCityAttribute()
-    {
-        return $this->cityRelation;
-    }
-
-    public function cityRelation(): BelongsTo
+    public function city(): BelongsTo
     {
         return $this->belongsTo(City::class, 'city_id');
     }
 
     public function properties(): HasMany
     {
-        return $this->hasMany(Property::class, 'author_id')
-            ->where('status', 'selling');
+        return $this->hasMany(Property::class, 'author_id');
     }
 
     public function projects(): HasMany
     {
-        return $this->hasMany(Project::class, 'author_id')
-            ->where('status', 'selling');
+        return $this->hasMany(Project::class, 'author_id');
     }
 }

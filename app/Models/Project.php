@@ -12,10 +12,13 @@ class Project extends Model
     protected $table = 're_projects';
 
     protected $fillable = [
-        'name', 'description', 'content', 'images', 'location',
+        'name', 'description', 'content', 'images', 'floor_plans', 'location',
         'investor_id', 'number_block', 'number_floor', 'number_flat',
-        'is_featured', 'price_from', 'price_to', 'city_id', 'state_id',
-        'country_id', 'status', 'author_id', 'latitude', 'longitude', 'views',
+        'is_featured', 'featured_priority', 'date_finish', 'date_sell',
+        'price_from', 'price_to', 'currency_id',
+        'city_id', 'state_id', 'country_id', 'status',
+        'author_id', 'author_type',
+        'latitude', 'longitude', 'zip_code', 'views', 'unique_id', 'private_notes',
     ];
 
     protected $casts = [
@@ -23,6 +26,7 @@ class Project extends Model
         'price_from'  => 'decimal:2',
         'price_to'    => 'decimal:2',
         'images'      => 'array',
+        'floor_plans' => 'array',
     ];
 
     public function city(): BelongsTo
@@ -33,6 +37,11 @@ class Project extends Model
     public function state(): BelongsTo
     {
         return $this->belongsTo(State::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function investor(): BelongsTo
@@ -50,9 +59,23 @@ class Project extends Model
         return $this->belongsToMany(Category::class, 're_project_categories', 'project_id', 'category_id');
     }
 
+    public function facilities(): BelongsToMany
+    {
+        return $this->belongsToMany(Facility::class, 're_facilities_distances', 'reference_id', 'facility_id')
+            ->where('reference_type', 'Botble\\RealEstate\\Models\\Project')
+            ->withPivot('distance');
+    }
+
     public function properties(): HasMany
     {
         return $this->hasMany(Property::class, 'project_id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewable_id')
+            ->where('reviewable_type', 'Botble\\RealEstate\\Models\\Project')
+            ->where('status', 'approved');
     }
 
     public function slug()

@@ -2,68 +2,45 @@
 
 namespace Database\Seeders;
 
-use Botble\Base\Facades\MetaBox;
-use Botble\Base\Supports\BaseSeeder;
-use Botble\RealEstate\Models\Category;
-use Botble\RealEstate\Models\Project;
-use Botble\RealEstate\Models\Property;
-use Botble\Slug\Facades\SlugHelper;
-use Botble\Slug\Models\Slug;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class CategorySeeder extends BaseSeeder
+class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        Category::query()->truncate();
-        Slug::query()->where('reference_type', Category::class)->delete();
-        DB::table('meta_boxes')->where('reference_type', Category::class)->delete();
+        DB::table('re_categories')->truncate();
+        DB::table('slugs')->where('reference_type', 'Botble\\RealEstate\\Models\\Category')->delete();
 
         $categories = [
-            'Apartment',
-            'Villa',
-            'Condo',
-            'House',
-            'Land',
-            'Commercial property',
+            ['id' => 1, 'name' => 'Apartment',         'slug' => 'apartment',          'order' => 1],
+            ['id' => 2, 'name' => 'Villa',              'slug' => 'villa',              'order' => 2],
+            ['id' => 3, 'name' => 'Condo',              'slug' => 'condo',              'order' => 3],
+            ['id' => 4, 'name' => 'House',              'slug' => 'house',              'order' => 4],
+            ['id' => 5, 'name' => 'Land',               'slug' => 'land',               'order' => 5],
+            ['id' => 6, 'name' => 'Commercial Property','slug' => 'commercial-property','order' => 6],
         ];
 
-        $icons = [
-            'ti ti-home',
-            'ti ti-calendar',
-            'ti ti-shopping-cart',
-            'ti ti-chart-bar',
-            'ti ti-mail',
-            'ti ti-map',
-            'ti ti-bell',
-        ];
-
-        shuffle($icons);
-
-        foreach ($categories as $key => $category) {
-            $category = Category::query()->create([
-                'name' => $category,
-                'order' => $key,
-                'is_default' => $key === 0,
+        foreach ($categories as $cat) {
+            DB::table('re_categories')->insert([
+                'id'         => $cat['id'],
+                'name'       => $cat['name'],
+                'status'     => 'published',
+                'order'      => $cat['order'],
+                'is_default' => 0,
+                'parent_id'  => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
-            MetaBox::saveMetaBoxData($category, 'icon', $icons[$key % count($icons)]);
-
-            SlugHelper::createSlug($category);
-        }
-
-        $properties = Property::query()->get();
-
-        foreach ($properties as $property) {
-            $property->categories()->sync([Category::query()->inRandomOrder()->value('id')]);
-            $property->save();
-        }
-
-        $projects = Project::query()->get();
-
-        foreach ($projects as $project) {
-            $project->categories()->sync([Category::query()->inRandomOrder()->value('id')]);
-            $project->save();
+            DB::table('slugs')->insert([
+                'key'            => $cat['slug'],
+                'reference_id'   => $cat['id'],
+                'reference_type' => 'Botble\\RealEstate\\Models\\Category',
+                'prefix'         => 'property-category',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
         }
     }
 }

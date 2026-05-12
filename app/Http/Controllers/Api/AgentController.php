@@ -11,7 +11,7 @@ class AgentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Agent::with(['cityRelation']);
+        $query = Agent::with(['city']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -48,7 +48,7 @@ class AgentController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $agent = Agent::with(['cityRelation'])->find($id);
+        $agent = Agent::with(['city'])->find($id);
 
         if (! $agent) {
             return response()->json(['data' => null, 'error' => true, 'message' => 'Agent not found'], 404);
@@ -107,7 +107,7 @@ class AgentController extends Controller
             'avatar'      => $agent->avatar_id ? null : null,
             'is_featured' => $agent->is_featured,
             'is_verified' => $agent->is_verified,
-            'city'        => $agent->cityRelation ? ['id' => $agent->cityRelation->id, 'name' => $agent->cityRelation->name] : null,
+            'city'        => $agent->city ? ['id' => $agent->city->id, 'name' => $agent->city->name] : null,
             'created_at'  => $agent->created_at,
         ];
     }

@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use Botble\RealEstate\Models\Investor;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class InvestorSeeder extends Seeder
 {
     public function run(): void
     {
-        Investor::query()->truncate();
+        DB::table('re_investors')->truncate();
 
         $investors = [
             'National Pension Service',
@@ -28,9 +28,13 @@ class InvestorSeeder extends Seeder
             'Rest Super',
         ];
 
-        foreach ($investors as $investor) {
-            Investor::query()->create([
-                'name' => $investor,
+        foreach ($investors as $i => $name) {
+            DB::table('re_investors')->insert([
+                'id'         => $i + 1,
+                'name'       => $name,
+                'status'     => 'published',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

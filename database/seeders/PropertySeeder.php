@@ -2,32 +2,22 @@
 
 namespace Database\Seeders;
 
-use Botble\Base\Facades\MetaBox;
-use Botble\Base\Supports\BaseSeeder;
-use Botble\Location\Models\State;
-use Botble\RealEstate\Enums\ModerationStatusEnum;
-use Botble\RealEstate\Models\Account;
-use Botble\RealEstate\Models\Category;
-use Botble\RealEstate\Models\Facility;
-use Botble\RealEstate\Models\Feature;
-use Botble\RealEstate\Models\Project;
-use Botble\RealEstate\Models\Property;
-use Botble\Slug\Facades\SlugHelper;
-use Carbon\Carbon;
+use App\Models\Property;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PropertySeeder extends BaseSeeder
+class PropertySeeder extends Seeder
 {
     public function run(): void
     {
-        Property::query()->truncate();
         DB::table('re_property_features')->truncate();
         DB::table('re_property_categories')->truncate();
-        DB::table('re_facilities_distances')->where('reference_type', Property::class)->delete();
-        DB::table('slugs')->where('reference_type', Property::class)->delete();
+        DB::table('re_facilities_distances')->where('reference_type', 'Botble\\RealEstate\\Models\\Property')->delete();
+        DB::table('slugs')->where('reference_type', 'Botble\\RealEstate\\Models\\Property')->delete();
+        Property::truncate();
 
-        $properties = [
+        $propertyNames = [
             '3 Beds Villa Calpe, Alicante',
             'Lavida Plus Office-tel 1 Bedroom',
             'Vinhomes Grand Park Studio 1 Bedroom',
@@ -91,40 +81,6 @@ class PropertySeeder extends BaseSeeder
             'Amberwood Apartments',
         ];
 
-        $floorPlans = collect(
-            [
-                [
-                    'name' => 'First Floor',
-                    'bedrooms' => 3,
-                    'bathrooms' => 2,
-                    'image' => $this->filePath('properties/floor.png'),
-                ],
-                [
-                    'name' => 'Second Floor',
-                    'bedrooms' => 2,
-                    'bathrooms' => 1,
-                    'image' => $this->filePath('properties/floor.png'),
-                ],
-            ]
-        )
-            ->map(function ($floorPlan) {
-                return collect($floorPlan)->map(function ($value, $key) {
-                    return [
-                        'key' => $key,
-                        'value' => (string) $value,
-                    ];
-                })->toArray();
-            })
-            ->toArray();
-
-        $projects = Project::query()->pluck('id');
-        $states = State::query()->with(['country', 'cities'])->limit(6)->oldest()->get();
-        $accounts = Account::query()->pluck('id');
-        $categories = Category::query()->pluck('id');
-        $features = Feature::query()->pluck('id');
-        $featuresCount = $features->count();
-        $facilitiesCount = Facility::query()->count();
-
         $descriptions = [
             'Beautiful property featuring modern design and premium finishes throughout. This stunning home offers an open floor plan perfect for entertaining.',
             'Exceptional residence in a prime location with easy access to schools, shopping, and public transportation. Recently renovated with high-end fixtures.',
@@ -134,15 +90,9 @@ class PropertySeeder extends BaseSeeder
             'Stunning property offering panoramic views and luxurious finishes. Every detail has been carefully considered in this exceptional home.',
             'Spacious and bright residence with an excellent layout for modern living. Move-in ready with all appliances included.',
             'Prime real estate opportunity in a desirable neighborhood. This property combines location, quality, and value perfectly.',
-            'Meticulously maintained property with upgrades throughout. Features include hardwood floors, granite countertops, and stainless appliances.',
-            'Inviting home with a warm atmosphere and practical layout. The outdoor space is perfect for relaxation and entertainment.',
         ];
 
-        $contents = [
-            'Welcome to this exceptional property that redefines modern living. From the moment you enter, you will be captivated by the attention to detail and quality craftsmanship evident throughout. The open-concept living area flows seamlessly into the gourmet kitchen, featuring premium appliances, quartz countertops, and custom cabinetry. Large windows flood the space with natural light while offering views of the beautifully landscaped surroundings. The primary suite is a true retreat, complete with a spa-like bathroom and generous walk-in closet. Additional bedrooms are well-appointed, perfect for family members or guests. The outdoor living space extends your entertaining options with a covered patio and mature landscaping. Located in a sought-after neighborhood with excellent schools, convenient shopping, and easy highway access, this property offers the perfect combination of comfort, style, and location.',
-            'This stunning residence offers an unparalleled living experience in one of the most desirable locations. The thoughtfully designed floor plan maximizes space and functionality while maintaining an elegant aesthetic. Upon entering, you are greeted by soaring ceilings and an abundance of natural light that highlights the premium finishes throughout. The chef-inspired kitchen features top-of-the-line appliances, a large center island, and ample storage. The living areas are perfect for both intimate gatherings and large-scale entertaining. Each bedroom is generously sized with excellent closet space. The primary suite includes a luxurious bathroom with dual vanities, a soaking tub, and a separate shower. Outside, the property boasts professional landscaping, a private backyard, and a covered outdoor entertaining area. Smart home features, energy-efficient systems, and a two-car garage complete this exceptional offering.',
-            'Discover your dream home in this beautifully appointed property that combines classic elegance with modern convenience. The grand entryway sets the tone for the sophisticated living spaces that follow. Gleaming hardwood floors flow throughout the main level, connecting the formal living room, dining area, and family room. The updated kitchen is a chef delight with granite counters, stainless steel appliances, and a breakfast nook overlooking the garden. Upstairs, the spacious primary suite features a sitting area, walk-in closet, and renovated bathroom. Additional bedrooms provide flexibility for family, guests, or a home office. The finished lower level offers extra living space for recreation or entertainment. Outside, mature trees provide privacy while the manicured lawn and garden beds enhance curb appeal. This is a rare opportunity to own a property that offers both character and modern updates.',
-        ];
+        $content = 'Welcome to this exceptional property that redefines modern living. From the moment you enter, you will be captivated by the attention to detail and quality craftsmanship evident throughout. The open-concept living area flows seamlessly into the gourmet kitchen, featuring premium appliances, quartz countertops, and custom cabinetry. Large windows flood the space with natural light while offering views of the beautifully landscaped surroundings. The primary suite is a true retreat, complete with a spa-like bathroom and generous walk-in closet. Additional bedrooms are well-appointed, perfect for family members or guests. The outdoor living space extends your entertaining options with a covered patio and mature landscaping. Located in a sought-after neighborhood with excellent schools, convenient shopping, and easy highway access, this property offers the perfect combination of comfort, style, and location.';
 
         $locations = [
             '123 Oak Street, Riverside Heights',
@@ -157,62 +107,129 @@ class PropertySeeder extends BaseSeeder
             '741 Hickory Place, Forest Glen',
         ];
 
-        foreach ($properties as $property) {
-            $type = rand(0, 1) ? 'sale' : 'rent';
+        $floorPlans = json_encode([
+            [
+                ['key' => 'name',      'value' => 'First Floor'],
+                ['key' => 'bedrooms',  'value' => '3'],
+                ['key' => 'bathrooms', 'value' => '2'],
+                ['key' => 'image',     'value' => 'properties/floor.png'],
+            ],
+            [
+                ['key' => 'name',      'value' => 'Second Floor'],
+                ['key' => 'bedrooms',  'value' => '2'],
+                ['key' => 'bathrooms', 'value' => '1'],
+                ['key' => 'image',     'value' => 'properties/floor.png'],
+            ],
+        ]);
 
-            $images = [];
-            $randomImages = array_rand(array_flip(range(1, 12)), rand(5, 12));
+        $cityStateCountry = [
+            [6,  3,  3],  [4,  2,  2],  [1,  1,  1],  [8,  4,  4],
+            [12, 6,  6],  [22, 10, 10], [14, 7,  7],  [16, 8,  8],
+            [19, 9,  9],  [10, 5,  5],  [6,  3,  3],  [4,  2,  2],
+            [1,  1,  1],  [8,  4,  4],  [12, 6,  6],  [22, 10, 10],
+            [14, 7,  7],  [16, 8,  8],  [19, 9,  9],  [10, 5,  5],
+            [6,  3,  3],  [4,  2,  2],  [1,  1,  1],  [8,  4,  4],
+            [12, 6,  6],  [22, 10, 10], [14, 7,  7],  [16, 8,  8],
+            [19, 9,  9],  [10, 5,  5],  [6,  3,  3],  [4,  2,  2],
+            [1,  1,  1],  [8,  4,  4],  [12, 6,  6],  [22, 10, 10],
+            [14, 7,  7],  [16, 8,  8],  [19, 9,  9],  [10, 5,  5],
+            [6,  3,  3],  [4,  2,  2],  [1,  1,  1],  [8,  4,  4],
+            [12, 6,  6],  [22, 10, 10], [14, 7,  7],  [16, 8,  8],
+            [19, 9,  9],  [10, 5,  5],  [6,  3,  3],  [4,  2,  2],
+            [1,  1,  1],  [8,  4,  4],  [12, 6,  6],  [22, 10, 10],
+            [14, 7,  7],  [16, 8,  8],  [19, 9,  9],  [10, 5,  5],
+        ];
 
-            foreach ((array) $randomImages as $image) {
-                $images[] = $this->filePath("properties/$image.jpg");
-            }
+        $accountIds = range(1, 12);
 
-            $state = $states->random();
+        foreach ($propertyNames as $idx => $name) {
+            $type       = $idx % 3 === 0 ? 'rent' : 'sale';
+            $status     = $type === 'rent' ? 'renting' : 'selling';
+            $price      = rand(100, 10000) * 100;
+            $bedrooms   = rand(1, 6);
+            $bathrooms  = rand(1, 4);
+            $square     = rand(50, 500);
+            $accountId  = $accountIds[$idx % count($accountIds)];
+            $loc        = $cityStateCountry[$idx] ?? [6, 3, 3];
+            $imgNums    = array_rand(array_flip(range(1, 12)), rand(5, 10));
+            $images     = array_map(fn($n) => "properties/{$n}.jpg", (array) $imgNums);
 
-            /**
-             * @var Property $property
-             */
-            $property = Property::query()->forceCreate([
-                'unique_id' => strtoupper(Str::random(6)),
-                'name' => $property,
-                'description' => $descriptions[array_rand($descriptions)],
-                'content' => $contents[array_rand($contents)],
-                'location' => $locations[array_rand($locations)],
-                'images' => $images,
-                'project_id' => $projects->isNotEmpty() ? $projects->random() : null,
-                'author_id' => $accounts->random(),
-                'author_type' => Account::class,
-                'number_bedroom' => rand(1, 10),
-                'number_bathroom' => rand(1, 10),
-                'number_floor' => rand(1, 100),
-                'square' => rand(1, 100) * 10,
-                'price' => rand(100, 10000) * 100,
-                'is_featured' => (bool) rand(0, 1),
-                'status' => $type === 'sale' ? 'selling' : 'renting',
-                'type' => $type,
-                'moderation_status' => ModerationStatusEnum::APPROVED,
-                'expire_date' => Carbon::now()->days(rand(30, 365)),
-                'never_expired' => true,
-                'latitude' => 42.4772 + (rand(0, 15000) / 10000),
-                'longitude' => -76.7517 + (rand(0, 20000) / 10000),
-                'views' => rand(0, 100000),
-                'country_id' => $state->country->id,
-                'state_id' => $state->id,
-                'city_id' => $state->cities->isNotEmpty() ? $state->cities->random()->id : null,
-                'floor_plans' => $floorPlans,
+            $imagesSets = [
+                '["properties/1.jpg","properties/2.jpg","properties/3.jpg","properties/4.jpg","properties/9.jpg","properties/10.jpg","properties/11.jpg","properties/12.jpg"]',
+                '["properties/5.jpg","properties/6.jpg","properties/7.jpg","properties/8.jpg","properties/1.jpg","properties/3.jpg","properties/11.jpg"]',
+                '["properties/2.jpg","properties/4.jpg","properties/6.jpg","properties/8.jpg","properties/10.jpg","properties/12.jpg"]',
+                '["properties/1.jpg","properties/3.jpg","properties/5.jpg","properties/7.jpg","properties/9.jpg","properties/11.jpg"]',
+            ];
+
+            $slug = Str::slug($name);
+
+            $property = Property::create([
+                'name'              => $name,
+                'type'              => $type,
+                'description'       => $descriptions[$idx % count($descriptions)],
+                'content'           => $content,
+                'location'          => $locations[$idx % count($locations)],
+                'images'            => $imagesSets[$idx % count($imagesSets)],
+                'floor_plans'       => $floorPlans,
+                'project_id'        => ($idx % 5 === 0) ? (($idx % 18) + 1) : 0,
+                'number_bedroom'    => $bedrooms,
+                'number_bathroom'   => $bathrooms,
+                'number_floor'      => rand(1, 50),
+                'square'            => $square,
+                'price'             => $price,
+                'currency_id'       => 1,
+                'is_featured'       => $idx < 8 ? 1 : 0,
+                'featured_priority' => $idx < 8 ? (8 - $idx) : 0,
+                'city_id'           => $loc[0],
+                'state_id'          => $loc[1],
+                'country_id'        => $loc[2],
+                'period'            => $type === 'rent' ? 'month' : 'month',
+                'status'            => $status,
+                'author_id'         => $accountId,
+                'author_type'       => 'Botble\\RealEstate\\Models\\Account',
+                'moderation_status' => 'approved',
+                'expire_date'       => now()->addDays(rand(30, 365))->toDateString(),
+                'never_expired'     => 1,
+                'latitude'          => sprintf('%.4f', 42.4772 + (rand(0, 15000) / 10000)),
+                'longitude'         => sprintf('%.4f', -76.7517 + (rand(0, 20000) / 10000)),
+                'views'             => rand(0, 100000),
+                'unique_id'         => strtoupper(Str::random(6)),
             ]);
 
-            MetaBox::saveMetaBoxData($property, 'video_url', 'https://youtu.be/tRxGSHL8bI0?si=kbumCspOMG-kJvTT');
+            DB::table('slugs')->insert([
+                'key'            => $slug,
+                'reference_id'   => $property->id,
+                'reference_type' => 'Botble\\RealEstate\\Models\\Property',
+                'prefix'         => 'properties',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
 
-            $property->categories()->attach($categories->random(rand(1, 3)));
-            $property->features()->attach($features->random(rand($featuresCount - 8, $featuresCount)));
-
-            foreach (range(1, $facilitiesCount) as $facilityId) {
-                $distance = sprintf('%skm', rand(1, 20));
-                $property->facilities()->attach($facilityId, ['distance' => $distance]);
+            $catIds   = array_slice(range(1, 6), 0, rand(1, 3));
+            shuffle($catIds);
+            foreach ($catIds as $catId) {
+                DB::table('re_property_categories')->insertOrIgnore([
+                    'property_id' => $property->id,
+                    'category_id' => $catId,
+                ]);
             }
 
-            SlugHelper::createSlug($property);
+            $featIds = array_rand(array_flip(range(1, 12)), rand(4, 10));
+            foreach ((array) $featIds as $featId) {
+                DB::table('re_property_features')->insert([
+                    'property_id' => $property->id,
+                    'feature_id'  => $featId,
+                ]);
+            }
+
+            for ($f = 1; $f <= 11; $f++) {
+                DB::table('re_facilities_distances')->insert([
+                    'reference_id'   => $property->id,
+                    'reference_type' => 'Botble\\RealEstate\\Models\\Property',
+                    'facility_id'    => $f,
+                    'distance'       => rand(1, 20) . 'km',
+                ]);
+            }
         }
     }
 }

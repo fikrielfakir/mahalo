@@ -2,279 +2,86 @@
 
 namespace Database\Seeders;
 
-use Botble\Base\Supports\BaseSeeder;
-use Botble\Location\Models\City;
-use Botble\Location\Models\Country;
-use Botble\Location\Models\State;
-use Illuminate\Support\Str;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
-class LocationSeeder extends BaseSeeder
+class LocationSeeder extends Seeder
 {
     public function run(): void
     {
-        Country::query()->truncate();
-        State::query()->truncate();
-        City::query()->truncate();
-
-        $this->uploadFiles('locations');
+        DB::table('cities')->truncate();
+        DB::table('states')->truncate();
+        DB::table('countries')->truncate();
 
         $countries = [
-            [
-                'name' => 'France',
-                'nationality' => 'French',
-                'code' => 'FRA',
-            ],
-            [
-                'name' => 'England',
-                'nationality' => 'English',
-                'code' => 'UK',
-            ],
-            [
-                'name' => 'USA',
-                'nationality' => 'Americans',
-                'code' => 'US',
-            ],
-            [
-                'name' => 'Holland',
-                'nationality' => 'Dutch',
-                'code' => 'HL',
-            ],
-            [
-                'name' => 'Denmark',
-                'nationality' => 'Danish',
-                'code' => 'DN',
-            ],
-            [
-                'name' => 'Germany',
-                'nationality' => 'German',
-                'code' => 'DE',
-            ],
-            [
-                'name' => 'Japan',
-                'nationality' => 'Japanese',
-                'code' => 'JP',
-            ],
-            [
-                'name' => 'Canada',
-                'nationality' => 'Canadian',
-                'code' => 'CA',
-            ],
-            [
-                'name' => 'Australia',
-                'nationality' => 'Australian',
-                'code' => 'AU',
-            ],
-            [
-                'name' => 'Italy',
-                'nationality' => 'Italian',
-                'code' => 'IT',
-            ],
+            ['id' => 1,  'name' => 'France',        'code' => 'FR', 'nationality' => 'French'],
+            ['id' => 2,  'name' => 'England',        'code' => 'GB', 'nationality' => 'British'],
+            ['id' => 3,  'name' => 'United States',  'code' => 'US', 'nationality' => 'American'],
+            ['id' => 4,  'name' => 'Netherlands',    'code' => 'NL', 'nationality' => 'Dutch'],
+            ['id' => 5,  'name' => 'Denmark',        'code' => 'DK', 'nationality' => 'Danish'],
+            ['id' => 6,  'name' => 'Germany',        'code' => 'DE', 'nationality' => 'German'],
+            ['id' => 7,  'name' => 'Japan',          'code' => 'JP', 'nationality' => 'Japanese'],
+            ['id' => 8,  'name' => 'Canada',         'code' => 'CA', 'nationality' => 'Canadian'],
+            ['id' => 9,  'name' => 'Australia',      'code' => 'AU', 'nationality' => 'Australian'],
+            ['id' => 10, 'name' => 'Italy',          'code' => 'IT', 'nationality' => 'Italian'],
         ];
+
+        DB::table('countries')->insert(array_map(fn($c) => array_merge($c, [
+            'status' => 'published', 'order' => 0, 'is_default' => 0,
+            'created_at' => now(), 'updated_at' => now(),
+        ]), $countries));
 
         $states = [
-            [
-                'name' => 'France',
-                'abbreviation' => 'FR',
-                'country_id' => 1,
-            ],
-            [
-                'name' => 'England',
-                'abbreviation' => 'EN',
-                'country_id' => 2,
-            ],
-            [
-                'name' => 'New York',
-                'abbreviation' => 'NY',
-                'country_id' => 3,
-            ],
-            [
-                'name' => 'Holland',
-                'abbreviation' => 'HL',
-                'country_id' => 4,
-            ],
-            [
-                'name' => 'Denmark',
-                'abbreviation' => 'DN',
-                'country_id' => 5,
-            ],
-            [
-                'name' => 'Bavaria',
-                'abbreviation' => 'BY',
-                'country_id' => 6,
-            ],
-            [
-                'name' => 'Tokyo',
-                'abbreviation' => 'TK',
-                'country_id' => 7,
-            ],
-            [
-                'name' => 'Ontario',
-                'abbreviation' => 'ON',
-                'country_id' => 8,
-            ],
-            [
-                'name' => 'New South Wales',
-                'abbreviation' => 'NSW',
-                'country_id' => 9,
-            ],
-            [
-                'name' => 'Lombardy',
-                'abbreviation' => 'LO',
-                'country_id' => 10,
-            ],
+            ['id' => 1,  'name' => 'France',         'slug' => 'france',          'abbreviation' => 'FR',  'country_id' => 1,  'image' => 'locations/5.jpg'],
+            ['id' => 2,  'name' => 'England',         'slug' => 'england',         'abbreviation' => 'EN',  'country_id' => 2,  'image' => 'locations/3.jpg'],
+            ['id' => 3,  'name' => 'New York',        'slug' => 'new-york',        'abbreviation' => 'NY',  'country_id' => 3,  'image' => 'locations/4.jpg'],
+            ['id' => 4,  'name' => 'Holland',         'slug' => 'holland',         'abbreviation' => 'HL',  'country_id' => 4,  'image' => 'locations/3.jpg'],
+            ['id' => 5,  'name' => 'Denmark',         'slug' => 'denmark',         'abbreviation' => 'DN',  'country_id' => 5,  'image' => 'locations/5.jpg'],
+            ['id' => 6,  'name' => 'Bavaria',         'slug' => 'bavaria',         'abbreviation' => 'BY',  'country_id' => 6,  'image' => 'locations/3.jpg'],
+            ['id' => 7,  'name' => 'Tokyo',           'slug' => 'tokyo',           'abbreviation' => 'TK',  'country_id' => 7,  'image' => 'locations/4.jpg'],
+            ['id' => 8,  'name' => 'Ontario',         'slug' => 'ontario',         'abbreviation' => 'ON',  'country_id' => 8,  'image' => 'locations/4.jpg'],
+            ['id' => 9,  'name' => 'New South Wales', 'slug' => 'new-south-wales', 'abbreviation' => 'NSW', 'country_id' => 9,  'image' => 'locations/3.jpg'],
+            ['id' => 10, 'name' => 'Lombardy',        'slug' => 'lombardy',        'abbreviation' => 'LO',  'country_id' => 10, 'image' => 'locations/4.jpg'],
         ];
+
+        DB::table('states')->insert(array_map(fn($s) => array_merge($s, [
+            'order' => 0, 'is_default' => 0, 'status' => 'published',
+            'created_at' => now(), 'updated_at' => now(),
+        ]), $states));
 
         $cities = [
-            [
-                'name' => 'Paris',
-                'state_id' => 1,
-                'country_id' => 1,
-            ],
-            [
-                'name' => 'London',
-                'state_id' => 2,
-                'country_id' => 2,
-            ],
-            [
-                'name' => 'New York City',
-                'state_id' => 3,
-                'country_id' => 3,
-            ],
-            [
-                'name' => 'Amsterdam',
-                'state_id' => 4,
-                'country_id' => 4,
-            ],
-            [
-                'name' => 'Copenhagen',
-                'state_id' => 5,
-                'country_id' => 5,
-            ],
-            [
-                'name' => 'Munich',
-                'state_id' => 6,
-                'country_id' => 6,
-            ],
-            [
-                'name' => 'Tokyo',
-                'state_id' => 7,
-                'country_id' => 7,
-            ],
-            [
-                'name' => 'Toronto',
-                'state_id' => 8,
-                'country_id' => 8,
-            ],
-            [
-                'name' => 'Sydney',
-                'state_id' => 9,
-                'country_id' => 9,
-            ],
-            [
-                'name' => 'Milan',
-                'state_id' => 10,
-                'country_id' => 10,
-            ],
-            [
-                'name' => 'Los Angeles',
-                'state_id' => 11,
-                'country_id' => 3,
-            ],
-            [
-                'name' => 'Berlin',
-                'state_id' => 12,
-                'country_id' => 6,
-            ],
-            [
-                'name' => 'Osaka',
-                'state_id' => 13,
-                'country_id' => 7,
-            ],
-            [
-                'name' => 'Vancouver',
-                'state_id' => 14,
-                'country_id' => 8,
-            ],
-            [
-                'name' => 'Melbourne',
-                'state_id' => 15,
-                'country_id' => 9,
-            ],
-            [
-                'name' => 'Rome',
-                'state_id' => 16,
-                'country_id' => 10,
-            ],
-            [
-                'name' => 'Marseille',
-                'state_id' => 17,
-                'country_id' => 1,
-            ],
-            [
-                'name' => 'Liverpool',
-                'state_id' => 18,
-                'country_id' => 2,
-            ],
-            [
-                'name' => 'Chicago',
-                'state_id' => 19,
-                'country_id' => 3,
-            ],
-            [
-                'name' => 'Rotterdam',
-                'state_id' => 20,
-                'country_id' => 4,
-            ],
-            [
-                'name' => 'Aarhus',
-                'state_id' => 21,
-                'country_id' => 5,
-            ],
-            [
-                'name' => 'Frankfurt',
-                'state_id' => 22,
-                'country_id' => 6,
-            ],
-            [
-                'name' => 'Kyoto',
-                'state_id' => 23,
-                'country_id' => 7,
-            ],
-            [
-                'name' => 'Montreal',
-                'state_id' => 24,
-                'country_id' => 8,
-            ],
-            [
-                'name' => 'Brisbane',
-                'state_id' => 25,
-                'country_id' => 9,
-            ],
-            [
-                'name' => 'Naples',
-                'state_id' => 26,
-                'country_id' => 10,
-            ],
+            ['id' => 1,  'name' => 'Paris',         'slug' => 'paris',         'state_id' => 1,  'country_id' => 1],
+            ['id' => 2,  'name' => 'Lyon',           'slug' => 'lyon',          'state_id' => 1,  'country_id' => 1],
+            ['id' => 3,  'name' => 'Marseille',      'slug' => 'marseille',     'state_id' => 1,  'country_id' => 1],
+            ['id' => 4,  'name' => 'London',         'slug' => 'london',        'state_id' => 2,  'country_id' => 2],
+            ['id' => 5,  'name' => 'Manchester',     'slug' => 'manchester',    'state_id' => 2,  'country_id' => 2],
+            ['id' => 6,  'name' => 'New York City',  'slug' => 'new-york-city', 'state_id' => 3,  'country_id' => 3],
+            ['id' => 7,  'name' => 'Buffalo',        'slug' => 'buffalo',       'state_id' => 3,  'country_id' => 3],
+            ['id' => 8,  'name' => 'Amsterdam',      'slug' => 'amsterdam',     'state_id' => 4,  'country_id' => 4],
+            ['id' => 9,  'name' => 'Rotterdam',      'slug' => 'rotterdam',     'state_id' => 4,  'country_id' => 4],
+            ['id' => 10, 'name' => 'Copenhagen',     'slug' => 'copenhagen',    'state_id' => 5,  'country_id' => 5],
+            ['id' => 11, 'name' => 'Aarhus',         'slug' => 'aarhus',        'state_id' => 5,  'country_id' => 5],
+            ['id' => 12, 'name' => 'Munich',         'slug' => 'munich',        'state_id' => 6,  'country_id' => 6],
+            ['id' => 13, 'name' => 'Nuremberg',      'slug' => 'nuremberg',     'state_id' => 6,  'country_id' => 6],
+            ['id' => 14, 'name' => 'Tokyo',          'slug' => 'tokyo-city',    'state_id' => 7,  'country_id' => 7],
+            ['id' => 15, 'name' => 'Osaka',          'slug' => 'osaka',         'state_id' => 7,  'country_id' => 7],
+            ['id' => 16, 'name' => 'Toronto',        'slug' => 'toronto',       'state_id' => 8,  'country_id' => 8],
+            ['id' => 17, 'name' => 'Ottawa',         'slug' => 'ottawa',        'state_id' => 8,  'country_id' => 8],
+            ['id' => 18, 'name' => 'Hamilton',       'slug' => 'hamilton',      'state_id' => 8,  'country_id' => 8],
+            ['id' => 19, 'name' => 'Sydney',         'slug' => 'sydney',        'state_id' => 9,  'country_id' => 9],
+            ['id' => 20, 'name' => 'Newcastle',      'slug' => 'newcastle',     'state_id' => 9,  'country_id' => 9],
+            ['id' => 21, 'name' => 'Wollongong',     'slug' => 'wollongong',    'state_id' => 9,  'country_id' => 9],
+            ['id' => 22, 'name' => 'Milan',          'slug' => 'milan',         'state_id' => 10, 'country_id' => 10],
+            ['id' => 23, 'name' => 'Brescia',        'slug' => 'brescia',       'state_id' => 10, 'country_id' => 10],
+            ['id' => 24, 'name' => 'Bergamo',        'slug' => 'bergamo',       'state_id' => 10, 'country_id' => 10],
+            ['id' => 25, 'name' => 'Bordeaux',       'slug' => 'bordeaux',      'state_id' => 1,  'country_id' => 1],
+            ['id' => 26, 'name' => 'Liverpool',      'slug' => 'liverpool',     'state_id' => 2,  'country_id' => 2],
+            ['id' => 27, 'name' => 'Vancouver',      'slug' => 'vancouver',     'state_id' => 8,  'country_id' => 8],
         ];
 
-        foreach ($countries as $country) {
-            Country::query()->insert($country);
-        }
-
-        foreach ($states as $state) {
-            State::query()->insert([
-                ...$state,
-                'slug' => Str::slug($state['name']),
-                'image' => $this->filePath(sprintf('locations/%s.jpg', rand(1, 5))),
-            ]);
-        }
-
-        foreach ($cities as $city) {
-            City::query()->forceCreate([
-                ...$city,
-                'slug' => Str::slug($city['name']),
-                'image' => $this->filePath(sprintf('locations/%s.jpg', rand(1, 5))),
-            ]);
-        }
+        DB::table('cities')->insert(array_map(fn($c) => array_merge($c, [
+            'order' => 0, 'is_default' => 0, 'status' => 'published', 'image' => null,
+            'created_at' => now(), 'updated_at' => now(),
+        ]), $cities));
     }
 }

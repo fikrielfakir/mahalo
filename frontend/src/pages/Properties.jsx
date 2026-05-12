@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import Footer from '../components/Footer'
@@ -8,22 +8,22 @@ import { propertiesApi } from '../api/client'
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [properties, setProperties] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [type, setType] = useState(searchParams.get('type') || '')
-  const [page, setPage] = useState(1)
-  const [meta, setMeta] = useState(null)
+  const [properties, setProperties]     = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [error, setError]               = useState(false)
+  const [search, setSearch]             = useState(searchParams.get('search') || '')
+  const [type, setType]                 = useState(searchParams.get('type') || '')
+  const [page, setPage]                 = useState(1)
+  const [meta, setMeta]                 = useState(null)
 
   const fetchProperties = useCallback(() => {
     setLoading(true)
     setError(false)
     const params = { per_page: 12, page }
-    if (search) params.search = search
-    if (type) params.type = type
+    if (search)                        params.search    = search
+    if (type)                          params.type      = type
     if (searchParams.get('is_featured')) params.is_featured = 1
-    if (searchParams.get('city_id')) params.city_id = searchParams.get('city_id')
+    if (searchParams.get('city_id'))   params.city_id   = searchParams.get('city_id')
 
     propertiesApi.list(params)
       .then((res) => {
@@ -36,60 +36,100 @@ export default function Properties() {
 
   useEffect(() => { fetchProperties() }, [type, page, searchParams])
 
-  const handleSearch = () => {
-    setPage(1)
-    fetchProperties()
+  const handleSearch = () => { setPage(1); fetchProperties() }
+
+  const clearCity = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('city_id')
+    setSearchParams(next)
   }
 
+  const cityId   = searchParams.get('city_id')
+  const featured = searchParams.get('is_featured')
+
+  const pageTitle = featured ? 'Featured Properties'
+    : type === 'rent' ? 'Properties for Rent'
+    : type === 'sale' ? 'Properties for Sale'
+    : 'All Properties'
+
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen" style={{ background: '#F7F8FC' }}>
       <Navbar />
-      <div className="pt-24 pb-20 px-6 max-w-7xl mx-auto">
+
+      {/* Page header */}
+      <div className="pt-24 pb-8 px-5 max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-navy mb-2">
-            {type === 'rent' ? 'Properties for Rent' : type === 'sale' ? 'Properties for Sale' : 'All Properties'}
-          </h1>
-          <p className="text-navy/50">
-            {meta ? `${meta.total} properties found` : 'Discover premium properties across Morocco'}
+          <p className="section-label mb-1.5">Real Estate</p>
+          <h1 className="text-3xl font-bold text-navy">{pageTitle}</h1>
+          <p className="text-navy/45 text-sm mt-1.5">
+            {meta ? `${meta.total} properties found` : 'Discover premium properties'}
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-card p-4 mb-8 flex flex-wrap gap-3 items-center">
-          <div className="flex-1 min-w-48 flex items-center gap-2 bg-surface rounded-2xl px-4 py-2.5">
-            <Search size={16} className="text-navy/40" />
+        {/* Filter bar */}
+        <div
+          className="flex flex-wrap gap-2.5 items-center p-3 rounded-3xl shadow-card"
+          style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.8)' }}
+        >
+          {/* Search input */}
+          <div className="flex-1 min-w-48 flex items-center gap-2.5 bg-surface rounded-2xl px-4 py-2.5">
+            <Search size={15} className="text-gold shrink-0" />
             <input
               type="text"
               placeholder="Search properties..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy/30"
+              className="flex-1 bg-transparent text-sm font-medium text-navy outline-none placeholder-navy/30"
             />
           </div>
 
-          <select
-            value={type}
-            onChange={(e) => { setType(e.target.value); setPage(1) }}
-            className="bg-surface rounded-2xl px-4 py-2.5 text-sm font-medium text-navy outline-none cursor-pointer"
-          >
-            <option value="">All Types</option>
-            <option value="sale">For Sale</option>
-            <option value="rent">For Rent</option>
-          </select>
+          {/* Type filter */}
+          <div className="flex gap-1.5 p-1 rounded-2xl bg-surface">
+            {[['', 'All'], ['sale', 'Buy'], ['rent', 'Rent']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setType(val); setPage(1) }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  type === val
+                    ? 'bg-navy text-white shadow-sm'
+                    : 'text-navy/55 hover:text-navy hover:bg-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          <button onClick={handleSearch} className="btn-gold py-2.5">
+          {/* Active city badge */}
+          {cityId && (
+            <button
+              onClick={clearCity}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm hover:bg-gold/20 transition-colors"
+            >
+              City filter active <X size={13} />
+            </button>
+          )}
+
+          <button
+            onClick={handleSearch}
+            className="btn-gold py-2.5 px-5 text-sm"
+          >
             Search
           </button>
         </div>
+      </div>
 
+      {/* Grid */}
+      <div className="pb-20 px-5 max-w-7xl mx-auto">
         {error ? (
           <div className="text-center py-24">
-            <p className="text-navy/40 text-lg">Failed to load properties. Please try again.</p>
-            <button onClick={fetchProperties} className="btn-gold mt-4">Retry</button>
+            <p className="text-navy/40 text-lg mb-4">Failed to load properties.</p>
+            <button onClick={fetchProperties} className="btn-gold">Retry</button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {loading
                 ? Array.from({ length: 12 }).map((_, i) => <PropertyCardSkeleton key={i} />)
                 : properties.map((p) => <PropertyCard key={p.id} property={p} />)
@@ -103,21 +143,34 @@ export default function Properties() {
             )}
 
             {!loading && meta && meta.last_page > 1 && (
-              <div className="flex justify-center gap-3 mt-12">
+              <div className="flex justify-center items-center gap-3 mt-14">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="px-5 py-2.5 rounded-2xl border border-navy/10 text-navy text-sm font-medium disabled:opacity-30 hover:bg-navy hover:text-white transition-all"
+                  className="px-5 py-2.5 rounded-2xl border border-navy/10 text-navy text-sm font-semibold disabled:opacity-30 hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 bg-white shadow-sm"
                 >
                   Previous
                 </button>
-                <span className="px-5 py-2.5 text-navy/50 text-sm">
-                  Page {meta.current_page} of {meta.last_page}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: Math.min(meta.last_page, 7) }, (_, i) => {
+                    const p = i + 1
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                          p === page ? 'bg-navy text-white shadow-sm' : 'text-navy/50 hover:bg-navy/6 hover:text-navy'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  })}
+                </div>
                 <button
                   disabled={page === meta.last_page}
                   onClick={() => setPage(p => p + 1)}
-                  className="px-5 py-2.5 rounded-2xl border border-navy/10 text-navy text-sm font-medium disabled:opacity-30 hover:bg-navy hover:text-white transition-all"
+                  className="px-5 py-2.5 rounded-2xl border border-navy/10 text-navy text-sm font-semibold disabled:opacity-30 hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 bg-white shadow-sm"
                 >
                   Next
                 </button>
@@ -126,6 +179,7 @@ export default function Properties() {
           </>
         )}
       </div>
+
       <Footer />
     </div>
   )

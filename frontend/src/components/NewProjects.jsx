@@ -12,24 +12,21 @@ const FALLBACK_IMAGES = [
 ]
 
 function formatPrice(price) {
-  if (!price) return 'Price on request'
+  if (!price) return 'On request'
   const num = parseFloat(price)
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M MAD`
-  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K MAD`
+  if (num >= 1_000)     return `${(num / 1_000).toFixed(0)}K MAD`
   return `${num.toLocaleString()} MAD`
 }
 
 export default function NewProjects() {
   const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [active, setActive] = useState(0)
+  const [loading, setLoading]   = useState(true)
+  const [active, setActive]     = useState(0)
 
   useEffect(() => {
     projectsApi.list({ per_page: 5 })
-      .then((res) => {
-        const data = res?.data
-        setProjects(Array.isArray(data) ? data : [])
-      })
+      .then((res) => setProjects(Array.isArray(res?.data) ? res.data : []))
       .catch(() => setProjects([]))
       .finally(() => setLoading(false))
   }, [])
@@ -40,72 +37,88 @@ export default function NewProjects() {
   if (!loading && projects.length === 0) return null
 
   return (
-    <section className="py-20 px-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-10">
+    <section className="py-20 px-5 max-w-7xl mx-auto">
+      <div className="flex items-end justify-between mb-10">
         <div>
-          <p className="text-gold text-xs font-semibold uppercase tracking-widest mb-2">Off-Plan & New</p>
+          <p className="section-label mb-2">Off-Plan & New</p>
           <h2 className="section-title text-3xl">New Projects</h2>
+          <p className="text-navy/45 text-sm mt-2">Invest early in Morocco's finest developments</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/projects" className="section-link hidden sm:flex mr-4">
-            View All Projects
-            <ArrowRight size={16} />
+        <div className="flex items-center gap-2">
+          <Link to="/projects" className="section-link hidden sm:flex mr-2">
+            View All <ArrowRight size={15} />
           </Link>
-          <button onClick={prev} className="w-10 h-10 rounded-2xl border border-navy/10 flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200">
-            <ChevronLeft size={18} />
+          <button
+            onClick={prev}
+            className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
+          >
+            <ChevronLeft size={16} />
           </button>
-          <button onClick={next} className="w-10 h-10 rounded-2xl border border-navy/10 flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200">
-            <ChevronRight size={18} />
+          <button
+            onClick={next}
+            className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
+          >
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-3xl overflow-hidden bg-gray-200 animate-pulse aspect-[3/4]" />
+            <div key={i} className="rounded-3xl skeleton aspect-[3/4]" />
           ))}
         </div>
       ) : (
-        <div className="flex gap-5 overflow-hidden">
+        <div className="flex gap-4 overflow-hidden">
           {projects.map((project, i) => {
             const rawImg = Array.isArray(project.images) ? project.images[0] : project.image
             const imgUrl = rawImg
               ? (rawImg.startsWith('http') ? rawImg : `/storage/${rawImg}`)
               : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
+            const isActive = i === active
+
             return (
               <Link
                 key={project.id}
                 to={`/projects/${project.slug}`}
-                className={`relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 ${
-                  i === active ? 'w-72 md:w-80' : 'w-52 md:w-60'
-                }`}
-                style={{ height: '400px' }}
                 onClick={() => setActive(i)}
+                className={`relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 shadow-card hover:shadow-card-hover`}
+                style={{ height: '420px', width: isActive ? '300px' : '220px' }}
               >
-                <img src={imgUrl} alt={project.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img
+                  src={imgUrl}
+                  alt={project.name}
+                  className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.05]"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-transparent" />
 
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-lg bg-gold/20 flex items-center justify-center">
-                      <Building size={12} className="text-gold" />
-                    </div>
-                    <span className="text-white/60 text-xs">{project.investor?.name || 'Developer'}</span>
+                {/* Glass label at top */}
+                {isActive && (
+                  <div className="absolute top-4 left-4">
+                    <span className="glass-pill text-[10px]">
+                      <Building size={9} /> {project.investor?.name || 'Developer'}
+                    </span>
                   </div>
-                  <h3 className="text-white font-bold text-lg leading-tight mb-1">{project.name}</h3>
-                  <p className="text-white/60 text-xs mb-3 line-clamp-1">{project.description}</p>
-                  {i === active && (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-white/50 text-xs">From</span>
-                        <div className="text-gold font-bold text-base">{formatPrice(project.price_from)}</div>
+                )}
+
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <h3 className="text-white font-bold text-base leading-tight mb-1">{project.name}</h3>
+                  {isActive && (
+                    <>
+                      <p className="text-white/55 text-xs mb-3 line-clamp-2">{project.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5">From</div>
+                          <div className="text-gold font-bold text-base">{formatPrice(project.price_from)}</div>
+                        </div>
+                        {project.city?.name && (
+                          <div className="flex items-center gap-1 text-white/50 text-xs glass-pill">
+                            <MapPin size={9} /> {project.city.name}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 text-white/50 text-xs">
-                        <MapPin size={11} />
-                        {project.city?.name}
-                      </div>
-                    </div>
+                    </>
                   )}
                 </div>
               </Link>
@@ -114,12 +127,13 @@ export default function NewProjects() {
         </div>
       )}
 
+      {/* Dots */}
       <div className="flex gap-2 justify-center mt-6">
         {projects.map((_, i) => (
           <button
             key={i}
             onClick={() => setActive(i)}
-            className={`transition-all duration-300 rounded-full ${i === active ? 'w-6 h-2 bg-gold' : 'w-2 h-2 bg-navy/20'}`}
+            className={`transition-all duration-300 rounded-full ${i === active ? 'w-6 h-2 bg-gold' : 'w-2 h-2 bg-navy/15 hover:bg-navy/30'}`}
           />
         ))}
       </div>

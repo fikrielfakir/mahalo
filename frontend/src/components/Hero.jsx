@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, MapPin, SlidersHorizontal } from 'lucide-react'
+import { Search, MapPin, SlidersHorizontal, BedDouble, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi } from '../api/client'
 
@@ -7,14 +7,14 @@ const tabs = ['Buy', 'Rent', 'New Projects']
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
 
 export default function Hero() {
-  const [activeTab, setActiveTab] = useState('Buy')
-  const [location, setLocation] = useState('')
+  const [activeTab, setActiveTab]       = useState('Buy')
+  const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [bedrooms, setBedrooms] = useState('Any')
-  const [categories, setCategories] = useState([])
-  const [citiesCount, setCitiesCount] = useState(null)
+  const [minPrice, setMinPrice]         = useState('')
+  const [maxPrice, setMaxPrice]         = useState('')
+  const [bedrooms, setBedrooms]         = useState('Any')
+  const [categories, setCategories]     = useState([])
+  const [citiesCount, setCitiesCount]   = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function Hero() {
       .then((res) => {
         const data = res?.data
         if (Array.isArray(data?.categories)) setCategories(data.categories)
-        if (Array.isArray(data?.cities)) setCitiesCount(data.cities.length)
+        if (Array.isArray(data?.cities))     setCitiesCount(data.cities.length)
       })
       .catch(() => {})
   }, [])
@@ -31,86 +31,111 @@ export default function Hero() {
     const params = new URLSearchParams()
     if (activeTab === 'Rent') params.set('type', 'rent')
     else if (activeTab === 'Buy') params.set('type', 'sale')
-    if (location) params.set('search', location)
-    if (propertyType) params.set('category_id', propertyType)
-    if (minPrice) params.set('min_price', minPrice)
-    if (maxPrice) params.set('max_price', maxPrice)
-    if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
+    if (location)            params.set('search', location)
+    if (propertyType)        params.set('category_id', propertyType)
+    if (minPrice)            params.set('min_price', minPrice)
+    if (maxPrice)            params.set('max_price', maxPrice)
+    if (bedrooms !== 'Any')  params.set('number_bedroom', bedrooms)
     const path = activeTab === 'New Projects' ? '/projects' : '/properties'
     navigate(`${path}?${params.toString()}`)
   }
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden">
+
+      {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&q=85&auto=format&fit=crop)`,
-            backgroundPosition: 'center 40%',
-          }}
+        <img
+          src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&q=85&auto=format&fit=crop"
+          alt="Hero background"
+          className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-navy/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-navy/70 via-navy/45 to-navy/80" />
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(200,169,126,0.12) 0%, transparent 65%)' }}
+        />
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-24 pb-16 flex flex-col items-start">
-        <div className="mb-10 animate-fade-up">
-          <p className="text-gold font-medium text-sm tracking-widest uppercase mb-4 opacity-90">
-            Premium Real Estate Platform
-          </p>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
-            Find Exceptional
-            <br />
-            Homes in{' '}
-            <span className="text-gold">Morocco</span>
-          </h1>
-          <p className="text-white/70 text-lg font-light max-w-lg">
-            Discover premium properties in the best locations across Morocco's most prestigious neighborhoods.
-          </p>
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-5 pt-28 pb-20 flex flex-col items-center text-center">
+
+        {/* Label */}
+        <div className="glass-pill mb-5 animate-fade-in">
+          ✦ Premium Real Estate Platform
         </div>
 
-        <div className="w-full max-w-4xl glass-white rounded-3xl shadow-glass p-2 animate-fade-up delay-200">
-          <div className="flex gap-1 px-2 pt-2 mb-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  activeTab === tab
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-navy/60 hover:text-navy hover:bg-navy/5'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+        {/* Heading */}
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.08] tracking-tight mb-5 animate-fade-up">
+          Find Your Dream
+          <br />
+          Home in{' '}
+          <span
+            className="relative inline-block"
+            style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text',
+              backgroundImage: 'linear-gradient(135deg, #C8A97E 0%, #e8ca9e 50%, #C8A97E 100%)' }}
+          >
+            Morocco
+          </span>
+        </h1>
+
+        <p className="text-white/65 text-lg font-light max-w-md mb-10 animate-fade-up delay-100">
+          Discover premium properties across Morocco's most prestigious neighborhoods.
+        </p>
+
+        {/* Search bar */}
+        <div className="w-full max-w-3xl animate-fade-up delay-200">
+
+          {/* Tabs */}
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex gap-1 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-250 ${
+                    activeTab === tab
+                      ? 'bg-white text-navy shadow-sm'
+                      : 'text-white/75 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 px-2 pb-2">
-            <div className="md:col-span-2 flex items-center gap-3 bg-surface rounded-2xl px-4 py-3">
-              <MapPin size={18} className="text-gold shrink-0" />
+          {/* Main search box */}
+          <div
+            className="flex flex-col md:flex-row items-stretch md:items-center gap-2 p-2 rounded-3xl shadow-glass-lg"
+            style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.75)' }}
+          >
+            {/* Location */}
+            <div className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3 rounded-2xl bg-transparent hover:bg-navy/4 transition-colors duration-200 cursor-text">
+              <MapPin size={17} className="text-gold shrink-0" />
               <div className="flex-1 min-w-0">
-                <label className="text-navy/40 text-xs font-medium block mb-0.5">Location</label>
+                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Location</label>
                 <input
                   type="text"
-                  placeholder="City, neighborhood, or area"
+                  placeholder="City or neighborhood..."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30"
+                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none placeholder-navy/30"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 bg-surface rounded-2xl px-4 py-3">
-              <SlidersHorizontal size={18} className="text-gold shrink-0" />
-              <div className="flex-1 min-w-0">
-                <label className="text-navy/40 text-xs font-medium block mb-0.5">Property Type</label>
+            <div className="hidden md:block w-px h-10 bg-navy/8 self-center shrink-0" />
+
+            {/* Property type */}
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-navy/4 transition-colors duration-200 cursor-pointer min-w-[140px]">
+              <SlidersHorizontal size={17} className="text-gold shrink-0" />
+              <div className="flex-1">
+                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Type</label>
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full text-sm font-medium text-navy bg-transparent outline-none cursor-pointer"
+                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none cursor-pointer appearance-none"
                 >
                   <option value="">All Types</option>
                   {categories.map((c) => (
@@ -120,66 +145,56 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-surface rounded-2xl px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <label className="text-navy/40 text-xs font-medium block mb-0.5">Price Range</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    placeholder="MAD 0"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-full text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30"
-                  />
-                  <span className="text-navy/30 text-xs">–</span>
-                  <input
-                    type="number"
-                    placeholder="No Max"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-full text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30"
-                  />
-                </div>
+            <div className="hidden md:block w-px h-10 bg-navy/8 self-center shrink-0" />
+
+            {/* Bedrooms */}
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-navy/4 transition-colors duration-200 cursor-pointer min-w-[120px]">
+              <BedDouble size={17} className="text-gold shrink-0" />
+              <div className="flex-1">
+                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Bedrooms</label>
+                <select
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none cursor-pointer appearance-none"
+                >
+                  {bedroomOptions.map((b) => (
+                    <option key={b} value={b}>{b === 'Any' ? 'Any' : `${b} bd`}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 bg-surface rounded-2xl px-4 py-3">
-                <div className="min-w-0">
-                  <label className="text-navy/40 text-xs font-medium block mb-0.5">Bedrooms</label>
-                  <select
-                    value={bedrooms}
-                    onChange={(e) => setBedrooms(e.target.value)}
-                    className="w-full text-sm font-medium text-navy bg-transparent outline-none cursor-pointer"
-                  >
-                    {bedroomOptions.map((b) => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <button
-                onClick={handleSearch}
-                className="w-12 h-full bg-gold hover:bg-gold-dark rounded-2xl flex items-center justify-center transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 shrink-0"
-              >
-                <Search size={20} className="text-navy" />
-              </button>
-            </div>
+            {/* Search button */}
+            <button
+              onClick={handleSearch}
+              className="flex items-center justify-center gap-2 bg-gold hover:bg-gold-dark text-navy font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-250 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
+            >
+              <Search size={17} />
+              Search
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-6 mt-10 animate-fade-up delay-300">
+        {/* Stats */}
+        <div className="flex flex-wrap justify-center gap-4 mt-10 animate-fade-up delay-300">
           {[
             { value: '15K+', label: 'Properties' },
-            { value: '8K+', label: 'Happy Clients' },
+            { value: '8K+',  label: 'Happy Clients' },
             { value: '200+', label: 'Verified Agents' },
             { value: citiesCount ? `${citiesCount}+` : '20+', label: 'Cities' },
           ].map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl px-5 py-3 flex flex-col">
-              <span className="text-white font-bold text-xl">{stat.value}</span>
-              <span className="text-white/60 text-xs font-medium">{stat.label}</span>
+            <div key={stat.label} className="glass rounded-2xl px-5 py-3 text-left min-w-[90px]">
+              <div className="text-white font-bold text-xl leading-none mb-1">{stat.value}</div>
+              <div className="text-white/55 text-xs font-medium">{stat.label}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Scroll cue */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-fade-in delay-500 z-10">
+        <div className="w-5 h-8 rounded-full border border-white/30 flex items-start justify-center pt-1.5">
+          <div className="w-1 h-2 bg-white/60 rounded-full animate-bounce" />
         </div>
       </div>
     </section>

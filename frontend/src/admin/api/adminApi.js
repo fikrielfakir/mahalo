@@ -1,0 +1,100 @@
+import axios from 'axios'
+
+const BASE = '/api/v1'
+
+const client = axios.create({
+  baseURL: BASE,
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+})
+
+client.interceptors.request.use((cfg) => {
+  const token = localStorage.getItem('admin_token')
+  if (token) cfg.headers.Authorization = `Bearer ${token}`
+  return cfg
+})
+
+client.interceptors.response.use(
+  (r) => r.data,
+  (e) => {
+    if (e.response?.status === 401) {
+      localStorage.removeItem('admin_token')
+      window.location.href = '/admin/login'
+    }
+    return Promise.reject(e?.response?.data || e)
+  }
+)
+
+export const adminAuth = {
+  login: (data) => client.post('/auth/login', data),
+  logout: () => client.post('/auth/logout'),
+  profile: () => client.get('/account/profile'),
+}
+
+export const adminStats = {
+  get: () => client.get('/admin/stats'),
+}
+
+export const adminProperties = {
+  list:    (p = {}) => client.get('/admin/properties', { params: p }),
+  get:     (id)     => client.get(`/admin/properties/${id}`),
+  create:  (d)      => client.post('/admin/properties', d),
+  update:  (id, d)  => client.put(`/admin/properties/${id}`, d),
+  delete:  (id)     => client.delete(`/admin/properties/${id}`),
+}
+
+export const adminProjects = {
+  list:    (p = {}) => client.get('/admin/projects', { params: p }),
+  get:     (id)     => client.get(`/admin/projects/${id}`),
+  create:  (d)      => client.post('/admin/projects', d),
+  update:  (id, d)  => client.put(`/admin/projects/${id}`, d),
+  delete:  (id)     => client.delete(`/admin/projects/${id}`),
+}
+
+export const adminAgents = {
+  list:    (p = {}) => client.get('/admin/agents', { params: p }),
+  get:     (id)     => client.get(`/admin/agents/${id}`),
+  create:  (d)      => client.post('/admin/agents', d),
+  update:  (id, d)  => client.put(`/admin/agents/${id}`, d),
+  delete:  (id)     => client.delete(`/admin/agents/${id}`),
+}
+
+export const adminCategories = {
+  list:   () => client.get('/admin/categories'),
+  create: (d)     => client.post('/admin/categories', d),
+  update: (id, d) => client.put(`/admin/categories/${id}`, d),
+  delete: (id)    => client.delete(`/admin/categories/${id}`),
+}
+
+export const adminFeatures = {
+  list:   () => client.get('/admin/features'),
+  create: (d)     => client.post('/admin/features', d),
+  update: (id, d) => client.put(`/admin/features/${id}`, d),
+  delete: (id)    => client.delete(`/admin/features/${id}`),
+}
+
+export const adminFacilities = {
+  list:   () => client.get('/admin/facilities'),
+  create: (d)     => client.post('/admin/facilities', d),
+  update: (id, d) => client.put(`/admin/facilities/${id}`, d),
+  delete: (id)    => client.delete(`/admin/facilities/${id}`),
+}
+
+export const adminInvestors = {
+  list:   () => client.get('/admin/investors'),
+  create: (d)     => client.post('/admin/investors', d),
+  update: (id, d) => client.put(`/admin/investors/${id}`, d),
+  delete: (id)    => client.delete(`/admin/investors/${id}`),
+}
+
+export const adminConsults = {
+  list:   (p = {}) => client.get('/admin/consults', { params: p }),
+  update: (id, d)  => client.put(`/admin/consults/${id}`, d),
+  delete: (id)     => client.delete(`/admin/consults/${id}`),
+}
+
+export const publicApi = {
+  cities:     () => client.get('/properties/filters'),
+  features:   () => client.get('/features/all'),
+  categories: () => client.get('/categories'),
+  investors:  () => client.get('/admin/investors'),
+}

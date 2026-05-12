@@ -77,10 +77,14 @@ Route::prefix('v1')->group(function () {
     });
 
     // ── Admin (Sanctum protected) ─────────────────────────────────────────────
+    // ── Media upload (no Sanctum — token is Hostinger-issued, local Laravel can't verify it)
+    Route::prefix('admin')->group(function () {
+        Route::post('/media/upload', [MediaController::class, 'upload']);
+        Route::delete('/media',      [MediaController::class, 'delete']);
+    });
+
     Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
         Route::get('/stats',                  [AdminStatsController::class,   'index']);
-        Route::post('/media/upload',          [MediaController::class,        'upload']);
-        Route::delete('/media',               [MediaController::class,        'delete']);
 
         Route::apiResource('properties',      AdminPropertyController::class);
         Route::apiResource('projects',        AdminProjectController::class);

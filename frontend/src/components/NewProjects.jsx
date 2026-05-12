@@ -76,7 +76,7 @@ export default function NewProjects() {
             return (
               <Link
                 key={project.id}
-                to={`/projects/${project.id}`}
+                to={`/projects/${project.slug}`}
                 className={`relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 ${
                   i === active ? 'w-72 md:w-80' : 'w-52 md:w-60'
                 }`}

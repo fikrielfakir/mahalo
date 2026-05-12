@@ -69,7 +69,7 @@ export default function Projects() {
                   return (
                     <Link
                       key={project.id}
-                      to={`/projects/${project.id}`}
+                      to={`/projects/${project.slug}`}
                       className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
                     >
                       <div className="aspect-video overflow-hidden relative">

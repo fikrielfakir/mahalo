@@ -29,8 +29,20 @@ class ProjectSeeder extends BaseSeeder
         DB::table('re_facilities_distances')->where('reference_type', Project::class)->delete();
 
         $users = User::query()->pluck('id');
+        if ($users->isEmpty()) {
+            $adminUser = User::query()->create([
+                'first_name' => 'Admin',
+                'last_name' => 'User',
+                'email' => 'admin@homzen.com',
+                'password' => bcrypt('password'),
+                'username' => 'admin',
+                'super_user' => true,
+            ]);
+            $users = collect([$adminUser->id]);
+        }
         $categories = Category::query()->pluck('id');
         $investors = Investor::query()->pluck('id');
+        $hasInvestors = $investors->isNotEmpty();
         $features = Feature::query()->pluck('id');
         $featuresCount = $features->count();
         $facilitiesCount = Facility::query()->count();
@@ -110,7 +122,7 @@ class ProjectSeeder extends BaseSeeder
                 'content' => $contents[array_rand($contents)],
                 'images' => $images,
                 'location' => $locations[array_rand($locations)],
-                'investor_id' => $investors->random(),
+                'investor_id' => $hasInvestors ? $investors->random() : null,
                 'number_block' => rand(1, 10),
                 'number_floor' => rand(1, 50),
                 'number_flat' => rand(10, 5000),
@@ -131,8 +143,13 @@ class ProjectSeeder extends BaseSeeder
                 'author_type' => User::class,
             ]);
 
-            $project->categories()->attach($categories->random(rand(1, 3)));
-            $project->features()->attach($features->random(rand($featuresCount - 8, $featuresCount)));
+            if ($categories->isNotEmpty()) {
+                $project->categories()->attach($categories->random(min(rand(1, 3), $categories->count())));
+            }
+            if ($features->isNotEmpty()) {
+                $count = min(rand(max(1, $featuresCount - 8), $featuresCount), $features->count());
+                $project->features()->attach($features->random($count));
+            }
 
             foreach (range(1, $facilitiesCount) as $facilityId) {
                 $distance = sprintf('%skm', rand(1, 20));

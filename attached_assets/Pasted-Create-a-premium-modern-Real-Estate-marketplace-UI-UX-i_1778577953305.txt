@@ -1,0 +1,135 @@
+Create a premium modern Real Estate marketplace UI/UX inspired by luxury architecture magazines and high-end SaaS products.
+The design must feel elegant, minimal, trustworthy, and modern — far more refined than traditional classified websites.
+Focus on clean spacing, large visuals, smooth typography, and premium interactions.
+
+Style Direction:
+
+Minimal luxury aesthetic
+Modern glassmorphism + soft shadows
+Editorial-style layout
+Airbnb + Apple + ArchDaily inspiration
+Spacious sections with breathing room
+Smooth rounded corners (20px–28px)
+Elegant animations and hover effects
+Avoid clutter, too many borders, or crowded cards
+
+Color Palette:
+
+Deep navy #0B1F3A
+Pure white #FFFFFF
+Soft beige #F6F3EE
+Luxury gold accents #C8A97E
+Light gray backgrounds #F8F9FB
+Soft gradients with subtle blur effects
+
+Typography:
+
+Modern sans-serif (Inter / Satoshi / General Sans)
+Large bold hero titles
+Elegant spacing between headings and content
+Minimal text, visually driven interface
+
+Homepage Layout:
+
+Hero Section
+Fullscreen cinematic real estate background video/image
+Floating transparent search bar
+Advanced property search with:
+Buy / Rent / New Projects tabs
+Location autocomplete
+Budget range
+Property type
+Large headline:
+“Find Exceptional Homes in Morocco”
+Elegant CTA buttons
+Floating stats cards with blur background
+Featured Properties
+Large premium property cards
+Masonry/grid layout
+Edge-to-edge property images
+Floating badges:
+Featured
+New
+Verified
+Card hover animation:
+image zoom
+soft glow
+smooth elevation
+Display:
+price
+location
+bedrooms
+size
+Save/Favorite heart button
+Luxury Neighborhoods
+Interactive city cards
+Casablanca, Marrakech, Rabat, Tangier
+Full image background with dark overlay
+Modern typography over image
+Smooth carousel with snap scrolling
+New Projects Section
+Premium horizontal slider
+Modern architectural project showcase
+Large project thumbnails
+Developer branding
+Elegant dark mode cards
+Mobile App Promotion
+Floating iPhone mockup
+Gradient background
+QR code card
+Minimal clean CTA
+Real Estate Agents Section
+Modern profile cards
+Circular portraits
+Ratings and verified badges
+Clean white cards with shadow depth
+Footer
+Ultra clean multi-column layout
+Minimal links
+Soft separators
+Dark luxury background
+
+UI Components:
+
+Floating navbar with blur background
+Sticky transparent navigation
+Rounded search fields
+Modern dropdown filters
+Skeleton loading states
+Elegant micro-interactions
+Smooth transitions (300ms ease)
+Premium empty states
+Interactive map preview
+
+Card Design:
+
+Large image ratio 4:5
+Rounded corners 24px
+Minimal info overlay
+Transparent glass bottom panel
+Elegant typography hierarchy
+Hover reveals additional details
+
+Mobile Design:
+
+Native-app feeling
+Bottom navigation
+Swipe gestures
+Floating search action
+Full-width immersive cards
+Modern responsive behavior
+
+Avoid:
+
+Old classified website look
+Too many borders
+Dense layouts
+Tiny text
+Excessive colors
+Heavy gradients
+Cluttered filters
+Cheap marketplace aesthetic
+
+Desired Feeling:
+“Luxury real estate platform for the next generation”
+clean • premium • emotional • architectural • elegant • immersive • trustworthy

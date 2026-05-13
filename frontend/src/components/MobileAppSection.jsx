@@ -2,100 +2,110 @@ import { Smartphone, Apple, Play } from 'lucide-react'
 
 export default function MobileAppSection() {
   return (
-    <section className="py-16 px-5">
-      <div className="max-w-7xl mx-auto">
-        {/* Outer wrapper — overflow visible so phone can poke out */}
-        <div className="relative" style={{ paddingBottom: '60px' }}>
+    <section style={{ padding: '80px 20px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', position: 'relative' }}>
 
-          {/* Dark card */}
-          <div
-            className="relative rounded-3xl overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, #0d0105 0%, #1a0208 30%, #2a0410 60%, #1a0208 100%)',
-              minHeight: '320px',
-            }}
-          >
-            {/* Glow orbs */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute rounded-full" style={{ top: '-20%', left: '-5%', width: '55%', height: '140%', background: 'radial-gradient(circle, rgba(186,25,50,0.32) 0%, transparent 65%)', filter: 'blur(55px)' }} />
-              <div className="absolute rounded-full" style={{ bottom: '-30%', right: '20%', width: '40%', height: '80%', background: 'radial-gradient(circle, rgba(115,13,38,0.22) 0%, transparent 65%)', filter: 'blur(40px)' }} />
-              <div className="absolute rounded-full" style={{ top: '0%', right: '0%', width: '50%', height: '100%', background: 'radial-gradient(circle, rgba(186,25,50,0.14) 0%, transparent 65%)', filter: 'blur(40px)' }} />
-            </div>
-
-            {/* Text content */}
-            <div className="relative z-10 pl-10 lg:pl-14 py-12 pr-6" style={{ maxWidth: '380px' }}>
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 mb-6" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '999px', padding: '5px 14px' }}>
-                <Smartphone size={12} style={{ color: '#BA1932' }} />
-                <span className="text-white/65 text-[10px] font-bold uppercase tracking-widest">Agentz Mobile App</span>
-              </div>
-
-              {/* Heading */}
-              <h2 className="font-bold text-white leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', letterSpacing: '-0.01em' }}>
-                Your next home<br />
-                <span style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text', backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 60%, #BA1932 100%)' }}>
-                  is in your hands
-                </span>
-              </h2>
-
-              <p className="text-white/45 text-sm leading-relaxed mb-8" style={{ maxWidth: '270px' }}>
-                Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.
-              </p>
-
-              {/* Store buttons */}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  className="flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.20)', borderRadius: '14px', padding: '10px 18px' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                >
-                  <Apple size={20} className="text-white" />
-                  <div className="text-left">
-                    <div className="text-white/45 text-[10px] leading-none mb-0.5">Download on the</div>
-                    <div className="text-white text-sm font-bold">App Store</div>
-                  </div>
-                </button>
-
-                <button
-                  className="flex items-center gap-3 transition-all duration-200 hover:-translate-y-0.5"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.20)', borderRadius: '14px', padding: '10px 18px' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                >
-                  <Play size={18} className="text-white fill-white" />
-                  <div className="text-left">
-                    <div className="text-white/45 text-[10px] leading-none mb-0.5">GET IT ON</div>
-                    <div className="text-white text-sm font-bold">Google Play</div>
-                  </div>
-                </button>
-              </div>
-            </div>
+        {/* ── Dark luxury card ── */}
+        <div
+          style={{
+            position: 'relative',
+            borderRadius: '28px',
+            overflow: 'hidden',
+            minHeight: '320px',
+            background: 'linear-gradient(120deg, #070003 0%, #130108 25%, #1e020c 50%, #2b0411 70%, #1a0208 100%)',
+          }}
+        >
+          {/* Glow orbs */}
+          <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+            <div style={{ position:'absolute', top:'-40%', left:'-10%', width:'60%', height:'180%', background:'radial-gradient(ellipse, rgba(186,25,50,0.40) 0%, transparent 60%)', filter:'blur(60px)' }} />
+            <div style={{ position:'absolute', top:'10%', left:'30%', width:'45%', height:'100%', background:'radial-gradient(ellipse, rgba(115,13,38,0.30) 0%, transparent 60%)', filter:'blur(50px)' }} />
+            <div style={{ position:'absolute', top:'-20%', right:'-5%', width:'40%', height:'120%', background:'radial-gradient(ellipse, rgba(186,25,50,0.18) 0%, transparent 60%)', filter:'blur(44px)' }} />
+            {/* Glossy top highlight */}
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:'1px', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.10) 60%, transparent)' }} />
+            {/* Bottom vignette */}
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:'40%', background:'linear-gradient(to top, rgba(7,0,3,0.65), transparent)' }} />
           </div>
 
-          {/* Phone mockup — positioned outside overflow-hidden card so it can overflow */}
-          <div
-            className="hidden md:block absolute"
-            style={{
-              right: '2%',
-              bottom: '0px',
-              width: '58%',
-              maxWidth: '680px',
-              pointerEvents: 'none',
-            }}
-          >
-            <img
-              src="/app-mockup.png"
-              alt="Agentz Mobile App"
-              style={{
-                width: '100%',
-                height: 'auto',
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 30px 60px rgba(115,13,38,0.55))',
-              }}
-            />
+          {/* Text content */}
+          <div style={{ position:'relative', zIndex:10, padding:'56px 52px 56px 52px', maxWidth:'420px' }}>
+            {/* Badge */}
+            <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', marginBottom:'24px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:'999px', padding:'6px 16px', backdropFilter:'blur(12px)' }}>
+              <Smartphone size={11} color="#BA1932" />
+              <span style={{ color:'rgba(255,255,255,0.60)', fontSize:'10px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em' }}>Agentz Mobile App</span>
+            </div>
+
+            {/* Heading */}
+            <h2 style={{ fontFamily:"'Plus Jakarta Sans', Inter, sans-serif", fontSize:'clamp(2rem, 3.5vw, 2.8rem)', fontWeight:800, color:'#fff', lineHeight:1.15, letterSpacing:'-0.02em', marginBottom:'18px', textShadow:'0 2px 40px rgba(186,25,50,0.20)' }}>
+              Your next home<br />
+              <span style={{ WebkitTextFillColor:'transparent', WebkitBackgroundClip:'text', backgroundClip:'text', backgroundImage:'linear-gradient(130deg, #BA1932 0%, #f07088 55%, #BA1932 100%)' }}>
+                is in your hands
+              </span>
+            </h2>
+
+            <p style={{ color:'rgba(255,255,255,0.40)', fontSize:'14px', lineHeight:1.75, marginBottom:'36px', maxWidth:'255px', letterSpacing:'0.01em' }}>
+              Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.
+            </p>
+
+            {/* Store buttons */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:'12px' }}>
+              {[
+                { icon: <Apple size={20} color="#fff" />, sub: 'Download on the', label: 'App Store' },
+                { icon: <Play size={17} color="#fff" fill="#fff" />, sub: 'GET IT ON', label: 'Google Play' },
+              ].map(({ icon, sub, label }) => (
+                <button
+                  key={label}
+                  style={{ display:'flex', alignItems:'center', gap:'12px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:'14px', padding:'11px 20px', backdropFilter:'blur(16px)', boxShadow:'0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)', cursor:'pointer', transition:'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.28)'; e.currentTarget.style.transform='translateY(-2px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.18)'; e.currentTarget.style.transform='translateY(0)' }}
+                >
+                  {icon}
+                  <div style={{ textAlign:'left' }}>
+                    <div style={{ color:'rgba(255,255,255,0.40)', fontSize:'10px', lineHeight:1, marginBottom:'3px', fontWeight:500 }}>{sub}</div>
+                    <div style={{ color:'#fff', fontSize:'14px', fontWeight:700, letterSpacing:'-0.01em' }}>{label}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* ── Phone mockup — sibling of card, positioned to overflow top & bottom ── */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-60px',
+            right: '2%',
+            bottom: '-60px',
+            width: '54%',
+            maxWidth: '640px',
+            pointerEvents: 'none',
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {/* Ambient glow behind phone */}
+          <div style={{ position:'absolute', inset:'0 10%', background:'radial-gradient(ellipse at center, rgba(186,25,50,0.28) 0%, transparent 65%)', filter:'blur(35px)' }} />
+
+          {/* Phone image */}
+          <img
+            src="/app-mockup.png"
+            alt="Agentz Mobile App"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 40px 80px rgba(115,13,38,0.70)) drop-shadow(0 12px 32px rgba(0,0,0,0.55))',
+              zIndex: 1,
+            }}
+          />
+
+          {/* Floor reflection glow */}
+          <div style={{ position:'absolute', bottom:'-10px', left:'20%', right:'20%', height:'28px', background:'radial-gradient(ellipse, rgba(186,25,50,0.30) 0%, transparent 70%)', filter:'blur(14px)' }} />
+        </div>
+
       </div>
     </section>
   )

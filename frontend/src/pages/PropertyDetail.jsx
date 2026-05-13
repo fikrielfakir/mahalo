@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
+import MortgageCalculator from '../components/MortgageCalculator'
+import SimilarProperties from '../components/SimilarProperties'
+import { trackRecentlyViewed } from '../components/RecentlyViewed'
+import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
 
 const FAVORITES_KEY = 'homzen_favorites'
@@ -68,6 +72,7 @@ export default function PropertyDetail() {
         setProperty(p)
         if (p) {
           setLiked(getFavorites().includes(p.id))
+          trackRecentlyViewed(p)
           propertiesApi.reviews(p.id)
             .then(r => setReviews(Array.isArray(r?.data) ? r.data : []))
             .catch(() => setReviews([]))
@@ -387,7 +392,7 @@ export default function PropertyDetail() {
             </div>
 
             {/* Contact Sidebar */}
-            <div>
+            <div className="space-y-4">
               <div className="bg-white rounded-3xl p-6 shadow-card sticky top-24">
                 <h3 className="text-navy font-bold text-lg mb-5">Contact Agent</h3>
                 {property.agent && (
@@ -444,8 +449,16 @@ export default function PropertyDetail() {
                   </div>
                 )}
               </div>
+
+              {/* Mortgage Calculator */}
+              {property.price && (
+                <MortgageCalculator price={parseFloat(property.price)} />
+              )}
             </div>
           </div>
+
+          {/* Similar Properties */}
+          <SimilarProperties property={property} />
         </div>
       </div>
       <Footer />

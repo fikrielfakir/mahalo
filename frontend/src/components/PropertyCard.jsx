@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck } from 'lucide-react'
+import { Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck, BarChart2, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useCompare } from '../context/CompareContext'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 const FAVORITES_KEY = 'homzen_favorites'
@@ -31,26 +32,30 @@ function formatPrice(price, isRent) {
 }
 
 export default function PropertyCard({ property, className = '' }) {
-  const [liked, setLiked] = useState(() => getFavorites().includes(property?.id))
+  const [liked, setLiked]       = useState(() => getFavorites().includes(property?.id))
   const [imgError, setImgError] = useState(false)
+  const { toggle, isIn, isFull } = useCompare()
 
   if (!property) return null
 
-  const slug   = property.slug || property.id
-  const isRent = property.type === 'rent'
-  const badge  = property.is_featured ? 'Featured' : null
+  const slug    = property.slug || property.id
+  const isRent  = property.type === 'rent'
+  const badge   = property.is_featured ? 'Featured' : null
+  const inCmp   = isIn(property.id)
 
   const handleLike = (e) => {
     e.preventDefault()
     const favs = getFavorites()
-    let next
-    if (favs.includes(property.id)) {
-      next = favs.filter(f => f !== property.id)
-    } else {
-      next = [...favs, property.id]
-    }
+    const next = favs.includes(property.id)
+      ? favs.filter(f => f !== property.id)
+      : [...favs, property.id]
     saveFavorites(next)
     setLiked(next.includes(property.id))
+  }
+
+  const handleCompare = (e) => {
+    e.preventDefault()
+    toggle(property)
   }
 
   return (
@@ -85,14 +90,33 @@ export default function PropertyCard({ property, className = '' }) {
           )}
         </div>
 
-        <button
-          onClick={handleLike}
-          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-250 ${
-            liked ? 'bg-red-500 shadow-lg scale-110' : 'bg-white/85 backdrop-blur-sm hover:bg-white hover:scale-110'
-          }`}
-        >
-          <Heart size={14} className={liked ? 'fill-white text-white' : 'text-navy/60'} />
-        </button>
+        {/* Action buttons */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+          <button
+            onClick={handleLike}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-250 ${
+              liked ? 'bg-red-500 shadow-lg scale-110' : 'bg-white/85 backdrop-blur-sm hover:bg-white hover:scale-110'
+            }`}
+          >
+            <Heart size={14} className={liked ? 'fill-white text-white' : 'text-navy/60'} />
+          </button>
+          <button
+            onClick={handleCompare}
+            title={inCmp ? 'Remove from compare' : isFull ? 'Max 3 properties' : 'Add to compare'}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-250 ${
+              inCmp
+                ? 'bg-gold shadow-lg scale-110'
+                : isFull
+                  ? 'bg-white/50 backdrop-blur-sm cursor-not-allowed'
+                  : 'bg-white/85 backdrop-blur-sm hover:bg-white hover:scale-110'
+            }`}
+          >
+            {inCmp
+              ? <Check size={13} className="text-white" />
+              : <BarChart2 size={13} className="text-navy/60" />
+            }
+          </button>
+        </div>
 
         <div className="absolute bottom-3 left-3">
           <div className="flex items-baseline gap-1">

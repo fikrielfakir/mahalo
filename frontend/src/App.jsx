@@ -9,6 +9,9 @@ import ProjectDetail from './pages/ProjectDetail'
 import AgentDetail from './pages/AgentDetail'
 import About from './pages/About'
 import ListProperty from './pages/ListProperty'
+import WhatsAppButton from './components/WhatsAppButton'
+import CompareBar from './components/CompareBar'
+import { CompareProvider } from './context/CompareContext'
 
 // Admin
 import { AuthProvider } from './admin/context/AuthContext'
@@ -31,45 +34,51 @@ import SettingsPage from './admin/pages/SettingsPage'
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public site */}
-          <Route path="/" element={<Home />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/properties/:slug" element={<PropertyDetail />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:slug" element={<ProjectDetail />} />
-          <Route path="/neighborhoods" element={<Neighborhoods />} />
-          <Route path="/agents" element={<Agents />} />
-          <Route path="/agents/:id" element={<AgentDetail />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/list-property" element={<ListProperty />} />
+      <CompareProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public site */}
+            <Route path="/" element={<Home />} />
+            <Route path="/properties" element={<Properties />} />
+            <Route path="/properties/:slug" element={<PropertyDetail />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:slug" element={<ProjectDetail />} />
+            <Route path="/neighborhoods" element={<Neighborhoods />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="/agents/:id" element={<AgentDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/list-property" element={<ListProperty />} />
 
-          {/* Admin login (no auth required) */}
-          <Route path="/admin/login" element={<LoginPage />} />
+            {/* Admin login (no auth required) */}
+            <Route path="/admin/login" element={<LoginPage />} />
 
-          {/* Admin dashboard (auth-protected) */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard"  element={<Dashboard />} />
-            <Route path="properties" element={<PropertiesPage />} />
-            <Route path="projects"   element={<ProjectsPage />} />
-            <Route path="agents"     element={<AgentsPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="features"   element={<FeaturesPage />} />
-            <Route path="facilities" element={<FacilitiesPage />} />
-            <Route path="investors"  element={<InvestorsPage />} />
-            <Route path="cities"     element={<CitiesPage />} />
-            <Route path="consults"   element={<ConsultsPage />} />
-            <Route path="media"      element={<MediaPage />} />
-            <Route path="users"      element={<UsersPage />} />
-            <Route path="settings"   element={<SettingsPage />} />
-          </Route>
+            {/* Admin dashboard (auth-protected) */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard"  element={<Dashboard />} />
+              <Route path="properties" element={<PropertiesPage />} />
+              <Route path="projects"   element={<ProjectsPage />} />
+              <Route path="agents"     element={<AgentsPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="features"   element={<FeaturesPage />} />
+              <Route path="facilities" element={<FacilitiesPage />} />
+              <Route path="investors"  element={<InvestorsPage />} />
+              <Route path="cities"     element={<CitiesPage />} />
+              <Route path="consults"   element={<ConsultsPage />} />
+              <Route path="media"      element={<MediaPage />} />
+              <Route path="users"      element={<UsersPage />} />
+              <Route path="settings"   element={<SettingsPage />} />
+            </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+
+          {/* Global overlays — only on public pages */}
+          <WhatsAppButton />
+          <CompareBar />
+        </AuthProvider>
+      </CompareProvider>
     </BrowserRouter>
   )
 }

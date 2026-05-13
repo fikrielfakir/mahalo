@@ -1,6 +1,7 @@
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import FeaturedProperties from '../components/FeaturedProperties'
+import RecentlyViewed from '../components/RecentlyViewed'
 import NeighborhoodsSection from '../components/NeighborhoodsSection'
 import NewProjects from '../components/NewProjects'
 import MobileAppSection from '../components/MobileAppSection'
@@ -13,6 +14,7 @@ export default function Home() {
       <Navbar transparent />
       <Hero />
       <FeaturedProperties />
+      <RecentlyViewed />
       <NeighborhoodsSection />
       <NewProjects />
       <MobileAppSection />

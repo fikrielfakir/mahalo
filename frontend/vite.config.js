@@ -13,23 +13,15 @@ export default defineConfig(({ mode }) => {
       port: 5000,
       allowedHosts: true,
       proxy: {
-        // Media uploads go to local Laravel — must be before /api
-        '/api/v1/admin/media': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false,
-        },
-        // All other API calls go to the configured backend (Hostinger)
         '/api': {
           target: apiUrl,
           changeOrigin: true,
           secure: isExternal,
         },
-        // Storage files served from local Laravel (seeded images + new uploads)
         '/storage': {
-          target: 'http://localhost:8000',
+          target: apiUrl,
           changeOrigin: true,
-          secure: false,
+          secure: isExternal,
         },
       },
     },

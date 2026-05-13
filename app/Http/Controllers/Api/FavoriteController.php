@@ -31,7 +31,7 @@ class FavoriteController extends Controller
             ->pluck('property_id');
 
         $properties = Property::whereIn('id', $propertyIds)
-            ->with(['city', 'category'])
+            ->with(['city', 'categories'])
             ->get()
             ->sortBy(fn($p) => array_search($p->id, $propertyIds->toArray()))
             ->values();

@@ -74,19 +74,27 @@ export default function Navbar({ transparent = false }) {
 
         {/* Desktop nav links */}
         <div className="hidden lg:flex items-center gap-0.5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              to={link.to}
-              className={`nav-pill transition-all duration-200 ${
-                isTransparent
-                  ? 'text-white/85 hover:text-white hover:bg-white/12'
-                  : 'text-navy/65 hover:text-navy hover:bg-navy/6'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.to || location.pathname + location.search === link.to
+            return (
+              <Link
+                key={link.label}
+                to={link.to}
+                className={`nav-pill relative transition-all duration-200 ${
+                  isTransparent
+                    ? 'text-white/85 hover:text-white hover:bg-white/12'
+                    : isActive
+                      ? 'text-navy font-semibold'
+                      : 'text-navy/65 hover:text-navy hover:bg-navy/6'
+                }`}
+              >
+                {link.label}
+                {!isTransparent && isActive && (
+                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-gold" />
+                )}
+              </Link>
+            )
+          })}
         </div>
 
         {/* Right actions */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, MapPin, SlidersHorizontal, BedDouble, ChevronDown } from 'lucide-react'
+import { Search, MapPin, SlidersHorizontal, BedDouble } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 
@@ -74,14 +74,24 @@ export default function Hero() {
           alt="Hero background"
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/75" />
+        {/* Luxury cinematic overlay */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(115,13,38,0.82) 0%, rgba(0,0,0,0.55) 100%)' }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+      </div>
+
+      {/* Floating ambient glow orbs */}
+      <div className="absolute inset-0 z-1 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 animate-pulse-glow"
+          style={{ background: 'radial-gradient(circle, #BA1932 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full opacity-15 animate-pulse-glow"
+          style={{ background: 'radial-gradient(circle, #730D26 0%, transparent 70%)', filter: 'blur(32px)', animationDelay: '1.5s' }} />
       </div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto px-5 pt-28 pb-20 flex flex-col items-center text-center">
 
         {/* Label */}
-        <div className="glass-pill mb-5 animate-fade-in">
+        <div className="glass-pill mb-6 animate-fade-in">
           ✦ Premium Real Estate Platform
         </div>
 
@@ -93,7 +103,7 @@ export default function Hero() {
           <span
             className="relative inline-block"
             style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text',
-              backgroundImage: 'linear-gradient(135deg, #111111 0%, #555555 50%, #111111 100%)' }}
+              backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 50%, #BA1932 100%)' }}
           >
             Morocco
           </span>
@@ -115,9 +125,10 @@ export default function Hero() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-250 ${
                     activeTab === tab
-                      ? 'bg-white text-navy shadow-sm'
+                      ? 'text-white shadow-sm'
                       : 'text-white/75 hover:text-white hover:bg-white/10'
                   }`}
+                  style={activeTab === tab ? { background: 'linear-gradient(135deg, #730D26, #BA1932)' } : {}}
                 >
                   {tab}
                 </button>
@@ -127,8 +138,14 @@ export default function Hero() {
 
           {/* Main search box */}
           <div
-            className="flex flex-col md:flex-row items-stretch md:items-center gap-2 p-2 rounded-3xl shadow-glass-lg"
-            style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.75)' }}
+            className="flex flex-col md:flex-row items-stretch md:items-center gap-2 p-2 rounded-3xl"
+            style={{
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(32px)',
+              WebkitBackdropFilter: 'blur(32px)',
+              border: '1px solid rgba(255,255,255,0.80)',
+              boxShadow: '0 20px 60px rgba(115,13,38,0.25), 0 4px 16px rgba(0,0,0,0.12)'
+            }}
           >
             {/* Location */}
             <div className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3 rounded-2xl bg-transparent hover:bg-navy/4 transition-colors duration-200 cursor-text">
@@ -188,7 +205,13 @@ export default function Hero() {
             {/* Search button */}
             <button
               onClick={handleSearch}
-              className="flex items-center justify-center gap-2 bg-gold hover:bg-gold-dark text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-250 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
+              className="flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
+              style={{
+                background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
+                boxShadow: '0 4px 20px rgba(186,25,50,0.40)'
+              }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 28px rgba(186,25,50,0.55)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
             >
               <Search size={17} />
               Search

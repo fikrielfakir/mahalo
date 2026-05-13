@@ -6,12 +6,12 @@ import Footer from '../components/Footer'
 import { agentsApi } from '../api/client'
 
 const AVATAR_COLORS = [
-  'linear-gradient(135deg,#111111,#333333)',
-  'linear-gradient(135deg,#2a2a2a,#555555)',
-  'linear-gradient(135deg,#1a1a1a,#444444)',
-  'linear-gradient(135deg,#333333,#666666)',
-  'linear-gradient(135deg,#000000,#2a2a2a)',
-  'linear-gradient(135deg,#222222,#555555)',
+  'linear-gradient(135deg,#730D26,#BA1932)',
+  'linear-gradient(135deg,#BA1932,#d01e38)',
+  'linear-gradient(135deg,#4f0919,#730D26)',
+  'linear-gradient(135deg,#9b1232,#BA1932)',
+  'linear-gradient(135deg,#730D26,#9b1232)',
+  'linear-gradient(135deg,#BA1932,#730D26)',
 ]
 
 export default function Agents() {

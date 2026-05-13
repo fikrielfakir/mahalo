@@ -1,6 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, Upload, CheckCircle, ArrowRight, Phone, Mail, User, MapPin, Bed, Bath, Maximize2, DollarSign, FileText, Building2 } from 'lucide-react'
+import axios from 'axios'
+import {
+  Home, CheckCircle, ArrowRight, Phone, Mail, User,
+  MapPin, Bed, Bath, Maximize2, DollarSign, FileText,
+  Building2, Upload, X, Video, AlertCircle, Image,
+} from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
@@ -21,10 +26,197 @@ const BENEFITS = [
   { icon: CheckCircle, text: 'Free professional consultation' },
 ]
 
+const IMAGE_MAX = 20 * 1024 * 1024
+const VIDEO_MAX = 100 * 1024 * 1024
+
+function ProgressBar({ pct, name }) {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-navy/70 truncate mb-1">{name}</p>
+        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gold rounded-full transition-all duration-200"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+      <span className="text-xs font-semibold text-gold shrink-0">{pct}%</span>
+    </div>
+  )
+}
+
+function MediaThumb({ file, onRemove }) {
+  const isVideo = file.mime?.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(file.url || '')
+  return (
+    <div className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
+      {isVideo ? (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
+          <Video size={22} className="text-gray-400" />
+          <span className="text-[9px] text-gray-300 px-1 text-center truncate w-full">
+            {file.name}
+          </span>
+        </div>
+      ) : (
+        <img
+          src={file.previewUrl || (file.url ? `/storage/${file.url}` : '')}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+      )}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none" />
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow hover:bg-red-600"
+      >
+        <X size={11} />
+      </button>
+    </div>
+  )
+}
+
+function MediaUploader({ files, onChange }) {
+  const [uploading, setUploading] = useState([])
+  const [errors, setErrors] = useState([])
+  const [dragging, setDragging] = useState(false)
+  const inputRef = useRef()
+  const filesRef = useRef(files)
+  filesRef.current = files
+
+  const addError = (msg) => {
+    setErrors(prev => [...prev, msg])
+    setTimeout(() => setErrors(prev => prev.slice(1)), 5000)
+  }
+
+  const uploadFile = useCallback(async (file) => {
+    const isVideo = file.type.startsWith('video/')
+    const isImage = file.type.startsWith('image/')
+
+    if (!isImage && !isVideo) return
+    if (isImage && file.size > IMAGE_MAX) { addError(`${file.name}: images must be under 20 MB`); return }
+    if (isVideo && file.size > VIDEO_MAX) { addError(`${file.name}: videos must be under 100 MB`); return }
+
+    const id = Math.random().toString(36).slice(2)
+    const previewUrl = isImage ? URL.createObjectURL(file) : null
+    setUploading(prev => [...prev, { id, name: file.name, pct: 0 }])
+
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('folder', isVideo ? 'videos' : 'media')
+
+    try {
+      const res = await axios.post('/api/v1/admin/media/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (e) => {
+          const pct = Math.round((e.loaded / e.total) * 100)
+          setUploading(prev => prev.map(u => u.id === id ? { ...u, pct } : u))
+        },
+      })
+      const path = res.data?.path
+      const mime = file.type
+      if (path) {
+        onChange([...filesRef.current, { path, name: file.name, mime, previewUrl, url: path }])
+      }
+    } catch {
+      addError(`Failed to upload ${file.name}. Please try again.`)
+    } finally {
+      setUploading(prev => prev.filter(u => u.id !== id))
+    }
+  }, [onChange])
+
+  const handleFiles = useCallback((fileList) => {
+    Array.from(fileList).forEach(uploadFile)
+  }, [uploadFile])
+
+  const onDrop = (e) => {
+    e.preventDefault()
+    setDragging(false)
+    handleFiles(e.dataTransfer.files)
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Thumbnails */}
+      {files.length > 0 && (
+        <div className="grid grid-cols-4 gap-2">
+          {files.map((f, i) => (
+            <MediaThumb
+              key={f.path}
+              file={f}
+              onRemove={() => onChange(files.filter((_, idx) => idx !== i))}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Upload progress */}
+      {uploading.length > 0 && (
+        <div className="space-y-2">
+          {uploading.map(u => <ProgressBar key={u.id} name={u.name} pct={u.pct} />)}
+        </div>
+      )}
+
+      {/* Errors */}
+      {errors.map((err, i) => (
+        <div key={i} className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+          <AlertCircle size={13} className="shrink-0" />
+          {err}
+        </div>
+      ))}
+
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        onClick={() => inputRef.current?.click()}
+        className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center py-8 cursor-pointer transition-all select-none ${
+          dragging
+            ? 'border-gold bg-gold/5'
+            : 'border-gray-200 hover:border-gold/50 hover:bg-gray-50'
+        }`}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Image size={20} className={dragging ? 'text-gold' : 'text-navy/25'} />
+          <Video size={20} className={dragging ? 'text-gold' : 'text-navy/25'} />
+        </div>
+        <p className="text-sm font-medium text-navy/50">
+          {dragging ? 'Drop files to upload' : 'Drag & drop photos or videos'}
+        </p>
+        <p className="text-xs text-navy/30 mt-1">
+          JPG, PNG, WEBP up to 20 MB · MP4, MOV, WEBM up to 100 MB
+        </p>
+        <button
+          type="button"
+          className="mt-3 px-4 py-1.5 text-xs font-semibold text-gold border border-gold/30 rounded-xl hover:bg-gold/5 transition-colors"
+        >
+          Browse files
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*,video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska"
+          multiple
+          className="hidden"
+          onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
+        />
+      </div>
+
+      {files.length > 0 && (
+        <p className="text-xs text-navy/35">
+          {files.length} file{files.length !== 1 ? 's' : ''} attached · hover a thumbnail to remove
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function ListProperty() {
-  const [form, setForm]           = useState(EMPTY)
+  const [form, setForm]             = useState(EMPTY)
+  const [mediaFiles, setMediaFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted]   = useState(false)
   const { toast, show: showToast, hide: hideToast } = useToast()
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -37,6 +229,7 @@ export default function ListProperty() {
     }
     setSubmitting(true)
     try {
+      const mediaList = mediaFiles.map(f => f.path).join(', ')
       const message = [
         `Property listing request from ${form.name}`,
         `Type: ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
@@ -48,6 +241,7 @@ export default function ListProperty() {
         form.size && `Size: ${form.size} m²`,
         form.price && `Price: ${form.price} MAD`,
         form.description && `Details: ${form.description}`,
+        mediaFiles.length > 0 && `Attached files: ${mediaList}`,
       ].filter(Boolean).join('\n')
 
       await consultsApi.store({
@@ -145,7 +339,7 @@ export default function ListProperty() {
                   <Link to="/properties" className="btn-gold flex items-center gap-2">
                     Browse Properties <ArrowRight size={15} />
                   </Link>
-                  <button onClick={() => { setSubmitted(false); setForm(EMPTY) }} className="btn-outline">
+                  <button onClick={() => { setSubmitted(false); setForm(EMPTY); setMediaFiles([]) }} className="btn-outline">
                     Submit Another
                   </button>
                 </div>
@@ -257,11 +451,12 @@ export default function ListProperty() {
                     </div>
                   </div>
 
-                  {/* Photo upload note */}
-                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center">
-                    <Upload size={24} className="text-navy/25 mx-auto mb-2" />
-                    <p className="text-navy/40 text-sm font-medium">Photos can be shared with your agent directly</p>
-                    <p className="text-navy/30 text-xs mt-1">WhatsApp or email — they'll guide you through it</p>
+                  {/* Media upload */}
+                  <div>
+                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">
+                      Photos & Videos <span className="normal-case font-normal">(optional)</span>
+                    </p>
+                    <MediaUploader files={mediaFiles} onChange={setMediaFiles} />
                   </div>
 
                   <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 py-4 text-base">

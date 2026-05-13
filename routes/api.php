@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\UserListingController;
 use App\Http\Controllers\Api\Admin\AdminAgentController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\Admin\AdminCityController;
@@ -83,6 +84,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/properties/{property_id}/reviews',      [ReviewController::class, 'store']);
         Route::put('/reviews/{id}',                           [ReviewController::class, 'update']);
         Route::delete('/reviews/{id}',                        [ReviewController::class, 'destroy']);
+
+        // User property listings
+        Route::get('/account/my-listings',  [UserListingController::class, 'index']);
+        Route::post('/account/listings',    [UserListingController::class, 'store']);
     });
 
     // ── Admin: Media (no Sanctum for upload — proxied through Vite in dev)
@@ -97,6 +102,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/stats',                  [AdminStatsController::class,   'index']);
 
         Route::apiResource('properties',      AdminPropertyController::class);
+        Route::put('/properties/{id}/moderation', [AdminPropertyController::class, 'moderation']);
         Route::apiResource('projects',        AdminProjectController::class);
         Route::apiResource('agents',          AdminAgentController::class);
         Route::apiResource('categories',      AdminCategoryController::class);

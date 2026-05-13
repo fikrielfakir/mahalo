@@ -68,6 +68,11 @@ export const consultsApi = {
   customFields: () => api.get('/consults/custom-fields'),
 }
 
+export const userListingsApi = {
+  myListings: () => api.get('/account/my-listings'),
+  store: (data) => api.post('/account/listings', data),
+}
+
 export const authApi = {
   register:            (data) => api.post('/auth/register', data),
   login:               (data) => api.post('/auth/login', data),

@@ -4,7 +4,7 @@ import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
-import { Plus, Pencil, Trash2, Building2, Star } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock } from 'lucide-react'
 
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
@@ -14,8 +14,25 @@ const EMPTY = {
   category_ids: [], feature_ids: [],
 }
 
+const MOD_TABS = [
+  { key: '', label: 'All' },
+  { key: 'pending', label: 'Pending Review' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'rejected', label: 'Rejected' },
+]
+
 function statusColor(s) {
-  return s === 'selling' ? 'green' : s === 'sold' ? 'blue' : s === 'rented' ? 'gold' : 'gray'
+  return s === 'selling' || s === 'renting' ? 'green' : s === 'sold' ? 'blue' : s === 'rented' ? 'gold' : 'gray'
+}
+
+function modColor(s) {
+  return s === 'approved' ? 'green' : s === 'rejected' ? 'red' : 'gold'
+}
+
+function ModIcon({ status }) {
+  if (status === 'approved') return <CheckCircle size={14} className="text-emerald-500" />
+  if (status === 'rejected') return <XCircle size={14} className="text-red-400" />
+  return <Clock size={14} className="text-amber-400" />
 }
 
 export default function PropertiesPage() {
@@ -24,6 +41,7 @@ export default function PropertiesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
   const [page, setPage]       = useState(1)
+  const [modTab, setModTab]   = useState('')
   const [modal, setModal]     = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm]       = useState(EMPTY)
@@ -32,13 +50,18 @@ export default function PropertiesPage() {
   const [categories, setCategories] = useState([])
   const [features, setFeatures]     = useState([])
   const [deleting, setDeleting]     = useState(null)
+  const [moderating, setModerating] = useState(null)
+  const [rejectModal, setRejectModal] = useState(null)
+  const [rejectReason, setRejectReason] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
-    adminProperties.list({ search, page, per_page: 12 })
+    const params = { search, page, per_page: 12 }
+    if (modTab) params.moderation_status = modTab
+    adminProperties.list(params)
       .then((r) => { setRows(r.data); setMeta(r.meta) })
       .finally(() => setLoading(false))
-  }, [search, page])
+  }, [search, page, modTab])
 
   useEffect(() => { load() }, [load])
 
@@ -104,6 +127,26 @@ export default function PropertiesPage() {
     finally { setDeleting(null) }
   }
 
+  const moderate = async (id, status, reason = '') => {
+    setModerating(id)
+    try {
+      await adminProperties.moderate(id, { moderation_status: status, reject_reason: reason || undefined })
+      load()
+    } catch (err) {
+      alert(err?.message || 'Error updating status')
+    } finally {
+      setModerating(null)
+    }
+  }
+
+  const openReject = (row) => { setRejectModal(row); setRejectReason('') }
+  const submitReject = async () => {
+    await moderate(rejectModal.id, 'rejected', rejectReason)
+    setRejectModal(null)
+  }
+
+  const pendingCount = modTab === 'pending' ? meta.total : undefined
+
   const cols = [
     { key: 'name', label: 'Property', render: (r) => (
       <div className="flex items-center gap-2">
@@ -120,16 +163,58 @@ export default function PropertiesPage() {
         </div>
       </div>
     )},
-    { key: 'type',       label: 'Type',    render: (r) => <Badge color={r.type === 'sale' ? 'blue' : 'gold'}>{r.type}</Badge> },
-    { key: 'price',      label: 'Price',   render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
-    { key: 'is_featured',label: 'Featured',render: (r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
-    { key: 'status',     label: 'Status',  render: (r) => <Badge color={statusColor(r.status)}>{r.status}</Badge> },
-    { key: 'coords',     label: 'Map',     render: (r) => r.latitude && r.longitude
-      ? <span className="text-xs text-emerald-500 font-semibold">✓ Located</span>
-      : <span className="text-xs text-gray-300">No location</span>
-    },
-    { key: 'actions',    label: '',        render: (r) => (
-      <div className="flex gap-1 justify-end">
+    { key: 'type',       label: 'Type',       render: (r) => <Badge color={r.type === 'sale' ? 'blue' : 'gold'}>{r.type}</Badge> },
+    { key: 'price',      label: 'Price',      render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
+    { key: 'is_featured',label: 'Featured',   render: (r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
+    { key: 'status',     label: 'Status',     render: (r) => <Badge color={statusColor(r.status)}>{r.status}</Badge> },
+    { key: 'moderation', label: 'Review',     render: (r) => (
+      <div className="flex items-center gap-1.5">
+        <ModIcon status={r.moderation_status} />
+        <Badge color={modColor(r.moderation_status)}>{r.moderation_status || 'pending'}</Badge>
+      </div>
+    )},
+    { key: 'actions', label: '', render: (r) => (
+      <div className="flex gap-1 justify-end items-center">
+        {r.moderation_status === 'pending' && (
+          <>
+            <Btn size="sm" variant="ghost"
+              disabled={moderating === r.id}
+              onClick={() => moderate(r.id, 'approved')}
+              title="Approve"
+              className="text-emerald-600 hover:bg-emerald-50"
+            >
+              <CheckCircle size={13} />
+            </Btn>
+            <Btn size="sm" variant="ghost"
+              disabled={moderating === r.id}
+              onClick={() => openReject(r)}
+              title="Reject"
+              className="text-red-500 hover:bg-red-50"
+            >
+              <XCircle size={13} />
+            </Btn>
+          </>
+        )}
+        {r.moderation_status === 'rejected' && (
+          <Btn size="sm" variant="ghost"
+            disabled={moderating === r.id}
+            onClick={() => moderate(r.id, 'approved')}
+            title="Approve"
+            className="text-emerald-600 hover:bg-emerald-50"
+          >
+            <CheckCircle size={13} />
+          </Btn>
+        )}
+        {r.moderation_status === 'approved' && (
+          <Btn size="sm" variant="ghost"
+            disabled={moderating === r.id}
+            onClick={() => openReject(r)}
+            title="Revoke approval"
+            className="text-red-500 hover:bg-red-50"
+          >
+            <XCircle size={13} />
+          </Btn>
+        )}
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         <Btn size="sm" variant="danger" disabled={deleting === r.id} onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
       </div>
@@ -142,11 +227,56 @@ export default function PropertiesPage() {
         <Btn variant="gold" onClick={openCreate}><Plus size={15} /> Add Property</Btn>
       </PageHeader>
 
+      {/* Moderation tabs */}
+      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-2xl w-fit">
+        {MOD_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => { setModTab(t.key); setPage(1) }}
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              modTab === t.key
+                ? 'bg-white text-navy shadow-sm'
+                : 'text-navy/50 hover:text-navy'
+            }`}
+          >
+            {t.label}
+            {t.key === 'pending' && pendingCount > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-400 text-white text-[10px] font-bold">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       <DataTable
         columns={cols} data={rows} loading={loading}
         search={search} onSearch={(v) => { setSearch(v); setPage(1) }}
         page={page} lastPage={meta.last_page || 1} onPage={setPage}
       />
+
+      {/* Reject reason modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h3 className="font-bold text-navy mb-1">Reject Listing</h3>
+            <p className="text-sm text-navy/50 mb-4">Optionally provide a reason for rejection:</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              placeholder="e.g. Missing price information, unclear photos..."
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-navy resize-none focus:outline-none focus:border-red-300"
+            />
+            <div className="flex gap-2 mt-4 justify-end">
+              <Btn variant="ghost" onClick={() => setRejectModal(null)}>Cancel</Btn>
+              <Btn variant="danger" onClick={submitReject} disabled={moderating === rejectModal?.id}>
+                {moderating === rejectModal?.id ? 'Rejecting…' : 'Reject Listing'}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Property' : 'Add Property'} size="lg">
         <form onSubmit={submit} className="space-y-4">
@@ -200,23 +330,12 @@ export default function PropertiesPage() {
             <div className="col-span-2">
               <FormField label="Map Location" hint="Click on the map to place a pin — drag to adjust">
                 <div className="grid grid-cols-2 gap-2 mb-2">
-                  <Input
-                    type="number" step="any"
-                    value={form.latitude}
-                    onChange={f('latitude')}
-                    placeholder="Latitude (e.g. 33.5731)"
-                  />
-                  <Input
-                    type="number" step="any"
-                    value={form.longitude}
-                    onChange={f('longitude')}
-                    placeholder="Longitude (e.g. -7.5898)"
-                  />
+                  <Input type="number" step="any" value={form.latitude} onChange={f('latitude')} placeholder="Latitude (e.g. 33.5731)" />
+                  <Input type="number" step="any" value={form.longitude} onChange={f('longitude')} placeholder="Longitude (e.g. -7.5898)" />
                 </div>
                 {modal && (
                   <LocationPicker
-                    lat={form.latitude}
-                    lng={form.longitude}
+                    lat={form.latitude} lng={form.longitude}
                     onChange={({ lat, lng }) => setForm(p => ({ ...p, latitude: lat, longitude: lng }))}
                     height={260}
                   />
@@ -232,11 +351,7 @@ export default function PropertiesPage() {
 
             <div className="col-span-2">
               <FormField label="Images" hint="Upload files or add URLs — first image is the main photo">
-                <ImageUploader
-                  images={form.images}
-                  onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))}
-                  folder="properties"
-                />
+                <ImageUploader images={form.images} onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))} folder="properties" />
               </FormField>
             </div>
 

@@ -9,7 +9,7 @@ import {
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
-import { consultsApi } from '../api/client'
+import { userListingsApi } from '../api/client'
 import LocationPicker from '../components/LocationPicker'
 import { useUserAuth } from '../context/UserAuthContext'
 
@@ -232,33 +232,30 @@ export default function ListProperty() {
       navigate('/login', { state: { from: '/list-property' } })
       return
     }
-    if (!form.name.trim() || !form.phone.trim() || !form.city.trim()) {
-      showToast('Please fill in name, phone, and city', 'error')
+    if (!form.name.trim() || !form.city.trim()) {
+      showToast('Please fill in name and city', 'error')
       return
     }
     setSubmitting(true)
     try {
-      const mediaList = mediaFiles.map(f => f.path).join(', ')
-      const message = [
-        `Property listing request from ${form.name}`,
-        `Type: ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
-        form.listing_type && `Category: ${form.listing_type}`,
-        `City: ${form.city}`,
-        form.location && `Location: ${form.location}`,
-        (form.latitude && form.longitude) && `Coordinates: ${form.latitude}, ${form.longitude}`,
-        form.bedrooms && `Bedrooms: ${form.bedrooms}`,
-        form.bathrooms && `Bathrooms: ${form.bathrooms}`,
-        form.size && `Size: ${form.size} m²`,
-        form.price && `Price: ${form.price} MAD`,
-        form.description && `Details: ${form.description}`,
-        mediaFiles.length > 0 && `Attached files: ${mediaList}`,
+      const description = [
+        form.description,
+        form.phone && `Contact phone: ${form.phone}`,
+        form.email && `Contact email: ${form.email}`,
       ].filter(Boolean).join('\n')
 
-      await consultsApi.store({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        content: message,
+      await userListingsApi.store({
+        name:             form.name || `Property in ${form.city}`,
+        type:             form.property_type,
+        location:         [form.location, form.city].filter(Boolean).join(', '),
+        number_bedroom:   form.bedrooms  ? parseInt(form.bedrooms)  : null,
+        number_bathroom:  form.bathrooms ? parseInt(form.bathrooms) : null,
+        square:           form.size      ? parseFloat(form.size)    : null,
+        price:            form.price     ? parseFloat(form.price)   : null,
+        description,
+        latitude:         form.latitude  || null,
+        longitude:        form.longitude || null,
+        images:           mediaFiles.map(f => f.path),
       })
       setSubmitted(true)
     } catch {
@@ -339,15 +336,22 @@ export default function ListProperty() {
           <div className="lg:col-span-2">
             {submitted ? (
               <div className="bg-white rounded-3xl shadow-card p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle size={36} className="text-emerald-500" />
+                <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-navy mb-3">Request Received!</h2>
-                <p className="text-navy/60 mb-2">Thank you, <strong>{form.name}</strong>. One of our agents will call you at <strong>{form.phone}</strong> within 24 hours.</p>
-                <p className="text-navy/40 text-sm mb-8">In the meantime, feel free to browse our current listings.</p>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600 text-xs font-bold uppercase tracking-wide mb-5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Pending Admin Review
+                </div>
+                <h2 className="text-2xl font-bold text-navy mb-3">Listing Submitted!</h2>
+                <p className="text-navy/60 mb-2">Your property <strong>{form.name || 'listing'}</strong> has been submitted for review.</p>
+                <p className="text-navy/40 text-sm mb-2">An admin will review it within 24 hours. Once approved, it will be visible to all visitors.</p>
+                <p className="text-navy/40 text-sm mb-8">You can track the status of your listing in your <Link to="/profile" className="text-gold font-semibold hover:underline">Profile → My Listings</Link>.</p>
                 <div className="flex flex-wrap gap-3 justify-center">
-                  <Link to="/properties" className="btn-gold flex items-center gap-2">
-                    Browse Properties <ArrowRight size={15} />
+                  <Link to="/profile" className="btn-gold flex items-center gap-2">
+                    View My Listings <ArrowRight size={15} />
                   </Link>
                   <button onClick={() => { setSubmitted(false); setForm(EMPTY); setMediaFiles([]) }} className="btn-outline">
                     Submit Another

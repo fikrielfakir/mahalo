@@ -35,11 +35,12 @@ export const adminStats = {
 }
 
 export const adminProperties = {
-  list:   (p = {}) => client.get('/admin/properties', { params: p }),
-  get:    (id)     => client.get(`/admin/properties/${id}`),
-  create: (d)      => client.post('/admin/properties', d),
-  update: (id, d)  => client.put(`/admin/properties/${id}`, d),
-  delete: (id)     => client.delete(`/admin/properties/${id}`),
+  list:     (p = {}) => client.get('/admin/properties', { params: p }),
+  get:      (id)     => client.get(`/admin/properties/${id}`),
+  create:   (d)      => client.post('/admin/properties', d),
+  update:   (id, d)  => client.put(`/admin/properties/${id}`, d),
+  delete:   (id)     => client.delete(`/admin/properties/${id}`),
+  moderate: (id, d)  => client.put(`/admin/properties/${id}/moderation`, d),
 }
 
 export const adminProjects = {

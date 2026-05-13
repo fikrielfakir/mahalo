@@ -14,7 +14,7 @@ export default function LoginPage() {
   const { login }  = useUserAuth()
   const navigate   = useNavigate()
   const location   = useLocation()
-  const from       = location.state?.from || '/'
+  const from       = location.state?.from || '/profile'
 
   const submit = async (e) => {
     e.preventDefault()

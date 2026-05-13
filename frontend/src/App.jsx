@@ -19,6 +19,7 @@ import RegisterPage       from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage  from './pages/auth/ResetPasswordPage'
 import VerifyEmailPage    from './pages/auth/VerifyEmailPage'
+import ProfilePage        from './pages/ProfilePage'
 
 // Admin
 import { AuthProvider }  from './admin/context/AuthContext'
@@ -56,6 +57,9 @@ export default function App() {
               <Route path="/agents/:id"          element={<AgentDetail />} />
               <Route path="/about"               element={<About />} />
               <Route path="/list-property"       element={<ListProperty />} />
+
+              {/* User profile */}
+              <Route path="/profile"             element={<ProfilePage />} />
 
               {/* User auth */}
               <Route path="/login"               element={<UserLoginPage />} />

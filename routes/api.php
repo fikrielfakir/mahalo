@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
     // ── Protected: Account ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/account/profile',                        [AuthController::class, 'profile']);
+        Route::put('/account/profile',                        [AuthController::class, 'updateProfile']);
         Route::post('/auth/logout',                           [AuthController::class, 'logout']);
         Route::post('/auth/resend-verification',              [AuthController::class, 'resendVerification']);
         Route::post('/properties/{property_id}/reviews',      [ReviewController::class, 'store']);

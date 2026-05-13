@@ -103,9 +103,43 @@ class AuthController extends Controller
                 'phone'          => $user->phone ?? null,
                 'role'           => $user->role,
                 'email_verified' => ! is_null($user->email_verified_at),
+                'account_type'   => $user->account_type ?? 'individual',
+                'company_name'   => $user->company_name ?? null,
+                'license_number' => $user->license_number ?? null,
             ],
             'error'   => false,
             'message' => null,
+        ]);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'           => 'sometimes|string|max:100',
+            'phone'          => 'nullable|string|max:30',
+            'account_type'   => 'sometimes|in:individual,professional',
+            'company_name'   => 'nullable|string|max:150',
+            'license_number' => 'nullable|string|max:100',
+        ]);
+
+        $user->update($data);
+
+        return response()->json([
+            'data' => [
+                'id'             => $user->id,
+                'name'           => $user->name,
+                'email'          => $user->email,
+                'phone'          => $user->phone ?? null,
+                'role'           => $user->role,
+                'email_verified' => ! is_null($user->email_verified_at),
+                'account_type'   => $user->account_type ?? 'individual',
+                'company_name'   => $user->company_name ?? null,
+                'license_number' => $user->license_number ?? null,
+            ],
+            'error'   => false,
+            'message' => 'Profile updated successfully.',
         ]);
     }
 

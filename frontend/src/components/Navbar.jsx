@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X, User, LogOut, Settings } from 'lucide-react'
+import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -126,11 +126,18 @@ export default function Navbar({ transparent = false }) {
               </button>
 
               {userDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
                   <div className="px-4 py-2 border-b border-gray-100 mb-1">
                     <p className="text-xs font-semibold text-navy truncate">{user?.name}</p>
                     <p className="text-xs text-navy/40 truncate">{user?.email}</p>
                   </div>
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
+                    style={{ width: 'calc(100% - 8px)' }}
+                  >
+                    <UserCircle size={14} /> My Profile
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
@@ -145,23 +152,13 @@ export default function Navbar({ transparent = false }) {
             <div className="flex items-center gap-2 ml-1">
               <Link
                 to="/login"
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                  isTransparent
-                    ? 'text-white/85 hover:text-white hover:bg-white/12'
-                    : 'text-navy/70 hover:text-navy hover:bg-navy/6'
-                }`}
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm ${
                   isTransparent
                     ? 'bg-white text-navy hover:bg-white/90'
                     : 'bg-gold text-white hover:bg-gold-dark'
                 }`}
               >
-                Sign Up
+                Sign In
               </Link>
             </div>
           )}
@@ -215,6 +212,12 @@ export default function Navbar({ transparent = false }) {
                     <p className="text-xs text-navy/40 truncate">{user?.email}</p>
                   </div>
                 </div>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 w-full px-4 py-3 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all"
+                >
+                  <UserCircle size={15} /> My Profile
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all"
@@ -225,12 +228,8 @@ export default function Navbar({ transparent = false }) {
             ) : (
               <div className="flex gap-2">
                 <Link to="/login"
-                  className="flex-1 text-center px-4 py-3 border border-navy/15 text-navy rounded-2xl font-semibold text-sm hover:bg-navy/5">
-                  Sign In
-                </Link>
-                <Link to="/register"
                   className="flex-1 text-center px-4 py-3 bg-gold text-white rounded-2xl font-semibold text-sm hover:bg-gold-dark">
-                  Sign Up
+                  Sign In
                 </Link>
               </div>
             )}

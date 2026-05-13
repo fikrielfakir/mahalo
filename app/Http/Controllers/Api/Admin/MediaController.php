@@ -173,6 +173,12 @@ class MediaController extends Controller
                 $path = Storage::disk('public')->path($rel);
                 if (file_exists($path)) return $this->imageFromFile($path);
             }
+            // Handle root-relative paths like /watermark.png
+            if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+                $path = public_path(ltrim($url, '/'));
+                if (file_exists($path)) return $this->imageFromFile($path);
+                return false;
+            }
             $ctx  = stream_context_create(['http' => ['timeout' => 5]]);
             $data = @file_get_contents($url, false, $ctx);
             if (!$data) return false;

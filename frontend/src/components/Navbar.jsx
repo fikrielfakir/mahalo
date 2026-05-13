@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X, Building2 } from 'lucide-react'
+import { Heart, Globe, ChevronDown, Menu, X } from 'lucide-react'
+import logo from '/logo.png'
+import logoLight from '/logo-light.png'
 
 const navLinks = [
   { label: 'Buy',           to: '/properties?type=sale' },
@@ -37,17 +39,12 @@ export default function Navbar({ transparent = false }) {
       <nav className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-              isTransparent ? 'bg-white/20 backdrop-blur-sm border border-white/30' : 'bg-navy'
-            }`}
-          >
-            <Building2 size={16} className={isTransparent ? 'text-white' : 'text-white'} />
-          </div>
-          <span className={`text-[1.15rem] font-bold tracking-tight transition-colors duration-300 ${isTransparent ? 'text-white' : 'text-navy'}`}>
-            Agenz
-          </span>
+        <Link to="/" className="flex items-center shrink-0">
+          <img
+            src={isTransparent ? logoLight : logo}
+            alt="Mahalo"
+            className="h-9 w-auto object-contain transition-all duration-300"
+          />
         </Link>
 
         {/* Desktop centre links */}

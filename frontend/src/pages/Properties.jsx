@@ -72,7 +72,7 @@ export default function Properties() {
     : 'All Properties'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F7F8FC' }}>
+    <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
       <Navbar />
 
       <div className="pt-24 pb-8 px-5 max-w-7xl mx-auto">

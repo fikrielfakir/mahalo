@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight } from 'lucide-react'
 
-const KEY = 'homzen_recently_viewed'
+const KEY = 'mahalo_recently_viewed'
 
 export function trackRecentlyViewed(property) {
   try {

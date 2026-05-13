@@ -22,13 +22,13 @@ function ProgressRing({ pct }) {
     <svg width="40" height="40" style={{ transform: 'rotate(-90deg)' }}>
       <circle cx="20" cy="20" r={r} fill="none" stroke="#e5e7eb" strokeWidth="3" />
       <circle
-        cx="20" cy="20" r={r} fill="none" stroke="#C8A97E" strokeWidth="3"
+        cx="20" cy="20" r={r} fill="none" stroke="#9B1232" strokeWidth="3"
         strokeDasharray={circ}
         strokeDashoffset={circ - (pct / 100) * circ}
         strokeLinecap="round"
         style={{ transition: 'stroke-dashoffset 0.2s' }}
       />
-      <text x="20" y="20" fill="#0B1F3A" fontSize="9" fontWeight="600"
+      <text x="20" y="20" fill="#1A1A1A" fontSize="9" fontWeight="600"
         textAnchor="middle" dominantBaseline="central"
         style={{ transform: 'rotate(90deg)', transformOrigin: '50% 50%' }}>
         {pct}%
@@ -135,7 +135,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
 
               {/* MAIN badge */}
               {idx === 0 && (
-                <span className="absolute bottom-1.5 left-1.5 bg-[#C8A97E] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none pointer-events-none z-10">
+                <span className="absolute bottom-1.5 left-1.5 bg-[#9B1232] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none pointer-events-none z-10">
                   MAIN
                 </span>
               )}
@@ -190,11 +190,11 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
         onClick={() => inputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center py-6 cursor-pointer transition-all select-none ${
           dragging
-            ? 'border-[#C8A97E] bg-[#C8A97E]/5'
-            : 'border-gray-200 hover:border-[#C8A97E]/60 hover:bg-gray-50'
+            ? 'border-[#9B1232] bg-[#9B1232]/5'
+            : 'border-gray-200 hover:border-[#9B1232]/60 hover:bg-gray-50'
         }`}
       >
-        <Upload size={22} className={`mb-2 transition-colors ${dragging ? 'text-[#C8A97E]' : 'text-gray-300'}`} />
+        <Upload size={22} className={`mb-2 transition-colors ${dragging ? 'text-[#9B1232]' : 'text-gray-300'}`} />
         <p className="text-sm font-medium text-gray-500">
           {dragging ? 'Drop to upload' : 'Drag & drop images here'}
         </p>
@@ -223,12 +223,12 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
                 if (e.key === 'Escape') { setShowUrl(false); setUrlInput('') }
               }}
               placeholder="https://images.unsplash.com/..."
-              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 outline-none focus:border-[#C8A97E] focus:ring-2 focus:ring-[#C8A97E]/20 transition-all placeholder-gray-400"
+              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all placeholder-gray-400"
             />
             <button
               type="button"
               onClick={addUrl}
-              className="px-4 py-2 bg-[#0B1F3A] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-[#1A1A1A] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
             >
               Add
             </button>
@@ -244,7 +244,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
           <button
             type="button"
             onClick={() => setShowUrl(true)}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-[#0B1F3A] border border-gray-200 rounded-xl hover:border-[#0B1F3A]/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-[#1A1A1A] border border-gray-200 rounded-xl hover:border-[#1A1A1A]/30 transition-all"
           >
             <Link size={13} />
             Add image URL

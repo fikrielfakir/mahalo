@@ -53,8 +53,8 @@ export default function CategoriesPage() {
           <div className="divide-y divide-gray-50">
             {rows.map((r) => (
               <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50">
-                <div className="w-8 h-8 rounded-xl bg-[#C8A97E]/10 flex items-center justify-center">
-                  <Tag size={14} className="text-[#C8A97E]" />
+                <div className="w-8 h-8 rounded-xl bg-[#9B1232]/10 flex items-center justify-center">
+                  <Tag size={14} className="text-[#9B1232]" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-800 text-sm">{r.name}</p>

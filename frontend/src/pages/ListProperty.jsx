@@ -95,7 +95,7 @@ export default function ListProperty() {
           {/* Sidebar */}
           <div className="space-y-6">
             <div className="bg-white rounded-3xl p-6 shadow-card">
-              <h3 className="text-navy font-bold text-lg mb-5">Why List with Homzen?</h3>
+              <h3 className="text-navy font-bold text-lg mb-5">Why List with Mahalo?</h3>
               <div className="space-y-3">
                 {BENEFITS.map(({ icon: Icon, text }) => (
                   <div key={text} className="flex items-center gap-3">
@@ -127,7 +127,7 @@ export default function ListProperty() {
                   <div className="text-navy/45 text-xs">Already on our platform</div>
                 </div>
               </div>
-              <p className="text-navy/55 text-xs leading-relaxed">Join thousands of homeowners, developers, and investors who trust Homzen to reach the right buyers.</p>
+              <p className="text-navy/55 text-xs leading-relaxed">Join thousands of homeowners, developers, and investors who trust Mahalo to reach the right buyers.</p>
             </div>
           </div>
 
@@ -270,7 +270,7 @@ export default function ListProperty() {
                   </button>
 
                   <p className="text-center text-navy/30 text-xs">
-                    By submitting you agree to be contacted by a Homzen agent. No spam, ever.
+                    By submitting you agree to be contacted by a Mahalo agent. No spam, ever.
                   </p>
                 </form>
               </div>

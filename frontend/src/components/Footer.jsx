@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
+import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
+import logoLight from '/logo-light.png'
 
 const footerLinks = {
   Company:   [
@@ -28,7 +29,7 @@ const footerLinks = {
 
 function getSettings() {
   try {
-    return JSON.parse(localStorage.getItem('homzen_settings') || '{}')
+    return JSON.parse(localStorage.getItem('mahalo_settings') || '{}')
   } catch {
     return {}
   }
@@ -51,18 +52,14 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer style={{ background: 'linear-gradient(180deg, #0B1F3A 0%, #071628 100%)' }}>
+    <footer style={{ background: 'linear-gradient(180deg, #1A1A1A 0%, #0d0d0d 100%)' }}>
       <div className="max-w-7xl mx-auto px-5 pt-16 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
 
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #C8A97E, #d4b896)' }}>
-                <Building2 size={17} className="text-navy" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">Agenz</span>
+              <img src={logoLight} alt="Mahalo" className="h-9 w-auto object-contain" />
             </div>
             <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-xs">
               Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.

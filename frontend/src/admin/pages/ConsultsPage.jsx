@@ -118,14 +118,14 @@ export default function ConsultsPage() {
       key: '_check', label: (
         <button onClick={toggleAll} className="p-0.5">
           {selected.size === rows.length && rows.length > 0
-            ? <CheckSquare size={15} className="text-[#C8A97E]" />
+            ? <CheckSquare size={15} className="text-[#9B1232]" />
             : <Square size={15} className="text-gray-300" />}
         </button>
       ),
       render: (r) => (
         <button onClick={(e) => { e.stopPropagation(); toggleSelect(r.id) }} className="p-0.5">
           {selected.has(r.id)
-            ? <CheckSquare size={15} className="text-[#C8A97E]" />
+            ? <CheckSquare size={15} className="text-[#9B1232]" />
             : <Square size={15} className="text-gray-300" />}
         </button>
       ),
@@ -134,7 +134,7 @@ export default function ConsultsPage() {
       key: 'name', label: 'From',
       render: (r) => (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#C8A97E]/10 flex items-center justify-center text-[#C8A97E] font-bold text-xs shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#9B1232]/10 flex items-center justify-center text-[#9B1232] font-bold text-xs shrink-0">
             {r.name?.[0]}
           </div>
           <div>
@@ -198,7 +198,7 @@ export default function ConsultsPage() {
           <select
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(1) }}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#C8A97E]"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#9B1232]"
           >
             <option value="">All statuses</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -211,7 +211,7 @@ export default function ConsultsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="mb-4 p-3 bg-[#0B1F3A] rounded-2xl flex items-center gap-3 flex-wrap">
+        <div className="mb-4 p-3 bg-[#1A1A1A] rounded-2xl flex items-center gap-3 flex-wrap">
           <span className="text-white text-sm font-medium">{selected.size} selected</span>
           <div className="flex items-center gap-2 flex-1">
             <select
@@ -249,7 +249,7 @@ export default function ConsultsPage() {
           <div className="space-y-5">
             {/* Header */}
             <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#C8A97E]/10 flex items-center justify-center text-[#C8A97E] font-bold text-2xl shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-[#9B1232]/10 flex items-center justify-center text-[#9B1232] font-bold text-2xl shrink-0">
                 {detail.name?.[0]}
               </div>
               <div className="flex-1">
@@ -299,7 +299,7 @@ export default function ConsultsPage() {
               <select
                 value={detail.status}
                 onChange={(e) => updateStatus(detail.id, e.target.value)}
-                className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm outline-none focus:border-[#C8A97E]"
+                className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm outline-none focus:border-[#9B1232]"
               >
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -313,15 +313,15 @@ export default function ConsultsPage() {
             <div className="flex flex-wrap gap-2 pt-1">
               {detail.email && (
                 <a
-                  href={`mailto:${detail.email}?subject=Re: Your inquiry on Homzen&body=Hello ${detail.name},%0D%0A%0D%0AThank you for contacting us.`}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#C8A97E] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                  href={`mailto:${detail.email}?subject=Re: Your inquiry on Mahalo&body=Hello ${detail.name},%0D%0A%0D%0AThank you for contacting us.`}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#9B1232] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
                 >
                   <Mail size={13} /> Reply by Email
                 </a>
               )}
               {detail.phone && (
                 <a
-                  href={`https://wa.me/${detail.phone.replace(/\D/g, '')}?text=Hello ${encodeURIComponent(detail.name)}, thank you for your inquiry on Homzen.`}
+                  href={`https://wa.me/${detail.phone.replace(/\D/g, '')}?text=Hello ${encodeURIComponent(detail.name)}, thank you for your inquiry on Mahalo.`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
                 >

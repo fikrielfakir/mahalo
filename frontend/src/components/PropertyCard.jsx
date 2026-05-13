@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
-const FAVORITES_KEY = 'homzen_favorites'
+const FAVORITES_KEY = 'mahalo_favorites'
 
 function getFavorites() {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] }

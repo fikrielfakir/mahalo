@@ -67,7 +67,7 @@ export default function NeighborhoodsSection() {
   if (!loading && cities.length === 0) return null
 
   return (
-    <section className="py-20 overflow-hidden" style={{ background: 'linear-gradient(180deg, #F7F8FC 0%, #EEEEF8 100%)' }}>
+    <section className="py-20 overflow-hidden" style={{ background: 'linear-gradient(180deg, #F5F5F5 0%, #EEEEF8 100%)' }}>
       <div className="max-w-7xl mx-auto px-5">
         <div className="flex items-end justify-between mb-10">
           <div>

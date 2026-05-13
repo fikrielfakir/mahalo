@@ -73,8 +73,8 @@ export default function ProjectsPage() {
         {r.images?.[0] ? (
           <img src={`/storage/${r.images[0]}`} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
         ) : (
-          <div className="w-8 h-8 rounded-xl bg-[#0B1F3A]/5 flex items-center justify-center">
-            <FolderKanban size={14} className="text-[#0B1F3A]/40" />
+          <div className="w-8 h-8 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center">
+            <FolderKanban size={14} className="text-[#1A1A1A]/40" />
           </div>
         )}
         <div>

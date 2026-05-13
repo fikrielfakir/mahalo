@@ -17,8 +17,8 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #F7F8FC;
-    color: #0B1F3A;
+    background-color: #F5F5F5;
+    color: #1A1A1A;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -148,7 +148,7 @@
 
 /* ── Swiper ── */
 .swiper-pagination-bullet {
-  background: #C8A97E !important;
+  background: #9B1232 !important;
   opacity: 0.35;
 }
 .swiper-pagination-bullet-active {
@@ -159,9 +159,9 @@
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #F7F8FC; }
+::-webkit-scrollbar-track { background: #F5F5F5; }
 ::-webkit-scrollbar-thumb { background: rgba(200,169,126,0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #C8A97E; }
+::-webkit-scrollbar-thumb:hover { background: #9B1232; }
 
 /* ── Scrollbar hide ── */
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

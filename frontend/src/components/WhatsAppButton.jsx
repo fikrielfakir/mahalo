@@ -6,7 +6,7 @@ const WA_MESSAGE = "Hello! I found your listing on Agenz and I'd like to know mo
 
 function getWaNumber() {
   try {
-    const s = JSON.parse(localStorage.getItem('homzen_settings') || '{}')
+    const s = JSON.parse(localStorage.getItem('mahalo_settings') || '{}')
     return (s.whatsapp_number || '').replace(/\D/g, '') || FALLBACK_NUMBER
   } catch {
     return FALLBACK_NUMBER

@@ -86,13 +86,13 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800 text-sm">Recent Properties</h2>
-            <Link to="/admin/properties" className="text-xs text-[#C8A97E] font-semibold hover:underline">View all</Link>
+            <Link to="/admin/properties" className="text-xs text-[#9B1232] font-semibold hover:underline">View all</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {recent_properties?.map((p) => (
               <div key={p.id} className="flex items-center gap-3 px-5 py-3">
-                <div className="w-8 h-8 rounded-xl bg-[#0B1F3A]/5 flex items-center justify-center shrink-0">
-                  <Building2 size={14} className="text-[#0B1F3A]/50" />
+                <div className="w-8 h-8 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center shrink-0">
+                  <Building2 size={14} className="text-[#1A1A1A]/50" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
@@ -108,7 +108,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800 text-sm">Recent Inquiries</h2>
-            <Link to="/admin/consults" className="text-xs text-[#C8A97E] font-semibold hover:underline">View all</Link>
+            <Link to="/admin/consults" className="text-xs text-[#9B1232] font-semibold hover:underline">View all</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {recent_consults?.length === 0 && (
@@ -116,8 +116,8 @@ export default function Dashboard() {
             )}
             {recent_consults?.map((c) => (
               <div key={c.id} className="flex items-center gap-3 px-5 py-3">
-                <div className="w-8 h-8 rounded-xl bg-[#C8A97E]/10 flex items-center justify-center shrink-0">
-                  <span className="text-[#C8A97E] text-xs font-bold">{c.name?.[0]}</span>
+                <div className="w-8 h-8 rounded-xl bg-[#9B1232]/10 flex items-center justify-center shrink-0">
+                  <span className="text-[#9B1232] text-xs font-bold">{c.name?.[0]}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{c.name}</p>

@@ -90,13 +90,13 @@ export default function MediaPage() {
 
       {/* Drop zone */}
       <div
-        className={`mb-6 border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragOver ? 'border-[#C8A97E] bg-[#C8A97E]/5' : 'border-gray-200 hover:border-[#C8A97E]/50'}`}
+        className={`mb-6 border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragOver ? 'border-[#9B1232] bg-[#9B1232]/5' : 'border-gray-200 hover:border-[#9B1232]/50'}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
         onClick={() => inputRef.current?.click()}
       >
-        <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-[#C8A97E]' : 'text-gray-300'}`} />
+        <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-[#9B1232]' : 'text-gray-300'}`} />
         <p className="text-gray-500 text-sm font-medium">Drop images here or click to browse</p>
         <p className="text-gray-400 text-xs mt-1">PNG, JPG, WebP — any size</p>
       </div>
@@ -123,7 +123,7 @@ export default function MediaPage() {
               <div
                 key={item.id}
                 onClick={() => setSelected(selected?.id === item.id ? null : item)}
-                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selected?.id === item.id ? 'border-[#C8A97E] ring-2 ring-[#C8A97E]/30' : 'border-transparent hover:border-gray-200'}`}
+                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selected?.id === item.id ? 'border-[#9B1232] ring-2 ring-[#9B1232]/30' : 'border-transparent hover:border-gray-200'}`}
               >
                 <img src={url} alt={item.name || item.file_name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />

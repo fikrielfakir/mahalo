@@ -16,9 +16,9 @@ const TABS = [
 ]
 
 const DEFAULTS = {
-  site_name: 'Homzen',
+  site_name: 'Mahalo',
   tagline: "Morocco's Most Trusted Real Estate Platform",
-  contact_email: 'contact@homzen.ma',
+  contact_email: 'contact@mahalo.ma',
   contact_phone: '+212 600 000 000',
   address: 'Casablanca, Morocco',
   whatsapp_number: '',
@@ -26,20 +26,20 @@ const DEFAULTS = {
   instagram_url: '',
   twitter_url: '',
   youtube_url: '',
-  seo_title: 'Homzen — Premium Real Estate in Morocco',
-  seo_description: 'Find your dream property in Morocco with Homzen. Browse thousands of verified listings across Casablanca, Marrakech, Rabat and more.',
+  seo_title: 'Mahalo — Premium Real Estate in Morocco',
+  seo_description: 'Find your dream property in Morocco with Mahalo. Browse thousands of verified listings across Casablanca, Marrakech, Rabat and more.',
   google_analytics_id: '',
   currency: 'MAD',
   properties_per_page: '12',
   // Theme
-  primary_color: '#C8A97E',
-  secondary_color: '#0B1F3A',
-  accent_color: '#F7F8FC',
-  logo_url: '',
-  footer_logo_url: '',
+  primary_color: '#9B1232',
+  secondary_color: '#1A1A1A',
+  accent_color: '#F5F5F5',
+  logo_url: '/logo.png',
+  footer_logo_url: '/logo-light.png',
   // Watermark
   watermark_enabled: '0',
-  watermark_logo_url: '',
+  watermark_logo_url: '/watermark.png',
   watermark_position: 'bottom-right',
   watermark_opacity: '60',
   watermark_size: '20',
@@ -65,7 +65,7 @@ export default function SettingsPage() {
     adminSettings.get()
       .then((r) => { if (r?.data) setForm(prev => ({ ...prev, ...r.data })) })
       .catch(() => {
-        const stored = localStorage.getItem('homzen_settings')
+        const stored = localStorage.getItem('mahalo_settings')
         if (stored) { try { setForm(prev => ({ ...prev, ...JSON.parse(stored) })) } catch {} }
       })
       .finally(() => setLoading(false))
@@ -98,7 +98,7 @@ export default function SettingsPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
-      localStorage.setItem('homzen_settings', JSON.stringify(form))
+      localStorage.setItem('mahalo_settings', JSON.stringify(form))
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } finally {
@@ -143,7 +143,7 @@ export default function SettingsPage() {
             onClick={() => setTab(id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               tab === id
-                ? 'bg-[#0B1F3A] text-white shadow-sm'
+                ? 'bg-[#1A1A1A] text-white shadow-sm'
                 : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
             }`}
           >
@@ -161,7 +161,7 @@ export default function SettingsPage() {
             <Section title="General" icon={Globe}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField label="App / Site Name" required>
-                  <Input value={form.site_name} onChange={f('site_name')} placeholder="Homzen" />
+                  <Input value={form.site_name} onChange={f('site_name')} placeholder="Mahalo" />
                 </FormField>
                 <FormField label="Currency">
                   <Input value={form.currency} onChange={f('currency')} placeholder="MAD" />
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                   <div
                     onClick={() => setForm(p => ({ ...p, watermark_enabled: p.watermark_enabled === '1' ? '0' : '1' }))}
                     className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
-                      form.watermark_enabled === '1' ? 'bg-[#C8A97E]' : 'bg-gray-200'
+                      form.watermark_enabled === '1' ? 'bg-[#9B1232]' : 'bg-gray-200'
                     }`}
                   >
                     <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     <select
                       value={form.watermark_position}
                       onChange={f('watermark_position')}
-                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C8A97E]/30 focus:border-[#C8A97E]"
+                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#9B1232]/30 focus:border-[#9B1232]"
                     >
                       {WATERMARK_POSITIONS.map(p => (
                         <option key={p.value} value={p.value}>{p.label}</option>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                       type="range" min="10" max="100" step="5"
                       value={form.watermark_opacity}
                       onChange={f('watermark_opacity')}
-                      className="w-full accent-[#C8A97E] mt-2"
+                      className="w-full accent-[#9B1232] mt-2"
                     />
                   </FormField>
                   <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                       type="range" min="5" max="50" step="5"
                       value={form.watermark_size}
                       onChange={f('watermark_size')}
-                      className="w-full accent-[#C8A97E] mt-2"
+                      className="w-full accent-[#9B1232] mt-2"
                     />
                   </FormField>
                 </div>
@@ -306,7 +306,7 @@ export default function SettingsPage() {
               <FormField label="Contact Email">
                 <div className="relative">
                   <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.contact_email} onChange={f('contact_email')} className="pl-9" placeholder="contact@homzen.ma" />
+                  <Input value={form.contact_email} onChange={f('contact_email')} className="pl-9" placeholder="contact@mahalo.ma" />
                 </div>
               </FormField>
               <FormField label="Contact Phone">
@@ -337,23 +337,23 @@ export default function SettingsPage() {
               <FormField label="Facebook URL">
                 <div className="relative">
                   <Facebook size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.facebook_url} onChange={f('facebook_url')} className="pl-9" placeholder="https://facebook.com/homzen" />
+                  <Input value={form.facebook_url} onChange={f('facebook_url')} className="pl-9" placeholder="https://facebook.com/mahalo" />
                 </div>
               </FormField>
               <FormField label="Instagram URL">
                 <div className="relative">
                   <Instagram size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.instagram_url} onChange={f('instagram_url')} className="pl-9" placeholder="https://instagram.com/homzen" />
+                  <Input value={form.instagram_url} onChange={f('instagram_url')} className="pl-9" placeholder="https://instagram.com/mahalo" />
                 </div>
               </FormField>
               <FormField label="Twitter / X URL">
                 <div className="relative">
                   <Twitter size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.twitter_url} onChange={f('twitter_url')} className="pl-9" placeholder="https://twitter.com/homzen" />
+                  <Input value={form.twitter_url} onChange={f('twitter_url')} className="pl-9" placeholder="https://twitter.com/mahalo" />
                 </div>
               </FormField>
               <FormField label="YouTube URL">
-                <Input value={form.youtube_url} onChange={f('youtube_url')} placeholder="https://youtube.com/@homzen" />
+                <Input value={form.youtube_url} onChange={f('youtube_url')} placeholder="https://youtube.com/@mahalo" />
               </FormField>
             </div>
           </Section>
@@ -363,7 +363,7 @@ export default function SettingsPage() {
         {tab === 'seo' && (
           <Section title="SEO & Analytics" icon={Globe}>
             <FormField label="Default SEO Title" hint="Used when no page-specific title is set">
-              <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Homzen — Premium Real Estate in Morocco" />
+              <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
             </FormField>
             <FormField label="Default Meta Description">
               <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />
@@ -388,8 +388,8 @@ function Section({ title, icon: Icon, children }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-        <div className="w-8 h-8 rounded-xl bg-[#C8A97E]/10 flex items-center justify-center">
-          <Icon size={15} className="text-[#C8A97E]" />
+        <div className="w-8 h-8 rounded-xl bg-[#9B1232]/10 flex items-center justify-center">
+          <Icon size={15} className="text-[#9B1232]" />
         </div>
         <h2 className="font-bold text-gray-800 text-sm">{title}</h2>
       </div>
@@ -415,8 +415,8 @@ function ColorField({ label, hint, value, onChange }) {
             type="text"
             value={value || ''}
             onChange={onChange}
-            placeholder="#C8A97E"
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#C8A97E]/30 focus:border-[#C8A97E] font-mono"
+            placeholder="#9B1232"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#9B1232]/30 focus:border-[#9B1232] font-mono"
           />
         </div>
       </div>
@@ -437,7 +437,7 @@ function LogoField({ label, hint, value, field, uploading, onChange }) {
 
       <div
         onClick={() => ref.current?.click()}
-        className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#C8A97E]/50 transition-colors min-h-[100px] bg-gray-50"
+        className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#9B1232]/50 transition-colors min-h-[100px] bg-gray-50"
       >
         {value ? (
           <img
@@ -454,7 +454,7 @@ function LogoField({ label, hint, value, field, uploading, onChange }) {
         )}
         {uploading && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl">
-            <div className="w-5 h-5 border-2 border-[#C8A97E] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[#9B1232] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>

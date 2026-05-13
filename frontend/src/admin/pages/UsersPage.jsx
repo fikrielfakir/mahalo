@@ -75,7 +75,7 @@ export default function UsersPage() {
       key: 'name', label: 'User',
       render: (r) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0B1F3A] flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center text-white font-bold text-sm shrink-0">
             {r.name?.[0]?.toUpperCase() || '?'}
           </div>
           <div>
@@ -157,7 +157,7 @@ export default function UsersPage() {
             <Input value={form.name} onChange={f('name')} required placeholder="Sarah Johnson" />
           </FormField>
           <FormField label="Email Address" required>
-            <Input type="email" value={form.email} onChange={f('email')} required placeholder="sarah@homzen.ma" />
+            <Input type="email" value={form.email} onChange={f('email')} required placeholder="sarah@mahalo.ma" />
           </FormField>
           <FormField label={editing ? 'New Password (leave blank to keep current)' : 'Password'} required={!editing}>
             <Input type="password" value={form.password} onChange={f('password')} required={!editing} placeholder="••••••••" autoComplete="new-password" />

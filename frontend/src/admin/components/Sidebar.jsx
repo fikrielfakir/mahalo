@@ -5,6 +5,7 @@ import {
   Star, MapPin, MessageSquare, LogOut, X, TrendingUp,
   Image, Settings, UserCog, Globe
 } from 'lucide-react'
+import logoLight from '/logo-light.png'
 
 const groups = [
   {
@@ -63,20 +64,17 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside className={`
-        fixed top-0 left-0 z-30 h-full w-64 bg-[#0B1F3A] flex flex-col
+        fixed top-0 left-0 z-30 h-full w-64 bg-[#1A1A1A] flex flex-col
         transition-transform duration-300 ease-in-out
         ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto
       `}>
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#C8A97E] flex items-center justify-center">
-              <Building2 size={16} className="text-white" />
-            </div>
-            <span className="text-white font-bold text-lg tracking-tight">Homzen</span>
-            <span className="text-[#C8A97E] text-xs font-semibold bg-[#C8A97E]/10 px-1.5 py-0.5 rounded">Admin</span>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={logoLight} alt="Mahalo" className="h-8 w-auto object-contain" />
+            <span className="text-[#9B1232] text-xs font-semibold bg-[#9B1232]/20 px-1.5 py-0.5 rounded shrink-0">Admin</span>
           </div>
-          <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white">
+          <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white ml-2">
             <X size={18} />
           </button>
         </div>
@@ -94,7 +92,7 @@ export default function Sidebar({ open, onClose }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150
                     ${isActive
-                      ? 'bg-[#C8A97E] text-white shadow-md'
+                      ? 'bg-[#9B1232] text-white shadow-md'
                       : 'text-white/60 hover:text-white hover:bg-white/5'}`
                   }
                 >
@@ -109,8 +107,8 @@ export default function Sidebar({ open, onClose }) {
         {/* User */}
         <div className="p-4 border-t border-white/10 shrink-0">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-[#C8A97E]/20 flex items-center justify-center">
-              <span className="text-[#C8A97E] font-bold text-sm">{user?.name?.[0] ?? 'A'}</span>
+            <div className="w-9 h-9 rounded-xl bg-[#9B1232]/20 flex items-center justify-center">
+              <span className="text-[#9B1232] font-bold text-sm">{user?.name?.[0] ?? 'A'}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-semibold truncate">{user?.name ?? 'Admin'}</p>

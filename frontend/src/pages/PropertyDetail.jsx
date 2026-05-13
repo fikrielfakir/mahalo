@@ -10,7 +10,7 @@ import { trackRecentlyViewed } from '../components/RecentlyViewed'
 import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
 
-const FAVORITES_KEY = 'homzen_favorites'
+const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
 function saveFavorites(ids) { try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids)) } catch {} }
 

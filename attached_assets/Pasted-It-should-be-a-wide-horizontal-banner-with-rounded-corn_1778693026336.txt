@@ -1,0 +1,19 @@
+It should be a wide horizontal banner with rounded corners, a deep dark red gradient background (#070003 → #1e020c → #2b0411), and soft glowing red radial light effects layered behind the content.
+
+Layout (left to right):
+
+Left — Text content (≈35% width): A small pill badge at the top reading "AGENTZ MOBILE APP" with a smartphone icon and subtle glassmorphism style. Below it a large heading: "Your next home" in white, then "is in your hands" in a crimson-to-rose gradient (#BA1932 → #f07088). Below that a short paragraph in muted white. At the bottom, two glassmorphism store buttons side by side — "Download on the App Store" (Apple icon) and "GET IT ON Google Play" (Play icon).
+
+Center — Smartphone mockup (≈40% width): A realistic floating phone image (/app-mockup.png) that overflows the top and bottom edges of the banner by ~60px on each side. The phone has a warm red radial glow behind it and a subtle elliptical glow beneath it simulating a floor reflection. Use drop-shadow for depth. The phone should be slightly perspective-tilted.
+
+Right — QR code card (≈20% width): A glassmorphism card with rounded corners, dark red tinted glass background (rgba(115,13,38,0.4)), a white QR code image in the center, and the text "Scan to download the Agentz app" below it (with "Agentz" in red #BA1932). The card has a subtle border (rgba(255,255,255,0.15)) and soft backdrop blur.
+
+Implementation rules:
+
+The phone image must be a sibling of the dark card div (not a child), both inside a position: relative container, so overflow: hidden on the card does not clip the phone.
+Phone wrapper: position: absolute, top: -60px, bottom: -60px, centered horizontally in its column.
+Background glow orbs: 3–4 absolutely positioned divs with radial-gradient and filter: blur(50–60px).
+Glassmorphism elements use background: rgba(255,255,255,0.07), border: 1px solid rgba(255,255,255,0.16), backdropFilter: blur(16px).
+Glossy top highlight: a 1px horizontal line at the very top of the card with a faded white center gradient.
+Store buttons lift slightly (translateY(-2px)) on hover.
+All inline styles (no Tailwind dependency for layout-critical parts).

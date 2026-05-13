@@ -93,7 +93,7 @@ export default function Hero() {
           <span
             className="relative inline-block"
             style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text',
-              backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 50%, #BA1932 100%)' }}
+              backgroundImage: 'linear-gradient(135deg, #111111 0%, #555555 50%, #111111 100%)' }}
           >
             Morocco
           </span>

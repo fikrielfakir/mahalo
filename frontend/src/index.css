@@ -18,7 +18,7 @@
   body {
     font-family: 'Inter', system-ui, sans-serif;
     background-color: #F5F5F5;
-    color: #730D26;
+    color: #111111;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -34,7 +34,7 @@
   }
 
   .glass-dark {
-    background: rgba(11, 31, 58, 0.65);
+    background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -52,7 +52,7 @@
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: 0 4px 24px rgba(11,31,58,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
   }
 
   .glass-surface {
@@ -64,7 +64,7 @@
 
   /* ── Buttons ── */
   .btn-gold {
-    @apply inline-flex items-center gap-2 bg-gold text-navy font-semibold px-6 py-3 rounded-2xl transition-all duration-300 hover:bg-gold-dark hover:-translate-y-0.5 active:translate-y-0;
+    @apply inline-flex items-center gap-2 bg-gold text-white font-semibold px-6 py-3 rounded-2xl transition-all duration-300 hover:bg-gold-light hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-navy {
@@ -128,7 +128,7 @@
 
   .field-wrap:focus-within {
     @apply border-gold/50 bg-white/90;
-    box-shadow: 0 0 0 3px rgba(200,169,126,0.12);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
   }
 
   /* ── Nav pill ── */
@@ -148,8 +148,8 @@
 
 /* ── Swiper ── */
 .swiper-pagination-bullet {
-  background: #BA1932 !important;
-  opacity: 0.35;
+  background: #111111 !important;
+  opacity: 0.25;
 }
 .swiper-pagination-bullet-active {
   opacity: 1 !important;
@@ -160,8 +160,8 @@
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #F5F5F5; }
-::-webkit-scrollbar-thumb { background: rgba(200,169,126,0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #BA1932; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.35); }
 
 /* ── Scrollbar hide ── */
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

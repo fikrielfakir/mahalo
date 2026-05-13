@@ -54,7 +54,7 @@ export default function MortgageCalculator({ price = 0 }) {
             <input
               type="range" min={5} max={60} step={5} value={down}
               onChange={e => setDown(+e.target.value)}
-              className="w-full accent-[#BA1932] h-1.5 rounded-full cursor-pointer"
+              className="w-full accent-[#111111] h-1.5 rounded-full cursor-pointer"
             />
             <div className="flex justify-between text-xs text-navy/30 mt-1">
               <span>5%</span><span>60%</span>
@@ -70,7 +70,7 @@ export default function MortgageCalculator({ price = 0 }) {
             <input
               type="range" min={1} max={12} step={0.5} value={rate}
               onChange={e => setRate(+e.target.value)}
-              className="w-full accent-[#BA1932] h-1.5 rounded-full cursor-pointer"
+              className="w-full accent-[#111111] h-1.5 rounded-full cursor-pointer"
             />
             <div className="flex justify-between text-xs text-navy/30 mt-1">
               <span>1%</span><span>12%</span>
@@ -86,7 +86,7 @@ export default function MortgageCalculator({ price = 0 }) {
             <input
               type="range" min={5} max={30} step={5} value={years}
               onChange={e => setYears(+e.target.value)}
-              className="w-full accent-[#BA1932] h-1.5 rounded-full cursor-pointer"
+              className="w-full accent-[#111111] h-1.5 rounded-full cursor-pointer"
             />
             <div className="flex justify-between text-xs text-navy/30 mt-1">
               <span>5 yrs</span><span>30 yrs</span>

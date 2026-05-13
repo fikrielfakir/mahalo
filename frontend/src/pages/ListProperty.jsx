@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import {
   Home, CheckCircle, ArrowRight, Phone, Mail, User,
@@ -11,6 +11,7 @@ import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
 import { consultsApi } from '../api/client'
 import LocationPicker from '../components/LocationPicker'
+import { useUserAuth } from '../context/UserAuthContext'
 
 const EMPTY = {
   name: '', email: '', phone: '',
@@ -220,11 +221,17 @@ export default function ListProperty() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const { toast, show: showToast, hide: hideToast } = useToast()
+  const { isAuthenticated, loading: authLoading } = useUserAuth()
+  const navigate = useNavigate()
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/list-property' } })
+      return
+    }
     if (!form.name.trim() || !form.phone.trim() || !form.city.trim()) {
       showToast('Please fill in name, phone, and city', 'error')
       return

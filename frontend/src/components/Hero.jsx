@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Search, MapPin, SlidersHorizontal, BedDouble, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { propertiesApi } from '../api/client'
+import { propertiesApi, agentsApi } from '../api/client'
 
 const tabs = ['Buy', 'Rent', 'New Projects']
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
@@ -14,7 +14,11 @@ export default function Hero() {
   const [maxPrice, setMaxPrice]         = useState('')
   const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
-  const [citiesCount, setCitiesCount]   = useState(null)
+
+  const [propertiesCount, setPropertiesCount] = useState(null)
+  const [agentsCount, setAgentsCount]         = useState(null)
+  const [citiesCount, setCitiesCount]         = useState(null)
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -25,7 +29,27 @@ export default function Hero() {
         if (Array.isArray(data?.cities))     setCitiesCount(data.cities.length)
       })
       .catch(() => {})
+
+    propertiesApi.list({ per_page: 1 })
+      .then((res) => {
+        const total = res?.meta?.total ?? res?.total
+        if (total != null) setPropertiesCount(total)
+      })
+      .catch(() => {})
+
+    agentsApi.list({ per_page: 1 })
+      .then((res) => {
+        const total = res?.meta?.total ?? res?.total
+        if (total != null) setAgentsCount(total)
+      })
+      .catch(() => {})
   }, [])
+
+  const fmtCount = (n, fallback) => {
+    if (n == null) return fallback
+    if (n >= 1000) return `${(n / 1000).toFixed(0)}K+`
+    return `${n}+`
+  }
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -178,10 +202,10 @@ export default function Hero() {
         {/* Stats */}
         <div className="flex flex-wrap justify-center gap-4 mt-10 animate-fade-up delay-300">
           {[
-            { value: '15K+', label: 'Properties' },
-            { value: '8K+',  label: 'Happy Clients' },
-            { value: '200+', label: 'Verified Agents' },
-            { value: citiesCount ? `${citiesCount}+` : '20+', label: 'Cities' },
+            { value: fmtCount(propertiesCount, '1K+'),  label: 'Properties' },
+            { value: '8K+',                              label: 'Happy Clients' },
+            { value: fmtCount(agentsCount, '50+'),       label: 'Verified Agents' },
+            { value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities' },
           ].map((stat) => (
             <div key={stat.label} className="glass rounded-2xl px-5 py-3 text-left min-w-[90px]">
               <div className="text-white font-bold text-xl leading-none mb-1">{stat.value}</div>

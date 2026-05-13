@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
-const WA_NUMBER = '212600000000'
-const WA_MESSAGE = 'Hello! I found your listing on Homzen and I\'d like to know more.'
+const FALLBACK_NUMBER = '212600000000'
+const WA_MESSAGE = "Hello! I found your listing on Agenz and I'd like to know more."
+
+function getWaNumber() {
+  try {
+    const s = JSON.parse(localStorage.getItem('homzen_settings') || '{}')
+    return (s.whatsapp_number || '').replace(/\D/g, '') || FALLBACK_NUMBER
+  } catch {
+    return FALLBACK_NUMBER
+  }
+}
 
 function WhatsAppIcon({ size = 24 }) {
   return (
@@ -18,20 +27,18 @@ export default function WhatsAppButton() {
 
   if (dismissed) return null
 
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_MESSAGE)}`
+  const url = `https://wa.me/${getWaNumber()}?text=${encodeURIComponent(WA_MESSAGE)}`
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-      {/* Tooltip bubble */}
       {hovered && (
-        <div className="bg-white rounded-2xl shadow-xl px-4 py-3 text-sm text-navy font-medium max-w-[200px] text-center animate-fade-in">
+        <div className="relative bg-white rounded-2xl shadow-xl px-4 py-3 text-sm text-navy font-medium max-w-[200px] text-center animate-fade-in">
           Chat with us on WhatsApp
           <div className="absolute -bottom-1.5 right-5 w-3 h-3 bg-white rotate-45 shadow-sm" />
         </div>
       )}
 
       <div className="flex items-end gap-2">
-        {/* Dismiss */}
         <button
           onClick={() => setDismissed(true)}
           className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors mb-1"
@@ -40,7 +47,6 @@ export default function WhatsAppButton() {
           <X size={12} className="text-gray-500" />
         </button>
 
-        {/* WhatsApp button */}
         <a
           href={url}
           target="_blank"
@@ -50,7 +56,6 @@ export default function WhatsAppButton() {
           className="relative w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
           aria-label="Chat on WhatsApp"
         >
-          {/* Pulse ring */}
           <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" />
           <WhatsAppIcon size={28} />
         </a>

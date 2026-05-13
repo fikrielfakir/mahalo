@@ -1,14 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Award, Users, Building2, Globe, Shield, TrendingUp, Heart, Star, ArrowRight, MapPin } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-
-const STATS = [
-  { value: '15K+', label: 'Properties Listed', icon: Building2 },
-  { value: '200+', label: 'Verified Agents', icon: Users },
-  { value: '8K+', label: 'Happy Clients', icon: Heart },
-  { value: '10+', label: 'Cities Covered', icon: Globe },
-]
+import { propertiesApi, agentsApi } from '../api/client'
 
 const VALUES = [
   {
@@ -19,7 +14,7 @@ const VALUES = [
   {
     icon: Award,
     title: 'Premium Quality',
-    desc: 'We handpick properties that meet our standards for quality, location, and value. Only the best makes it onto Homzen.',
+    desc: 'We handpick properties that meet our standards for quality, location, and value. Only the best makes it onto Agenz.',
   },
   {
     icon: TrendingUp,
@@ -34,15 +29,46 @@ const VALUES = [
 ]
 
 const TEAM = [
-  { name: 'Youssef Alami', role: 'Founder & CEO', city: 'Casablanca', initial: 'Y', color: '#0B1F3A' },
-  { name: 'Fatima Zahra', role: 'Head of Operations', city: 'Rabat', initial: 'F', color: '#C8A97E' },
-  { name: 'Karim Benchekroun', role: 'Chief Technology Officer', city: 'Casablanca', initial: 'K', color: '#1a3a5c' },
-  { name: 'Nadia El Fassi', role: 'Head of Agent Network', city: 'Marrakech', initial: 'N', color: '#8b6914' },
-  { name: 'Omar Tazi', role: 'Head of Sales', city: 'Tangier', initial: 'O', color: '#132d52' },
-  { name: 'Salma Haddad', role: 'Marketing Director', city: 'Casablanca', initial: 'S', color: '#a07a3c' },
+  { name: 'Youssef Alami',      role: 'Founder & CEO',           city: 'Casablanca', initial: 'Y', color: '#0B1F3A' },
+  { name: 'Fatima Zahra',       role: 'Head of Operations',       city: 'Rabat',       initial: 'F', color: '#C8A97E' },
+  { name: 'Karim Benchekroun',  role: 'Chief Technology Officer', city: 'Casablanca', initial: 'K', color: '#1a3a5c' },
+  { name: 'Nadia El Fassi',     role: 'Head of Agent Network',    city: 'Marrakech',   initial: 'N', color: '#8b6914' },
+  { name: 'Omar Tazi',          role: 'Head of Sales',            city: 'Tangier',     initial: 'O', color: '#132d52' },
+  { name: 'Salma Haddad',       role: 'Marketing Director',       city: 'Casablanca',  initial: 'S', color: '#a07a3c' },
 ]
 
+function fmtCount(n, fallback) {
+  if (n == null) return fallback
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}K+`
+  return `${n}+`
+}
+
 export default function About() {
+  const [propertiesCount, setPropertiesCount] = useState(null)
+  const [agentsCount, setAgentsCount]         = useState(null)
+  const [citiesCount, setCitiesCount]         = useState(null)
+
+  useEffect(() => {
+    propertiesApi.list({ per_page: 1 })
+      .then(r => { const t = r?.meta?.total ?? r?.total; if (t != null) setPropertiesCount(t) })
+      .catch(() => {})
+
+    agentsApi.list({ per_page: 1 })
+      .then(r => { const t = r?.meta?.total ?? r?.total; if (t != null) setAgentsCount(t) })
+      .catch(() => {})
+
+    propertiesApi.filters()
+      .then(r => { if (Array.isArray(r?.data?.cities)) setCitiesCount(r.data.cities.length) })
+      .catch(() => {})
+  }, [])
+
+  const STATS = [
+    { value: fmtCount(propertiesCount, '1K+'), label: 'Properties Listed',  icon: Building2 },
+    { value: fmtCount(agentsCount, '50+'),     label: 'Verified Agents',     icon: Users },
+    { value: '8K+',                            label: 'Happy Clients',       icon: Heart },
+    { value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities Covered', icon: Globe },
+  ]
+
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
@@ -63,7 +89,7 @@ export default function About() {
             <span className="text-gold">Real Estate Platform</span>
           </h1>
           <p className="text-white/70 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
-            Founded in Casablanca, Homzen was built on a simple belief: finding your dream property should be exciting,
+            Founded in Casablanca, Agenz was built on a simple belief: finding your dream property should be exciting,
             not stressful. We connect buyers, renters, and investors with Morocco's finest real estate.
           </p>
           <Link to="/properties" className="inline-flex items-center gap-2 btn-gold">
@@ -96,7 +122,7 @@ export default function About() {
               Making homeownership accessible to every Moroccan
             </h2>
             <p className="text-navy/60 leading-relaxed mb-5">
-              We started Homzen because we experienced firsthand how fragmented and opaque the Moroccan
+              We started Agenz because we experienced firsthand how fragmented and opaque the Moroccan
               real estate market was. Finding a property meant dozens of calls, visits to unreliable listings,
               and endless uncertainty about pricing.
             </p>
@@ -117,7 +143,7 @@ export default function About() {
             <div className="rounded-3xl overflow-hidden aspect-[4/3] shadow-card-hover">
               <img
                 src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80"
-                alt="Homzen office"
+                alt="Agenz office"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -140,7 +166,7 @@ export default function About() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="section-label mb-3">Why Choose Homzen</p>
+            <p className="section-label mb-3">Why Choose Agenz</p>
             <h2 className="text-3xl font-bold text-navy">Built on four core values</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -162,7 +188,7 @@ export default function About() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="section-label mb-3">The Team</p>
-            <h2 className="text-3xl font-bold text-navy">Meet the people behind Homzen</h2>
+            <h2 className="text-3xl font-bold text-navy">Meet the people behind Agenz</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
             {TEAM.map(({ name, role, city, initial, color }) => (
@@ -188,7 +214,7 @@ export default function About() {
       <section className="py-20 px-6 bg-navy">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to find your dream property?</h2>
-          <p className="text-white/60 mb-8">Browse thousands of verified listings across Morocco's most sought-after locations.</p>
+          <p className="text-white/60 mb-8">Browse verified listings across Morocco's most sought-after locations.</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link to="/properties" className="btn-gold flex items-center gap-2">
               Browse Properties <ArrowRight size={15} />

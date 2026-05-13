@@ -1,14 +1,55 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Facebook, Instagram, Twitter, Linkedin, ArrowRight, Mail } from 'lucide-react'
+import { Building2, Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
 
 const footerLinks = {
-  Company:   ['About Us', 'Careers', 'Press', 'Contact'],
-  Discover:  ['Buy', 'Rent', 'New Projects', 'Neighborhoods'],
-  Resources: ['Blog', 'Guides', 'Market Insights', 'Help Center'],
-  Legal:     ['Terms of Use', 'Privacy Policy', 'Cookie Policy'],
+  Company:   [
+    { label: 'About Us',       to: '/about' },
+    { label: 'Agents',         to: '/agents' },
+    { label: 'Contact',        to: '/contact' },
+  ],
+  Discover:  [
+    { label: 'Buy',            to: '/properties?type=sale' },
+    { label: 'Rent',           to: '/properties?type=rent' },
+    { label: 'New Projects',   to: '/projects' },
+    { label: 'Neighborhoods',  to: '/neighborhoods' },
+  ],
+  Resources: [
+    { label: 'List Property',  to: '/list-property' },
+    { label: 'Help Center',    to: '#' },
+    { label: 'Market Insights',to: '#' },
+  ],
+  Legal:     [
+    { label: 'Terms of Use',   to: '#' },
+    { label: 'Privacy Policy', to: '#' },
+    { label: 'Cookie Policy',  to: '#' },
+  ],
+}
+
+function getSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('homzen_settings') || '{}')
+  } catch {
+    return {}
+  }
 }
 
 export default function Footer() {
+  const [settings, setSettings] = useState({})
+
+  useEffect(() => {
+    setSettings(getSettings())
+  }, [])
+
+  const socials = [
+    { Icon: Facebook,  href: settings.facebook_url,  label: 'Facebook' },
+    { Icon: Instagram, href: settings.instagram_url, label: 'Instagram' },
+    { Icon: Twitter,   href: settings.twitter_url,   label: 'Twitter' },
+    { Icon: Youtube,   href: settings.youtube_url,   label: 'YouTube' },
+  ].filter(s => s.href)
+
+  const year = new Date().getFullYear()
+
   return (
     <footer style={{ background: 'linear-gradient(180deg, #0B1F3A 0%, #071628 100%)' }}>
       <div className="max-w-7xl mx-auto px-5 pt-16 pb-8">
@@ -26,26 +67,42 @@ export default function Footer() {
             <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-xs">
               Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.
             </p>
-            <div className="flex gap-2.5">
-              {[
-                { Icon: Facebook,  href: '#', label: 'Facebook' },
-                { Icon: Instagram, href: '#', label: 'Instagram' },
-                { Icon: Twitter,   href: '#', label: 'Twitter' },
-                { Icon: Linkedin,  href: '#', label: 'LinkedIn' },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-all duration-200"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                >
-                  <Icon size={15} />
-                </a>
-              ))}
-            </div>
+            {socials.length > 0 ? (
+              <div className="flex gap-2.5">
+                {socials.map(({ Icon, href, label }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-all duration-200"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  >
+                    <Icon size={15} />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-2.5">
+                {[
+                  { Icon: Facebook,  label: 'Facebook' },
+                  { Icon: Instagram, label: 'Instagram' },
+                  { Icon: Twitter,   label: 'Twitter' },
+                ].map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-white/20"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    title={`${label} — configure in admin settings`}
+                  >
+                    <Icon size={15} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Links */}
@@ -54,12 +111,12 @@ export default function Footer() {
               <h4 className="text-white/70 font-semibold text-xs uppercase tracking-widest mb-4">{section}</h4>
               <ul className="space-y-3">
                 {links.map((link) => (
-                  <li key={`${section}-${link}`}>
+                  <li key={`${section}-${link.label}`}>
                     <Link
-                      to="#"
+                      to={link.to}
                       className="text-white/35 text-sm hover:text-white/70 transition-colors duration-200"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -104,7 +161,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-6"
           style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <p className="text-white/25 text-sm">© 2025 Agenz. All rights reserved.</p>
+          <p className="text-white/25 text-sm">© {year} Agenz. All rights reserved.</p>
           <p className="text-white/25 text-sm">Morocco (MAD) · Premium Real Estate</p>
         </div>
       </div>

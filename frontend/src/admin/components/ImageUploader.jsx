@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { Upload, X, Link, AlertCircle, Star } from 'lucide-react'
+import { Upload, X, Link, AlertCircle, Star, Video } from 'lucide-react'
 import axios from 'axios'
 
 const client = axios.create({ baseURL: '/api/v1' })
@@ -13,6 +13,12 @@ function getDisplayUrl(path) {
   if (!path) return ''
   if (path.startsWith('http') || path.startsWith('blob:')) return path
   return `/storage/${path}`
+}
+
+function isVideoPath(path) {
+  if (!path) return false
+  const ext = path.split('.').pop().toLowerCase()
+  return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v'].includes(ext)
 }
 
 function ProgressRing({ pct }) {
@@ -37,7 +43,7 @@ function ProgressRing({ pct }) {
   )
 }
 
-export default function ImageUploader({ images = [], onChange, folder = 'properties' }) {
+export default function ImageUploader({ images = [], onChange, folder = 'properties', allowVideo = false }) {
   const [dragging, setDragging]   = useState(false)
   const [urlInput, setUrlInput]   = useState('')
   const [showUrl, setShowUrl]     = useState(false)
@@ -45,16 +51,12 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   const [errors, setErrors]       = useState([])
   const inputRef = useRef()
 
-  // Always-fresh refs so async callbacks never have stale closures
-  const imagesRef  = useRef(images)
+  const imagesRef   = useRef(images)
   const onChangeRef = useRef(onChange)
   useEffect(() => { imagesRef.current = images }, [images])
   useEffect(() => { onChangeRef.current = onChange }, [onChange])
 
-  const removeImage = (idx) => {
-    const next = images.filter((_, i) => i !== idx)
-    onChange(next)
-  }
+  const removeImage = (idx) => onChange(images.filter((_, i) => i !== idx))
 
   const setAsMain = (idx) => {
     if (idx === 0) return
@@ -82,11 +84,8 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
       })
       const path = res.data?.path
       if (path) {
-        // Use refs so we always append to the latest images list
         const latest = imagesRef.current
-        if (!latest.includes(path)) {
-          onChangeRef.current([...latest, path])
-        }
+        if (!latest.includes(path)) onChangeRef.current([...latest, path])
       }
       setUploading((prev) => prev.filter((u) => u.id !== id))
     } catch (err) {
@@ -97,9 +96,24 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
     }
   }, [folder])
 
+  const acceptedTypes = allowVideo
+    ? 'image/*,video/mp4,video/quicktime,video/x-msvideo,video/webm,video/mkv'
+    : 'image/*'
+
   const handleFiles = useCallback((files) => {
-    Array.from(files).filter((f) => f.type.startsWith('image/')).forEach(uploadFile)
-  }, [uploadFile])
+    Array.from(files).forEach((f) => {
+      const isImg = f.type.startsWith('image/')
+      const isVid = f.type.startsWith('video/')
+      if (!isImg && !isVid) return
+      if (isVid && !allowVideo) return
+      if (isVid && f.size > 100 * 1024 * 1024) {
+        setErrors((prev) => [...prev, `${f.name} exceeds 100 MB limit`])
+        setTimeout(() => setErrors((prev) => prev.slice(1)), 5000)
+        return
+      }
+      uploadFile(f)
+    })
+  }, [uploadFile, allowVideo])
 
   const onDrop = (e) => {
     e.preventDefault()
@@ -120,31 +134,36 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
       {/* Thumbnail grid */}
       {(images.length > 0 || uploading.length > 0) && (
         <div className="grid grid-cols-4 gap-2">
-
           {images.map((img, idx) => (
             <div key={`${img}-${idx}`} className="relative rounded-xl overflow-hidden aspect-square bg-gray-100 group">
-              <img
-                src={getDisplayUrl(img)}
-                alt=""
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
+              {isVideoPath(img) ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
+                  <Video size={24} className="text-gray-400" />
+                  <span className="text-[9px] text-gray-400 truncate px-1 w-full text-center">
+                    {img.split('/').pop()}
+                  </span>
+                </div>
+              ) : (
+                <img
+                  src={getDisplayUrl(img)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              )}
 
-              {/* Dark overlay on hover */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none" />
 
-              {/* MAIN badge */}
               {idx === 0 && (
                 <span className="absolute bottom-1.5 left-1.5 bg-[#BA1932] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md leading-none pointer-events-none z-10">
                   MAIN
                 </span>
               )}
 
-              {/* Set as main star — shown on non-main images on hover */}
               {idx !== 0 && (
                 <button
                   type="button"
-                  title="Set as main photo"
+                  title="Set as main"
                   onClick={(e) => { e.stopPropagation(); setAsMain(idx) }}
                   className="absolute bottom-1.5 left-1.5 w-6 h-6 bg-white/90 text-amber-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-white hover:scale-110 active:scale-95"
                 >
@@ -152,10 +171,9 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
                 </button>
               )}
 
-              {/* Remove button */}
               <button
                 type="button"
-                title="Remove image"
+                title="Remove"
                 onClick={(e) => { e.stopPropagation(); removeImage(idx) }}
                 className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-red-600 hover:scale-110 active:scale-95"
               >
@@ -164,7 +182,6 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
             </div>
           ))}
 
-          {/* Upload progress placeholders */}
           {uploading.map((u) => (
             <div key={u.id} className="relative rounded-xl overflow-hidden aspect-square bg-gray-100 flex flex-col items-center justify-center gap-1">
               <ProgressRing pct={u.pct} />
@@ -189,20 +206,22 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center py-6 cursor-pointer transition-all select-none ${
-          dragging
-            ? 'border-[#BA1932] bg-[#BA1932]/5'
-            : 'border-gray-200 hover:border-[#BA1932]/60 hover:bg-gray-50'
+          dragging ? 'border-[#BA1932] bg-[#BA1932]/5' : 'border-gray-200 hover:border-[#BA1932]/60 hover:bg-gray-50'
         }`}
       >
         <Upload size={22} className={`mb-2 transition-colors ${dragging ? 'text-[#BA1932]' : 'text-gray-300'}`} />
         <p className="text-sm font-medium text-gray-500">
-          {dragging ? 'Drop to upload' : 'Drag & drop images here'}
+          {dragging ? 'Drop to upload' : `Drag & drop ${allowVideo ? 'images or videos' : 'images'} here`}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">or click to browse — JPG, PNG, WEBP up to 20 MB</p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {allowVideo
+            ? 'JPG, PNG, WEBP up to 20 MB · MP4, MOV, WEBM up to 100 MB'
+            : 'JPG, PNG, WEBP up to 20 MB'}
+        </p>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={acceptedTypes}
           multiple
           className="hidden"
           onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
@@ -222,30 +241,21 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
                 if (e.key === 'Enter') { e.preventDefault(); addUrl() }
                 if (e.key === 'Escape') { setShowUrl(false); setUrlInput('') }
               }}
-              placeholder="https://images.unsplash.com/..."
+              placeholder="https://example.com/image.jpg"
               className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all placeholder-gray-400"
             />
-            <button
-              type="button"
-              onClick={addUrl}
-              className="px-4 py-2 bg-[#730D26] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
-            >
+            <button type="button" onClick={addUrl}
+              className="px-4 py-2 bg-[#730D26] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
               Add
             </button>
-            <button
-              type="button"
-              onClick={() => { setShowUrl(false); setUrlInput('') }}
-              className="px-3 py-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors"
-            >
+            <button type="button" onClick={() => { setShowUrl(false); setUrlInput('') }}
+              className="px-3 py-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors">
               <X size={15} />
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setShowUrl(true)}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-[#730D26] border border-gray-200 rounded-xl hover:border-[#730D26]/30 transition-all"
-          >
+          <button type="button" onClick={() => setShowUrl(true)}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-[#730D26] border border-gray-200 rounded-xl hover:border-[#730D26]/30 transition-all">
             <Link size={13} />
             Add image URL
           </button>
@@ -254,7 +264,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
 
       {images.length > 0 && (
         <p className="text-xs text-gray-400">
-          {images.length} image{images.length !== 1 ? 's' : ''} · hover a thumbnail to remove or
+          {images.length} file{images.length !== 1 ? 's' : ''} · hover a thumbnail to remove or
           <Star size={9} className="inline mx-0.5 text-amber-400 fill-amber-400" />
           set as main
         </p>

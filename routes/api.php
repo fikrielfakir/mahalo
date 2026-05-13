@@ -88,6 +88,7 @@ Route::prefix('v1')->group(function () {
     // ── Admin: Media (no Sanctum for upload — proxied through Vite in dev)
     Route::prefix('admin')->group(function () {
         Route::post('/media',        [MediaController::class, 'upload']);
+        Route::post('/media/upload', [MediaController::class, 'upload']);
         Route::delete('/media/path', [MediaController::class, 'deleteByPath']);
     });
 
@@ -120,5 +121,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/settings',             [AdminSettingsController::class, 'show']);
         Route::put('/settings',             [AdminSettingsController::class, 'update']);
         Route::post('/settings/logo',       [AdminSettingsController::class, 'uploadLogo']);
+        Route::post('/settings/mail-test',  [AdminSettingsController::class, 'testMail']);
     });
 });

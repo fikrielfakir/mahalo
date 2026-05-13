@@ -5,6 +5,7 @@ import { FormField, Input, Textarea } from '../components/Modal'
 import {
   Save, Globe, Mail, Phone, Instagram, Facebook, Twitter, MapPin,
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
+  Server, Send, Lock, AlertCircle,
 } from 'lucide-react'
 
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'contact',  label: 'Contact',  icon: Mail },
   { id: 'social',   label: 'Social',   icon: Instagram },
   { id: 'seo',      label: 'SEO',      icon: Globe },
+  { id: 'mail',     label: 'Mail / SMTP', icon: Server },
 ]
 
 const DEFAULTS = {
@@ -43,6 +45,15 @@ const DEFAULTS = {
   watermark_position: 'bottom-right',
   watermark_opacity: '60',
   watermark_size: '20',
+  // SMTP Mail
+  mail_mailer: 'smtp',
+  mail_host: '',
+  mail_port: '587',
+  mail_username: '',
+  mail_password: '',
+  mail_encryption: 'tls',
+  mail_from_address: '',
+  mail_from_name: 'Agentz',
 }
 
 const WATERMARK_POSITIONS = [
@@ -54,12 +65,15 @@ const WATERMARK_POSITIONS = [
 ]
 
 export default function SettingsPage() {
-  const [form, setForm]       = useState(DEFAULTS)
-  const [tab, setTab]         = useState('general')
-  const [saving, setSaving]   = useState(false)
-  const [saved, setSaved]     = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [form, setForm]           = useState(DEFAULTS)
+  const [tab, setTab]             = useState('general')
+  const [saving, setSaving]       = useState(false)
+  const [saved, setSaved]         = useState(false)
+  const [loading, setLoading]     = useState(true)
   const [uploading, setUploading] = useState({})
+  const [showPwd, setShowPwd]     = useState(false)
+  const [testing, setTesting]     = useState(false)
+  const [testResult, setTestResult] = useState(null)
 
   useEffect(() => {
     adminSettings.get()
@@ -372,6 +386,126 @@ export default function SettingsPage() {
               <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
             </FormField>
           </Section>
+        )}
+
+        {/* ── MAIL TAB ── */}
+        {tab === 'mail' && (
+          <>
+            <Section title="SMTP Mail Configuration" icon={Server}>
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 mb-2">
+                Configure your outgoing mail server. These settings are used to send contact form notifications, consultation confirmations, and admin alerts.
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Mailer Driver">
+                  <select
+                    value={form.mail_mailer}
+                    onChange={f('mail_mailer')}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                  >
+                    <option value="smtp">SMTP</option>
+                    <option value="sendmail">Sendmail</option>
+                    <option value="log">Log (testing only)</option>
+                  </select>
+                </FormField>
+                <FormField label="Encryption">
+                  <select
+                    value={form.mail_encryption}
+                    onChange={f('mail_encryption')}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                  >
+                    <option value="tls">TLS (recommended)</option>
+                    <option value="ssl">SSL</option>
+                    <option value="">None</option>
+                  </select>
+                </FormField>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <FormField label="SMTP Host">
+                    <div className="relative">
+                      <Server size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Input value={form.mail_host} onChange={f('mail_host')} className="pl-9" placeholder="smtp.gmail.com" />
+                    </div>
+                  </FormField>
+                </div>
+                <FormField label="SMTP Port">
+                  <Input type="number" value={form.mail_port} onChange={f('mail_port')} placeholder="587" />
+                </FormField>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="SMTP Username">
+                  <div className="relative">
+                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input value={form.mail_username} onChange={f('mail_username')} className="pl-9" placeholder="you@gmail.com" />
+                  </div>
+                </FormField>
+                <FormField label="SMTP Password">
+                  <div className="relative">
+                    <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type={showPwd ? 'text' : 'password'}
+                      value={form.mail_password}
+                      onChange={f('mail_password')}
+                      placeholder="App password or SMTP password"
+                      className="w-full pl-9 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </FormField>
+              </div>
+            </Section>
+
+            <Section title="From Address" icon={Send}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="From Email Address">
+                  <div className="relative">
+                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input value={form.mail_from_address} onChange={f('mail_from_address')} className="pl-9" placeholder="no-reply@mahalo.ma" />
+                  </div>
+                </FormField>
+                <FormField label="From Name">
+                  <Input value={form.mail_from_name} onChange={f('mail_from_name')} placeholder="Mahalo Real Estate" />
+                </FormField>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <Btn
+                  type="button"
+                  variant="ghost"
+                  disabled={testing || !form.mail_host}
+                  onClick={async () => {
+                    setTesting(true)
+                    setTestResult(null)
+                    try {
+                      const r = await adminSettings.testMail(form.mail_from_address || form.contact_email)
+                      setTestResult({ ok: true, msg: r?.message || 'Test email sent successfully!' })
+                    } catch (e) {
+                      setTestResult({ ok: false, msg: e?.message || e?.error || 'Failed to send test email.' })
+                    } finally {
+                      setTesting(false)
+                    }
+                  }}
+                >
+                  <Send size={14} /> {testing ? 'Sending…' : 'Send Test Email'}
+                </Btn>
+                {testResult && (
+                  <span className={`text-sm font-medium flex items-center gap-1.5 ${testResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {testResult.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+                    {testResult.msg}
+                  </span>
+                )}
+              </div>
+            </Section>
+          </>
         )}
 
         <div className="flex justify-end">

@@ -118,6 +118,7 @@ export const adminSettings = {
   get:        ()          => client.get('/admin/settings'),
   update:     (d)         => client.put('/admin/settings', d),
   uploadLogo: (formData)  => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  testMail:   (to)        => client.post('/admin/settings/mail-test', { to }),
 }
 
 export const publicApi = {

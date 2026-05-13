@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -83,23 +82,17 @@ class MediaController extends Controller
     private function applyWatermark(string $storedPath, string $ext): void
     {
         try {
-            $settings = DB::table('site_settings')
-                ->whereIn('key', ['watermark_enabled', 'watermark_logo_url', 'watermark_position', 'watermark_opacity', 'watermark_size'])
-                ->pluck('value', 'key');
-
-            if (($settings['watermark_enabled'] ?? '0') !== '1') return;
-
-            $logoUrl = $settings['watermark_logo_url'] ?? '';
-            if (!$logoUrl) return;
-
             $supportedExt = ['jpg', 'jpeg', 'png', 'webp'];
             if (!in_array(strtolower($ext), $supportedExt)) return;
 
             if (!extension_loaded('gd')) return;
 
-            $position  = $settings['watermark_position'] ?? 'bottom-right';
-            $opacity   = (int) ($settings['watermark_opacity'] ?? 60);
-            $sizeRatio = (int) ($settings['watermark_size'] ?? 20);
+            $watermarkFile = public_path('watermark.png');
+            if (!file_exists($watermarkFile)) return;
+
+            $position  = 'bottom-right';
+            $opacity   = 60;
+            $sizeRatio = 20;
 
             $diskPath = Storage::disk('public')->path($storedPath);
             $main     = $this->imageFromFile($diskPath);
@@ -108,7 +101,7 @@ class MediaController extends Controller
             $mainW = imagesx($main);
             $mainH = imagesy($main);
 
-            $watermark = $this->loadWatermarkImage($logoUrl);
+            $watermark = @imagecreatefrompng($watermarkFile);
             if (!$watermark) { imagedestroy($main); return; }
 
             $wmW    = (int) ($mainW * $sizeRatio / 100);

@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Search, MapPin, SlidersHorizontal, BedDouble } from 'lucide-react'
+import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 
 const tabs = ['Buy', 'Rent', 'New Projects']
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
+const priceRanges = [
+  { label: 'Any', min: '', max: '' },
+  { label: '< 500K', min: '', max: '500000' },
+  { label: '500K – 1M', min: '500000', max: '1000000' },
+  { label: '1M – 3M', min: '1000000', max: '3000000' },
+  { label: '3M – 5M', min: '3000000', max: '5000000' },
+  { label: '5M+', min: '5000000', max: '' },
+]
 
 export default function Hero() {
   const [activeTab, setActiveTab]       = useState('Buy')
   const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
-  const [minPrice, setMinPrice]         = useState('')
-  const [maxPrice, setMaxPrice]         = useState('')
+  const [priceRange, setPriceRange]     = useState('Any')
   const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
 
@@ -55,125 +62,156 @@ export default function Hero() {
     const params = new URLSearchParams()
     if (activeTab === 'Rent') params.set('type', 'rent')
     else if (activeTab === 'Buy') params.set('type', 'sale')
-    if (location)            params.set('search', location)
-    if (propertyType)        params.set('category_id', propertyType)
-    if (minPrice)            params.set('min_price', minPrice)
-    if (maxPrice)            params.set('max_price', maxPrice)
-    if (bedrooms !== 'Any')  params.set('number_bedroom', bedrooms)
+    if (location) params.set('search', location)
+    if (propertyType) params.set('category_id', propertyType)
+    if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
+    const selected = priceRanges.find(r => r.label === priceRange)
+    if (selected?.min) params.set('min_price', selected.min)
+    if (selected?.max) params.set('max_price', selected.max)
     const path = activeTab === 'New Projects' ? '/projects' : '/properties'
     navigate(`${path}?${params.toString()}`)
   }
 
-  return (
-    <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden">
+  const stats = [
+    { icon: Home,        value: fmtCount(propertiesCount, '1K+'), label: 'Properties' },
+    { icon: Users,       value: '8K+',                             label: 'Happy Clients' },
+    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),      label: 'Verified Agents' },
+    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities' },
+  ]
 
-      {/* Background */}
+  return (
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+
+      {/* Background image */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&q=85&auto=format&fit=crop"
-          alt="Hero background"
+          src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&q=90&auto=format&fit=crop"
+          alt="Luxury Villa"
           className="w-full h-full object-cover object-center"
         />
-        {/* Luxury cinematic overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(115,13,38,0.82) 0%, rgba(0,0,0,0.55) 100%)' }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+        {/* Primary overlay: very dark left → reveals image right */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(to right, rgba(8,1,3,0.97) 0%, rgba(30,4,12,0.93) 25%, rgba(115,13,38,0.72) 50%, rgba(115,13,38,0.28) 72%, rgba(0,0,0,0.05) 100%)'
+        }} />
+
+        {/* Top + bottom vignette */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 65%, rgba(0,0,0,0.55) 100%)'
+        }} />
       </div>
 
-      {/* Floating ambient glow orbs */}
-      <div className="absolute inset-0 z-1 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 animate-pulse-glow"
-          style={{ background: 'radial-gradient(circle, #BA1932 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full opacity-15 animate-pulse-glow"
-          style={{ background: 'radial-gradient(circle, #730D26 0%, transparent 70%)', filter: 'blur(32px)', animationDelay: '1.5s' }} />
-      </div>
+      {/* Content — left-aligned */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-24">
+        <div className="max-w-2xl">
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-5 pt-28 pb-20 flex flex-col items-center text-center">
-
-        {/* Label */}
-        <div className="glass-pill mb-6 animate-fade-in">
-          ✦ Premium Real Estate Platform
-        </div>
-
-        {/* Heading */}
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.08] tracking-tight mb-5 animate-fade-up">
-          Find Your Dream
-          <br />
-          Home in{' '}
-          <span
-            className="relative inline-block"
-            style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text',
-              backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 50%, #BA1932 100%)' }}
-          >
-            Morocco
-          </span>
-        </h1>
-
-        <p className="text-white/65 text-lg font-light max-w-md mb-10 animate-fade-up delay-100">
-          Discover premium properties across Morocco's most prestigious neighborhoods.
-        </p>
-
-        {/* Search bar */}
-        <div className="w-full max-w-3xl animate-fade-up delay-200">
-
-          {/* Tabs */}
-          <div className="flex justify-center mb-4">
-            <div className="inline-flex gap-1 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-250 ${
-                    activeTab === tab
-                      ? 'text-white shadow-sm'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                  style={activeTab === tab ? { background: 'linear-gradient(135deg, #730D26, #BA1932)' } : {}}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 mb-7 animate-fade-in"
+            style={{
+              background: 'rgba(255,255,255,0.10)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.20)',
+              borderRadius: '999px',
+              padding: '6px 16px',
+            }}>
+            <span style={{ color: '#BA1932', fontSize: '12px' }}>◆</span>
+            <span className="text-white/85 text-xs font-semibold uppercase tracking-widest">Premium Real Estate Platform</span>
           </div>
 
-          {/* Main search box */}
-          <div
-            className="flex flex-col md:flex-row items-stretch md:items-center gap-2 p-2 rounded-3xl"
+          {/* Heading */}
+          <h1
+            className="font-bold text-white leading-[1.05] tracking-tight mb-5 animate-fade-up"
             style={{
-              background: 'rgba(255,255,255,0.92)',
+              fontFamily: "'Plus Jakarta Sans', Inter, sans-serif",
+              fontSize: 'clamp(2.8rem, 6vw, 4.5rem)',
+            }}
+          >
+            Find Your Dream<br />
+            Home in{' '}
+            <span style={{
+              WebkitTextFillColor: 'transparent',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 55%, #BA1932 100%)',
+            }}>
+              Morocco
+            </span>
+          </h1>
+
+          {/* Subtext */}
+          <p className="text-white/55 text-base font-light max-w-sm mb-9 animate-fade-up" style={{ animationDelay: '80ms' }}>
+            Discover premium properties across Morocco's most prestigious neighborhoods.
+          </p>
+
+          {/* Tabs */}
+          <div className="flex items-center gap-1 mb-5 animate-fade-up" style={{ animationDelay: '120ms' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+                style={activeTab === tab
+                  ? {
+                      background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
+                      color: 'white',
+                      boxShadow: '0 4px 16px rgba(186,25,50,0.40)',
+                    }
+                  : {
+                      background: 'transparent',
+                      color: 'rgba(255,255,255,0.65)',
+                    }
+                }
+                onMouseEnter={e => { if (activeTab !== tab) e.currentTarget.style.color = 'white' }}
+                onMouseLeave={e => { if (activeTab !== tab) e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Search bar */}
+          <div
+            className="flex flex-col lg:flex-row items-stretch lg:items-center gap-0 animate-fade-up"
+            style={{
+              animationDelay: '160ms',
+              background: 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(32px)',
               WebkitBackdropFilter: 'blur(32px)',
-              border: '1px solid rgba(255,255,255,0.80)',
-              boxShadow: '0 20px 60px rgba(115,13,38,0.25), 0 4px 16px rgba(0,0,0,0.12)'
+              borderRadius: '20px',
+              boxShadow: '0 24px 64px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)',
+              overflow: 'hidden',
             }}
           >
             {/* Location */}
-            <div className="flex items-center gap-3 flex-1 min-w-0 px-4 py-3 rounded-2xl bg-transparent hover:bg-navy/4 transition-colors duration-200 cursor-text">
-              <MapPin size={17} className="text-gold shrink-0" />
+            <div className="flex items-center gap-3 flex-1 min-w-0 px-5 py-4 cursor-text"
+              style={{ borderRight: '1px solid rgba(115,13,38,0.08)' }}>
+              <MapPin size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
               <div className="flex-1 min-w-0">
-                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Location</label>
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Location</div>
                 <input
                   type="text"
                   placeholder="City or neighborhood..."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none placeholder-navy/30"
+                  className="w-full text-sm font-semibold bg-transparent outline-none"
+                  style={{ color: '#730D26' }}
                 />
               </div>
             </div>
 
-            <div className="hidden md:block w-px h-10 bg-navy/8 self-center shrink-0" />
-
-            {/* Property type */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-navy/4 transition-colors duration-200 cursor-pointer min-w-[140px]">
-              <SlidersHorizontal size={17} className="text-gold shrink-0" />
+            {/* Type */}
+            <div className="flex items-center gap-3 px-5 py-4 cursor-pointer min-w-[130px]"
+              style={{ borderRight: '1px solid rgba(115,13,38,0.08)' }}>
+              <SlidersHorizontal size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
               <div className="flex-1">
-                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Type</label>
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Type</div>
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none cursor-pointer appearance-none"
+                  className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
+                  style={{ color: '#730D26' }}
                 >
                   <option value="">All Types</option>
                   {categories.map((c) => (
@@ -183,17 +221,17 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className="hidden md:block w-px h-10 bg-navy/8 self-center shrink-0" />
-
             {/* Bedrooms */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-navy/4 transition-colors duration-200 cursor-pointer min-w-[120px]">
-              <BedDouble size={17} className="text-gold shrink-0" />
+            <div className="flex items-center gap-3 px-5 py-4 cursor-pointer min-w-[120px]"
+              style={{ borderRight: '1px solid rgba(115,13,38,0.08)' }}>
+              <BedDouble size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
               <div className="flex-1">
-                <label className="text-navy/40 text-[10px] font-semibold uppercase tracking-wider block mb-0.5">Bedrooms</label>
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Bedrooms</div>
                 <select
                   value={bedrooms}
                   onChange={(e) => setBedrooms(e.target.value)}
-                  className="w-full text-sm font-semibold text-navy bg-transparent outline-none cursor-pointer appearance-none"
+                  className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
+                  style={{ color: '#730D26' }}
                 >
                   {bedroomOptions.map((b) => (
                     <option key={b} value={b}>{b === 'Any' ? 'Any' : `${b} bd`}</option>
@@ -202,43 +240,77 @@ export default function Hero() {
               </div>
             </div>
 
+            {/* Price Range */}
+            <div className="flex items-center gap-3 px-5 py-4 cursor-pointer min-w-[130px]">
+              <DollarSign size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
+              <div className="flex-1">
+                <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Price Range</div>
+                <select
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(e.target.value)}
+                  className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
+                  style={{ color: '#730D26' }}
+                >
+                  {priceRanges.map((r) => (
+                    <option key={r.label} value={r.label}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Search button */}
             <button
               onClick={handleSearch}
-              className="flex items-center justify-center gap-2 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
+              className="flex items-center justify-center gap-2 text-white font-bold text-sm px-8 py-4 transition-all duration-300 active:scale-95 shrink-0"
               style={{
                 background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
-                boxShadow: '0 4px 20px rgba(186,25,50,0.40)'
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+                minWidth: '130px',
               }}
-              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 28px rgba(186,25,50,0.55)'}
-              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
+              onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.10)'}
+              onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
             >
               <Search size={17} />
               Search
             </button>
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap justify-center gap-4 mt-10 animate-fade-up delay-300">
-          {[
-            { value: fmtCount(propertiesCount, '1K+'),  label: 'Properties' },
-            { value: '8K+',                              label: 'Happy Clients' },
-            { value: fmtCount(agentsCount, '50+'),       label: 'Verified Agents' },
-            { value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities' },
-          ].map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl px-5 py-3 text-left min-w-[90px]">
-              <div className="text-white font-bold text-xl leading-none mb-1">{stat.value}</div>
-              <div className="text-white/55 text-xs font-medium">{stat.label}</div>
-            </div>
-          ))}
+          {/* Stats */}
+          <div className="flex flex-wrap gap-3 mt-9 animate-fade-up" style={{ animationDelay: '220ms' }}>
+            {stats.map(({ icon: Icon, value, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
+              >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(186,25,50,0.20)', border: '1px solid rgba(186,25,50,0.25)' }}>
+                  <Icon size={15} style={{ color: '#f5748a' }} />
+                </div>
+                <div>
+                  <div className="text-white font-bold text-base leading-none mb-0.5"
+                    style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+                    {value}
+                  </div>
+                  <div className="text-white/45 text-xs font-medium">{label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
 
       {/* Scroll cue */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-fade-in delay-500 z-10">
-        <div className="w-5 h-8 rounded-full border border-white/30 flex items-start justify-center pt-1.5">
-          <div className="w-1 h-2 bg-white/60 rounded-full animate-bounce" />
+      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 z-10 animate-fade-in" style={{ animationDelay: '600ms' }}>
+        <div className="w-5 h-8 rounded-full flex items-start justify-center pt-1.5"
+          style={{ border: '1px solid rgba(255,255,255,0.25)' }}>
+          <div className="w-1 h-2 rounded-full animate-bounce" style={{ background: 'rgba(255,255,255,0.55)' }} />
         </div>
       </div>
     </section>

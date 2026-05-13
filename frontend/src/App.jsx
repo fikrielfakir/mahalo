@@ -22,7 +22,11 @@ import CategoriesPage from './admin/pages/CategoriesPage'
 import FeaturesPage from './admin/pages/FeaturesPage'
 import FacilitiesPage from './admin/pages/FacilitiesPage'
 import InvestorsPage from './admin/pages/InvestorsPage'
+import CitiesPage from './admin/pages/CitiesPage'
 import ConsultsPage from './admin/pages/ConsultsPage'
+import MediaPage from './admin/pages/MediaPage'
+import UsersPage from './admin/pages/UsersPage'
+import SettingsPage from './admin/pages/SettingsPage'
 
 export default function App() {
   return (
@@ -55,7 +59,11 @@ export default function App() {
             <Route path="features"   element={<FeaturesPage />} />
             <Route path="facilities" element={<FacilitiesPage />} />
             <Route path="investors"  element={<InvestorsPage />} />
+            <Route path="cities"     element={<CitiesPage />} />
             <Route path="consults"   element={<ConsultsPage />} />
+            <Route path="media"      element={<MediaPage />} />
+            <Route path="users"      element={<UsersPage />} />
+            <Route path="settings"   element={<SettingsPage />} />
           </Route>
 
           {/* Fallback */}

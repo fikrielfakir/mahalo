@@ -62,70 +62,91 @@ export default function NeighborhoodsSection() {
     load()
   }, [])
 
-  const scroll = (dir) => scrollRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
+  const scroll = (dir) => scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
 
   if (!loading && cities.length === 0) return null
 
   return (
-    <section className="py-20 overflow-hidden" style={{ background: 'linear-gradient(180deg, #F5F5F5 0%, #EEEEF8 100%)' }}>
-      <div className="max-w-7xl mx-auto px-5">
-        <div className="flex items-end justify-between mb-10">
+    <section className="py-28 overflow-hidden relative" style={{
+      background: 'linear-gradient(180deg, #F2EDE8 0%, #EAE4DE 100%)'
+    }}>
+      {/* Soft ambient glow */}
+      <div className="absolute top-0 right-0 w-1/2 h-full pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at 80% 50%, rgba(115,13,38,0.05) 0%, transparent 70%)'
+      }} />
+
+      <div className="max-w-7xl mx-auto px-5 relative z-10">
+        <div className="flex items-end justify-between mb-14">
           <div>
-            <p className="section-label mb-2">Prime Locations</p>
-            <h2 className="section-title text-3xl">Explore Neighborhoods</h2>
-            <p className="text-navy/45 text-sm mt-2">Discover the finest areas to live</p>
+            <p className="section-label mb-3">Prime Locations</p>
+            <h2 className="section-title text-4xl mb-3">Explore Neighborhoods</h2>
+            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>Discover the finest areas to live in Morocco</p>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/neighborhoods" className="section-link hidden sm:flex mr-3">
-              View All
-              <ArrowRight size={15} />
+              View All <ArrowRight size={15} />
             </Link>
             <button
               onClick={() => scroll(-1)}
-              className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 bg-white text-navy shadow-sm"
+              style={{ border: '1px solid rgba(115,13,38,0.10)', boxShadow: '0 2px 12px rgba(115,13,38,0.08)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #730D26, #BA1932)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#730D26'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(115,13,38,0.08)' }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={17} />
             </button>
             <button
               onClick={() => scroll(1)}
-              className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 bg-white text-navy shadow-sm"
+              style={{ border: '1px solid rgba(115,13,38,0.10)', boxShadow: '0 2px 12px rgba(115,13,38,0.08)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #730D26, #BA1932)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#730D26'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(115,13,38,0.08)' }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={17} />
             </button>
           </div>
         </div>
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
+          className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
         >
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="shrink-0 w-56 h-72 rounded-3xl skeleton snap-start" />
+                <div key={i} className="shrink-0 w-64 h-80 rounded-3xl skeleton snap-start" />
               ))
             : cities.map((city) => (
                 <Link
                   key={city.id}
                   to={`/properties?city_id=${city.id}`}
-                  className="relative shrink-0 w-56 h-72 rounded-3xl overflow-hidden group cursor-pointer snap-start shadow-card hover:shadow-card-hover transition-all duration-400 hover:-translate-y-1.5"
+                  className="relative shrink-0 w-64 h-80 rounded-3xl overflow-hidden group cursor-pointer snap-start transition-all duration-400 hover:-translate-y-2"
+                  style={{ boxShadow: '0 4px 24px rgba(115,13,38,0.10)' }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 16px 48px rgba(115,13,38,0.22)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 24px rgba(115,13,38,0.10)'}
                 >
                   <img
                     src={CITY_IMAGES[city.name] || DEFAULT_IMAGE}
                     alt={city.name}
-                    className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.07]"
+                    className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.08]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-transparent" />
+                  <div className="absolute inset-0" style={{
+                    background: 'linear-gradient(to top, rgba(115,13,38,0.85) 0%, rgba(0,0,0,0.20) 50%, transparent 100%)'
+                  }} />
 
-                  {/* Glass pill at top */}
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-4 left-4">
                     <span className="glass-pill text-[10px]">
                       <MapPin size={9} /> Explore
                     </span>
                   </div>
 
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-white font-bold text-lg leading-tight mb-0.5">{city.name}</h3>
-                    <p className="text-white/55 text-xs font-medium">View properties →</p>
+                    <h3 className="text-white font-bold text-xl leading-tight mb-1"
+                      style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+                      {city.name}
+                    </h3>
+                    <p className="text-white/55 text-xs font-medium flex items-center gap-1">
+                      View properties <ArrowRight size={10} />
+                    </p>
                   </div>
                 </Link>
               ))}

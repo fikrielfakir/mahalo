@@ -37,105 +37,131 @@ export default function NewProjects() {
   if (!loading && projects.length === 0) return null
 
   return (
-    <section className="py-20 px-5 max-w-7xl mx-auto">
-      <div className="flex items-end justify-between mb-10">
-        <div>
-          <p className="section-label mb-2">Off-Plan & New</p>
-          <h2 className="section-title text-3xl">New Projects</h2>
-          <p className="text-navy/45 text-sm mt-2">Invest early in Morocco's finest developments</p>
+    <section className="luxury-dark-section py-28 px-5">
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="flex items-end justify-between mb-14">
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: '#BA1932' }}>Off-Plan & New</p>
+            <h2 className="text-4xl font-bold text-white leading-tight mb-3"
+              style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", letterSpacing: '-0.01em' }}>
+              New Projects
+            </h2>
+            <p className="text-sm font-medium text-white/40">Invest early in Morocco's finest developments</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/projects" className="hidden sm:flex items-center gap-1.5 font-semibold text-sm mr-2 transition-all duration-300 hover:gap-2.5" style={{ color: '#BA1932' }}>
+              View All <ArrowRight size={15} />
+            </Link>
+            <button
+              onClick={prev}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 text-white/60 hover:text-white"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #730D26, #BA1932)'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              <ChevronLeft size={17} />
+            </button>
+            <button
+              onClick={next}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 text-white/60 hover:text-white"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, #730D26, #BA1932)'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none' }}
+            >
+              <ChevronRight size={17} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/projects" className="section-link hidden sm:flex mr-2">
-            View All <ArrowRight size={15} />
-          </Link>
-          <button
-            onClick={prev}
-            className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={next}
-            className="w-9 h-9 rounded-full border border-navy/10 bg-white flex items-center justify-center hover:bg-navy hover:text-white hover:border-navy transition-all duration-200 text-navy shadow-sm"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-3xl skeleton aspect-[3/4]" />
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-3xl skeleton aspect-[3/4]" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-5 overflow-hidden">
+            {projects.map((project, i) => {
+              const rawImg = Array.isArray(project.images) ? project.images[0] : project.image
+              const imgUrl = rawImg
+                ? (rawImg.startsWith('http') ? rawImg : `/storage/${rawImg}`)
+                : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
+              const isActive = i === active
+
+              return (
+                <Link
+                  key={project.id}
+                  to={`/projects/${project.slug}`}
+                  onClick={() => setActive(i)}
+                  className="relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1"
+                  style={{
+                    height: '460px',
+                    width: isActive ? '320px' : '220px',
+                    boxShadow: isActive ? '0 16px 48px rgba(115,13,38,0.40)' : '0 4px 24px rgba(0,0,0,0.25)'
+                  }}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={project.name}
+                    className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.05]"
+                  />
+                  <div className="absolute inset-0" style={{
+                    background: isActive
+                      ? 'linear-gradient(to top, rgba(115,13,38,0.92) 0%, rgba(0,0,0,0.30) 50%, transparent 100%)'
+                      : 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.20) 60%, transparent 100%)'
+                  }} />
+
+                  {isActive && (
+                    <div className="absolute top-4 left-4">
+                      <span className="glass-pill text-[10px]">
+                        <Building size={9} /> {project.investor?.name || 'Developer'}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <h3 className="text-white font-bold text-base leading-tight mb-1"
+                      style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+                      {project.name}
+                    </h3>
+                    {isActive && (
+                      <>
+                        <p className="text-white/55 text-xs mb-4 line-clamp-2">{project.description}</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">From</div>
+                            <div className="font-bold text-base" style={{ color: '#f5748a' }}>{formatPrice(project.price_from)}</div>
+                          </div>
+                          {project.city?.name && (
+                            <div className="flex items-center gap-1 text-white/50 text-xs glass-pill">
+                              <MapPin size={9} /> {project.city.name}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Dots */}
+        <div className="flex gap-2 justify-center mt-8">
+          {projects.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              className="transition-all duration-300 rounded-full"
+              style={{
+                width: i === active ? '24px' : '8px',
+                height: '8px',
+                background: i === active ? '#BA1932' : 'rgba(255,255,255,0.20)'
+              }}
+            />
           ))}
         </div>
-      ) : (
-        <div className="flex gap-4 overflow-hidden">
-          {projects.map((project, i) => {
-            const rawImg = Array.isArray(project.images) ? project.images[0] : project.image
-            const imgUrl = rawImg
-              ? (rawImg.startsWith('http') ? rawImg : `/storage/${rawImg}`)
-              : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
-            const isActive = i === active
-
-            return (
-              <Link
-                key={project.id}
-                to={`/projects/${project.slug}`}
-                onClick={() => setActive(i)}
-                className={`relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 shadow-card hover:shadow-card-hover`}
-                style={{ height: '420px', width: isActive ? '300px' : '220px' }}
-              >
-                <img
-                  src={imgUrl}
-                  alt={project.name}
-                  className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.05]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-transparent" />
-
-                {/* Glass label at top */}
-                {isActive && (
-                  <div className="absolute top-4 left-4">
-                    <span className="glass-pill text-[10px]">
-                      <Building size={9} /> {project.investor?.name || 'Developer'}
-                    </span>
-                  </div>
-                )}
-
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h3 className="text-white font-bold text-base leading-tight mb-1">{project.name}</h3>
-                  {isActive && (
-                    <>
-                      <p className="text-white/55 text-xs mb-3 line-clamp-2">{project.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5">From</div>
-                          <div className="text-gold font-bold text-base">{formatPrice(project.price_from)}</div>
-                        </div>
-                        {project.city?.name && (
-                          <div className="flex items-center gap-1 text-white/50 text-xs glass-pill">
-                            <MapPin size={9} /> {project.city.name}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Dots */}
-      <div className="flex gap-2 justify-center mt-6">
-        {projects.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            className={`transition-all duration-300 rounded-full ${i === active ? 'w-6 h-2 bg-gold' : 'w-2 h-2 bg-navy/15 hover:bg-navy/30'}`}
-          />
-        ))}
       </div>
     </section>
   )

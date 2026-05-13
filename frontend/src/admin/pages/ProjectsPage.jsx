@@ -3,12 +3,14 @@ import { adminProjects, adminInvestors, publicApi } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
+import LocationPicker from '../../components/LocationPicker'
 import { Plus, Pencil, Trash2, FolderKanban } from 'lucide-react'
 
 const EMPTY = {
   name: '', description: '', content: '', location: '', images: [],
   investor_id: '', city_id: '', price_from: '', price_to: '',
   is_featured: false, status: 'selling',
+  latitude: '', longitude: '',
 }
 
 export default function ProjectsPage() {
@@ -41,7 +43,12 @@ export default function ProjectsPage() {
   const openCreate = () => { setEditing(null); setForm(EMPTY); setModal(true) }
   const openEdit   = (row) => {
     setEditing(row)
-    setForm({ ...row, images: Array.isArray(row.images) ? row.images : [] })
+    setForm({
+      ...row,
+      images:    Array.isArray(row.images) ? row.images : [],
+      latitude:  row.latitude  || '',
+      longitude: row.longitude || '',
+    })
     setModal(true)
   }
   const f = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target?.value ?? e }))
@@ -51,11 +58,13 @@ export default function ProjectsPage() {
     try {
       const payload = {
         ...form,
-        images:     form.images,
-        price_from: form.price_from  || null,
-        price_to:   form.price_to    || null,
-        city_id:    form.city_id     || null,
-        investor_id:form.investor_id || null,
+        images:      form.images,
+        price_from:  form.price_from  || null,
+        price_to:    form.price_to    || null,
+        city_id:     form.city_id     || null,
+        investor_id: form.investor_id || null,
+        latitude:    form.latitude    || null,
+        longitude:   form.longitude   || null,
       }
       editing ? await adminProjects.update(editing.id, payload) : await adminProjects.create(payload)
       setModal(false); load()
@@ -87,7 +96,11 @@ export default function ProjectsPage() {
     { key: 'price_from', label: 'Price From',  render: (r) => r.price_from ? `${Number(r.price_from).toLocaleString()} MAD` : '—' },
     { key: 'is_featured',label: 'Featured',    render: (r) => <Badge color={r.is_featured ? 'gold' : 'gray'}>{r.is_featured ? 'Yes' : 'No'}</Badge> },
     { key: 'status',     label: 'Status',      render: (r) => <Badge color={r.status === 'selling' ? 'green' : 'gray'}>{r.status}</Badge> },
-    { key: 'actions',    label: '',            render: (r) => (
+    { key: 'coords',     label: 'Map',         render: (r) => r.latitude && r.longitude
+      ? <span className="text-xs text-emerald-500 font-semibold">✓ Located</span>
+      : <span className="text-xs text-gray-300">No location</span>
+    },
+    { key: 'actions', label: '', render: (r) => (
       <div className="flex gap-1 justify-end">
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
@@ -134,9 +147,35 @@ export default function ProjectsPage() {
               </Select>
             </FormField>
           </div>
-          <FormField label="Location">
+          <FormField label="Address / Location">
             <Input value={form.location} onChange={f('location')} placeholder="Anfa, Casablanca" />
           </FormField>
+
+          <FormField label="Map Location" hint="Click on the map to place a pin — drag to adjust">
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Input
+                type="number" step="any"
+                value={form.latitude}
+                onChange={f('latitude')}
+                placeholder="Latitude (e.g. 33.5731)"
+              />
+              <Input
+                type="number" step="any"
+                value={form.longitude}
+                onChange={f('longitude')}
+                placeholder="Longitude (e.g. -7.5898)"
+              />
+            </div>
+            {modal && (
+              <LocationPicker
+                lat={form.latitude}
+                lng={form.longitude}
+                onChange={({ lat, lng }) => setForm(p => ({ ...p, latitude: lat, longitude: lng }))}
+                height={260}
+              />
+            )}
+          </FormField>
+
           <FormField label="Description">
             <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Short description..." />
           </FormField>
@@ -146,6 +185,7 @@ export default function ProjectsPage() {
               images={form.images}
               onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))}
               folder="projects"
+              allowVideo
             />
           </FormField>
 

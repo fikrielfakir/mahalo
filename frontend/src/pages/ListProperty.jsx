@@ -10,11 +10,13 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
 import { consultsApi } from '../api/client'
+import LocationPicker from '../components/LocationPicker'
 
 const EMPTY = {
   name: '', email: '', phone: '',
   property_type: 'sale', listing_type: '',
   city: '', location: '',
+  latitude: '', longitude: '',
   bedrooms: '', bathrooms: '', size: '', price: '',
   description: '',
 }
@@ -236,6 +238,7 @@ export default function ListProperty() {
         form.listing_type && `Category: ${form.listing_type}`,
         `City: ${form.city}`,
         form.location && `Location: ${form.location}`,
+        (form.latitude && form.longitude) && `Coordinates: ${form.latitude}, ${form.longitude}`,
         form.bedrooms && `Bedrooms: ${form.bedrooms}`,
         form.bathrooms && `Bathrooms: ${form.bathrooms}`,
         form.size && `Size: ${form.size} m²`,
@@ -395,7 +398,7 @@ export default function ListProperty() {
                   {/* Location */}
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Location</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div className="relative">
                         <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
                         <input type="text" placeholder="City *" value={form.city} onChange={set('city')} required
@@ -406,6 +409,18 @@ export default function ListProperty() {
                         <input type="text" placeholder="Neighborhood / address" value={form.location} onChange={set('location')}
                           className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
                       </div>
+                    </div>
+                    <div className="rounded-2xl border border-dashed border-navy/15 p-4 bg-surface/50">
+                      <p className="text-navy/40 text-xs font-semibold mb-2 flex items-center gap-1.5">
+                        <MapPin size={12} className="text-gold" />
+                        Pin your property on the map <span className="font-normal">(optional — click to place, drag to adjust)</span>
+                      </p>
+                      <LocationPicker
+                        lat={form.latitude}
+                        lng={form.longitude}
+                        onChange={({ lat, lng }) => setForm(f => ({ ...f, latitude: lat, longitude: lng }))}
+                        height={260}
+                      />
                     </div>
                   </div>
 

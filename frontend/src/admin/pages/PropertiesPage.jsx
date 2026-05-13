@@ -3,6 +3,7 @@ import { adminProperties, adminCategories, adminFeatures, publicApi } from '../a
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
+import LocationPicker from '../../components/LocationPicker'
 import { Plus, Pencil, Trash2, Building2, Star } from 'lucide-react'
 
 const EMPTY = {
@@ -55,6 +56,8 @@ export default function PropertiesPage() {
       images:       Array.isArray(row.images) ? row.images : [],
       category_ids: row.category_ids || (row.categories?.map(c => c.id)) || [],
       feature_ids:  row.feature_ids  || (row.features?.map(f => f.id))  || [],
+      latitude:     row.latitude  || '',
+      longitude:    row.longitude || '',
     })
     setModal(true)
   }
@@ -80,6 +83,8 @@ export default function PropertiesPage() {
         number_bathroom: form.number_bathroom ? parseFloat(form.number_bathroom) : 0,
         square:          form.square          ? parseFloat(form.square)          : null,
         city_id:         form.city_id         || null,
+        latitude:        form.latitude        || null,
+        longitude:       form.longitude       || null,
       }
       if (editing) await adminProperties.update(editing.id, payload)
       else await adminProperties.create(payload)
@@ -119,6 +124,10 @@ export default function PropertiesPage() {
     { key: 'price',      label: 'Price',   render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
     { key: 'is_featured',label: 'Featured',render: (r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
     { key: 'status',     label: 'Status',  render: (r) => <Badge color={statusColor(r.status)}>{r.status}</Badge> },
+    { key: 'coords',     label: 'Map',     render: (r) => r.latitude && r.longitude
+      ? <span className="text-xs text-emerald-500 font-semibold">✓ Located</span>
+      : <span className="text-xs text-gray-300">No location</span>
+    },
     { key: 'actions',    label: '',        render: (r) => (
       <div className="flex gap-1 justify-end">
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
@@ -183,10 +192,38 @@ export default function PropertiesPage() {
               <Input type="number" value={form.number_floor} onChange={f('number_floor')} placeholder="2" />
             </FormField>
             <div className="col-span-2">
-              <FormField label="Location">
+              <FormField label="Address / Location">
                 <Input value={form.location} onChange={f('location')} placeholder="Ain Diab, Casablanca" />
               </FormField>
             </div>
+
+            <div className="col-span-2">
+              <FormField label="Map Location" hint="Click on the map to place a pin — drag to adjust">
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <Input
+                    type="number" step="any"
+                    value={form.latitude}
+                    onChange={f('latitude')}
+                    placeholder="Latitude (e.g. 33.5731)"
+                  />
+                  <Input
+                    type="number" step="any"
+                    value={form.longitude}
+                    onChange={f('longitude')}
+                    placeholder="Longitude (e.g. -7.5898)"
+                  />
+                </div>
+                {modal && (
+                  <LocationPicker
+                    lat={form.latitude}
+                    lng={form.longitude}
+                    onChange={({ lat, lng }) => setForm(p => ({ ...p, latitude: lat, longitude: lng }))}
+                    height={260}
+                  />
+                )}
+              </FormField>
+            </div>
+
             <div className="col-span-2">
               <FormField label="Description">
                 <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Short description..." />

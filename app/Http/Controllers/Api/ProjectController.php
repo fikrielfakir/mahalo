@@ -170,6 +170,8 @@ class ProjectController extends Controller
             'status'      => $project->status,
             'city'        => $project->city ? ['id' => $project->city->id, 'name' => $project->city->name] : null,
             'investor'    => $project->investor ? ['id' => $project->investor->id, 'name' => $project->investor->name] : null,
+            'latitude'    => $project->latitude,
+            'longitude'   => $project->longitude,
             'views'       => $project->views,
             'created_at'  => $project->created_at,
         ];

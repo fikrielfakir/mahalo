@@ -160,11 +160,15 @@ export default function Navbar({ transparent = false }) {
             <div className="flex items-center gap-2 ml-1">
               <Link
                 to="/login"
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm ${
-                  isTransparent
-                    ? 'bg-white text-navy hover:bg-white/90'
-                    : 'bg-gold text-white hover:bg-gold-dark'
-                }`}
+                className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 bg-white"
+                style={{
+                  border: '1.5px solid transparent',
+                  backgroundClip: 'padding-box',
+                  boxShadow: '0 0 0 1.5px #730D26',
+                  color: '#730D26',
+                }}
+                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #BA1932'}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #730D26'}
               >
                 Sign In
               </Link>
@@ -173,11 +177,13 @@ export default function Navbar({ transparent = false }) {
 
           <Link
             to="/list-property"
-            className={`ml-1 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm ${
-              isTransparent
-                ? 'bg-white/20 border border-white/40 text-white hover:bg-white/30'
-                : 'bg-navy text-white hover:bg-navy-light'
-            }`}
+            className="ml-1 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
+              boxShadow: '0 2px 12px rgba(186,25,50,0.30)',
+            }}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 18px rgba(186,25,50,0.50)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(186,25,50,0.30)'}
           >
             List Property
           </Link>

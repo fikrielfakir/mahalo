@@ -189,7 +189,7 @@ export default function Hero() {
           >
             {/* Desktop/tablet: single pill row */}
             <div
-              className="hidden sm:flex items-center gap-0"
+              className="hidden sm:flex items-center"
               style={{
                 background: 'rgba(255,255,255,0.97)',
                 backdropFilter: 'blur(32px)',
@@ -201,11 +201,11 @@ export default function Hero() {
             >
               {/* Location */}
               <div
-                className="flex items-center gap-2.5 flex-1 min-w-0 px-5 py-3.5 cursor-text"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)' }}
+                className="flex items-center gap-2.5 px-5 py-3.5 cursor-text"
+                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '2 1 160px', minWidth: 0 }}
               >
                 <MapPin size={15} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div className="flex-1 min-w-0">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Location</div>
                   <input
                     type="text"
@@ -213,8 +213,17 @@ export default function Hero() {
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="w-full text-sm font-semibold bg-transparent outline-none"
-                    style={{ color: '#730D26' }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      background: 'transparent',
+                      outline: 'none',
+                      color: '#730D26',
+                      border: 'none',
+                      padding: 0,
+                    }}
                   />
                 </div>
               </div>
@@ -222,16 +231,28 @@ export default function Hero() {
               {/* Type */}
               <div
                 className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', minWidth: '120px' }}
+                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 110px', minWidth: 0 }}
               >
                 <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div className="flex-1">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Type</div>
                   <select
                     value={propertyType}
                     onChange={(e) => setPropertyType(e.target.value)}
-                    className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
-                    style={{ color: '#730D26' }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: 'transparent',
+                      outline: 'none',
+                      border: 'none',
+                      color: '#730D26',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      padding: 0,
+                    }}
                   >
                     <option value="">All Types</option>
                     {categories.map((c) => (
@@ -244,16 +265,28 @@ export default function Hero() {
               {/* Bedrooms */}
               <div
                 className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', minWidth: '110px' }}
+                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 100px', minWidth: 0 }}
               >
                 <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div className="flex-1">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Bedrooms</div>
                   <select
                     value={bedrooms}
                     onChange={(e) => setBedrooms(e.target.value)}
-                    className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
-                    style={{ color: '#730D26' }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: 'transparent',
+                      outline: 'none',
+                      border: 'none',
+                      color: '#730D26',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      padding: 0,
+                    }}
                   >
                     {bedroomOptions.map((b) => (
                       <option key={b} value={b}>{b === 'Any' ? 'Any' : `${b} bd`}</option>
@@ -265,16 +298,28 @@ export default function Hero() {
               {/* Price Range */}
               <div
                 className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
-                style={{ minWidth: '115px' }}
+                style={{ flex: '1 1 105px', minWidth: 0 }}
               >
                 <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div className="flex-1">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Price Range</div>
                   <select
                     value={priceRange}
                     onChange={(e) => setPriceRange(e.target.value)}
-                    className="w-full text-sm font-semibold bg-transparent outline-none cursor-pointer appearance-none"
-                    style={{ color: '#730D26' }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: 'transparent',
+                      outline: 'none',
+                      border: 'none',
+                      color: '#730D26',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      padding: 0,
+                    }}
                   >
                     {priceRanges.map((r) => (
                       <option key={r.label} value={r.label}>{r.label}</option>
@@ -284,20 +329,24 @@ export default function Hero() {
               </div>
 
               {/* Search button */}
-              <button
-                onClick={handleSearch}
-                className="flex items-center justify-center gap-2 text-white font-bold text-sm px-7 py-3.5 transition-all duration-300 active:scale-95 shrink-0 m-1.5"
-                style={{
-                  background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
-                  borderRadius: '999px',
-                  boxShadow: '0 4px 20px rgba(186,25,50,0.40)',
-                }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 28px rgba(186,25,50,0.55)'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
-              >
-                <Search size={16} />
-                Search
-              </button>
+              <div className="p-1.5 shrink-0">
+                <button
+                  onClick={handleSearch}
+                  className="flex items-center justify-center gap-2 text-white font-bold text-sm transition-all duration-300 active:scale-95"
+                  style={{
+                    background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
+                    borderRadius: '999px',
+                    boxShadow: '0 4px 20px rgba(186,25,50,0.40)',
+                    padding: '12px 24px',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 28px rgba(186,25,50,0.55)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
+                >
+                  <Search size={16} />
+                  Search
+                </button>
+              </div>
             </div>
 
             {/* Mobile: stacked card */}

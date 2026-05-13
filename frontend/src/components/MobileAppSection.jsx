@@ -1,4 +1,4 @@
-import { Smartphone, Apple, Play } from 'lucide-react'
+import { Smartphone } from 'lucide-react'
 
 export default function MobileAppSection() {
   return (
@@ -11,7 +11,7 @@ export default function MobileAppSection() {
             position: 'relative',
             borderRadius: '28px',
             overflow: 'hidden',
-            minHeight: '280px',
+            minHeight: '300px',
             background: 'linear-gradient(118deg, #070003 0%, #130108 22%, #1e020c 50%, #2b0411 72%, #1a0208 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -27,8 +27,8 @@ export default function MobileAppSection() {
             <div style={{ position:'absolute', top:0, left:0, right:0, height:'1px', background:'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 70%, transparent 100%)' }} />
           </div>
 
-          {/* ── LEFT: Text (40%) ── */}
-          <div style={{ position:'relative', zIndex:10, padding:'52px 48px 52px 52px', flex:'0 0 40%', maxWidth:'40%' }}>
+          {/* ── LEFT: Text (42%) ── */}
+          <div style={{ position:'relative', zIndex:10, padding:'52px 48px 52px 52px', flex:'0 0 42%', maxWidth:'42%' }}>
 
             {/* Badge */}
             <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', marginBottom:'24px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:'999px', padding:'7px 18px', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)' }}>
@@ -44,53 +44,52 @@ export default function MobileAppSection() {
               </span>
             </h2>
 
-            <p style={{ color:'rgba(255,255,255,0.38)', fontSize:'14px', lineHeight:1.78, marginBottom:'36px', maxWidth:'240px', letterSpacing:'0.01em' }}>
+            <p style={{ color:'rgba(255,255,255,0.38)', fontSize:'14px', lineHeight:1.78, marginBottom:'36px', maxWidth:'250px', letterSpacing:'0.01em' }}>
               Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.
             </p>
 
-            {/* Store buttons */}
-            <div style={{ display:'flex', flexWrap:'wrap', gap:'12px' }}>
-              {[
-                { Icon: Apple, iconSize: 20, sub: 'Download on the', label: 'App Store', fill: false },
-                { Icon: Play,  iconSize: 17, sub: 'GET IT ON',       label: 'Google Play', fill: true },
-              ].map(({ Icon, iconSize, sub, label, fill }) => (
-                <button
-                  key={label}
-                  style={{ display:'flex', alignItems:'center', gap:'12px', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:'14px', padding:'12px 22px', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', boxShadow:'0 4px 22px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.09)', cursor:'pointer', transition:'all 0.22s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.13)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.30)'; e.currentTarget.style.transform='translateY(-2px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.18)'; e.currentTarget.style.transform='translateY(0)' }}
-                >
-                  <Icon size={iconSize} color="#fff" fill={fill ? '#fff' : 'none'} />
-                  <div style={{ textAlign:'left' }}>
-                    <div style={{ color:'rgba(255,255,255,0.38)', fontSize:'10px', lineHeight:1, marginBottom:'3px', fontWeight:500 }}>{sub}</div>
-                    <div style={{ color:'#fff', fontSize:'14px', fontWeight:700, letterSpacing:'-0.01em' }}>{label}</div>
-                  </div>
-                </button>
-              ))}
+            {/* Real store badges */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:'12px', alignItems:'center' }}>
+              <a
+                href="#"
+                style={{ display:'block', transition:'all 0.22s ease', borderRadius:'10px', overflow:'hidden' }}
+                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.12)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.filter='brightness(1)' }}
+              >
+                <img src="/badge-appstore.png" alt="Download on the App Store" style={{ height:'44px', width:'auto', display:'block' }} />
+              </a>
+              <a
+                href="#"
+                style={{ display:'block', transition:'all 0.22s ease', borderRadius:'10px', overflow:'hidden' }}
+                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.filter='brightness(1.12)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.filter='brightness(1)' }}
+              >
+                <img src="/badge-playstore.png" alt="Get it on Google Play" style={{ height:'44px', width:'auto', display:'block' }} />
+              </a>
             </div>
           </div>
 
-          {/* ── RIGHT spacer — reserves space so card is wide enough ── */}
+          {/* Spacer */}
           <div style={{ flex:'1' }} />
         </div>
 
-        {/* ── PHONE MOCKUP — outside the card, overflows top & bottom ── */}
+        {/* ── PHONE MOCKUP — exact positioning as specified ── */}
         <div
           style={{
             position: 'absolute',
-            top: '-70px',
-            right: '-10px',
-            bottom: '-70px',
-            width: '62%',
+            top: '-60px',
+            bottom: '-80px',
+            width: '74%',
             pointerEvents: 'none',
             zIndex: 20,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
+            right: '-60px',
           }}
         >
-          {/* Red glow behind the phone */}
-          <div style={{ position:'absolute', inset:'5% 0', background:'radial-gradient(ellipse at 40% 50%, rgba(186,25,50,0.35) 0%, transparent 60%)', filter:'blur(36px)', zIndex:0 }} />
+          {/* Warm red glow behind phone */}
+          <div style={{ position:'absolute', inset:'5% 5%', background:'radial-gradient(ellipse at 50% 50%, rgba(186,25,50,0.32) 0%, transparent 60%)', filter:'blur(40px)', zIndex:0 }} />
 
           <img
             src="/app-mockup.png"

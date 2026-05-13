@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Heart, Globe, ChevronDown, Menu, X, User, LogOut, Settings } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
+import { useUserAuth } from '../context/UserAuthContext'
 
 const navLinks = [
   { label: 'Buy',           to: '/properties?type=sale' },
@@ -14,9 +15,13 @@ const navLinks = [
 ]
 
 export default function Navbar({ transparent = false }) {
-  const [scrolled, setScrolled]   = useState(false)
-  const [menuOpen, setMenuOpen]   = useState(false)
-  const location                  = useLocation()
+  const [scrolled,     setScrolled]     = useState(false)
+  const [menuOpen,     setMenuOpen]     = useState(false)
+  const [userDropdown, setUserDropdown] = useState(false)
+  const dropdownRef                     = useRef(null)
+  const location                        = useLocation()
+  const navigate                        = useNavigate()
+  const { user, isAuthenticated, logout } = useUserAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -24,16 +29,36 @@ export default function Navbar({ transparent = false }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => setMenuOpen(false), [location])
+  useEffect(() => { setMenuOpen(false); setUserDropdown(false) }, [location])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setUserDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const isTransparent = transparent && !scrolled && !menuOpen
+
+  const handleLogout = async () => {
+    await logout()
+    setUserDropdown(false)
+    navigate('/')
+  }
+
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?'
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isTransparent
           ? 'bg-transparent'
-          : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(11,31,58,0.08)] border-b border-white/60'
+          : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-white/60'
       }`}
     >
       <nav className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
@@ -47,7 +72,7 @@ export default function Navbar({ transparent = false }) {
           />
         </Link>
 
-        {/* Desktop centre links */}
+        {/* Desktop nav links */}
         <div className="hidden lg:flex items-center gap-0.5">
           {navLinks.map((link) => (
             <Link
@@ -66,29 +91,86 @@ export default function Navbar({ transparent = false }) {
 
         {/* Right actions */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          <button
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-full ${
-              isTransparent ? 'text-white/80 hover:bg-white/10 hover:text-white' : 'text-navy/60 hover:text-navy hover:bg-navy/5'
-            }`}
-          >
-            <Globe size={14} />
-            EN
-            <ChevronDown size={12} />
+          {/* Language */}
+          <button className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-full ${
+            isTransparent ? 'text-white/80 hover:bg-white/10 hover:text-white' : 'text-navy/60 hover:text-navy hover:bg-navy/5'
+          }`}>
+            <Globe size={14} /> EN <ChevronDown size={12} />
           </button>
 
-          <button
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
-              isTransparent ? 'text-white/80 hover:text-white hover:bg-white/12' : 'text-navy/60 hover:text-navy hover:bg-navy/6'
-            }`}
-          >
+          {/* Favorites */}
+          <button className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+            isTransparent ? 'text-white/80 hover:text-white hover:bg-white/12' : 'text-navy/60 hover:text-navy hover:bg-navy/6'
+          }`}>
             <Heart size={17} />
           </button>
+
+          {/* Auth section */}
+          {isAuthenticated ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setUserDropdown(!userDropdown)}
+                className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200 ${
+                  isTransparent
+                    ? 'hover:bg-white/12 text-white'
+                    : 'hover:bg-navy/6 text-navy'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-full bg-gold flex items-center justify-center text-white text-xs font-bold">
+                  {initials}
+                </div>
+                <span className="text-sm font-medium max-w-[90px] truncate">
+                  {user?.name?.split(' ')[0]}
+                </span>
+                <ChevronDown size={12} className={`transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {userDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
+                  <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                    <p className="text-xs font-semibold text-navy truncate">{user?.name}</p>
+                    <p className="text-xs text-navy/40 truncate">{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
+                    style={{ width: 'calc(100% - 8px)' }}
+                  >
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 ml-1">
+              <Link
+                to="/login"
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  isTransparent
+                    ? 'text-white/85 hover:text-white hover:bg-white/12'
+                    : 'text-navy/70 hover:text-navy hover:bg-navy/6'
+                }`}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm ${
+                  isTransparent
+                    ? 'bg-white text-navy hover:bg-white/90'
+                    : 'bg-gold text-white hover:bg-gold-dark'
+                }`}
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
 
           <Link
             to="/list-property"
             className={`ml-1 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm ${
               isTransparent
-                ? 'bg-white text-navy hover:bg-white/90'
+                ? 'bg-white/20 border border-white/40 text-white hover:bg-white/30'
                 : 'bg-navy text-white hover:bg-navy-light'
             }`}
           >
@@ -120,7 +202,38 @@ export default function Navbar({ transparent = false }) {
               {link.label}
             </Link>
           ))}
-          <div className="pt-3 mt-1 border-t border-gray-100">
+
+          <div className="pt-3 mt-1 border-t border-gray-100 space-y-2">
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-3 px-4 py-2">
+                  <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-navy truncate">{user?.name}</p>
+                    <p className="text-xs text-navy/40 truncate">{user?.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all"
+                >
+                  <LogOut size={15} /> Sign Out
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <Link to="/login"
+                  className="flex-1 text-center px-4 py-3 border border-navy/15 text-navy rounded-2xl font-semibold text-sm hover:bg-navy/5">
+                  Sign In
+                </Link>
+                <Link to="/register"
+                  className="flex-1 text-center px-4 py-3 bg-gold text-white rounded-2xl font-semibold text-sm hover:bg-gold-dark">
+                  Sign Up
+                </Link>
+              </div>
+            )}
             <Link
               to="/list-property"
               className="flex items-center justify-center px-4 py-3 bg-navy text-white rounded-2xl font-semibold text-sm w-full"

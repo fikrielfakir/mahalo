@@ -68,4 +68,24 @@ export const consultsApi = {
   customFields: () => api.get('/consults/custom-fields'),
 }
 
+export const authApi = {
+  register:            (data) => api.post('/auth/register', data),
+  login:               (data) => api.post('/auth/login', data),
+  logout:              ()     => api.post('/auth/logout'),
+  profile:             ()     => api.get('/account/profile'),
+  forgotPassword:      (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword:       (data) => api.post('/auth/reset-password', data),
+  verifyEmail:         (id, hash, expires, signature) =>
+    api.post(`/auth/verify-email/${id}/${hash}`, {}, { params: { expires, signature } }),
+  resendVerification:  () => api.post('/auth/resend-verification'),
+}
+
+export const setAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  } else {
+    delete api.defaults.headers.common['Authorization']
+  }
+}
+
 export default api

@@ -74,10 +74,7 @@ export default function Hero() {
           alt="Hero background"
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-navy/70 via-navy/45 to-navy/80" />
-        <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(186,25,50,0.12) 0%, transparent 65%)' }}
-        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/75" />
       </div>
 
       {/* Content */}

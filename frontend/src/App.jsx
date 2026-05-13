@@ -11,71 +11,86 @@ import About from './pages/About'
 import ListProperty from './pages/ListProperty'
 import CompareBar from './components/CompareBar'
 import { CompareProvider } from './context/CompareContext'
+import { UserAuthProvider } from './context/UserAuthContext'
+
+// User auth pages
+import UserLoginPage      from './pages/auth/LoginPage'
+import RegisterPage       from './pages/auth/RegisterPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage  from './pages/auth/ResetPasswordPage'
+import VerifyEmailPage    from './pages/auth/VerifyEmailPage'
 
 // Admin
-import { AuthProvider } from './admin/context/AuthContext'
-import AdminLayout from './admin/components/AdminLayout'
-import LoginPage from './admin/pages/LoginPage'
-import Dashboard from './admin/pages/Dashboard'
-import PropertiesPage from './admin/pages/PropertiesPage'
-import ProjectsPage from './admin/pages/ProjectsPage'
-import AgentsPage from './admin/pages/AgentsPage'
-import CategoriesPage from './admin/pages/CategoriesPage'
-import FeaturesPage from './admin/pages/FeaturesPage'
-import FacilitiesPage from './admin/pages/FacilitiesPage'
-import InvestorsPage from './admin/pages/InvestorsPage'
-import CitiesPage from './admin/pages/CitiesPage'
-import ConsultsPage from './admin/pages/ConsultsPage'
-import MediaPage from './admin/pages/MediaPage'
-import UsersPage from './admin/pages/UsersPage'
-import SettingsPage from './admin/pages/SettingsPage'
+import { AuthProvider }  from './admin/context/AuthContext'
+import AdminLayout       from './admin/components/AdminLayout'
+import AdminLoginPage    from './admin/pages/LoginPage'
+import Dashboard         from './admin/pages/Dashboard'
+import PropertiesPage    from './admin/pages/PropertiesPage'
+import ProjectsPage      from './admin/pages/ProjectsPage'
+import AgentsPage        from './admin/pages/AgentsPage'
+import CategoriesPage    from './admin/pages/CategoriesPage'
+import FeaturesPage      from './admin/pages/FeaturesPage'
+import FacilitiesPage    from './admin/pages/FacilitiesPage'
+import InvestorsPage     from './admin/pages/InvestorsPage'
+import CitiesPage        from './admin/pages/CitiesPage'
+import ConsultsPage      from './admin/pages/ConsultsPage'
+import MediaPage         from './admin/pages/MediaPage'
+import UsersPage         from './admin/pages/UsersPage'
+import SettingsPage      from './admin/pages/SettingsPage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <CompareProvider>
-        <AuthProvider>
-          <Routes>
-            {/* Public site */}
-            <Route path="/" element={<Home />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:slug" element={<PropertyDetail />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:slug" element={<ProjectDetail />} />
-            <Route path="/neighborhoods" element={<Neighborhoods />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/agents/:id" element={<AgentDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/list-property" element={<ListProperty />} />
+        <UserAuthProvider>
+          <AuthProvider>
+            <Routes>
+              {/* Public site */}
+              <Route path="/"                    element={<Home />} />
+              <Route path="/properties"          element={<Properties />} />
+              <Route path="/properties/:slug"    element={<PropertyDetail />} />
+              <Route path="/projects"            element={<Projects />} />
+              <Route path="/projects/:slug"      element={<ProjectDetail />} />
+              <Route path="/neighborhoods"       element={<Neighborhoods />} />
+              <Route path="/agents"              element={<Agents />} />
+              <Route path="/agents/:id"          element={<AgentDetail />} />
+              <Route path="/about"               element={<About />} />
+              <Route path="/list-property"       element={<ListProperty />} />
 
-            {/* Admin login (no auth required) */}
-            <Route path="/admin/login" element={<LoginPage />} />
+              {/* User auth */}
+              <Route path="/login"               element={<UserLoginPage />} />
+              <Route path="/register"            element={<RegisterPage />} />
+              <Route path="/forgot-password"     element={<ForgotPasswordPage />} />
+              <Route path="/reset-password"      element={<ResetPasswordPage />} />
+              <Route path="/email/verify/:id/:hash" element={<VerifyEmailPage />} />
 
-            {/* Admin dashboard (auth-protected) */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard"  element={<Dashboard />} />
-              <Route path="properties" element={<PropertiesPage />} />
-              <Route path="projects"   element={<ProjectsPage />} />
-              <Route path="agents"     element={<AgentsPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="features"   element={<FeaturesPage />} />
-              <Route path="facilities" element={<FacilitiesPage />} />
-              <Route path="investors"  element={<InvestorsPage />} />
-              <Route path="cities"     element={<CitiesPage />} />
-              <Route path="consults"   element={<ConsultsPage />} />
-              <Route path="media"      element={<MediaPage />} />
-              <Route path="users"      element={<UsersPage />} />
-              <Route path="settings"   element={<SettingsPage />} />
-            </Route>
+              {/* Admin */}
+              <Route path="/admin/login"         element={<AdminLoginPage />} />
+              <Route path="/admin"               element={<AdminLayout />}>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard"   element={<Dashboard />} />
+                <Route path="properties"  element={<PropertiesPage />} />
+                <Route path="projects"    element={<ProjectsPage />} />
+                <Route path="agents"      element={<AgentsPage />} />
+                <Route path="categories"  element={<CategoriesPage />} />
+                <Route path="features"    element={<FeaturesPage />} />
+                <Route path="facilities"  element={<FacilitiesPage />} />
+                <Route path="investors"   element={<InvestorsPage />} />
+                <Route path="cities"      element={<CitiesPage />} />
+                <Route path="consults"    element={<ConsultsPage />} />
+                <Route path="media"       element={<MediaPage />} />
+                <Route path="users"       element={<UsersPage />} />
+                <Route path="settings"    element={<SettingsPage />} />
+              </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
 
-          {/* Global overlays */}
-          <CompareBar />
-        </AuthProvider>
+            {/* Global overlays */}
+            <CompareBar />
+          </AuthProvider>
+        </UserAuthProvider>
       </CompareProvider>
     </BrowserRouter>
   )

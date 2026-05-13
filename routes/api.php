@@ -68,12 +68,17 @@ Route::prefix('v1')->group(function () {
     // ── Public: Consults & Auth ───────────────────────────────────────────────
     Route::post('/consults',                       [ConsultController::class, 'store']);
     Route::get('/consults/custom-fields',          [ConsultController::class, 'customFields']);
+    Route::post('/auth/register',                  [AuthController::class, 'register']);
     Route::post('/auth/login',                     [AuthController::class, 'login']);
+    Route::post('/auth/forgot-password',           [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password',            [AuthController::class, 'resetPassword']);
+    Route::post('/auth/verify-email/{id}/{hash}',  [AuthController::class, 'verifyEmail']);
 
     // ── Protected: Account ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/account/profile',                        [AuthController::class, 'profile']);
         Route::post('/auth/logout',                           [AuthController::class, 'logout']);
+        Route::post('/auth/resend-verification',              [AuthController::class, 'resendVerification']);
         Route::post('/properties/{property_id}/reviews',      [ReviewController::class, 'store']);
         Route::put('/reviews/{id}',                           [ReviewController::class, 'update']);
         Route::delete('/reviews/{id}',                        [ReviewController::class, 'destroy']);

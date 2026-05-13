@@ -38,4 +38,29 @@ class AdminConsultController extends Controller
         Consult::findOrFail($id)->delete();
         return response()->json(['data' => null, 'error' => false, 'message' => 'Consult deleted.']);
     }
+
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids'    => 'required|array',
+            'ids.*'  => 'integer',
+            'status' => 'required|in:read,unread,processing,done',
+        ]);
+
+        Consult::whereIn('id', $data['ids'])->update(['status' => $data['status']]);
+
+        return response()->json(['data' => null, 'error' => false, 'message' => count($data['ids']) . ' consults updated.']);
+    }
+
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        Consult::whereIn('id', $data['ids'])->delete();
+
+        return response()->json(['data' => null, 'error' => false, 'message' => count($data['ids']) . ' consults deleted.']);
+    }
 }

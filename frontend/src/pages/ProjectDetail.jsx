@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MapPin, Heart, Share2, ArrowLeft, Building, Phone, Mail, Calendar } from 'lucide-react'
+import { MapPin, Heart, Share2, ArrowLeft, Building, Phone, Mail, Calendar, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { projectsApi } from '../api/client'
+import { Toast, useToast } from '../components/Toast'
+import { projectsApi, consultsApi } from '../api/client'
 
 function formatPrice(price) {
   if (!price) return 'Price on request'
@@ -19,13 +20,18 @@ function imgUrl(path) {
 }
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80'
+const EMPTY_FORM = { name: '', email: '', phone: '', message: '' }
 
 export default function ProjectDetail() {
   const { slug } = useParams()
-  const [project, setProject] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [liked, setLiked] = useState(false)
+  const [project, setProject]   = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [liked, setLiked]       = useState(false)
   const [activeImg, setActiveImg] = useState(0)
+
+  const [form, setForm]         = useState(EMPTY_FORM)
+  const [submitting, setSubmitting] = useState(false)
+  const { toast, show: showToast, hide: hideToast } = useToast()
 
   useEffect(() => {
     projectsApi.bySlug(slug)
@@ -33,6 +39,39 @@ export default function ProjectDetail() {
       .catch(() => setProject(null))
       .finally(() => setLoading(false))
   }, [slug])
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      showToast('Link copied to clipboard!')
+    } catch {
+      showToast('Could not copy link', 'error')
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim() || !form.phone.trim()) {
+      showToast('Please fill in your name and phone', 'error')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await consultsApi.store({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        message: form.message || `I'm interested in ${project?.name}`,
+        project_id: project?.id,
+      })
+      showToast('Request sent! An agent will contact you shortly.')
+      setForm(EMPTY_FORM)
+    } catch {
+      showToast('Failed to send message. Please try again.', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -73,13 +112,12 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
-      <div className="pt-20">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-        {/* Back */}
+      <div className="pt-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Link to="/projects" className="flex items-center gap-2 text-navy/50 hover:text-navy text-sm font-medium transition-colors">
-            <ArrowLeft size={16} />
-            Back to Projects
+            <ArrowLeft size={16} /> Back to Projects
           </Link>
         </div>
 
@@ -90,12 +128,16 @@ export default function ProjectDetail() {
             <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent" />
             <div className="absolute top-4 right-4 flex gap-2">
               <button
-                onClick={() => setLiked(!liked)}
+                onClick={() => setLiked(l => !l)}
                 className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors"
               >
                 <Heart size={18} className={liked ? 'fill-red-500 text-red-500' : 'text-navy'} />
               </button>
-              <button className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
+              <button
+                onClick={handleShare}
+                className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors"
+                title="Copy link"
+              >
                 <Share2 size={18} className="text-navy" />
               </button>
             </div>
@@ -106,7 +148,6 @@ export default function ProjectDetail() {
             )}
           </div>
 
-          {/* Thumbnails */}
           {images.length > 1 && (
             <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
               {images.map((img, i) => (
@@ -125,8 +166,6 @@ export default function ProjectDetail() {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Main info */}
             <div className="lg:col-span-2 space-y-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -142,7 +181,6 @@ export default function ProjectDetail() {
                 </div>
                 <div className="text-3xl font-bold text-gold mb-6">From {formatPrice(project.price_from)}</div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-5 bg-white rounded-2xl shadow-card">
                   {project.city?.name && (
                     <div className="flex flex-col items-center gap-2 py-2">
@@ -168,7 +206,6 @@ export default function ProjectDetail() {
                 </div>
               </div>
 
-              {/* Description */}
               {project.description && (
                 <div>
                   <h2 className="text-navy font-bold text-xl mb-3">Overview</h2>
@@ -176,7 +213,6 @@ export default function ProjectDetail() {
                 </div>
               )}
 
-              {/* Content */}
               {project.content && (
                 <div>
                   <h2 className="text-navy font-bold text-xl mb-3">About This Project</h2>
@@ -184,7 +220,6 @@ export default function ProjectDetail() {
                 </div>
               )}
 
-              {/* Facilities */}
               {project.facilities?.length > 0 && (
                 <div>
                   <h2 className="text-navy font-bold text-xl mb-4">Facilities</h2>
@@ -203,7 +238,7 @@ export default function ProjectDetail() {
             </div>
 
             {/* Contact Sidebar */}
-            <div className="space-y-5">
+            <div>
               <div className="bg-white rounded-3xl p-6 shadow-card sticky top-24">
                 <h3 className="text-navy font-bold text-lg mb-5">Request Information</h3>
                 {project.agent && (
@@ -217,18 +252,33 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 )}
-                <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
-                  <input type="text" placeholder="Your name" className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                  <input type="email" placeholder="Your email" className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                  <input type="tel" placeholder="Your phone" className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                  <textarea
-                    placeholder="I'm interested in this project..."
-                    rows={3}
-                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
-                    defaultValue={`I'm interested in ${project.name}`}
+                <form className="space-y-3" onSubmit={handleSubmit}>
+                  <input
+                    type="text" placeholder="Your name *"
+                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                    required
                   />
-                  <button type="submit" className="w-full btn-gold justify-center flex">
-                    Send Message
+                  <input
+                    type="email" placeholder="Your email"
+                    value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                  />
+                  <input
+                    type="tel" placeholder="Your phone *"
+                    value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                    required
+                  />
+                  <textarea
+                    placeholder="Your message..."
+                    rows={3}
+                    value={form.message}
+                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
+                  />
+                  <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 disabled:opacity-60">
+                    {submitting ? <><Loader2 size={15} className="animate-spin" /> Sending...</> : 'Send Message'}
                   </button>
                 </form>
 
@@ -246,7 +296,6 @@ export default function ProjectDetail() {
                 )}
               </div>
             </div>
-
           </div>
         </div>
       </div>

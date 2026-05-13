@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Star, BadgeCheck, MapPin, Home, Phone, Mail, ArrowLeft, MessageCircle } from 'lucide-react'
+import { Star, BadgeCheck, MapPin, Home, Phone, Mail, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
-import { agentsApi } from '../api/client'
+import { Toast, useToast } from '../components/Toast'
+import { agentsApi, consultsApi } from '../api/client'
 
 const AVATAR_COLORS = ['#0B1F3A', '#C8A97E', '#1a3a5c', '#8b6914', '#132d52', '#a07a3c']
+const EMPTY_FORM = { name: '', phone: '', message: '' }
 
 export default function AgentDetail() {
   const { id } = useParams()
-  const [agent, setAgent] = useState(null)
+  const [agent, setAgent]           = useState(null)
   const [properties, setProperties] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]       = useState(true)
   const [propsLoading, setPropsLoading] = useState(true)
+
+  const [form, setForm]             = useState(EMPTY_FORM)
+  const [submitting, setSubmitting] = useState(false)
+  const { toast, show: showToast, hide: hideToast } = useToast()
 
   useEffect(() => {
     agentsApi.byId(id)
@@ -26,6 +32,29 @@ export default function AgentDetail() {
       .catch(() => setProperties([]))
       .finally(() => setPropsLoading(false))
   }, [id])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim() || !form.phone.trim()) {
+      showToast('Please fill in your name and phone', 'error')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await consultsApi.store({
+        name: form.name,
+        phone: form.phone,
+        message: form.message || `I'd like to connect with ${agent?.display_name || agent?.name}`,
+        agent_id: agent?.id,
+      })
+      showToast('Message sent! The agent will contact you shortly.')
+      setForm(EMPTY_FORM)
+    } catch {
+      showToast('Failed to send message. Please try again.', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -66,13 +95,12 @@ export default function AgentDetail() {
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
-      <div className="pt-20">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-        {/* Back */}
+      <div className="pt-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Link to="/agents" className="flex items-center gap-2 text-navy/50 hover:text-navy text-sm font-medium transition-colors">
-            <ArrowLeft size={16} />
-            Back to Agents
+            <ArrowLeft size={16} /> Back to Agents
           </Link>
         </div>
 
@@ -112,7 +140,6 @@ export default function AgentDetail() {
                   {agent.city?.name || 'Morocco'}
                 </div>
 
-                {/* Stats row */}
                 <div className="flex items-center justify-center sm:justify-start gap-5 mb-5">
                   {agent.rating && (
                     <div className="flex items-center gap-1.5">
@@ -129,31 +156,19 @@ export default function AgentDetail() {
                   )}
                 </div>
 
-                {/* Contact buttons */}
                 <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                   {agent.phone && (
-                    <a
-                      href={`tel:${agent.phone}`}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-navy text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                    >
+                    <a href={`tel:${agent.phone}`} className="flex items-center gap-2 px-4 py-2.5 bg-navy text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
                       <Phone size={14} /> {agent.phone}
                     </a>
                   )}
                   {agent.whatsapp && (
-                    <a
-                      href={`https://wa.me/${agent.whatsapp.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                    >
+                    <a href={`https://wa.me/${agent.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
                       <MessageCircle size={14} /> WhatsApp
                     </a>
                   )}
                   {agent.email && (
-                    <a
-                      href={`mailto:${agent.email}`}
-                      className="flex items-center gap-2 px-4 py-2.5 border border-navy/10 text-navy text-sm font-semibold rounded-xl hover:bg-navy hover:text-white hover:border-navy transition-all"
-                    >
+                    <a href={`mailto:${agent.email}`} className="flex items-center gap-2 px-4 py-2.5 border border-navy/10 text-navy text-sm font-semibold rounded-xl hover:bg-navy hover:text-white hover:border-navy transition-all">
                       <Mail size={14} /> {agent.email}
                     </a>
                   )}
@@ -162,16 +177,33 @@ export default function AgentDetail() {
 
               {/* Contact form */}
               <div className="w-full sm:w-72 shrink-0">
-                <form className="space-y-2.5" onSubmit={(e) => e.preventDefault()}>
-                  <input type="text" placeholder="Your name" className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                  <input type="tel" placeholder="Your phone" className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                  <textarea placeholder="Your message..." rows={2} className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none" />
-                  <button type="submit" className="w-full btn-gold justify-center flex">Send Message</button>
+                <form className="space-y-2.5" onSubmit={handleSubmit}>
+                  <input
+                    type="text" placeholder="Your name *"
+                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                    required
+                  />
+                  <input
+                    type="tel" placeholder="Your phone *"
+                    value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                    required
+                  />
+                  <textarea
+                    placeholder="Your message..."
+                    rows={2}
+                    value={form.message}
+                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
+                  />
+                  <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 disabled:opacity-60">
+                    {submitting ? <><Loader2 size={15} className="animate-spin" /> Sending...</> : 'Send Message'}
+                  </button>
                 </form>
               </div>
             </div>
 
-            {/* Description */}
             {agent.description && (
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <p className="text-navy/60 text-sm leading-relaxed">{agent.description}</p>
@@ -197,7 +229,6 @@ export default function AgentDetail() {
             }
           </div>
         </div>
-
       </div>
       <Footer />
     </div>

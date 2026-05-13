@@ -1,8 +1,17 @@
 import { useState } from 'react'
-import { Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck, Star } from 'lucide-react'
+import { Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
+const FAVORITES_KEY = 'homzen_favorites'
+
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] }
+}
+
+function saveFavorites(ids) {
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids)) } catch {}
+}
 
 function getImageUrl(property) {
   const img = Array.isArray(property?.images) ? property.images[0] : property?.image
@@ -22,21 +31,33 @@ function formatPrice(price, isRent) {
 }
 
 export default function PropertyCard({ property, className = '' }) {
-  const [liked, setLiked]       = useState(false)
+  const [liked, setLiked] = useState(() => getFavorites().includes(property?.id))
   const [imgError, setImgError] = useState(false)
 
   if (!property) return null
 
-  const slug    = property.slug || property.id
-  const isRent  = property.type === 'rent'
-  const badge   = property.is_featured ? 'Featured' : null
+  const slug   = property.slug || property.id
+  const isRent = property.type === 'rent'
+  const badge  = property.is_featured ? 'Featured' : null
+
+  const handleLike = (e) => {
+    e.preventDefault()
+    const favs = getFavorites()
+    let next
+    if (favs.includes(property.id)) {
+      next = favs.filter(f => f !== property.id)
+    } else {
+      next = [...favs, property.id]
+    }
+    saveFavorites(next)
+    setLiked(next.includes(property.id))
+  }
 
   return (
     <Link
       to={`/properties/${slug}`}
       className={`group block rounded-3xl overflow-hidden bg-white shadow-card hover:shadow-card-hover transition-all duration-400 hover:-translate-y-1.5 ${className}`}
     >
-      {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={imgError ? FALLBACK : getImageUrl(property)}
@@ -44,11 +65,8 @@ export default function PropertyCard({ property, className = '' }) {
           onError={() => setImgError(true)}
           className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.06]"
         />
-
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-navy/10 to-transparent" />
 
-        {/* Top badges */}
         <div className="absolute top-3 left-3 flex gap-1.5">
           {badge && (
             <span className="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wide bg-gold text-navy shadow-sm">
@@ -67,20 +85,15 @@ export default function PropertyCard({ property, className = '' }) {
           )}
         </div>
 
-        {/* Favourite */}
         <button
-          onClick={(e) => { e.preventDefault(); setLiked(!liked) }}
+          onClick={handleLike}
           className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-250 ${
             liked ? 'bg-red-500 shadow-lg scale-110' : 'bg-white/85 backdrop-blur-sm hover:bg-white hover:scale-110'
           }`}
         >
-          <Heart
-            size={14}
-            className={liked ? 'fill-white text-white' : 'text-navy/60'}
-          />
+          <Heart size={14} className={liked ? 'fill-white text-white' : 'text-navy/60'} />
         </button>
 
-        {/* Price at bottom of image */}
         <div className="absolute bottom-3 left-3">
           <div className="flex items-baseline gap-1">
             <span className="text-white font-bold text-lg leading-none drop-shadow">
@@ -91,7 +104,6 @@ export default function PropertyCard({ property, className = '' }) {
         </div>
       </div>
 
-      {/* Info */}
       <div className="p-4">
         <h3 className="text-navy font-semibold text-sm leading-snug mb-1.5 line-clamp-1 group-hover:text-gold transition-colors duration-200">
           {property.name}
@@ -104,7 +116,6 @@ export default function PropertyCard({ property, className = '' }) {
           </div>
         )}
 
-        {/* Specs */}
         <div className="flex items-center gap-4 pt-3 border-t border-gray-100/80">
           {property.number_bedroom > 0 && (
             <div className="flex items-center gap-1.5 text-navy/50 text-xs">

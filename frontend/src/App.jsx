@@ -14,6 +14,7 @@ import AuthModal from './components/AuthModal'
 import { CompareProvider } from './context/CompareContext'
 import { UserAuthProvider } from './context/UserAuthContext'
 import { AuthModalProvider } from './context/AuthModalContext'
+import { FavoritesProvider } from './context/FavoritesContext'
 
 // User auth pages
 import UserLoginPage      from './pages/auth/LoginPage'
@@ -46,6 +47,7 @@ export default function App() {
     <BrowserRouter>
       <CompareProvider>
         <UserAuthProvider>
+          <FavoritesProvider>
           <AuthModalProvider>
             <AuthProvider>
               <Routes>
@@ -99,6 +101,7 @@ export default function App() {
               <AuthModal />
             </AuthProvider>
           </AuthModalProvider>
+          </FavoritesProvider>
         </UserAuthProvider>
       </CompareProvider>
     </BrowserRouter>

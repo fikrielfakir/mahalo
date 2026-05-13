@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   User, Mail, Phone, Building2, FileText, Check, AlertCircle,
-  ChevronRight, Clock, CheckCircle, XCircle, Home, MapPin, Bed, Bath, Maximize2,
+  ChevronRight, Clock, CheckCircle, XCircle, Home, MapPin, Bed, Bath, Maximize2, Heart,
 } from 'lucide-react'
 import { useUserAuth } from '../context/UserAuthContext'
-import { authApi, userListingsApi } from '../api/client'
+import { authApi, userListingsApi, favoritesApi } from '../api/client'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import PropertyCard from '../components/PropertyCard'
 
 const TYPES = [
   { id: 'individual', label: 'Private Individual', description: 'Looking to buy, sell, or rent a property for personal use.', icon: User },
@@ -114,6 +115,9 @@ export default function ProfilePage() {
   const [listings, setListings]       = useState([])
   const [listingsLoading, setListingsLoading] = useState(false)
 
+  const [favorites, setFavorites]         = useState([])
+  const [favoritesLoading, setFavoritesLoading] = useState(false)
+
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate('/login', { replace: true })
   }, [loading, isAuthenticated, navigate])
@@ -137,6 +141,16 @@ export default function ProfilePage() {
         .then((r) => setListings(Array.isArray(r?.data) ? r.data : []))
         .catch(() => setListings([]))
         .finally(() => setListingsLoading(false))
+    }
+  }, [activeTab, isAuthenticated])
+
+  useEffect(() => {
+    if (activeTab === 'favorites' && isAuthenticated) {
+      setFavoritesLoading(true)
+      favoritesApi.list()
+        .then((r) => setFavorites(Array.isArray(r?.data) ? r.data : []))
+        .catch(() => setFavorites([]))
+        .finally(() => setFavoritesLoading(false))
     }
   }, [activeTab, isAuthenticated])
 
@@ -192,6 +206,7 @@ export default function ProfilePage() {
             {[
               { key: 'profile', label: 'Profile' },
               { key: 'listings', label: 'My Listings', badge: pendingCount > 0 ? pendingCount : null },
+              { key: 'favorites', label: 'Favorites' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -311,6 +326,35 @@ export default function ProfilePage() {
                 {saving ? (<><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving…</>) : (<>Save Changes <ChevronRight size={16} /></>)}
               </button>
             </form>
+          )}
+
+          {/* Favorites tab */}
+          {activeTab === 'favorites' && (
+            <div>
+              {favoritesLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="bg-white rounded-3xl shadow-card p-12 text-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                    <Heart size={28} className="text-navy/20" />
+                  </div>
+                  <h3 className="text-lg font-bold text-navy mb-2">No favorites yet</h3>
+                  <p className="text-navy/45 text-sm mb-6">Browse properties and tap the heart icon to save them here.</p>
+                  <Link to="/properties" className="btn-gold inline-flex items-center gap-2 text-sm">
+                    Browse Properties <ChevronRight size={15} />
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-navy/50 mb-4">{favorites.length} saved propert{favorites.length !== 1 ? 'ies' : 'y'}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {favorites.map((p) => <PropertyCard key={p.id} property={p} />)}
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {/* My Listings tab */}

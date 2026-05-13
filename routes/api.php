@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\UserListingController;
 use App\Http\Controllers\Api\Admin\AdminAgentController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
@@ -88,6 +89,11 @@ Route::prefix('v1')->group(function () {
         // User property listings
         Route::get('/account/my-listings',  [UserListingController::class, 'index']);
         Route::post('/account/listings',    [UserListingController::class, 'store']);
+
+        // Favorites
+        Route::get('/account/favorites/ids',       [FavoriteController::class, 'ids']);
+        Route::get('/account/favorites',            [FavoriteController::class, 'index']);
+        Route::post('/account/favorites/{property_id}', [FavoriteController::class, 'toggle']);
     });
 
     // ── Admin: Media (no Sanctum for upload — proxied through Vite in dev)

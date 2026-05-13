@@ -12,6 +12,7 @@ import { Toast, useToast } from '../components/Toast'
 import { userListingsApi } from '../api/client'
 import LocationPicker from '../components/LocationPicker'
 import { useUserAuth } from '../context/UserAuthContext'
+import { useAuthModal } from '../context/AuthModalContext'
 
 const EMPTY = {
   name: '', email: '', phone: '',
@@ -222,6 +223,7 @@ export default function ListProperty() {
   const [submitted, setSubmitted]   = useState(false)
   const { toast, show: showToast, hide: hideToast } = useToast()
   const { isAuthenticated, loading: authLoading } = useUserAuth()
+  const { openAuthModal } = useAuthModal()
   const navigate = useNavigate()
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
@@ -229,7 +231,7 @@ export default function ListProperty() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: '/list-property' } })
+      openAuthModal()
       return
     }
     if (!form.name.trim() || !form.city.trim()) {

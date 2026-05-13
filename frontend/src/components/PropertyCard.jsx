@@ -4,17 +4,9 @@ import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
+import { useFavorites } from '../context/FavoritesContext'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
-const FAVORITES_KEY = 'mahalo_favorites'
-
-function getFavorites() {
-  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] }
-}
-
-function saveFavorites(ids) {
-  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids)) } catch {}
-}
 
 function getImageUrl(property) {
   const img = Array.isArray(property?.images) ? property.images[0] : property?.image
@@ -34,11 +26,11 @@ function formatPrice(price, isRent) {
 }
 
 export default function PropertyCard({ property, className = '' }) {
-  const [liked, setLiked]       = useState(() => getFavorites().includes(property?.id))
   const [imgError, setImgError] = useState(false)
-  const { toggle, isIn, isFull } = useCompare()
+  const { toggle: toggleCompare, isIn, isFull } = useCompare()
   const { isAuthenticated } = useUserAuth()
   const { openAuthModal } = useAuthModal()
+  const { isFavorited, toggle: toggleFavorite } = useFavorites()
 
   if (!property) return null
 
@@ -46,30 +38,20 @@ export default function PropertyCard({ property, className = '' }) {
   const isRent  = property.type === 'rent'
   const badge   = property.is_featured ? 'Featured' : null
   const inCmp   = isIn(property.id)
+  const liked   = isFavorited(property.id)
 
   const handleLike = (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      openAuthModal(() => {
-        const favs = getFavorites()
-        if (!favs.includes(property.id)) {
-          saveFavorites([...favs, property.id])
-          setLiked(true)
-        }
-      })
+      openAuthModal(() => toggleFavorite(property.id))
       return
     }
-    const favs = getFavorites()
-    const next = favs.includes(property.id)
-      ? favs.filter(f => f !== property.id)
-      : [...favs, property.id]
-    saveFavorites(next)
-    setLiked(next.includes(property.id))
+    toggleFavorite(property.id)
   }
 
   const handleCompare = (e) => {
     e.preventDefault()
-    toggle(property)
+    toggleCompare(property)
   }
 
   return (

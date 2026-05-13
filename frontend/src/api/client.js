@@ -68,6 +68,12 @@ export const consultsApi = {
   customFields: () => api.get('/consults/custom-fields'),
 }
 
+export const favoritesApi = {
+  ids:    ()           => api.get('/account/favorites/ids'),
+  list:   ()           => api.get('/account/favorites'),
+  toggle: (propertyId) => api.post(`/account/favorites/${propertyId}`),
+}
+
 export const userListingsApi = {
   myListings: () => api.get('/account/my-listings'),
   store: (data) => api.post('/account/listings', data),

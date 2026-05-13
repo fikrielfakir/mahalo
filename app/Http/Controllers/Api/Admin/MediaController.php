@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -87,12 +88,20 @@ class MediaController extends Controller
 
             if (!extension_loaded('gd')) return;
 
-            $watermarkFile = public_path('watermark.png');
-            if (!file_exists($watermarkFile)) return;
+            // Load settings from DB, fall back to sensible defaults
+            $settings = DB::table('site_settings')
+                ->whereIn('key', ['watermark_enabled', 'watermark_logo_url', 'watermark_position', 'watermark_opacity', 'watermark_size'])
+                ->pluck('value', 'key');
 
-            $position  = 'bottom-right';
-            $opacity   = 60;
-            $sizeRatio = 20;
+            if (($settings['watermark_enabled'] ?? '1') === '0') return;
+
+            $position  = $settings['watermark_position'] ?? 'bottom-right';
+            $opacity   = (int) ($settings['watermark_opacity'] ?? 60);
+            $sizeRatio = (int) ($settings['watermark_size'] ?? 20);
+
+            // Resolve watermark image: custom logo from settings, or bundled default
+            $logoUrl = $settings['watermark_logo_url'] ?? '';
+            $watermarkFile = public_path('watermark.png');
 
             $diskPath = Storage::disk('public')->path($storedPath);
             $main     = $this->imageFromFile($diskPath);
@@ -101,7 +110,14 @@ class MediaController extends Controller
             $mainW = imagesx($main);
             $mainH = imagesy($main);
 
-            $watermark = @imagecreatefrompng($watermarkFile);
+            // Try custom logo URL first, then fall back to the bundled PNG
+            $watermark = null;
+            if ($logoUrl) {
+                $watermark = $this->loadWatermarkImage($logoUrl) ?: null;
+            }
+            if (!$watermark && file_exists($watermarkFile)) {
+                $watermark = @imagecreatefrompng($watermarkFile) ?: null;
+            }
             if (!$watermark) { imagedestroy($main); return; }
 
             $wmW    = (int) ($mainW * $sizeRatio / 100);

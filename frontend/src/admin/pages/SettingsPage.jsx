@@ -9,12 +9,13 @@ import {
 } from 'lucide-react'
 
 const TABS = [
-  { id: 'general',  label: 'General',  icon: Globe },
-  { id: 'theme',    label: 'Theme',    icon: Palette },
-  { id: 'contact',  label: 'Contact',  icon: Mail },
-  { id: 'social',   label: 'Social',   icon: Instagram },
-  { id: 'seo',      label: 'SEO',      icon: Globe },
-  { id: 'mail',     label: 'Mail / SMTP', icon: Server },
+  { id: 'general',   label: 'General',   icon: Globe },
+  { id: 'theme',     label: 'Theme',     icon: Palette },
+  { id: 'watermark', label: 'Watermark', icon: Droplets },
+  { id: 'contact',   label: 'Contact',   icon: Mail },
+  { id: 'social',    label: 'Social',    icon: Instagram },
+  { id: 'seo',       label: 'SEO',       icon: Globe },
+  { id: 'mail',      label: 'Mail / SMTP', icon: Server },
 ]
 
 const DEFAULTS = {
@@ -238,77 +239,90 @@ export default function SettingsPage() {
               </div>
             </Section>
 
-            <Section title="Watermark" icon={Droplets}>
-              <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl mb-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <div
-                    onClick={() => setForm(p => ({ ...p, watermark_enabled: p.watermark_enabled === '1' ? '0' : '1' }))}
-                    className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
-                      form.watermark_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
-                    }`}
-                  >
-                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      form.watermark_enabled === '1' ? 'translate-x-5' : 'translate-x-0'
-                    }`} />
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {form.watermark_enabled === '1' ? 'Watermark enabled' : 'Watermark disabled'}
-                  </span>
-                </label>
-                <span className="text-xs text-blue-600 ml-auto">
-                  When enabled, your watermark logo is stamped on every uploaded image
-                </span>
+          </>
+        )}
+
+        {/* ── WATERMARK TAB ── */}
+        {tab === 'watermark' && (
+          <>
+            <Section title="Watermark Settings" icon={Droplets}>
+              {/* Enable / Disable toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Auto-watermark on upload</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    When enabled, the Mahalo logo is stamped on every image as it is uploaded
+                  </p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, watermark_enabled: p.watermark_enabled === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                    form.watermark_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.watermark_enabled === '1' ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </div>
               </div>
 
+              {/* Logo upload */}
               <LogoField
                 label="Watermark Logo"
-                hint="PNG with transparent background works best"
+                hint="PNG with transparent background works best. Leave empty to use the default Mahalo logo."
                 value={form.watermark_logo_url}
                 field="watermark_logo_url"
                 uploading={uploading.watermark_logo_url}
                 onChange={uploadLogo}
               />
 
-              {form.watermark_enabled === '1' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <FormField label="Position">
-                    <select
-                      value={form.watermark_position}
-                      onChange={f('watermark_position')}
-                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                    >
-                      {WATERMARK_POSITIONS.map(p => (
-                        <option key={p.value} value={p.value}>{p.label}</option>
-                      ))}
-                    </select>
-                  </FormField>
-                  <FormField label="Opacity" hint={`${form.watermark_opacity}%`}>
-                    <input
-                      type="range" min="10" max="100" step="5"
-                      value={form.watermark_opacity}
-                      onChange={f('watermark_opacity')}
-                      className="w-full accent-[#BA1932] mt-2"
-                    />
-                  </FormField>
-                  <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
-                    <input
-                      type="range" min="5" max="50" step="5"
-                      value={form.watermark_size}
-                      onChange={f('watermark_size')}
-                      className="w-full accent-[#BA1932] mt-2"
-                    />
-                  </FormField>
-                </div>
-              )}
+              {/* Position / Opacity / Size — always visible */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                <FormField label="Position">
+                  <select
+                    value={form.watermark_position}
+                    onChange={f('watermark_position')}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                  >
+                    {WATERMARK_POSITIONS.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </FormField>
 
-              {form.watermark_enabled === '1' && form.watermark_logo_url && (
-                <WatermarkPreview
-                  logo={form.watermark_logo_url}
-                  position={form.watermark_position}
-                  opacity={form.watermark_opacity}
-                  size={form.watermark_size}
-                />
-              )}
+                <FormField label="Opacity" hint={`${form.watermark_opacity}%`}>
+                  <input
+                    type="range" min="10" max="100" step="5"
+                    value={form.watermark_opacity}
+                    onChange={f('watermark_opacity')}
+                    className="w-full accent-[#BA1932] mt-2"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                    <span>10%</span><span>100%</span>
+                  </div>
+                </FormField>
+
+                <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
+                  <input
+                    type="range" min="5" max="50" step="5"
+                    value={form.watermark_size}
+                    onChange={f('watermark_size')}
+                    className="w-full accent-[#BA1932] mt-2"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                    <span>5%</span><span>50%</span>
+                  </div>
+                </FormField>
+              </div>
+
+              {/* Live preview — always visible */}
+              <WatermarkPreview
+                logo={form.watermark_logo_url || '/watermark.png'}
+                position={form.watermark_position}
+                opacity={form.watermark_opacity}
+                size={form.watermark_size}
+                enabled={form.watermark_enabled === '1'}
+              />
             </Section>
           </>
         )}
@@ -608,36 +622,53 @@ function LogoField({ label, hint, value, field, uploading, onChange }) {
   )
 }
 
-function WatermarkPreview({ logo, position, opacity, size }) {
+function WatermarkPreview({ logo, position, opacity, size, enabled }) {
   const posMap = {
-    'top-left':     'top-2 left-2',
-    'top-right':    'top-2 right-2',
-    'bottom-left':  'bottom-2 left-2',
-    'bottom-right': 'bottom-2 right-2',
+    'top-left':     'top-3 left-3',
+    'top-right':    'top-3 right-3',
+    'bottom-left':  'bottom-3 left-3',
+    'bottom-right': 'bottom-3 right-3',
     'center':       'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
   }
 
   return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Preview</p>
-      <div className="relative rounded-xl overflow-hidden bg-gray-200 border border-gray-100" style={{ height: 160 }}>
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live Preview</p>
+        {!enabled && (
+          <span className="text-xs bg-amber-50 text-amber-600 border border-amber-100 rounded-lg px-2 py-0.5">
+            Watermark is disabled — enable above to activate
+          </span>
+        )}
+      </div>
+      <div
+        className="relative rounded-xl overflow-hidden border border-gray-100"
+        style={{ height: 200, background: 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #64748b 100%)' }}
+      >
+        {/* Fake property image grid lines */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="h-full w-full" style={{
+            backgroundImage: 'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)'
+          }} />
+        </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-gray-400 text-sm">Sample image</span>
+          <span className="text-white/60 text-sm font-medium select-none">Sample Property Image</span>
         </div>
         <img
           src={logo}
           alt="watermark preview"
-          className={`absolute ${posMap[position] || posMap['bottom-right']}`}
+          className={`absolute ${posMap[position] || posMap['bottom-right']} transition-all duration-200`}
           style={{
-            opacity: parseInt(opacity, 10) / 100,
+            opacity: enabled ? parseInt(opacity, 10) / 100 : 0.25,
             width: `${size}%`,
             objectFit: 'contain',
+            filter: enabled ? 'none' : 'grayscale(1)',
           }}
           onError={(e) => { e.currentTarget.style.display = 'none' }}
         />
       </div>
-      <p className="text-xs text-gray-400 mt-1">
-        Position: <strong>{position}</strong> · Opacity: <strong>{opacity}%</strong> · Size: <strong>{size}% width</strong>
+      <p className="text-xs text-gray-400 mt-1.5">
+        Position: <strong>{position}</strong> · Opacity: <strong>{opacity}%</strong> · Size: <strong>{size}% of width</strong>
       </p>
     </div>
   )

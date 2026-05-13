@@ -49,7 +49,7 @@ export default function AgentsPage() {
   const cols = [
     { key: 'name', label: 'Agent', render: (r) => (
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-xs font-bold">{r.name?.[0]}</div>
+        <div className="w-8 h-8 rounded-full bg-[#730D26] flex items-center justify-center text-white text-xs font-bold">{r.name?.[0]}</div>
         <div>
           <p className="font-medium text-sm text-gray-800 flex items-center gap-1">
             {r.name} {r.is_verified && <BadgeCheck size={13} className="text-blue-500" />}

@@ -29,8 +29,8 @@ const VALUES = [
 ]
 
 const TEAM = [
-  { name: 'Youssef Alami',      role: 'Founder & CEO',           city: 'Casablanca', initial: 'Y', color: '#1A1A1A' },
-  { name: 'Fatima Zahra',       role: 'Head of Operations',       city: 'Rabat',       initial: 'F', color: '#9B1232' },
+  { name: 'Youssef Alami',      role: 'Founder & CEO',           city: 'Casablanca', initial: 'Y', color: '#730D26' },
+  { name: 'Fatima Zahra',       role: 'Head of Operations',       city: 'Rabat',       initial: 'F', color: '#BA1932' },
   { name: 'Karim Benchekroun',  role: 'Chief Technology Officer', city: 'Casablanca', initial: 'K', color: '#1a3a5c' },
   { name: 'Nadia El Fassi',     role: 'Head of Agent Network',    city: 'Marrakech',   initial: 'N', color: '#8b6914' },
   { name: 'Omar Tazi',          role: 'Head of Sales',            city: 'Tangier',     initial: 'O', color: '#132d52' },

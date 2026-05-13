@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 import { agentsApi } from '../api/client'
 
 const AVATAR_COLORS = [
-  'linear-gradient(135deg,#1A1A1A,#132d52)',
-  'linear-gradient(135deg,#8b6914,#9B1232)',
+  'linear-gradient(135deg,#730D26,#132d52)',
+  'linear-gradient(135deg,#8b6914,#BA1932)',
   'linear-gradient(135deg,#1a3a5c,#2a5a8c)',
   'linear-gradient(135deg,#a07a3c,#d4b896)',
 ]

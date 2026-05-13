@@ -76,7 +76,7 @@ export default function Hero() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-navy/70 via-navy/45 to-navy/80" />
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(200,169,126,0.12) 0%, transparent 65%)' }}
+          style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(186,25,50,0.12) 0%, transparent 65%)' }}
         />
       </div>
 
@@ -96,7 +96,7 @@ export default function Hero() {
           <span
             className="relative inline-block"
             style={{ WebkitTextFillColor: 'transparent', WebkitBackgroundClip: 'text', backgroundClip: 'text',
-              backgroundImage: 'linear-gradient(135deg, #9B1232 0%, #e8ca9e 50%, #9B1232 100%)' }}
+              backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 50%, #BA1932 100%)' }}
           >
             Morocco
           </span>
@@ -191,7 +191,7 @@ export default function Hero() {
             {/* Search button */}
             <button
               onClick={handleSearch}
-              className="flex items-center justify-center gap-2 bg-gold hover:bg-gold-dark text-navy font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-250 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
+              className="flex items-center justify-center gap-2 bg-gold hover:bg-gold-dark text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all duration-250 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0 shrink-0 m-0.5"
             >
               <Search size={17} />
               Search

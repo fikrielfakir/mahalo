@@ -120,8 +120,8 @@ export function Badge({ children, color = 'gray' }) {
 export function Btn({ children, onClick, variant = 'primary', size = 'md', type = 'button', disabled, className = '' }) {
   const base = 'inline-flex items-center gap-2 font-semibold rounded-xl transition-all duration-150 disabled:opacity-50'
   const variants = {
-    primary:  'bg-[#1A1A1A] text-white hover:bg-[#1A1A1A]/90',
-    gold:     'bg-[#9B1232] text-white hover:bg-[#b8956a]',
+    primary:  'bg-[#730D26] text-white hover:bg-[#730D26]/90',
+    gold:     'bg-[#BA1932] text-white hover:bg-[#b8956a]',
     ghost:    'bg-gray-100 text-gray-700 hover:bg-gray-200',
     danger:   'bg-red-50 text-red-600 hover:bg-red-100',
   }

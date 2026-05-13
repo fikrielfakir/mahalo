@@ -47,7 +47,7 @@ export function Input({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all placeholder-gray-400 ${className}`}
+      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all placeholder-gray-400 ${className}`}
     />
   )
 }
@@ -56,7 +56,7 @@ export function Textarea({ className = '', ...props }) {
   return (
     <textarea
       {...props}
-      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all placeholder-gray-400 resize-none ${className}`}
+      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all placeholder-gray-400 resize-none ${className}`}
     />
   )
 }
@@ -65,7 +65,7 @@ export function Select({ className = '', children, ...props }) {
   return (
     <select
       {...props}
-      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all bg-white ${className}`}
+      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all bg-white ${className}`}
     >
       {children}
     </select>
@@ -77,7 +77,7 @@ export function Toggle({ checked, onChange, label }) {
     <label className="flex items-center gap-3 cursor-pointer">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${checked ? 'bg-[#9B1232]' : 'bg-gray-200'}`}
+        className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${checked ? 'bg-[#BA1932]' : 'bg-gray-200'}`}
       >
         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
       </div>

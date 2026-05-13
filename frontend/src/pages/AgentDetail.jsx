@@ -7,7 +7,7 @@ import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import { Toast, useToast } from '../components/Toast'
 import { agentsApi, consultsApi } from '../api/client'
 
-const AVATAR_COLORS = ['#1A1A1A', '#9B1232', '#1a3a5c', '#8b6914', '#132d52', '#a07a3c']
+const AVATAR_COLORS = ['#730D26', '#BA1932', '#1a3a5c', '#8b6914', '#132d52', '#a07a3c']
 const EMPTY_FORM = { name: '', phone: '', message: '' }
 
 function formatPrice(price) {

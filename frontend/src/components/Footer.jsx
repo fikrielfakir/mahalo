@@ -52,7 +52,7 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer style={{ background: 'linear-gradient(180deg, #1A1A1A 0%, #0d0d0d 100%)' }}>
+    <footer style={{ background: 'linear-gradient(180deg, #730D26 0%, #0d0d0d 100%)' }}>
       <div className="max-w-7xl mx-auto px-5 pt-16 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
 

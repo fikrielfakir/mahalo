@@ -8,20 +8,20 @@ export default {
     extend: {
       colors: {
         navy: {
-          DEFAULT: '#0B1F3A',
-          light: '#132d52',
-          dark: '#071628',
+          DEFAULT: '#730D26',
+          light: '#9b1232',
+          dark: '#4f0919',
         },
         gold: {
-          DEFAULT: '#C8A97E',
-          light: '#d4b896',
-          dark: '#b8945f',
+          DEFAULT: '#BA1932',
+          light: '#d01e38',
+          dark: '#9b1229',
         },
         beige: {
           DEFAULT: '#F6F3EE',
           dark: '#ede9e0',
         },
-        surface: '#F7F8FC',
+        surface: '#F5F5F5',
         rose: '#FF5A5F',
       },
       fontFamily: {
@@ -34,13 +34,13 @@ export default {
         '5xl': '40px',
       },
       boxShadow: {
-        card: '0 2px 20px rgba(11,31,58,0.07), 0 1px 4px rgba(11,31,58,0.04)',
-        'card-hover': '0 12px 40px rgba(11,31,58,0.14), 0 2px 8px rgba(11,31,58,0.06)',
-        glass: '0 8px 32px rgba(11,31,58,0.10), inset 0 1px 0 rgba(255,255,255,0.6)',
-        'glass-lg': '0 20px 60px rgba(11,31,58,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
-        glow: '0 0 30px rgba(200,169,126,0.25)',
-        'glow-lg': '0 0 50px rgba(200,169,126,0.35)',
-        float: '0 24px 64px rgba(11,31,58,0.18)',
+        card: '0 2px 20px rgba(115,13,38,0.07), 0 1px 4px rgba(115,13,38,0.04)',
+        'card-hover': '0 12px 40px rgba(115,13,38,0.14), 0 2px 8px rgba(115,13,38,0.06)',
+        glass: '0 8px 32px rgba(115,13,38,0.10), inset 0 1px 0 rgba(255,255,255,0.6)',
+        'glass-lg': '0 20px 60px rgba(115,13,38,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
+        glow: '0 0 30px rgba(186,25,50,0.25)',
+        'glow-lg': '0 0 50px rgba(186,25,50,0.35)',
+        float: '0 24px 64px rgba(115,13,38,0.18)',
       },
       backdropBlur: {
         xs: '4px',

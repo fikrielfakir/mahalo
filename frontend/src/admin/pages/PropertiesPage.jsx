@@ -105,8 +105,8 @@ export default function PropertiesPage() {
         {r.images?.[0] ? (
           <img src={`/storage/${r.images[0]}`} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
         ) : (
-          <div className="w-8 h-8 rounded-xl bg-[#1A1A1A]/5 flex items-center justify-center shrink-0">
-            <Building2 size={14} className="text-[#1A1A1A]/40" />
+          <div className="w-8 h-8 rounded-xl bg-[#730D26]/5 flex items-center justify-center shrink-0">
+            <Building2 size={14} className="text-[#730D26]/40" />
           </div>
         )}
         <div>
@@ -209,7 +209,7 @@ export default function PropertiesPage() {
                   {categories.map((c) => (
                     <button key={c.id} type="button"
                       onClick={() => toggleArr('category_ids', c.id)}
-                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.category_ids.includes(c.id) ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A1A1A]'}`}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.category_ids.includes(c.id) ? 'bg-[#730D26] text-white border-[#730D26]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#730D26]'}`}
                     >{c.name}</button>
                   ))}
                 </div>
@@ -221,7 +221,7 @@ export default function PropertiesPage() {
                   {features.map((feat) => (
                     <button key={feat.id} type="button"
                       onClick={() => toggleArr('feature_ids', feat.id)}
-                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.feature_ids.includes(feat.id) ? 'bg-[#9B1232] text-white border-[#9B1232]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#9B1232]'}`}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.feature_ids.includes(feat.id) ? 'bg-[#BA1932] text-white border-[#BA1932]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#BA1932]'}`}
                     >{feat.name}</button>
                   ))}
                 </div>

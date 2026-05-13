@@ -6,12 +6,12 @@ export default function MobileAppSection() {
       <div className="max-w-7xl mx-auto">
         <div
           className="relative rounded-4xl overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #132d52 60%, #1a3a5c 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #730D26 0%, #132d52 60%, #1a3a5c 100%)' }}
         >
           {/* Background blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-20"
-              style={{ background: 'radial-gradient(circle, #9B1232 0%, transparent 70%)' }} />
+              style={{ background: 'radial-gradient(circle, #BA1932 0%, transparent 70%)' }} />
             <div className="absolute bottom-0 left-1/4 w-64 h-64 rounded-full opacity-10"
               style={{ background: 'radial-gradient(circle, #4f9ef8 0%, transparent 70%)' }} />
           </div>
@@ -98,7 +98,7 @@ export default function MobileAppSection() {
                         key={idx}
                         className="w-2 h-2 rounded-sm"
                         style={{
-                          background: [0,1,2,3,4,5,6,7,13,14,20,21,27,28,34,35,41,42,43,44,45,46,47,48,7,14,21,28,35,42].includes(idx) ? '#9B1232' : '#1a3a5c'
+                          background: [0,1,2,3,4,5,6,7,13,14,20,21,27,28,34,35,41,42,43,44,45,46,47,48,7,14,21,28,35,42].includes(idx) ? '#BA1932' : '#1a3a5c'
                         }}
                       />
                     ))}

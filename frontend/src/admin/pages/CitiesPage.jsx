@@ -72,8 +72,8 @@ export default function CitiesPage() {
           {r.image_url ? (
             <img src={r.image_url} alt={r.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-[#9B1232]/10 flex items-center justify-center shrink-0">
-              <Globe size={16} className="text-[#9B1232]" />
+            <div className="w-10 h-10 rounded-xl bg-[#BA1932]/10 flex items-center justify-center shrink-0">
+              <Globe size={16} className="text-[#BA1932]" />
             </div>
           )}
           <div>

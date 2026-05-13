@@ -75,7 +75,7 @@ export default function UsersPage() {
       key: 'name', label: 'User',
       render: (r) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-[#730D26] flex items-center justify-center text-white font-bold text-sm shrink-0">
             {r.name?.[0]?.toUpperCase() || '?'}
           </div>
           <div>

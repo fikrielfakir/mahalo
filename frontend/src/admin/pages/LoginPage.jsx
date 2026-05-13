@@ -27,7 +27,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #2a0a10 50%, #1A1A1A 100%)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #730D26 0%, #4a0a18 50%, #730D26 100%)' }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -52,7 +52,7 @@ export default function LoginPage() {
                   required
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all"
+                  className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all"
                   placeholder="admin@mahalo.ma"
                 />
               </div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
                   required
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-[#9B1232] focus:ring-2 focus:ring-[#9B1232]/20 transition-all"
+                  className="w-full border border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all"
                   placeholder="••••••••"
                 />
                 <button type="button" onClick={() => setShow(!show)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -80,7 +80,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full bg-[#1A1A1A] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#1A1A1A]/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            className="mt-6 w-full bg-[#730D26] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#730D26]/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

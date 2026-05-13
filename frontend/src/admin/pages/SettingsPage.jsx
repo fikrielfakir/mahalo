@@ -32,8 +32,8 @@ const DEFAULTS = {
   currency: 'MAD',
   properties_per_page: '12',
   // Theme
-  primary_color: '#9B1232',
-  secondary_color: '#1A1A1A',
+  primary_color: '#BA1932',
+  secondary_color: '#730D26',
   accent_color: '#F5F5F5',
   logo_url: '/logo.png',
   footer_logo_url: '/logo-light.png',
@@ -143,7 +143,7 @@ export default function SettingsPage() {
             onClick={() => setTab(id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               tab === id
-                ? 'bg-[#1A1A1A] text-white shadow-sm'
+                ? 'bg-[#730D26] text-white shadow-sm'
                 : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
             }`}
           >
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                   <div
                     onClick={() => setForm(p => ({ ...p, watermark_enabled: p.watermark_enabled === '1' ? '0' : '1' }))}
                     className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
-                      form.watermark_enabled === '1' ? 'bg-[#9B1232]' : 'bg-gray-200'
+                      form.watermark_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
                     }`}
                   >
                     <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     <select
                       value={form.watermark_position}
                       onChange={f('watermark_position')}
-                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#9B1232]/30 focus:border-[#9B1232]"
+                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
                     >
                       {WATERMARK_POSITIONS.map(p => (
                         <option key={p.value} value={p.value}>{p.label}</option>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                       type="range" min="10" max="100" step="5"
                       value={form.watermark_opacity}
                       onChange={f('watermark_opacity')}
-                      className="w-full accent-[#9B1232] mt-2"
+                      className="w-full accent-[#BA1932] mt-2"
                     />
                   </FormField>
                   <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                       type="range" min="5" max="50" step="5"
                       value={form.watermark_size}
                       onChange={f('watermark_size')}
-                      className="w-full accent-[#9B1232] mt-2"
+                      className="w-full accent-[#BA1932] mt-2"
                     />
                   </FormField>
                 </div>
@@ -388,8 +388,8 @@ function Section({ title, icon: Icon, children }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-        <div className="w-8 h-8 rounded-xl bg-[#9B1232]/10 flex items-center justify-center">
-          <Icon size={15} className="text-[#9B1232]" />
+        <div className="w-8 h-8 rounded-xl bg-[#BA1932]/10 flex items-center justify-center">
+          <Icon size={15} className="text-[#BA1932]" />
         </div>
         <h2 className="font-bold text-gray-800 text-sm">{title}</h2>
       </div>
@@ -415,8 +415,8 @@ function ColorField({ label, hint, value, onChange }) {
             type="text"
             value={value || ''}
             onChange={onChange}
-            placeholder="#9B1232"
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#9B1232]/30 focus:border-[#9B1232] font-mono"
+            placeholder="#BA1932"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono"
           />
         </div>
       </div>
@@ -437,7 +437,7 @@ function LogoField({ label, hint, value, field, uploading, onChange }) {
 
       <div
         onClick={() => ref.current?.click()}
-        className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#9B1232]/50 transition-colors min-h-[100px] bg-gray-50"
+        className="relative border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#BA1932]/50 transition-colors min-h-[100px] bg-gray-50"
       >
         {value ? (
           <img
@@ -454,7 +454,7 @@ function LogoField({ label, hint, value, field, uploading, onChange }) {
         )}
         {uploading && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl">
-            <div className="w-5 h-5 border-2 border-[#9B1232] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[#BA1932] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>

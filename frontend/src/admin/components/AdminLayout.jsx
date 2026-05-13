@@ -11,7 +11,7 @@ export default function AdminLayout() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#9B1232] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#BA1932] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -32,7 +32,7 @@ export default function AdminLayout() {
             <Menu size={18} />
           </button>
           <div className="flex-1" />
-          <div className="w-8 h-8 rounded-xl bg-[#1A1A1A] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-[#730D26] flex items-center justify-center">
             <span className="text-white text-xs font-bold">{user?.name?.[0] ?? 'A'}</span>
           </div>
         </header>

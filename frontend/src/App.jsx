@@ -7,6 +7,8 @@ import Agents from './pages/Agents'
 import PropertyDetail from './pages/PropertyDetail'
 import ProjectDetail from './pages/ProjectDetail'
 import AgentDetail from './pages/AgentDetail'
+import About from './pages/About'
+import ListProperty from './pages/ListProperty'
 
 // Admin
 import { AuthProvider } from './admin/context/AuthContext'
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/neighborhoods" element={<Neighborhoods />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/agents/:id" element={<AgentDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/list-property" element={<ListProperty />} />
 
           {/* Admin login (no auth required) */}
           <Route path="/admin/login" element={<LoginPage />} />

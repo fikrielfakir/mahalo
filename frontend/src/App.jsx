@@ -9,7 +9,6 @@ import ProjectDetail from './pages/ProjectDetail'
 import AgentDetail from './pages/AgentDetail'
 import About from './pages/About'
 import ListProperty from './pages/ListProperty'
-import WhatsAppButton from './components/WhatsAppButton'
 import CompareBar from './components/CompareBar'
 import { CompareProvider } from './context/CompareContext'
 
@@ -74,8 +73,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
-          {/* Global overlays — only on public pages */}
-          <WhatsAppButton />
+          {/* Global overlays */}
           <CompareBar />
         </AuthProvider>
       </CompareProvider>

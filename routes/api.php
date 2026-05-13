@@ -111,7 +111,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/consults/bulk-delete',   [AdminConsultController::class, 'bulkDelete']);
 
         // Settings
-        Route::get('/settings',           [AdminSettingsController::class, 'show']);
-        Route::put('/settings',           [AdminSettingsController::class, 'update']);
+        Route::get('/settings',             [AdminSettingsController::class, 'show']);
+        Route::put('/settings',             [AdminSettingsController::class, 'update']);
+        Route::post('/settings/logo',       [AdminSettingsController::class, 'uploadLogo']);
     });
 });

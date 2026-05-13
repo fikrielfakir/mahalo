@@ -115,8 +115,9 @@ export const adminUsers = {
 }
 
 export const adminSettings = {
-  get:    ()  => client.get('/admin/settings'),
-  update: (d) => client.put('/admin/settings', d),
+  get:        ()          => client.get('/admin/settings'),
+  update:     (d)         => client.put('/admin/settings', d),
+  uploadLogo: (formData)  => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 }
 
 export const publicApi = {

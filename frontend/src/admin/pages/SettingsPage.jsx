@@ -41,9 +41,9 @@ const DEFAULTS = {
   logo_url: '/logo.png',
   footer_logo_url: '/logo-light.png',
   // Watermark
-  watermark_enabled: '0',
+  watermark_enabled: '1',
   watermark_logo_url: '/watermark.png',
-  watermark_position: 'bottom-right',
+  watermark_position: 'center',
   watermark_opacity: '60',
   watermark_size: '20',
   // SMTP Mail

@@ -95,7 +95,7 @@ class MediaController extends Controller
 
             if (($settings['watermark_enabled'] ?? '1') === '0') return;
 
-            $position  = $settings['watermark_position'] ?? 'bottom-right';
+            $position  = $settings['watermark_position'] ?? 'center';
             $opacity   = (int) ($settings['watermark_opacity'] ?? 60);
             $sizeRatio = (int) ($settings['watermark_size'] ?? 20);
 
@@ -194,14 +194,30 @@ class MediaController extends Controller
         int $dstX, int $dstY, int $srcX, int $srcY,
         int $srcW, int $srcH, int $pct
     ): void {
-        if ($pct >= 100) { imagecopy($dst, $src, $dstX, $dstY, $srcX, $srcY, $srcW, $srcH); return; }
-        $tmp = imagecreatetruecolor($srcW, $srcH);
-        imagealphablending($tmp, false);
-        imagesavealpha($tmp, true);
-        imagecopy($tmp, $dst, 0, 0, $dstX, $dstY, $srcW, $srcH);
-        imagecopy($tmp, $src, 0, 0, $srcX, $srcY, $srcW, $srcH);
-        imagecopymerge($dst, $tmp, $dstX, $dstY, 0, 0, $srcW, $srcH, $pct);
-        imagedestroy($tmp);
+        // Enable alpha blending on destination so semi-transparent pixels composite correctly
+        imagealphablending($dst, true);
+
+        for ($x = 0; $x < $srcW; $x++) {
+            for ($y = 0; $y < $srcH; $y++) {
+                $pixel = imagecolorat($src, $srcX + $x, $srcY + $y);
+                $srcAlpha = ($pixel >> 24) & 0x7F; // 0 = fully opaque, 127 = fully transparent
+
+                // Skip fully transparent pixels — leave background untouched
+                if ($srcAlpha === 127) continue;
+
+                $r = ($pixel >> 16) & 0xFF;
+                $g = ($pixel >> 8)  & 0xFF;
+                $b = $pixel         & 0xFF;
+
+                // Combine watermark pixel's own transparency with the global opacity setting.
+                // $pct=100 → fully opaque (no extra alpha), $pct=0 → fully transparent.
+                $opacityAlpha  = (int) round(127 * (1 - $pct / 100));
+                $combinedAlpha = min(127, $srcAlpha + $opacityAlpha);
+
+                $color = imagecolorallocatealpha($dst, $r, $g, $b, $combinedAlpha);
+                imagesetpixel($dst, $dstX + $x, $dstY + $y, $color);
+            }
+        }
     }
 
     public function destroy(int $id)

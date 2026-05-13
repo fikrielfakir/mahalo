@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck, BarChart2, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
+import { useUserAuth } from '../context/UserAuthContext'
+import { useAuthModal } from '../context/AuthModalContext'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 const FAVORITES_KEY = 'mahalo_favorites'
@@ -35,6 +37,8 @@ export default function PropertyCard({ property, className = '' }) {
   const [liked, setLiked]       = useState(() => getFavorites().includes(property?.id))
   const [imgError, setImgError] = useState(false)
   const { toggle, isIn, isFull } = useCompare()
+  const { isAuthenticated } = useUserAuth()
+  const { openAuthModal } = useAuthModal()
 
   if (!property) return null
 
@@ -45,6 +49,16 @@ export default function PropertyCard({ property, className = '' }) {
 
   const handleLike = (e) => {
     e.preventDefault()
+    if (!isAuthenticated) {
+      openAuthModal(() => {
+        const favs = getFavorites()
+        if (!favs.includes(property.id)) {
+          saveFavorites([...favs, property.id])
+          setLiked(true)
+        }
+      })
+      return
+    }
     const favs = getFavorites()
     const next = favs.includes(property.id)
       ? favs.filter(f => f !== property.id)

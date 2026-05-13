@@ -9,6 +9,8 @@ import SimilarProperties from '../components/SimilarProperties'
 import { trackRecentlyViewed } from '../components/RecentlyViewed'
 import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
+import { useUserAuth } from '../context/UserAuthContext'
+import { useAuthModal } from '../context/AuthModalContext'
 
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
@@ -64,6 +66,8 @@ export default function PropertyDetail() {
   const [reviewSubmitted, setReviewSubmitted]   = useState(false)
 
   const { toast, show: showToast, hide: hideToast } = useToast()
+  const { isAuthenticated } = useUserAuth()
+  const { openAuthModal } = useAuthModal()
 
   useEffect(() => {
     propertiesApi.bySlug(slug)
@@ -84,6 +88,16 @@ export default function PropertyDetail() {
 
   const handleLike = () => {
     if (!property) return
+    if (!isAuthenticated) {
+      openAuthModal(() => {
+        const favs = getFavorites()
+        if (!favs.includes(property.id)) {
+          saveFavorites([...favs, property.id])
+          setLiked(true)
+        }
+      })
+      return
+    }
     const favs = getFavorites()
     const next = favs.includes(property.id)
       ? favs.filter(f => f !== property.id)
@@ -111,7 +125,7 @@ export default function PropertyDetail() {
     try {
       await consultsApi.store({
         name: form.name, email: form.email, phone: form.phone,
-        message: form.message || `I'm interested in ${property?.name}`,
+        content: form.message || `I'm interested in ${property?.name}`,
         property_id: property?.id,
       })
       showToast('Message sent! An agent will contact you shortly.')

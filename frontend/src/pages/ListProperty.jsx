@@ -258,7 +258,7 @@ export default function ListProperty() {
         name: form.name,
         email: form.email,
         phone: form.phone,
-        message,
+        content: message,
       })
       setSubmitted(true)
     } catch {

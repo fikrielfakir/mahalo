@@ -21,7 +21,7 @@ export default function Navbar({ transparent = false }) {
   const dropdownRef                     = useRef(null)
   const location                        = useLocation()
   const navigate                        = useNavigate()
-  const { user, isAuthenticated, logout } = useUserAuth()
+  const { user, isAuthenticated, isEmailVerified, logout } = useUserAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -42,6 +42,7 @@ export default function Navbar({ transparent = false }) {
   }, [])
 
   const isTransparent = transparent && !scrolled && !menuOpen
+  const showBanner    = isAuthenticated && !isEmailVerified
 
   const handleLogout = async () => {
     await logout()
@@ -55,7 +56,9 @@ export default function Navbar({ transparent = false }) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
+        showBanner ? 'top-[42px]' : 'top-0'
+      } ${
         isTransparent
           ? 'bg-transparent'
           : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-white/60'

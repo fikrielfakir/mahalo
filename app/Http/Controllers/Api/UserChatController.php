@@ -55,11 +55,12 @@ class UserChatController extends Controller
     {
         $user = auth()->user();
         $data = $request->validate([
-            'agent_id' => 'required|integer|exists:re_agents,id',
+            'agent_id' => 'required|integer|exists:re_accounts,id',
             'message'  => 'nullable|string|max:5000',
         ]);
 
-        $existing = Consult::where('user_id', $user->id)
+        $existing = Consult::with('agent')
+            ->where('user_id', $user->id)
             ->where('agent_id', $data['agent_id'])
             ->first();
 
@@ -70,12 +71,14 @@ class UserChatController extends Controller
         $consult = Consult::create([
             'user_id'    => $user->id,
             'agent_id'   => $data['agent_id'],
-            'name'       => $user->name,
+            'name'       => $user->name ?? $user->email,
             'email'      => $user->email,
             'content'    => $data['message'] ?? '',
             'status'     => 'unread',
             'ip_address' => $request->ip(),
         ]);
+
+        $consult->load('agent');
 
         return response()->json(['data' => $consult, 'error' => false, 'message' => 'created'], 201);
     }

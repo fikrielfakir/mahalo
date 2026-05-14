@@ -182,7 +182,7 @@ export default function UserChatsPage() {
   const [selected, setSelected] = useState(null)
   const [mobileView, setMobileView] = useState('list')
   const [search, setSearch] = useState('')
-  const [starting, setStarting] = useState(false)
+  const [initDone, setInitDone] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) navigate('/login')
@@ -190,40 +190,36 @@ export default function UserChatsPage() {
 
   const loadChats = useCallback(() => {
     setLoading(true)
-    userChatsApi.list()
-      .then(r => setChats(r.data || []))
-      .catch(() => {})
+    return userChatsApi.list()
+      .then(r => { setChats(r.data || []); return r.data || [] })
+      .catch(() => [])
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { if (isAuthenticated) loadChats() }, [isAuthenticated, loadChats])
-
   useEffect(() => {
-    if (loading) return
-    if (chatIdParam) {
-      const found = chats.find(c => String(c.id) === chatIdParam)
-      if (found) { setSelected(found); setMobileView('chat') }
-    } else if (agentIdParam) {
-      const found = chats.find(c => String(c.agent_id) === agentIdParam)
-      if (found) { setSelected(found); setMobileView('chat') }
-      else {
-        setStarting(true)
-        userChatsApi.startChat({ agent_id: parseInt(agentIdParam) })
-          .then(r => {
-            setChats(prev => {
-              const exists = prev.find(c => c.id === r.data.id)
-              return exists ? prev : [r.data, ...prev]
+    if (!isAuthenticated) return
+    loadChats().then(data => {
+      if (chatIdParam) {
+        const found = data.find(c => String(c.id) === chatIdParam)
+        if (found) { setSelected(found); setMobileView('chat') }
+      } else if (agentIdParam) {
+        const found = data.find(c => String(c.agent_id) === agentIdParam)
+        if (found) { setSelected(found); setMobileView('chat') }
+        else {
+          userChatsApi.startChat({ agent_id: parseInt(agentIdParam) })
+            .then(r => {
+              setChats(prev => prev.find(c => c.id === r.data.id) ? prev : [r.data, ...prev])
+              setSelected(r.data)
+              setMobileView('chat')
             })
-            setSelected(r.data)
-            setMobileView('chat')
-          })
-          .catch(() => {})
-          .finally(() => setStarting(false))
+            .catch(() => {})
+        }
+      } else if (data.length > 0) {
+        setSelected(data[0])
       }
-    } else if (!selected && chats.length > 0) {
-      setSelected(chats[0])
-    }
-  }, [loading, chats.length, agentIdParam, chatIdParam])
+      setInitDone(true)
+    })
+  }, [isAuthenticated, chatIdParam, agentIdParam])
 
   const handleMessageSent = (chatId) => {
     setChats(prev => {
@@ -241,7 +237,7 @@ export default function UserChatsPage() {
     return name.includes(search.toLowerCase())
   })
 
-  if (authLoading || starting) return (
+  if (authLoading) return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
       <Loader2 size={28} className="animate-spin text-[#730D26]" />
     </div>

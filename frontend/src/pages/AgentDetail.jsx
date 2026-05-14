@@ -132,10 +132,10 @@ export default function AgentDetail() {
     if (!isAuthenticated) { navigate('/login'); return }
     setChatStarting(true)
     try {
-      await userChatsApi.startChat({ agent_id: agent.id })
-      navigate(`/messages?agent_id=${agent.id}`)
-    } catch {
-      navigate(`/messages?agent_id=${agent.id}`)
+      const r = await userChatsApi.startChat({ agent_id: agent.id })
+      navigate(`/messages?id=${r.data.id}`)
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Could not open chat. Please try again.', 'error')
     } finally {
       setChatStarting(false)
     }

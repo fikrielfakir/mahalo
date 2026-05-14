@@ -1,134 +1,135 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import {
   MessageCircle, Send, Loader2, ChevronLeft, Mail, Phone,
-  AlertCircle, Building, Home, Search,
+  AlertCircle, Building, Home, Search, UserCircle,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { agentDashboardApi } from '../api/client'
+import { userChatsApi } from '../api/client'
 import { useUserAuth } from '../context/UserAuthContext'
 
-function fmtDate(d) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+function fmtDate(str) {
+  if (!str) return ''
+  const d = new Date(str)
+  const now = new Date()
+  const diff = now - d
+  if (diff < 60000) return 'Just now'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-const MSG_STATUS_STYLES = {
-  unread: 'bg-blue-50 text-blue-600',
-  read: 'bg-gray-100 text-gray-400',
-  processing: 'bg-amber-50 text-amber-600',
-  done: 'bg-emerald-50 text-emerald-600',
+function agentName(agent) {
+  if (!agent) return 'Agent'
+  return agent.display_name || `${agent.first_name || ''} ${agent.last_name || ''}`.trim() || 'Agent'
 }
 
-function ChatThread({ consult, onReplied }) {
+function AgentAvatar({ agent, size = 10 }) {
+  const src = agent?.avatar?.url || agent?.avatar_url
+  const initials = agentName(agent).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const cls = `w-${size} h-${size} rounded-xl flex items-center justify-center text-sm font-bold shrink-0 bg-[#730D26]/10 text-[#730D26] overflow-hidden`
+  if (src) return <div className={cls}><img src={src} alt="" className="w-full h-full object-cover" /></div>
+  return <div className={cls}>{initials}</div>
+}
+
+function ChatPane({ chat, onMessageSent }) {
   const [thread, setThread] = useState(null)
-  const [loadingThread, setLoadingThread] = useState(true)
-  const [replyText, setReplyText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
-  const [sendError, setSendError] = useState(null)
+  const [error, setError] = useState(null)
   const bottomRef = useRef(null)
-  const textareaRef = useRef(null)
 
   useEffect(() => {
-    setLoadingThread(true)
+    setLoading(true)
     setThread(null)
-    agentDashboardApi.getThread(consult.id)
+    userChatsApi.getThread(chat.id)
       .then(r => setThread(r.data))
       .catch(() => {})
-      .finally(() => setLoadingThread(false))
-  }, [consult.id])
+      .finally(() => setLoading(false))
+  }, [chat.id])
 
   useEffect(() => {
-    if (thread) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (thread) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }, [thread])
 
   const handleSend = () => {
-    const body = replyText.trim()
+    const body = text.trim()
     if (!body || sending) return
     setSending(true)
-    setSendError(null)
-    agentDashboardApi.replyMessage(consult.id, { reply: body })
+    setError(null)
+    userChatsApi.sendMessage(chat.id, { message: body })
       .then(r => {
-        setThread(prev => ({
-          ...prev,
-          replies: [...(prev.replies || []), r.data],
-          status: 'done',
-        }))
-        setReplyText('')
-        onReplied()
+        setThread(prev => ({ ...prev, replies: [...(prev.replies || []), r.data] }))
+        setText('')
+        onMessageSent(chat.id)
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       })
-      .catch(err => setSendError(err?.response?.data?.message || 'Failed to send.'))
+      .catch(err => setError(err?.response?.data?.message || 'Failed to send.'))
       .finally(() => setSending(false))
   }
 
-  const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
+  const handleKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }
 
-  if (loadingThread) return (
+  if (loading) return (
     <div className="flex-1 flex items-center justify-center">
       <Loader2 size={24} className="animate-spin text-[#730D26]" />
     </div>
   )
 
+  const agent = thread?.agent || chat?.agent
   const messages = []
-  if (thread?.content) {
-    messages.push({ id: 'original', body: thread.content, sender: 'user', created_at: thread.created_at })
-  }
+  if (thread?.content) messages.push({ id: 'orig', body: thread.content, sender: 'user', created_at: thread.created_at })
   ;(thread?.replies || []).forEach(r => messages.push(r))
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Chat header */}
+      {/* Header */}
       <div className="px-5 py-4 border-b border-gray-100 bg-white flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center text-[#730D26] font-bold text-sm shrink-0">
-          {consult.name?.[0]?.toUpperCase() || '?'}
-        </div>
+        <AgentAvatar agent={agent} size={10} />
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-navy text-sm truncate">{consult.name}</p>
+          <p className="font-bold text-navy text-sm truncate">{agentName(agent)}</p>
           <div className="flex items-center gap-3 flex-wrap">
-            {consult.email && <span className="flex items-center gap-1 text-xs text-navy/45"><Mail size={10} />{consult.email}</span>}
-            {consult.phone && <span className="flex items-center gap-1 text-xs text-navy/45"><Phone size={10} />{consult.phone}</span>}
+            {agent?.email && <span className="flex items-center gap-1 text-xs text-navy/45"><Mail size={10} />{agent.email}</span>}
+            {agent?.phone && <span className="flex items-center gap-1 text-xs text-navy/45"><Phone size={10} />{agent.phone}</span>}
           </div>
         </div>
-        {thread?.status && (
-          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${MSG_STATUS_STYLES[thread.status] || 'bg-gray-100 text-gray-500'}`}>
-            {thread.status}
-          </span>
+        {agent?.id && (
+          <Link to={`/agents/${agent.id}`} className="text-xs text-[#730D26] font-semibold hover:underline shrink-0">
+            View Profile
+          </Link>
         )}
       </div>
 
-      {/* Messages area */}
+      {/* Property/Project context pill */}
+      {(thread?.property?.name || thread?.project?.name) && (
+        <div className="px-5 pt-3 flex">
+          <span className="text-[11px] text-navy/40 bg-gray-50 border border-gray-100 rounded-full px-3 py-1 flex items-center gap-1">
+            {thread.property ? <Home size={10} /> : <Building size={10} />}
+            Re: {thread.property?.name || thread.project?.name}
+          </span>
+        </div>
+      )}
+
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-[#F7F7F8]">
-        {(consult.property?.name || consult.project?.name) && (
+        {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="text-[11px] text-navy/40 bg-white border border-gray-100 rounded-full px-3 py-1 flex items-center gap-1">
-              {consult.property ? <Home size={10} /> : <Building size={10} />}
-              Re: {consult.property?.name || consult.project?.name}
+            <span className="text-xs text-navy/30 italic bg-white px-4 py-2 rounded-full border border-gray-100">
+              Chat started — say hello!
             </span>
           </div>
         )}
-
-        {messages.length === 0 && (
-          <div className="flex justify-center">
-            <span className="text-xs text-navy/30 italic">No message content yet.</span>
-          </div>
-        )}
-
-        {messages.map((msg) => {
-          const isAgent = msg.sender === 'agent'
+        {messages.map(msg => {
+          const isUser = msg.sender === 'user'
           return (
-            <div key={msg.id} className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}>
-              {!isAgent && (
-                <div className="w-7 h-7 rounded-lg bg-[#730D26]/10 flex items-center justify-center text-[#730D26] font-bold text-xs shrink-0 mr-2 mt-0.5">
-                  {consult.name?.[0]?.toUpperCase() || '?'}
-                </div>
-              )}
-              <div className={`max-w-[72%] ${isAgent ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+            <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+              {!isUser && <AgentAvatar agent={agent} size={7} />}
+              {!isUser && <div className="w-2" />}
+              <div className={`flex flex-col gap-1 max-w-[72%] ${isUser ? 'items-end' : 'items-start'}`}>
                 <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                  isAgent
+                  isUser
                     ? 'bg-[#730D26] text-white rounded-br-sm'
                     : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
                 }`}>
@@ -136,9 +137,10 @@ function ChatThread({ consult, onReplied }) {
                 </div>
                 <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at)}</span>
               </div>
-              {isAgent && (
-                <div className="w-7 h-7 rounded-lg bg-[#730D26] flex items-center justify-center text-white font-bold text-xs shrink-0 ml-2 mt-0.5">
-                  A
+              {isUser && <div className="w-2" />}
+              {isUser && (
+                <div className="w-7 h-7 rounded-xl bg-[#730D26] flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
+                  Me
                 </div>
               )}
             </div>
@@ -147,32 +149,26 @@ function ChatThread({ consult, onReplied }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input area */}
+      {/* Input */}
       <div className="px-4 py-3 bg-white border-t border-gray-100">
-        {sendError && (
+        {error && (
           <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-2">
-            <AlertCircle size={12} />{sendError}
-          </div>
-        )}
-        {!consult.email && (
-          <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2 mb-2">
-            <AlertCircle size={12} />No email — reply will be saved but not emailed.
+            <AlertCircle size={12} />{error}
           </div>
         )}
         <div className="flex items-end gap-2">
           <textarea
-            ref={textareaRef}
-            value={replyText}
-            onChange={e => setReplyText(e.target.value)}
+            value={text}
+            onChange={e => setText(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Type a reply… (Enter to send, Shift+Enter for new line)"
+            placeholder="Type a message… (Enter to send)"
             rows={2}
             disabled={sending}
-            className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
+            className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60"
           />
           <button
             onClick={handleSend}
-            disabled={!replyText.trim() || sending}
+            disabled={!text.trim() || sending}
             className="w-10 h-10 rounded-xl bg-[#730D26] text-white flex items-center justify-center hover:bg-[#5a0a1e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
           >
             {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -186,46 +182,67 @@ function ChatThread({ consult, onReplied }) {
 export default function UserChatsPage() {
   const { isAuthenticated, loading: authLoading } = useUserAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const agentIdParam = searchParams.get('agent_id')
+  const chatIdParam  = searchParams.get('id')
 
-  const [rows, setRows] = useState([])
+  const [chats, setChats] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
   const [selected, setSelected] = useState(null)
   const [mobileView, setMobileView] = useState('list')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) navigate('/login')
   }, [authLoading, isAuthenticated, navigate])
 
-  const load = useCallback(() => {
+  const loadChats = useCallback(() => {
     setLoading(true)
-    setError(null)
-    agentDashboardApi.messages({ search, status, per_page: 50 })
-      .then(r => {
-        const data = r.data ?? []
-        setRows(data)
-        if (!selected && data.length > 0) setSelected(data[0])
-      })
-      .catch(err => setError(err?.response?.data?.message || 'Failed to load messages.'))
+    return userChatsApi.list()
+      .then(r => { setChats(r.data || []); return r.data || [] })
+      .catch(() => [])
       .finally(() => setLoading(false))
-  }, [search, status])
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated) return
-    load()
-  }, [isAuthenticated, load])
+    loadChats().then(data => {
+      if (chatIdParam) {
+        const found = data.find(c => String(c.id) === chatIdParam)
+        if (found) { setSelected(found); setMobileView('chat') }
+      } else if (agentIdParam) {
+        const found = data.find(c => String(c.agent_id) === agentIdParam)
+        if (found) { setSelected(found); setMobileView('chat') }
+        else {
+          userChatsApi.startChat({ agent_id: parseInt(agentIdParam) })
+            .then(r => {
+              setChats(prev => prev.find(c => c.id === r.data.id) ? prev : [r.data, ...prev])
+              setSelected(r.data)
+              setMobileView('chat')
+            })
+            .catch(() => {})
+        }
+      } else if (data.length > 0) {
+        setSelected(data[0])
+      }
+    })
+  }, [isAuthenticated, chatIdParam, agentIdParam])
 
-  const handleSelect = (m) => {
-    setSelected(m)
-    setMobileView('chat')
-    setRows(prev => prev.map(r => r.id === m.id ? { ...r, status: r.status === 'unread' ? 'read' : r.status } : r))
+  const handleMessageSent = (chatId) => {
+    setChats(prev => {
+      const idx = prev.findIndex(c => c.id === chatId)
+      if (idx === -1) return prev
+      const updated = [...prev]
+      updated[idx] = { ...updated[idx], updated_at: new Date().toISOString() }
+      return updated
+    })
   }
 
-  const handleReplied = () => {
-    setRows(prev => prev.map(r => r.id === selected?.id ? { ...r, status: 'done' } : r))
-  }
+  const filtered = chats.filter(c => {
+    if (!search) return true
+    const name = agentName(c.agent).toLowerCase()
+    return name.includes(search.toLowerCase())
+  })
 
   if (authLoading) return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -239,75 +256,58 @@ export default function UserChatsPage() {
       <div className="flex-1 max-w-6xl mx-auto w-full px-4 pt-24 pb-10">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-navy">My Messages</h1>
-          <p className="text-sm text-navy/50 mt-1">Your conversations and inquiries</p>
+          <p className="text-sm text-navy/50 mt-1">Your conversations with real estate agents</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: '600px' }}>
           <div className="flex h-full">
 
-            {/* Left: conversation list */}
-            <div className={`flex flex-col border-r border-gray-100 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 shrink-0`}>
-              <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+            {/* Left list */}
+            <div className={`flex flex-col border-r border-gray-100 w-full md:w-72 lg:w-80 shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
+              <div className="px-4 py-3 border-b border-gray-100">
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
                   <input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search…"
+                    value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Search agent…"
                     className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white"
                   />
                 </div>
-                <select
-                  value={status}
-                  onChange={e => setStatus(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white"
-                >
-                  <option value="">All statuses</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                  <option value="processing">Processing</option>
-                  <option value="done">Done</option>
-                </select>
               </div>
 
               <div className="flex-1 overflow-y-auto">
                 {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 size={20} className="animate-spin text-[#730D26]" />
-                  </div>
-                ) : error ? (
-                  <div className="p-4 text-center">
-                    <p className="text-xs text-red-500">{error}</p>
-                    <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">Retry</button>
-                  </div>
-                ) : rows.length === 0 ? (
+                  <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-[#730D26]" /></div>
+                ) : filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <MessageCircle size={28} className="text-navy/20 mb-2" />
-                    <p className="text-xs text-navy/40">No messages yet</p>
+                    <p className="text-xs text-navy/40 font-medium">No conversations yet</p>
+                    <p className="text-xs text-navy/30 mt-1">Visit an agent's profile to start chatting</p>
+                    <Link to="/agents" className="mt-3 text-xs text-[#730D26] font-semibold hover:underline">
+                      Browse agents →
+                    </Link>
                   </div>
                 ) : (
-                  rows.map(m => {
-                    const isActive = selected?.id === m.id
-                    const isUnread = m.status === 'unread'
+                  filtered.map(chat => {
+                    const isActive = selected?.id === chat.id
+                    const lastReply = chat.replies?.[chat.replies.length - 1]
+                    const preview = lastReply?.body || chat.content || 'No messages yet'
+                    const hasAgentReply = chat.replies?.some(r => r.sender === 'agent')
                     return (
-                      <button
-                        key={m.id}
-                        onClick={() => handleSelect(m)}
+                      <button key={chat.id} onClick={() => { setSelected(chat); setMobileView('chat') }}
                         className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors flex items-start gap-3 ${
                           isActive ? 'bg-[#730D26]/5 border-l-2 border-l-[#730D26]' : 'hover:bg-gray-50'
                         }`}
                       >
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${isActive ? 'bg-[#730D26] text-white' : 'bg-[#730D26]/10 text-[#730D26]'}`}>
-                          {m.name?.[0]?.toUpperCase() || '?'}
-                        </div>
+                        <AgentAvatar agent={chat.agent} size={9} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
-                            <p className={`text-sm truncate ${isUnread ? 'font-bold text-navy' : 'font-medium text-navy/70'}`}>{m.name}</p>
-                            <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(m.created_at)}</span>
+                            <p className="text-sm font-semibold text-navy truncate">{agentName(chat.agent)}</p>
+                            <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(chat.updated_at || chat.created_at)}</span>
                           </div>
                           <div className="flex items-center justify-between mt-0.5">
-                            <p className="text-xs text-navy/40 truncate">{m.email || m.phone || '—'}</p>
-                            {isUnread && <span className="w-2 h-2 rounded-full bg-[#730D26] shrink-0 ml-1" />}
+                            <p className="text-xs text-navy/40 truncate">{preview}</p>
+                            {hasAgentReply && <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 ml-1" title="Agent replied" />}
                           </div>
                         </div>
                       </button>
@@ -315,26 +315,36 @@ export default function UserChatsPage() {
                   })
                 )}
               </div>
+
+              <div className="px-4 py-3 border-t border-gray-100">
+                <Link to="/agents"
+                  className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-[#730D26]/8 text-[#730D26] text-xs font-semibold hover:bg-[#730D26]/15 transition-colors">
+                  <UserCircle size={13} /> Chat with a new agent
+                </Link>
+              </div>
             </div>
 
-            {/* Right: chat thread */}
+            {/* Right chat */}
             <div className={`flex-1 flex flex-col min-w-0 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}>
               {selected ? (
                 <>
                   <button onClick={() => setMobileView('list')} className="md:hidden flex items-center gap-2 px-4 py-2 text-xs text-[#730D26] font-semibold border-b border-gray-100">
-                    <ChevronLeft size={14} />Back to messages
+                    <ChevronLeft size={14} />Back
                   </button>
-                  <ChatThread key={selected.id} consult={selected} onReplied={handleReplied} />
+                  <ChatPane key={selected.id} chat={selected} onMessageSent={handleMessageSent} />
                 </>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                  <MessageCircle size={40} className="text-navy/15 mb-3" />
-                  <p className="text-sm font-semibold text-navy/30">Select a conversation</p>
-                  <p className="text-xs text-navy/20 mt-1">Click a message on the left to open the chat</p>
+                  <MessageCircle size={44} className="text-navy/15 mb-4" />
+                  <p className="text-sm font-bold text-navy/30">No conversation selected</p>
+                  <p className="text-xs text-navy/20 mt-1">Pick one from the list, or start a new chat from any agent's profile</p>
+                  <Link to="/agents" className="mt-4 px-5 py-2 rounded-xl text-sm font-semibold text-white"
+                    style={{ background: 'linear-gradient(135deg,#730D26,#BA1932)' }}>
+                    Browse Agents
+                  </Link>
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>

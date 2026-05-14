@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Consult extends Model
 {
@@ -16,4 +17,14 @@ class Consult extends Model
     protected $casts = [
         'custom_fields' => 'array',
     ];
+
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class, 'property_id');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
 }

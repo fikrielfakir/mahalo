@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\UserListingController;
 use App\Http\Controllers\Api\Admin\AdminAgentController;
 use App\Http\Controllers\Api\Admin\AdminProfessionalApplicationController;
 use App\Http\Controllers\Api\ProfessionalApplicationController;
+use App\Http\Controllers\Api\AgentDashboardController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\Admin\AdminCityController;
 use App\Http\Controllers\Api\Admin\AdminConsultController;
@@ -101,6 +102,16 @@ Route::prefix('v1')->group(function () {
         // Professional applications
         Route::get('/account/professional-status',  [ProfessionalApplicationController::class, 'status']);
         Route::post('/account/professional-apply',  [ProfessionalApplicationController::class, 'apply']);
+
+        // Agent dashboard (approved professionals only)
+        Route::get('/account/agent/overview',              [AgentDashboardController::class, 'overview']);
+        Route::get('/account/agent/properties',            [AgentDashboardController::class, 'properties']);
+        Route::put('/account/agent/properties/{id}',       [AgentDashboardController::class, 'updateProperty']);
+        Route::get('/account/agent/projects',              [AgentDashboardController::class, 'projects']);
+        Route::put('/account/agent/projects/{id}',         [AgentDashboardController::class, 'updateProject']);
+        Route::get('/account/agent/messages',              [AgentDashboardController::class, 'messages']);
+        Route::put('/account/agent/profile',               [AgentDashboardController::class, 'updateProfile']);
+        Route::post('/account/agent/avatar',               [AgentDashboardController::class, 'uploadAvatar']);
 
         // Favorites
         Route::get('/account/favorites/ids',       [FavoriteController::class, 'ids']);

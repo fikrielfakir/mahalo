@@ -98,6 +98,17 @@ export const professionalApi = {
   apply:  (data) => api.post('/account/professional-apply', data),
 }
 
+export const agentDashboardApi = {
+  overview:       ()             => api.get('/account/agent/overview'),
+  properties:     (params = {})  => api.get('/account/agent/properties', { params }),
+  updateProperty: (id, data)     => api.put(`/account/agent/properties/${id}`, data),
+  projects:       (params = {})  => api.get('/account/agent/projects', { params }),
+  updateProject:  (id, data)     => api.put(`/account/agent/projects/${id}`, data),
+  messages:       (params = {})  => api.get('/account/agent/messages', { params }),
+  updateProfile:  (data)         => api.put('/account/agent/profile', data),
+  uploadAvatar:   (formData)     => api.post('/account/agent/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+}
+
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`

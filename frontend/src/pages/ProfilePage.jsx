@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   User, Mail, Phone, Building2, FileText, Check, AlertCircle,
   ChevronRight, Clock, CheckCircle, XCircle, Home, MapPin, Bed, Bath, Maximize2, Heart,
-  Briefcase, Star, Send, RotateCcw,
+  Briefcase, Star, Send, RotateCcw, LayoutDashboard,
 } from 'lucide-react'
 import { useUserAuth } from '../context/UserAuthContext'
 import { authApi, userListingsApi, favoritesApi, professionalApi } from '../api/client'
@@ -404,7 +404,14 @@ export default function ProfilePage() {
               <Link to="/list-property" className="btn-gold text-xs flex items-center gap-1.5 py-2 px-4">
                 <Home size={13} /> List Property
               </Link>
-              {!isProfessional && (
+              {isProfessional ? (
+                <Link
+                  to="/agent-dashboard"
+                  className="text-xs flex items-center gap-1.5 py-2 px-4 rounded-2xl bg-navy text-white font-semibold hover:opacity-90 transition-all"
+                >
+                  <LayoutDashboard size={13} /> Agent Dashboard
+                </Link>
+              ) : (
                 <button
                   onClick={() => setActiveTab('professional')}
                   className="text-xs flex items-center gap-1.5 py-2 px-4 rounded-2xl border border-gold text-gold font-semibold hover:bg-gold/5 transition-all"

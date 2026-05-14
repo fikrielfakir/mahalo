@@ -79,8 +79,14 @@ class PropertyController extends Controller
         }
 
         if ($request->filled('features')) {
-            $ids = explode(',', $request->features);
-            $query->whereHas('features', fn($q) => $q->whereIn('re_features.id', $ids));
+            $raw = $request->features;
+            $ids = is_array($raw)
+                ? $raw
+                : explode(',', (string) $raw);
+            $ids = array_values(array_filter(array_map('intval', $ids)));
+            if (!empty($ids)) {
+                $query->whereHas('features', fn($q) => $q->whereIn('re_features.id', $ids));
+            }
         }
 
         if ($request->filled('facilities')) {

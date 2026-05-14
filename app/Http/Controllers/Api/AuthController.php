@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -24,14 +23,13 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => $data['password'],
-            'phone'    => $data['phone'] ?? null,
-            'role'     => 'user',
+            'name'              => $data['name'],
+            'email'             => $data['email'],
+            'password'          => $data['password'],
+            'phone'             => $data['phone'] ?? null,
+            'role'              => 'user',
+            'email_verified_at' => now(),
         ]);
-
-        event(new Registered($user));
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -39,7 +37,7 @@ class AuthController extends Controller
             'data' => [
                 'token'          => $token,
                 'token_type'     => 'Bearer',
-                'email_verified' => false,
+                'email_verified' => true,
                 'user'           => [
                     'id'    => $user->id,
                     'name'  => $user->name,
@@ -48,7 +46,7 @@ class AuthController extends Controller
                 ],
             ],
             'error'   => false,
-            'message' => 'Registration successful. Please check your email to verify your account.',
+            'message' => 'Registration successful.',
         ], 201);
     }
 

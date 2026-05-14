@@ -1,0 +1,159 @@
+client:495 [vite] connecting...
+chunk-PJEEZAML.js?v=1f6d836b:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+react-router-dom.js?v=1f6d836b:4436 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+warnOnce @ react-router-dom.js?v=1f6d836b:4436
+react-router-dom.js?v=1f6d836b:4436 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+warnOnce @ react-router-dom.js?v=1f6d836b:4436
+client:618 [vite] connected.
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/projects?per_page=5' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/projects?per_page=5:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/projects?per_page=5' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/projects?per_page=5:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/projects?per_page=5' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/projects?per_page=5:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=4' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=12' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=12:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties/filters' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/agents?per_page=12' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/agents?per_page=12:1  Failed to load resource: net::ERR_FAILED
+:5000/agents:1 Access to XMLHttpRequest at 'https://your-backend-domain.com/api/v1/properties?per_page=100' from origin 'http://192.168.56.1:5000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/properties?per_page=100:1  Failed to load resource: net::ERR_FAILED
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/projects?per_page=5:1  Failed to load resource: net::ERR_CONNECTION_TIMED_OUT
+client.js:18 API Error: Network Error
+(anonymous) @ client.js:18
+your-backend-domain.com/api/v1/projects?per_page=5:1  Failed to load resource: net::ERR_CONNECTION_TIMED_OUT
+ API Error: Network Error
+your-backend-domain.com/api/v1/properties/filters:1  Failed to load resource: net::ERR_CONNECTION_TIMED_OUT
+ API Error: Network Error
+your-backend-domain.com/api/v1/properties?is_featured=1&per_page=8:1  Failed to load resource: net::ERR_CONNECTION_TIMED_OUT
+ API Error: Network Error
+your-backend-domain.com/api/v1/agents?per_page=4:1  Failed to load resource: net::ERR_CONNECTION_TIMED_OUT

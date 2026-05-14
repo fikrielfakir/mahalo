@@ -1,0 +1,122 @@
+Redesign and optimize the entire Real Estate platform UI/UX using a refined luxury aesthetic while integrating the brand colors:
+
+Primary Dark Burgundy: #730D26
+Primary Accent Red: #BA1932
+
+The design should feel premium, modern, elegant, cinematic, and high-end — inspired by luxury real estate brands and upscale Moroccan architecture.
+
+Color Integration Guidelines
+
+Use the colors strategically across the interface instead of overwhelming the UI:
+
+Primary Usage
+#730D26 → main luxury brand color
+navbar active states
+gradients
+section overlays
+premium cards
+footer background accents
+hero dark overlays
+buttons hover states
+Accent Usage
+#BA1932 → vibrant accent color
+CTA buttons
+search button
+active tabs
+badges
+property highlights
+icons
+subtle glow effects
+Neutral Palette
+
+Balance the interface using:
+
+Warm white #F8F6F4
+Soft beige #EAE4DE
+Charcoal #1A1A1A
+Graphite #2A2A2A
+
+Avoid flat pure black backgrounds. Use layered gradients and transparent glassmorphism.
+
+UI/UX Improvements
+Hero Section
+Add luxury cinematic overlay using gradient:
+linear-gradient(135deg, rgba(115,13,38,0.82), rgba(0,0,0,0.55))
+Make headline more immersive and premium
+Highlight “Morocco” using #BA1932
+Add soft glassmorphism search container
+Add subtle floating blur lights in burgundy/red tones
+Navigation Bar
+Transparent luxury navbar with blur
+Active menu item underline in #BA1932
+Elegant hover animations
+Premium rounded buttons
+Search Bar
+White/soft glass background
+Search button gradient:
+linear-gradient(135deg, #730D26, #BA1932)
+Rounded 20px radius
+Add soft shadow with burgundy tint
+Property Cards
+Add hover elevation animation
+Image zoom effect on hover
+Price badges in #730D26
+CTA buttons using #BA1932
+Use subtle gold/burgundy shadows
+Sections
+Alternate sections between:
+warm white backgrounds
+dark luxury gradients
+Add more spacing and cleaner typography hierarchy
+Use elegant minimal separators
+Mobile App Promo Section
+Replace blue tones with burgundy luxury gradients
+Add glowing red ambient lighting behind phone mockup
+QR card with soft premium shadows
+More futuristic premium aesthetic
+Footer
+Deep dark burgundy gradient background
+Elegant newsletter input with glass effect
+Social icons hover in #BA1932
+Improve typography contrast and spacing
+Visual Style
+
+Style Keywords:
+Luxury • Premium • Modern • Elegant • Minimal • Cinematic • High-end • Sophisticated • Moroccan Luxury • Real Estate Elite
+
+Design Inspiration:
+
+Sotheby’s Realty
+Apple luxury landing pages
+Modern architectural magazines
+Premium hotel booking platforms
+Motion & Effects
+Smooth micro-interactions
+Soft fade-in animations
+Parallax hero image
+Floating ambient glows
+Elegant hover transitions (300ms ease)
+Glassmorphism with subtle blur
+Layered shadows with burgundy tint
+Typography
+
+Use modern premium typography:
+
+Headings: bold elegant sans-serif
+Large hero typography
+Clean spacing
+Strong visual hierarchy
+
+Suggested font pairing:
+
+Inter
+Plus Jakarta Sans
+General Sans
+Important
+Keep the interface clean and minimal
+Avoid excessive shapes or decorations
+Prioritize whitespace and readability
+Maintain strong luxury branding consistency
+Ensure the burgundy/red palette feels elegant, not aggressive
+Optimize both desktop and mobile responsiveness
+Keep cards and sections visually balanced and breathable

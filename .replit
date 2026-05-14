@@ -1,0 +1,96 @@
+modules = ["php-8.2", "web", "vue-node-20", "php-8.4"]
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Laravel API"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "Laravel API"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && PHP_CLI_SERVER_WORKERS=1 php -d upload_max_filesize=110M -d post_max_size=115M -d memory_limit=256M -d max_execution_time=120 artisan serve --host=0.0.0.0 --port=8000 --no-reload"
+waitForPort = 8000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[userenv]
+
+[userenv.shared]
+APP_NAME = "Homzen Real Estate"
+APP_ENV = "local"
+APP_DEBUG = "true"
+APP_URL = "https://a22b87d0-bfda-416f-a80a-fb45d5ff1787-00-xxylo8wp4ksd.picard.replit.dev:8000"
+LOG_CHANNEL = "stderr"
+LOG_LEVEL = "debug"
+DB_CONNECTION = "sqlite"
+DB_DATABASE = "/home/runner/workspace/database/database.sqlite"
+BROADCAST_DRIVER = "log"
+CACHE_STORE = "file"
+QUEUE_CONNECTION = "sync"
+SESSION_DRIVER = "file"
+SESSION_LIFETIME = "120"
+SANCTUM_STATEFUL_DOMAINS = "localhost:5000,localhost:8000"
+APP_KEY = "base64:1C4BFiutdFFpm4GLMGhQghRi8fI6fh48YsfGVDAzyEU="
+API_BACKEND_URL = "https://blueviolet-newt-360669.hostingersite.com"
+SESSION_HTTP_ONLY = "true"
+SESSION_SECURE_COOKIE = "false"
+ENABLE_HTTP_SECURITY_HEADERS = "false"
+ADMIN_DIR = "admin"
+CMS_ENABLE_INSTALLER = "false"
+FRONTEND_URL = "https://a22b87d0-bfda-416f-a80a-fb45d5ff1787-00-xxylo8wp4ksd.picard.replit.dev:5000"
+FORCE_SCHEMA = "http"
+FORCE_ROOT_URL = "http://localhost:8000"
+MAIL_MAILER = "smtp"
+MAIL_HOST = "smtp.hostinger.com"
+MAIL_PORT = "465"
+MAIL_USERNAME = "jaw@nekkour.com"
+MAIL_ENCRYPTION = "ssl"
+MAIL_FROM_ADDRESS = "jaw@nekkour.com"
+MAIL_FROM_NAME = "Mahalo"
+MAIL_PASSWORD = "7qF6HK9$Es"
+GOOGLE_REDIRECT_URI = "https://a22b87d0-bfda-416f-a80a-fb45d5ff1787-00-xxylo8wp4ksd.picard.replit.dev:8000/api/v1/auth/google/callback"

@@ -1,15 +1,14 @@
 import { useState } from 'react'
-import { MailCheck, X, RefreshCw } from 'lucide-react'
+import { MailCheck, RefreshCw } from 'lucide-react'
 import { useUserAuth } from '../context/UserAuthContext'
 import { authApi } from '../api/client'
 
 export default function VerifyEmailBanner() {
   const { isAuthenticated, isEmailVerified } = useUserAuth()
-  const [dismissed, setDismissed]   = useState(false)
-  const [sending, setSending]       = useState(false)
-  const [sent, setSent]             = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sent, setSent]       = useState(false)
 
-  if (!isAuthenticated || isEmailVerified || dismissed) return null
+  if (!isAuthenticated || isEmailVerified) return null
 
   const resend = async () => {
     setSending(true)
@@ -42,9 +41,6 @@ export default function VerifyEmailBanner() {
               : <><RefreshCw size={11} /> Resend Email</>}
           </button>
         )}
-        <button onClick={() => setDismissed(true)} className="shrink-0 text-navy/30 hover:text-navy/60 transition-colors">
-          <X size={16} />
-        </button>
       </div>
     </div>
   )

@@ -23,13 +23,14 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
-            'name'              => $data['name'],
-            'email'             => $data['email'],
-            'password'          => $data['password'],
-            'phone'             => $data['phone'] ?? null,
-            'role'              => 'user',
-            'email_verified_at' => now(),
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => $data['password'],
+            'phone'    => $data['phone'] ?? null,
+            'role'     => 'user',
         ]);
+
+        $user->sendEmailVerificationNotification();
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -37,7 +38,7 @@ class AuthController extends Controller
             'data' => [
                 'token'          => $token,
                 'token_type'     => 'Bearer',
-                'email_verified' => true,
+                'email_verified' => false,
                 'user'           => [
                     'id'    => $user->id,
                     'name'  => $user->name,

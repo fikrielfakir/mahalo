@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useUserAuth } from './UserAuthContext'
+import { useVerifyEmail } from './VerifyEmailContext'
 import { favoritesApi } from '../api/client'
 
 const LS_KEY = 'mahalo_favorites'
@@ -11,7 +12,8 @@ function loadLocal() {
 const FavoritesContext = createContext(null)
 
 export function FavoritesProvider({ children }) {
-  const { isAuthenticated } = useUserAuth()
+  const { isAuthenticated, isEmailVerified } = useUserAuth()
+  const { openPopup } = useVerifyEmail()
   const [ids, setIds] = useState(loadLocal)
 
   useEffect(() => {
@@ -31,6 +33,10 @@ export function FavoritesProvider({ children }) {
   const toggle = useCallback(async (propertyId) => {
     const numId = Number(propertyId)
     if (isAuthenticated) {
+      if (!isEmailVerified) {
+        openPopup()
+        return
+      }
       try {
         const r = await favoritesApi.toggle(numId)
         const newIds = (r?.data?.ids || []).map(Number)
@@ -44,7 +50,7 @@ export function FavoritesProvider({ children }) {
         return next
       })
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, isEmailVerified, openPopup])
 
   const isFavorited = useCallback((propertyId) => ids.includes(Number(propertyId)), [ids])
 

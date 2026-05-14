@@ -15,6 +15,9 @@ import { CompareProvider } from './context/CompareContext'
 import { UserAuthProvider } from './context/UserAuthContext'
 import { AuthModalProvider } from './context/AuthModalContext'
 import { FavoritesProvider } from './context/FavoritesContext'
+import { VerifyEmailProvider } from './context/VerifyEmailContext'
+import VerifyEmailBanner from './components/VerifyEmailBanner'
+import VerifyEmailPopup from './components/VerifyEmailPopup'
 
 // User auth pages
 import UserLoginPage        from './pages/auth/LoginPage'
@@ -49,6 +52,7 @@ export default function App() {
     <BrowserRouter>
       <CompareProvider>
         <UserAuthProvider>
+          <VerifyEmailProvider>
           <FavoritesProvider>
           <AuthModalProvider>
             <AuthProvider>
@@ -103,9 +107,12 @@ export default function App() {
               {/* Global overlays */}
               <CompareBar />
               <AuthModal />
+              <VerifyEmailBanner />
+              <VerifyEmailPopup />
             </AuthProvider>
           </AuthModalProvider>
           </FavoritesProvider>
+          </VerifyEmailProvider>
         </UserAuthProvider>
       </CompareProvider>
     </BrowserRouter>

@@ -136,7 +136,7 @@ export default function Properties() {
   const filterBar = (
     <div
       className="flex flex-wrap gap-2.5 items-center p-3 rounded-3xl shadow-card mb-4"
-      style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.8)' }}
+      style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(200,200,200,0.5)' }}
     >
       <div className="flex-1 min-w-48 flex items-center gap-2.5 bg-surface rounded-2xl px-4 py-2.5">
         <Search size={15} className="text-gold shrink-0" />

@@ -73,6 +73,7 @@ class AdminProfessionalApplicationController extends Controller
             'professional_status'   => 'approved',
             'account_type'          => 'professional',
             'professional_agent_id' => $agent->id,
+            'role'                  => 'agent',
         ]);
 
         return response()->json([

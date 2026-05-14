@@ -490,14 +490,20 @@ function MessagesTab() {
   const [rows, setRows] = useState([])
   const [meta, setMeta] = useState({})
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
 
   const load = useCallback(() => {
     setLoading(true)
+    setError(null)
     agentDashboardApi.messages({ search, page, status, per_page: 15 })
-      .then(r => { setRows(r.data); setMeta(r.meta) })
+      .then(r => { setRows(r.data ?? []); setMeta(r.meta ?? {}) })
+      .catch(err => {
+        const msg = err?.response?.data?.message || 'Failed to load messages.'
+        setError(msg)
+      })
       .finally(() => setLoading(false))
   }, [search, page, status])
 
@@ -524,6 +530,12 @@ function MessagesTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
+      ) : error ? (
+        <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
+          <MessageCircle size={32} className="mx-auto mb-3 text-red-300" />
+          <p className="text-red-600 font-medium text-sm">{error}</p>
+          <button onClick={load} className="mt-3 text-xs text-[#730D26] underline hover:no-underline">Try again</button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
           <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />

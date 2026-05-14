@@ -184,12 +184,21 @@ class AgentDashboardController extends Controller
         $agent = $this->getAgent($request);
         if (!$agent) return response()->json(['error' => true, 'message' => 'No agent profile found.'], 403);
 
-        $propertyIds = Property::where('author_id', $agent->id)->pluck('id');
-        $projectIds  = Project::where('author_id', $agent->id)->pluck('id');
+        $propertyIds = Property::where('author_id', $agent->id)->pluck('id')->toArray();
+        $projectIds  = Project::where('author_id', $agent->id)->pluck('id')->toArray();
+
+        if (empty($propertyIds) && empty($projectIds)) {
+            return response()->json([
+                'data' => [],
+                'meta' => ['total' => 0, 'last_page' => 1, 'current_page' => 1],
+                'error' => false, 'message' => null,
+            ]);
+        }
 
         $query = Consult::with(['property:id,name', 'project:id,name'])
             ->where(function ($q) use ($propertyIds, $projectIds) {
-                $q->whereIn('property_id', $propertyIds)->orWhereIn('project_id', $projectIds);
+                if (!empty($propertyIds)) $q->whereIn('property_id', $propertyIds);
+                if (!empty($projectIds))  $q->orWhereIn('project_id', $projectIds);
             });
 
         if ($request->filled('status')) $query->where('status', $request->status);

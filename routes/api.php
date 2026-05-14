@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Admin\AdminAgentController;
 use App\Http\Controllers\Api\Admin\AdminProfessionalApplicationController;
 use App\Http\Controllers\Api\ProfessionalApplicationController;
 use App\Http\Controllers\Api\AgentDashboardController;
+use App\Http\Controllers\Api\UserChatController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\Admin\AdminCityController;
 use App\Http\Controllers\Api\Admin\AdminConsultController;
@@ -116,6 +117,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/account/agent/avatar',               [AgentDashboardController::class, 'uploadAvatar']);
 
         // Favorites
+        Route::get('/account/chats',              [UserChatController::class, 'index']);
+        Route::post('/account/chats/start',       [UserChatController::class, 'startChat']);
+        Route::get('/account/chats/{id}',         [UserChatController::class, 'getThread']);
+        Route::post('/account/chats/{id}/message',[UserChatController::class, 'sendMessage']);
+
         Route::get('/account/favorites/ids',       [FavoriteController::class, 'ids']);
         Route::get('/account/favorites',            [FavoriteController::class, 'index']);
         Route::post('/account/favorites/{property_id}', [FavoriteController::class, 'toggle']);

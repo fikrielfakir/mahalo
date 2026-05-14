@@ -111,6 +111,13 @@ export const agentDashboardApi = {
   uploadAvatar:   (formData)     => api.post('/account/agent/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 }
 
+export const userChatsApi = {
+  list:        ()             => api.get('/account/chats'),
+  getThread:   (id)           => api.get(`/account/chats/${id}`),
+  sendMessage: (id, data)     => api.post(`/account/chats/${id}/message`, data),
+  startChat:   (data)         => api.post('/account/chats/start', data),
+}
+
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`

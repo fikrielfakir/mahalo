@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut } from 'lucide-react'
+import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -149,6 +149,13 @@ export default function Navbar({ transparent = false }) {
                   >
                     <UserCircle size={14} /> My Profile
                   </Link>
+                  <Link
+                    to="/messages"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
+                    style={{ width: 'calc(100% - 8px)' }}
+                  >
+                    <MessageCircle size={14} /> My Messages
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
@@ -234,6 +241,12 @@ export default function Navbar({ transparent = false }) {
                   className="flex items-center gap-2 w-full px-4 py-3 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all"
                 >
                   <UserCircle size={15} /> My Profile
+                </Link>
+                <Link
+                  to="/messages"
+                  className="flex items-center gap-2 w-full px-4 py-3 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all"
+                >
+                  <MessageCircle size={15} /> My Messages
                 </Link>
                 <button
                   onClick={handleLogout}

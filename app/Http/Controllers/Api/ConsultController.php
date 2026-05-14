@@ -21,8 +21,10 @@ class ConsultController extends Controller
             'agent_id'    => 'nullable|integer',
         ]);
 
+        $userId = auth('sanctum')->id();
         $consult = Consult::create([
             ...$validated,
+            'user_id'    => $userId,
             'ip_address' => $request->ip(),
             'status'     => 'unread',
         ]);

@@ -28,6 +28,7 @@ import VerifyEmailPage      from './pages/auth/VerifyEmailPage'
 import GoogleCallbackPage   from './pages/auth/GoogleCallbackPage'
 import ProfilePage          from './pages/ProfilePage'
 import AgentDashboardPage  from './pages/AgentDashboardPage'
+import UserChatsPage        from './pages/UserChatsPage'
 
 // Admin
 import { AuthProvider }  from './admin/context/AuthContext'
@@ -73,6 +74,7 @@ export default function App() {
 
                 {/* User profile */}
                 <Route path="/profile"                element={<ProfilePage />} />
+                <Route path="/messages"              element={<UserChatsPage />} />
                 <Route path="/agent-dashboard"        element={<AgentDashboardPage />} />
 
                 {/* User auth */}

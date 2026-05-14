@@ -10,7 +10,7 @@ class Consult extends Model
     protected $table = 're_consults';
 
     protected $fillable = [
-        'name', 'email', 'phone', 'project_id', 'property_id', 'agent_id',
+        'name', 'email', 'phone', 'project_id', 'property_id', 'agent_id', 'user_id',
         'ip_address', 'content', 'custom_fields', 'status',
     ];
 
@@ -26,6 +26,16 @@ class Consult extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'agent_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany

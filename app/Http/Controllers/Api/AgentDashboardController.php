@@ -261,10 +261,6 @@ class AgentDashboardController extends Controller
               ->orWhere('agent_id', $agentId);
         })->findOrFail($id);
 
-        if (empty($consult->email)) {
-            return response()->json(['error' => true, 'message' => 'This message has no email address to reply to.'], 422);
-        }
-
         $reply = ConsultReply::create([
             'consult_id' => $consult->id,
             'body'       => $data['reply'],

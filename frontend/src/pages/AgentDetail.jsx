@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { Star, BadgeCheck, MapPin, Home, Phone, Mail, ArrowLeft, MessageCircle, Loader2, Building, Calendar } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { Star, BadgeCheck, MapPin, Home, Phone, Mail, ArrowLeft, MessageCircle, Loader2, Building, Calendar, Send } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import { Toast, useToast } from '../components/Toast'
-import { agentsApi, consultsApi } from '../api/client'
+import { agentsApi, consultsApi, userChatsApi } from '../api/client'
+import { useUserAuth } from '../context/UserAuthContext'
 
 const AVATAR_COLORS = ['#730D26', '#BA1932', '#9b1232', '#4f0919', '#d01e38', '#730D26']
 const EMPTY_FORM = { name: '', phone: '', message: '' }
@@ -72,6 +73,8 @@ function ProjectMiniSkeleton() {
 
 export default function AgentDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const { isAuthenticated } = useUserAuth()
   const [agent, setAgent]           = useState(null)
   const [properties, setProperties] = useState([])
   const [projects, setProjects]     = useState([])
@@ -79,6 +82,7 @@ export default function AgentDetail() {
   const [propsLoading, setPropsLoading] = useState(true)
   const [projsLoading, setProjsLoading] = useState(true)
   const [activeTab, setActiveTab]   = useState('properties')
+  const [chatStarting, setChatStarting] = useState(false)
 
   const [form, setForm]             = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
@@ -121,6 +125,19 @@ export default function AgentDetail() {
       showToast('Failed to send message. Please try again.', 'error')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleStartChat = async () => {
+    if (!isAuthenticated) { navigate('/login'); return }
+    setChatStarting(true)
+    try {
+      await userChatsApi.startChat({ agent_id: agent.id })
+      navigate(`/messages?agent_id=${agent.id}`)
+    } catch {
+      navigate(`/messages?agent_id=${agent.id}`)
+    } finally {
+      setChatStarting(false)
     }
   }
 
@@ -253,31 +270,48 @@ export default function AgentDetail() {
               </div>
 
               {/* Contact form */}
-              <div className="w-full sm:w-72 shrink-0">
-                <form className="space-y-2.5" onSubmit={handleSubmit}>
-                  <input
-                    type="text" placeholder="Your name *"
-                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
-                    required
-                  />
-                  <input
-                    type="tel" placeholder="Your phone *"
-                    value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
-                    required
-                  />
-                  <textarea
-                    placeholder="Your message..."
-                    rows={2}
-                    value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
-                  />
-                  <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 disabled:opacity-60">
-                    {submitting ? <><Loader2 size={15} className="animate-spin" /> Sending...</> : 'Send Message'}
+              <div className="w-full sm:w-72 shrink-0 space-y-3">
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleStartChat}
+                    disabled={chatStarting}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-60"
+                    style={{ background: 'linear-gradient(135deg,#730D26,#BA1932)', boxShadow: '0 2px 12px rgba(186,25,50,0.30)' }}
+                  >
+                    {chatStarting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                    {chatStarting ? 'Opening chat…' : 'Chat with Agent'}
                   </button>
-                </form>
+                ) : (
+                  <form className="space-y-2.5" onSubmit={handleSubmit}>
+                    <input
+                      type="text" placeholder="Your name *"
+                      value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                      required
+                    />
+                    <input
+                      type="tel" placeholder="Your phone *"
+                      value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                      className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                      required
+                    />
+                    <textarea
+                      placeholder="Your message..."
+                      rows={2}
+                      value={form.message}
+                      onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                      className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
+                    />
+                    <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 disabled:opacity-60">
+                      {submitting ? <><Loader2 size={15} className="animate-spin" /> Sending...</> : 'Send Message'}
+                    </button>
+                  </form>
+                )}
+                {!isAuthenticated && (
+                  <p className="text-center text-xs text-navy/40">
+                    <Link to="/login" className="text-[#730D26] font-semibold hover:underline">Sign in</Link> to chat directly with the agent
+                  </p>
+                )}
               </div>
             </div>
 

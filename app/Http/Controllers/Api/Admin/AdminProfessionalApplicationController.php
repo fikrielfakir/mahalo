@@ -114,9 +114,10 @@ class AdminProfessionalApplicationController extends Controller
             'professional_experience_years' => $u->professional_experience_years,
             'professional_phone'          => $u->professional_phone,
             'professional_city_id'        => $u->professional_city_id,
+            'city_name'                   => $u->city?->name,
             'professional_applied_at'     => $u->professional_applied_at,
             'professional_reject_reason'  => $u->professional_reject_reason,
-            'company_name'               => $u->company_name,
+            'company_name'                => $u->company_name,
             'license_number'             => $u->license_number,
         ];
     }

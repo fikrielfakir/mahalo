@@ -69,4 +69,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'password'          => 'hashed',
         ];
     }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'professional_city_id');
+    }
 }

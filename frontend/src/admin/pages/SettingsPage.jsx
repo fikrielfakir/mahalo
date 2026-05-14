@@ -22,7 +22,7 @@ const TABS = [
 const DEFAULTS = {
   site_name: 'Mahalo',
   tagline: "Morocco's Most Trusted Real Estate Platform",
-  contact_email: 'contact@mahalo.ma',
+  contact_email: 'elfakirfikri@gmail.com',
   contact_phone: '+212 600 000 000',
   address: 'Casablanca, Morocco',
   whatsapp_number: '',

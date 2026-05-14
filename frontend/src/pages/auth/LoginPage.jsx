@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useUserAuth } from '../../context/UserAuthContext'
 import { authApi } from '../../api/client'
@@ -12,11 +12,13 @@ export default function LoginPage() {
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
 
-  const { login }  = useUserAuth()
+  const { login, isAuthenticated, loading: authLoading } = useUserAuth()
   const navigate   = useNavigate()
   const location   = useLocation()
-  const from       = location.state?.from || '/profile'
+  const from       = location.state?.from || '/'
   const [googleLoading, setGoogleLoading] = useState(false)
+
+  if (!authLoading && isAuthenticated) return <Navigate to="/" replace />
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)

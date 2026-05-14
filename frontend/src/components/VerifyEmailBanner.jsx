@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { MailCheck, RefreshCw } from 'lucide-react'
 import { useUserAuth } from '../context/UserAuthContext'
 import { authApi } from '../api/client'
@@ -7,8 +8,10 @@ export default function VerifyEmailBanner() {
   const { isAuthenticated, isEmailVerified } = useUserAuth()
   const [sending, setSending] = useState(false)
   const [sent, setSent]       = useState(false)
+  const location = useLocation()
 
   if (!isAuthenticated || isEmailVerified) return null
+  if (location.pathname.startsWith('/admin')) return null
 
   const resend = async () => {
     setSending(true)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { User, Mail, Lock, Eye, EyeOff, Phone, ArrowLeft } from 'lucide-react'
 import { useUserAuth } from '../../context/UserAuthContext'
 import { authApi } from '../../api/client'
@@ -13,9 +13,11 @@ export default function RegisterPage() {
   const [loading,  setLoading]  = useState(false)
   const [done,     setDone]     = useState(false)
 
-  const { register } = useUserAuth()
+  const { register, isAuthenticated, loading: authLoading } = useUserAuth()
   const navigate     = useNavigate()
   const [googleLoading, setGoogleLoading] = useState(false)
+
+  if (!authLoading && isAuthenticated) return <Navigate to="/" replace />
 
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true)

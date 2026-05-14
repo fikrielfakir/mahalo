@@ -15,7 +15,7 @@ const TABS = [
   { id: 'contact',    label: 'Contact',     icon: Mail },
   { id: 'social',     label: 'Social',      icon: Instagram },
   { id: 'seo',        label: 'SEO',         icon: Globe },
-  { id: 'mail',       label: 'Mail / SMTP', icon: Server },
+  { id: 'mail',       label: 'Mail / SMTP', icon: Server  },
   { id: 'google',     label: 'Google Auth', icon: KeyRound },
 ]
 
@@ -47,15 +47,6 @@ const DEFAULTS = {
   watermark_position: 'center',
   watermark_opacity: '60',
   watermark_size: '20',
-  // SMTP Mail
-  mail_mailer: 'smtp',
-  mail_host: '',
-  mail_port: '587',
-  mail_username: '',
-  mail_password: '',
-  mail_encryption: 'tls',
-  mail_from_address: '',
-  mail_from_name: 'Agentz',
   // Google OAuth
   google_client_id: '',
   google_client_secret: '',
@@ -419,104 +410,51 @@ export default function SettingsPage() {
         {tab === 'mail' && (
           <>
             <Section title="SMTP Mail Configuration" icon={Server}>
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 mb-2">
-                Configure your outgoing mail server. These settings are used to send contact form notifications, consultation confirmations, and admin alerts.
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Mailer Driver">
-                  <select
-                    value={form.mail_mailer}
-                    onChange={f('mail_mailer')}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                  >
-                    <option value="smtp">SMTP</option>
-                    <option value="sendmail">Sendmail</option>
-                    <option value="log">Log (testing only)</option>
-                  </select>
-                </FormField>
-                <FormField label="Encryption">
-                  <select
-                    value={form.mail_encryption}
-                    onChange={f('mail_encryption')}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                  >
-                    <option value="tls">TLS (recommended)</option>
-                    <option value="ssl">SSL</option>
-                    <option value="">None</option>
-                  </select>
-                </FormField>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <FormField label="SMTP Host">
-                    <div className="relative">
-                      <Server size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <Input value={form.mail_host} onChange={f('mail_host')} className="pl-9" placeholder="smtp.gmail.com" />
-                    </div>
-                  </FormField>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 flex items-start gap-3">
+                <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+                <div>
+                  <p className="font-semibold mb-1">Mail settings are managed via environment variables</p>
+                  <p className="text-xs text-blue-700">
+                    SMTP credentials are configured directly in your server's <code className="bg-blue-100 px-1 rounded">.env</code> file.
+                    Changes here have no effect — edit the <code className="bg-blue-100 px-1 rounded">.env</code> on your server to update mail settings.
+                  </p>
                 </div>
-                <FormField label="SMTP Port">
-                  <Input type="number" value={form.mail_port} onChange={f('mail_port')} placeholder="587" />
-                </FormField>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="SMTP Username">
-                  <div className="relative">
-                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input value={form.mail_username} onChange={f('mail_username')} className="pl-9" placeholder="you@gmail.com" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                {[
+                  { label: 'Mailer',     value: 'MAIL_MAILER' },
+                  { label: 'Host',       value: 'MAIL_HOST' },
+                  { label: 'Port',       value: 'MAIL_PORT' },
+                  { label: 'Encryption', value: 'MAIL_ENCRYPTION' },
+                  { label: 'Username',   value: 'MAIL_USERNAME' },
+                  { label: 'Password',   value: 'MAIL_PASSWORD' },
+                  { label: 'From Address', value: 'MAIL_FROM_ADDRESS' },
+                  { label: 'From Name',  value: 'MAIL_FROM_NAME' },
+                ].map(({ label, value }) => (
+                  <div key={value} className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+                    <span className="text-xs font-semibold text-gray-500">{label}</span>
+                    <code className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-lg font-mono">{value}</code>
                   </div>
-                </FormField>
-                <FormField label="SMTP Password">
-                  <div className="relative">
-                    <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type={showPwd ? 'text' : 'password'}
-                      value={form.mail_password}
-                      onChange={f('mail_password')}
-                      placeholder="App password or SMTP password"
-                      className="w-full pl-9 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPwd(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
-                  </div>
-                </FormField>
+                ))}
               </div>
             </Section>
 
-            <Section title="From Address" icon={Send}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="From Email Address">
-                  <div className="relative">
-                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input value={form.mail_from_address} onChange={f('mail_from_address')} className="pl-9" placeholder="no-reply@mahalo.ma" />
-                  </div>
-                </FormField>
-                <FormField label="From Name">
-                  <Input value={form.mail_from_name} onChange={f('mail_from_name')} placeholder="Mahalo Real Estate" />
-                </FormField>
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
+            <Section title="Send Test Email" icon={Send}>
+              <p className="text-sm text-gray-500">Verify your current SMTP configuration is working correctly.</p>
+              <div className="flex items-center gap-3 pt-1">
                 <Btn
                   type="button"
                   variant="ghost"
-                  disabled={testing || !form.mail_host}
+                  disabled={testing}
                   onClick={async () => {
                     setTesting(true)
                     setTestResult(null)
                     try {
-                      const r = await adminSettings.testMail(form.mail_from_address || form.contact_email)
+                      const r = await adminSettings.testMail(form.contact_email || 'test@example.com')
                       setTestResult({ ok: true, msg: r?.message || 'Test email sent successfully!' })
                     } catch (e) {
-                      setTestResult({ ok: false, msg: e?.message || e?.error || 'Failed to send test email.' })
+                      setTestResult({ ok: false, msg: e?.response?.data?.message || e?.message || 'Failed to send test email.' })
                     } finally {
                       setTesting(false)
                     }

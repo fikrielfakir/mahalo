@@ -24,9 +24,6 @@ class AdminSettingsController extends Controller
         // Watermark
         'watermark_enabled', 'watermark_logo_url', 'watermark_position',
         'watermark_opacity', 'watermark_size',
-        // SMTP Mail
-        'mail_mailer', 'mail_host', 'mail_port', 'mail_username',
-        'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name',
         // Google OAuth
         'google_client_id', 'google_client_secret',
     ];
@@ -68,31 +65,13 @@ class AdminSettingsController extends Controller
         $request->validate(['to' => 'required|email']);
         $to = $request->input('to');
 
-        // Load mail settings from DB and override config at runtime
-        $settings = DB::table('site_settings')
-            ->whereIn('key', ['mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name'])
-            ->pluck('value', 'key');
-
-        if (!empty($settings['mail_host'])) {
-            config([
-                'mail.default'                       => $settings['mail_mailer'] ?? 'smtp',
-                'mail.mailers.smtp.host'             => $settings['mail_host'],
-                'mail.mailers.smtp.port'             => (int) ($settings['mail_port'] ?? 587),
-                'mail.mailers.smtp.username'         => $settings['mail_username'] ?? null,
-                'mail.mailers.smtp.password'         => $settings['mail_password'] ?? null,
-                'mail.mailers.smtp.encryption'       => $settings['mail_encryption'] ?? 'tls',
-                'mail.from.address'                  => $settings['mail_from_address'] ?? $settings['mail_username'] ?? $to,
-                'mail.from.name'                     => $settings['mail_from_name'] ?? config('app.name'),
-            ]);
-        }
-
         try {
-            Mail::raw('This is a test email from your Mahalo admin panel. Your SMTP configuration is working correctly.', function ($msg) use ($to, $settings) {
+            Mail::raw('This is a test email from your Mahalo admin panel. Your SMTP configuration is working correctly.', function ($msg) use ($to) {
                 $msg->to($to)
                     ->subject('Mahalo — SMTP Test Email')
                     ->from(
-                        $settings['mail_from_address'] ?? $to,
-                        $settings['mail_from_name'] ?? 'Mahalo'
+                        config('mail.from.address'),
+                        config('mail.from.name')
                     );
             });
 

@@ -28,7 +28,8 @@ import ProfilePage          from './pages/ProfilePage'
 // Admin
 import { AuthProvider }  from './admin/context/AuthContext'
 import AdminLayout       from './admin/components/AdminLayout'
-import AdminLoginPage    from './admin/pages/LoginPage'
+import AdminLoginPage          from './admin/pages/LoginPage'
+import AdminGoogleCallbackPage from './admin/pages/GoogleCallbackPage'
 import Dashboard         from './admin/pages/Dashboard'
 import PropertiesPage    from './admin/pages/PropertiesPage'
 import ProjectsPage      from './admin/pages/ProjectsPage'
@@ -76,7 +77,8 @@ export default function App() {
                 <Route path="/auth/google/callback"   element={<GoogleCallbackPage />} />
 
                 {/* Admin */}
-                <Route path="/admin/login"            element={<AdminLoginPage />} />
+                <Route path="/admin/login"                  element={<AdminLoginPage />} />
+                <Route path="/admin/auth/google/callback"   element={<AdminGoogleCallbackPage />} />
                 <Route path="/admin"                  element={<AdminLayout />}>
                   <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard"   element={<Dashboard />} />

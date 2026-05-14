@@ -25,9 +25,10 @@ client.interceptors.response.use(
 )
 
 export const adminAuth = {
-  login:   (data) => client.post('/auth/login', data),
-  logout:  ()     => client.post('/auth/logout'),
-  profile: ()     => client.get('/account/profile'),
+  login:            (data) => client.post('/auth/login', data),
+  logout:           ()     => client.post('/auth/logout'),
+  profile:          ()     => client.get('/account/profile'),
+  googleRedirectUrl:()     => client.get('/admin/auth/google'),
 }
 
 export const adminStats = {

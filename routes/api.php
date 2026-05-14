@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\GoogleAuthController;
+use App\Http\Controllers\Api\Admin\AdminGoogleAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConsultController;
@@ -78,6 +79,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/verify-email/{id}/{hash}',  [AuthController::class, 'verifyEmail']);
     Route::get('/auth/google',                     [GoogleAuthController::class, 'redirect']);
     Route::get('/auth/google/callback',            [GoogleAuthController::class, 'callback']);
+    Route::get('/admin/auth/google',               [AdminGoogleAuthController::class, 'redirect']);
+    Route::get('/admin/auth/google/callback',      [AdminGoogleAuthController::class, 'callback']);
 
     // ── Protected: Account ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {

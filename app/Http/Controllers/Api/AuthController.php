@@ -30,7 +30,11 @@ class AuthController extends Controller
             'role'     => 'user',
         ]);
 
-        $user->sendEmailVerificationNotification();
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Verification email failed: ' . $e->getMessage());
+        }
 
         $token = $user->createToken('api-token')->plainTextToken;
 

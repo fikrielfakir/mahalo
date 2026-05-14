@@ -7,12 +7,34 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $frontendUrl = rtrim(
+            env('FRONTEND_URL')
+                ?: (env('REPLIT_DEV_DOMAIN') ? 'https://' . env('REPLIT_DEV_DOMAIN') : 'http://localhost:5000'),
+            '/'
+        );
+
+        $id      = $this->getKey();
+        $hash    = sha1($this->getEmailForVerification());
+        $expires = Carbon::now()->addMinutes(60)->timestamp;
+        $sig     = hash_hmac('sha256', "{$id}|{$hash}|{$expires}", config('app.key'));
+        $url     = "{$frontendUrl}/email/verify/{$id}/{$hash}?expires={$expires}&signature={$sig}";
+
+        $notification = new VerifyEmail();
+        $notification::createUrlUsing(fn () => $url);
+
+        $this->notify($notification);
+    }
 
     protected $fillable = [
         'name',

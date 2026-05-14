@@ -59,7 +59,7 @@ class CategoryController extends Controller
         $perPage = min((int) ($request->per_page ?? 10), 100);
         $props   = $category->properties()
             ->with(['city', 'slug'])
-            ->where('status', 'selling')
+            ->whereIn('status', ['selling', 'renting'])
             ->paginate($perPage);
 
         return response()->json([
@@ -73,7 +73,7 @@ class CategoryController extends Controller
     public function filters(): JsonResponse
     {
         $categories = Category::where('status', 'published')
-            ->withCount(['properties' => fn($q) => $q->where('status', 'selling')])
+            ->withCount(['properties' => fn($q) => $q->whereIn('status', ['selling', 'renting'])])
             ->orderBy('order')
             ->get()
             ->map(fn($c) => array_merge($this->formatCategory($c), ['property_count' => $c->properties_count]));

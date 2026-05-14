@@ -16,7 +16,7 @@ class PropertyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-            ->where('status', 'selling');
+            ->whereIn('status', ['selling', 'renting']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -129,7 +129,7 @@ class PropertyController extends Controller
     {
         $q    = $request->input('q', '');
         $data = Property::with(['city', 'slug'])
-            ->where('status', 'selling')
+            ->whereIn('status', ['selling', 'renting'])
             ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%$q%")
                       ->orWhere('location', 'like', "%$q%");
@@ -152,7 +152,7 @@ class PropertyController extends Controller
                 ->find($slugModel->reference_id);
         } else {
             $property = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-                ->where('status', 'selling')
+                ->whereIn('status', ['selling', 'renting'])
                 ->where('name', 'like', "%$slug%")
                 ->first();
         }
@@ -177,7 +177,7 @@ class PropertyController extends Controller
 
     public function filters(): JsonResponse
     {
-        $cities = City::whereHas('properties', fn($q) => $q->where('status', 'selling'))
+        $cities = City::whereHas('properties', fn($q) => $q->whereIn('status', ['selling', 'renting']))
             ->select('id', 'name')
             ->get();
 
@@ -189,7 +189,7 @@ class PropertyController extends Controller
             ->select('id', 'name', 'icon')
             ->get();
 
-        $priceRange = Property::where('status', 'selling')
+        $priceRange = Property::whereIn('status', ['selling', 'renting'])
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
 

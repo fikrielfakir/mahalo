@@ -10,7 +10,7 @@ class Consult extends Model
     protected $table = 're_consults';
 
     protected $fillable = [
-        'name', 'email', 'phone', 'project_id', 'property_id',
+        'name', 'email', 'phone', 'project_id', 'property_id', 'agent_id',
         'ip_address', 'content', 'custom_fields', 'status',
     ];
 

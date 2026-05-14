@@ -18,6 +18,7 @@ class ConsultController extends Controller
             'content'     => 'nullable|string',
             'property_id' => 'nullable|integer',
             'project_id'  => 'nullable|integer',
+            'agent_id'    => 'nullable|integer',
         ]);
 
         $consult = Consult::create([

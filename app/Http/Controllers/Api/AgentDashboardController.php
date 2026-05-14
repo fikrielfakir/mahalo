@@ -33,16 +33,20 @@ class AgentDashboardController extends Controller
         $totalViews = Property::where('author_id', $agent->id)->sum('views')
                     + Project::where('author_id', $agent->id)->sum('views');
 
-        $messagesCount = Consult::where(function ($q) use ($propertyIds, $projectIds) {
+        $agentId = $agent->id;
+        $messagesCount = Consult::where(function ($q) use ($propertyIds, $projectIds, $agentId) {
             $q->whereIn('property_id', $propertyIds)
-              ->orWhereIn('project_id', $projectIds);
+              ->orWhereIn('project_id', $projectIds)
+              ->orWhere('agent_id', $agentId);
         })->count();
 
         $propertiesCount = $propertyIds->count();
         $projectsCount   = $projectIds->count();
 
-        $recentMessages = Consult::where(function ($q) use ($propertyIds, $projectIds) {
-            $q->whereIn('property_id', $propertyIds)->orWhereIn('project_id', $projectIds);
+        $recentMessages = Consult::where(function ($q) use ($propertyIds, $projectIds, $agentId) {
+            $q->whereIn('property_id', $propertyIds)
+              ->orWhereIn('project_id', $projectIds)
+              ->orWhere('agent_id', $agentId);
         })->with(['property:id,name', 'project:id,name'])->orderByDesc('created_at')->limit(5)->get();
 
         $topProperties = Property::where('author_id', $agent->id)
@@ -187,18 +191,13 @@ class AgentDashboardController extends Controller
         $propertyIds = Property::where('author_id', $agent->id)->pluck('id')->toArray();
         $projectIds  = Project::where('author_id', $agent->id)->pluck('id')->toArray();
 
-        if (empty($propertyIds) && empty($projectIds)) {
-            return response()->json([
-                'data' => [],
-                'meta' => ['total' => 0, 'last_page' => 1, 'current_page' => 1],
-                'error' => false, 'message' => null,
-            ]);
-        }
+        $agentId = $agent->id;
 
         $query = Consult::with(['property:id,name', 'project:id,name'])
-            ->where(function ($q) use ($propertyIds, $projectIds) {
-                if (!empty($propertyIds)) $q->whereIn('property_id', $propertyIds);
-                if (!empty($projectIds))  $q->orWhereIn('project_id', $projectIds);
+            ->where(function ($q) use ($propertyIds, $projectIds, $agentId) {
+                $q->whereIn('property_id', $propertyIds)
+                  ->orWhereIn('project_id', $projectIds)
+                  ->orWhere('agent_id', $agentId);
             });
 
         if ($request->filled('status')) $query->where('status', $request->status);

@@ -114,6 +114,7 @@ class AuthController extends Controller
                 'company_name'                => $user->company_name ?? null,
                 'license_number'              => $user->license_number ?? null,
                 'professional_status'         => $user->professional_status,
+                'professional_agent_id'       => $user->professional_agent_id,
                 'professional_bio'            => $user->professional_bio,
                 'professional_specialty'      => $user->professional_specialty,
                 'professional_experience_years' => $user->professional_experience_years,

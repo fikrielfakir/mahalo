@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\UserListingController;
 use App\Http\Controllers\Api\Admin\AdminAgentController;
+use App\Http\Controllers\Api\Admin\AdminProfessionalApplicationController;
+use App\Http\Controllers\Api\ProfessionalApplicationController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\Admin\AdminCityController;
 use App\Http\Controllers\Api\Admin\AdminConsultController;
@@ -96,6 +98,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/account/my-listings',  [UserListingController::class, 'index']);
         Route::post('/account/listings',    [UserListingController::class, 'store']);
 
+        // Professional applications
+        Route::get('/account/professional-status',  [ProfessionalApplicationController::class, 'status']);
+        Route::post('/account/professional-apply',  [ProfessionalApplicationController::class, 'apply']);
+
         // Favorites
         Route::get('/account/favorites/ids',       [FavoriteController::class, 'ids']);
         Route::get('/account/favorites',            [FavoriteController::class, 'index']);
@@ -117,6 +123,9 @@ Route::prefix('v1')->group(function () {
         Route::put('/properties/{id}/moderation', [AdminPropertyController::class, 'moderation']);
         Route::apiResource('projects',        AdminProjectController::class);
         Route::apiResource('agents',          AdminAgentController::class);
+        Route::get('/professional-applications',              [AdminProfessionalApplicationController::class, 'index']);
+        Route::post('/professional-applications/{id}/approve', [AdminProfessionalApplicationController::class, 'approve']);
+        Route::post('/professional-applications/{id}/reject',  [AdminProfessionalApplicationController::class, 'reject']);
         Route::apiResource('categories',      AdminCategoryController::class);
         Route::apiResource('features',        AdminFeatureController::class);
         Route::apiResource('facilities',      AdminFacilityController::class);

@@ -116,6 +116,12 @@ export const adminUsers = {
   delete: (id)     => client.delete(`/admin/users/${id}`),
 }
 
+export const adminProfessionalApplications = {
+  list:    (p = {}) => client.get('/admin/professional-applications', { params: p }),
+  approve: (id)     => client.post(`/admin/professional-applications/${id}/approve`),
+  reject:  (id, reason) => client.post(`/admin/professional-applications/${id}/reject`, { reason }),
+}
+
 export const adminSettings = {
   get:        ()          => client.get('/admin/settings'),
   update:     (d)         => client.put('/admin/settings', d),

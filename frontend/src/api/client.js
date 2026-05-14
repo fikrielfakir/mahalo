@@ -93,6 +93,11 @@ export const authApi = {
   resendVerification:  () => api.post('/auth/resend-verification'),
 }
 
+export const professionalApi = {
+  status: () => api.get('/account/professional-status'),
+  apply:  (data) => api.post('/account/professional-apply', data),
+}
+
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`

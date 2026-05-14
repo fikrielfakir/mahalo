@@ -34,9 +34,16 @@ export function UserAuthProvider({ children }) {
       .finally(() => setLoading(false))
   }, [clearSession])
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await authApi.profile()
+      setUser(res.data)
+    } catch {}
+  }, [])
+
   const login = async (email, password) => {
     const res = await authApi.login({ email, password })
-    saveSession(res.data.token, res.data.user)
+    saveSession(res.data.token, { ...res.data.user, email_verified: res.data.email_verified })
     return res.data
   }
 
@@ -48,7 +55,7 @@ export function UserAuthProvider({ children }) {
       password_confirmation: passwordConfirmation,
       phone,
     })
-    saveSession(res.data.token, res.data.user)
+    saveSession(res.data.token, { ...res.data.user, email_verified: res.data.email_verified })
     return res.data
   }
 
@@ -64,7 +71,7 @@ export function UserAuthProvider({ children }) {
     <UserAuthContext.Provider value={{
       user, token, loading,
       isAuthenticated, isEmailVerified,
-      login, register, logout, saveSession,
+      login, register, logout, saveSession, refreshUser,
     }}>
       {children}
     </UserAuthContext.Provider>

@@ -15,16 +15,17 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState('')
   const [resent,  setResent]  = useState(false)
 
-  const { token, user } = useUserAuth()
+  const { token, user, refreshUser } = useUserAuth()
 
   useEffect(() => {
     if (!id || !hash) { setStatus('error'); setMessage('Invalid verification link.'); return }
 
     authApi.verifyEmail(id, hash, expires, signature)
-      .then((res) => {
+      .then(async (res) => {
         if (res.message === 'Email already verified.') setStatus('already')
         else setStatus('success')
         setMessage(res.message)
+        await refreshUser()
       })
       .catch((err) => {
         setStatus('error')

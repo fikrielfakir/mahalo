@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AgentController;
+use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConsultController;
@@ -75,6 +76,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/forgot-password',           [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password',            [AuthController::class, 'resetPassword']);
     Route::post('/auth/verify-email/{id}/{hash}',  [AuthController::class, 'verifyEmail']);
+    Route::get('/auth/google',                     [GoogleAuthController::class, 'redirect']);
+    Route::get('/auth/google/callback',            [GoogleAuthController::class, 'callback']);
 
     // ── Protected: Account ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {

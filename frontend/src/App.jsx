@@ -17,12 +17,13 @@ import { AuthModalProvider } from './context/AuthModalContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 
 // User auth pages
-import UserLoginPage      from './pages/auth/LoginPage'
-import RegisterPage       from './pages/auth/RegisterPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage  from './pages/auth/ResetPasswordPage'
-import VerifyEmailPage    from './pages/auth/VerifyEmailPage'
-import ProfilePage        from './pages/ProfilePage'
+import UserLoginPage        from './pages/auth/LoginPage'
+import RegisterPage         from './pages/auth/RegisterPage'
+import ForgotPasswordPage   from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage    from './pages/auth/ResetPasswordPage'
+import VerifyEmailPage      from './pages/auth/VerifyEmailPage'
+import GoogleCallbackPage   from './pages/auth/GoogleCallbackPage'
+import ProfilePage          from './pages/ProfilePage'
 
 // Admin
 import { AuthProvider }  from './admin/context/AuthContext'
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="/forgot-password"        element={<ForgotPasswordPage />} />
                 <Route path="/reset-password"         element={<ResetPasswordPage />} />
                 <Route path="/email/verify/:id/:hash" element={<VerifyEmailPage />} />
+                <Route path="/auth/google/callback"   element={<GoogleCallbackPage />} />
 
                 {/* Admin */}
                 <Route path="/admin/login"            element={<AdminLoginPage />} />

@@ -84,6 +84,7 @@ export const authApi = {
   login:               (data) => api.post('/auth/login', data),
   logout:              ()     => api.post('/auth/logout'),
   profile:             ()     => api.get('/account/profile'),
+  googleRedirectUrl:   ()     => api.get('/auth/google'),
   updateProfile:       (data) => api.put('/account/profile', data),
   forgotPassword:      (email) => api.post('/auth/forgot-password', { email }),
   resetPassword:       (data) => api.post('/auth/reset-password', data),

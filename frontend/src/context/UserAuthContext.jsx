@@ -64,7 +64,7 @@ export function UserAuthProvider({ children }) {
     <UserAuthContext.Provider value={{
       user, token, loading,
       isAuthenticated, isEmailVerified,
-      login, register, logout,
+      login, register, logout, saveSession,
     }}>
       {children}
     </UserAuthContext.Provider>

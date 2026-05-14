@@ -4,7 +4,7 @@ import {
   Home, Building, MessageCircle, Eye, TrendingUp, User, Phone, Mail,
   MapPin, Edit2, Check, X, ArrowLeft, Camera, Loader2, BadgeCheck,
   ChevronLeft, ChevronRight, Search, Calendar, AlertCircle, Star,
-  BarChart2, Inbox, Settings, ExternalLink,
+  BarChart2, Inbox, Settings, ExternalLink, Reply, Send,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -486,6 +486,97 @@ function ProjectsTab() {
   )
 }
 
+function ReplyModal({ message, onClose, onReplied }) {
+  const [replyText, setReplyText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+
+  const handleSend = () => {
+    if (!replyText.trim()) return
+    setSending(true)
+    setError(null)
+    agentDashboardApi.replyMessage(message.id, { reply: replyText.trim() })
+      .then(() => {
+        setSuccess(true)
+        setTimeout(() => { onReplied(); onClose() }, 1500)
+      })
+      .catch(err => {
+        setError(err?.response?.data?.message || 'Failed to send reply.')
+      })
+      .finally(() => setSending(false))
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <Reply size={16} className="text-[#730D26]" />
+            <span className="font-semibold text-navy text-sm">Reply to {message.name}</span>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-navy/40 hover:bg-gray-100 transition-colors">
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          {message.email && (
+            <div className="flex items-center gap-2 text-xs text-navy/50 bg-gray-50 rounded-xl px-3 py-2">
+              <Mail size={12} className="text-[#730D26]" />
+              <span>Sending to: <strong className="text-navy">{message.email}</strong></span>
+            </div>
+          )}
+
+          {message.content && (
+            <div className="bg-gray-50 rounded-xl px-4 py-3 border-l-2 border-gray-200">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-navy/30 mb-1">Original message</p>
+              <p className="text-xs text-navy/50 leading-relaxed italic">{message.content}</p>
+            </div>
+          )}
+
+          <textarea
+            value={replyText}
+            onChange={e => setReplyText(e.target.value)}
+            placeholder="Write your reply here..."
+            rows={5}
+            disabled={sending || success}
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
+            autoFocus
+          />
+
+          {error && (
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2">
+              <AlertCircle size={13} />{error}
+            </div>
+          )}
+
+          {success && (
+            <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2">
+              <Check size={13} />Reply sent successfully!
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100">
+          <button onClick={onClose} disabled={sending} className="px-4 py-2 rounded-xl text-sm text-navy/60 hover:bg-gray-100 transition-colors disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!replyText.trim() || sending || success}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#5a0a1e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            {sending ? 'Sending…' : 'Send Reply'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function MessagesTab() {
   const [rows, setRows] = useState([])
   const [meta, setMeta] = useState({})
@@ -494,6 +585,7 @@ function MessagesTab() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
+  const [replyTarget, setReplyTarget] = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -512,95 +604,114 @@ function MessagesTab() {
   const MSG_STATUS = { unread: 'bg-blue-50 text-blue-600', read: 'bg-gray-100 text-gray-500', processing: 'bg-amber-50 text-amber-600', done: 'bg-emerald-50 text-emerald-600' }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Search by name, phone..." className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
-        </div>
-        <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white">
-          <option value="">All statuses</option>
-          <option value="unread">Unread</option>
-          <option value="read">Read</option>
-          <option value="processing">Processing</option>
-          <option value="done">Done</option>
-        </select>
-      </div>
+    <>
+      {replyTarget && (
+        <ReplyModal
+          message={replyTarget}
+          onClose={() => setReplyTarget(null)}
+          onReplied={() => { setReplyTarget(null); load() }}
+        />
+      )}
 
-      {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
-      ) : error ? (
-        <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
-          <MessageCircle size={32} className="mx-auto mb-3 text-red-300" />
-          <p className="text-red-600 font-medium text-sm">{error}</p>
-          <button onClick={load} className="mt-3 text-xs text-[#730D26] underline hover:no-underline">Try again</button>
+      <div className="space-y-4">
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
+            <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
+              placeholder="Search by name, phone..." className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
+          </div>
+          <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white">
+            <option value="">All statuses</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+            <option value="processing">Processing</option>
+            <option value="done">Done</option>
+          </select>
         </div>
-      ) : rows.length === 0 ? (
-        <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
-          <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
-          <p>No messages yet</p>
-          <p className="text-xs mt-1">Messages from users inquiring about your properties/projects will appear here</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {rows.map(m => (
-            <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center shrink-0 text-[#730D26] font-bold">
-                  {m.name?.[0]?.toUpperCase() || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-navy text-sm">{m.name}</p>
-                    {m.status && (
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${MSG_STATUS[m.status] || 'bg-gray-100 text-gray-500'}`}>{m.status}</span>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
+        ) : error ? (
+          <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
+            <MessageCircle size={32} className="mx-auto mb-3 text-red-300" />
+            <p className="text-red-600 font-medium text-sm">{error}</p>
+            <button onClick={load} className="mt-3 text-xs text-[#730D26] underline hover:no-underline">Try again</button>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
+            <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
+            <p>No messages yet</p>
+            <p className="text-xs mt-1">Messages from users inquiring about your properties/projects will appear here</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {rows.map(m => (
+              <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center shrink-0 text-[#730D26] font-bold">
+                    {m.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-navy text-sm">{m.name}</p>
+                      {m.status && (
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${MSG_STATUS[m.status] || 'bg-gray-100 text-gray-500'}`}>{m.status}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      {m.phone && (
+                        <a href={`tel:${m.phone}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
+                          <Phone size={11} />{m.phone}
+                        </a>
+                      )}
+                      {m.email && (
+                        <a href={`mailto:${m.email}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
+                          <Mail size={11} />{m.email}
+                        </a>
+                      )}
+                      <span className="flex items-center gap-1 text-xs text-navy/35">
+                        <Calendar size={10} />{fmtDate(m.created_at)}
+                      </span>
+                    </div>
+                    {m.content && <p className="text-sm text-navy/60 mt-2 leading-relaxed">{m.content}</p>}
+                    {(m.property?.name || m.project?.name) && (
+                      <p className="text-xs text-navy/40 mt-1.5 flex items-center gap-1">
+                        {m.property ? <Home size={10} /> : <Building size={10} />}
+                        Re: {m.property?.name || m.project?.name}
+                      </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-1 flex-wrap">
-                    {m.phone && (
-                      <a href={`tel:${m.phone}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
-                        <Phone size={11} />{m.phone}
-                      </a>
-                    )}
-                    {m.email && (
-                      <a href={`mailto:${m.email}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
-                        <Mail size={11} />{m.email}
-                      </a>
-                    )}
-                    <span className="flex items-center gap-1 text-xs text-navy/35">
-                      <Calendar size={10} />{fmtDate(m.created_at)}
-                    </span>
-                  </div>
-                  {m.content && <p className="text-sm text-navy/60 mt-2 leading-relaxed">{m.content}</p>}
-                  {(m.property?.name || m.project?.name) && (
-                    <p className="text-xs text-navy/40 mt-1.5 flex items-center gap-1">
-                      {m.property ? <Home size={10} /> : <Building size={10} />}
-                      Re: {m.property?.name || m.project?.name}
-                    </p>
+                  {m.email && (
+                    <button
+                      onClick={() => setReplyTarget(m)}
+                      title="Reply by email"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#730D26]/8 text-[#730D26] text-xs font-semibold hover:bg-[#730D26] hover:text-white transition-all"
+                    >
+                      <Reply size={13} />Reply
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {meta.last_page > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-navy/40">{meta.total} total</span>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-xs text-navy/50 flex items-center px-2">{page} / {meta.last_page}</span>
-            <button onClick={() => setPage(p => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
-              <ChevronRight size={14} />
-            </button>
+            ))}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {meta.last_page > 1 && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-navy/40">{meta.total} total</span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
+                <ChevronLeft size={14} />
+              </button>
+              <span className="text-xs text-navy/50 flex items-center px-2">{page} / {meta.last_page}</span>
+              <button onClick={() => setPage(p => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

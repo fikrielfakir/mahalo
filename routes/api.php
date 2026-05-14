@@ -110,6 +110,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/account/agent/projects',              [AgentDashboardController::class, 'projects']);
         Route::put('/account/agent/projects/{id}',         [AgentDashboardController::class, 'updateProject']);
         Route::get('/account/agent/messages',              [AgentDashboardController::class, 'messages']);
+        Route::post('/account/agent/messages/{id}/reply', [AgentDashboardController::class, 'replyToMessage']);
         Route::put('/account/agent/profile',               [AgentDashboardController::class, 'updateProfile']);
         Route::post('/account/agent/avatar',               [AgentDashboardController::class, 'uploadAvatar']);
 

@@ -269,21 +269,31 @@ class AgentDashboardController extends Controller
 
         $consult->touch();
 
+        $mailSent = false;
         if ($consult->email) {
-            Mail::to($consult->email)->send(new AgentReplyMail(
-                agentName:       $agent->name ?? trim($agent->first_name . ' ' . $agent->last_name),
-                replyBody:       $data['reply'],
-                recipientName:   $consult->name,
-                originalMessage: $consult->content,
-            ));
+            try {
+                Mail::to($consult->email)->send(new AgentReplyMail(
+                    agentName:       $agent->name ?? trim($agent->first_name . ' ' . $agent->last_name),
+                    replyBody:       $data['reply'],
+                    recipientName:   $consult->name,
+                    originalMessage: $consult->content,
+                ));
+                $mailSent = true;
+            } catch (\Throwable $e) {
+                \Log::warning('AgentReplyMail failed: ' . $e->getMessage());
+            }
         }
 
         $consult->update(['status' => 'done']);
 
+        $message = $consult->email
+            ? ($mailSent ? 'Reply sent successfully.' : 'Reply saved (email delivery failed).')
+            : 'Reply saved (no email on file).';
+
         return response()->json([
             'data'    => $reply,
             'error'   => false,
-            'message' => $consult->email ? 'Reply sent successfully.' : 'Reply saved (no email on file).',
+            'message' => $message,
         ]);
     }
 

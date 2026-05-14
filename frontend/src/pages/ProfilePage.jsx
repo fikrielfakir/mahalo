@@ -367,10 +367,9 @@ export default function ProfilePage() {
   const isProfessional = profStatus?.status === 'approved'
 
   const TABS = [
-    { key: 'profile',       label: 'Profile' },
-    { key: 'professional',  label: 'Professional', badge: profStatus?.status === 'pending' ? '⏳' : null },
-    { key: 'listings',      label: 'My Listings', badge: pendingCount > 0 ? pendingCount : null },
-    { key: 'favorites',     label: 'Favorites' },
+    { key: 'profile',   label: 'Profile' },
+    ...(isProfessional ? [{ key: 'listings', label: 'My Listings', badge: pendingCount > 0 ? pendingCount : null }] : []),
+    { key: 'favorites', label: 'Favorites' },
   ]
 
   if (loading) {
@@ -401,9 +400,19 @@ export default function ProfilePage() {
                 {isProfessional ? '✓ Verified Professional' : 'Private Individual'}
               </span>
             </div>
-            <Link to="/list-property" className="shrink-0 btn-gold text-xs flex items-center gap-1.5 py-2 px-4">
-              <Home size={13} /> List Property
-            </Link>
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <Link to="/list-property" className="btn-gold text-xs flex items-center gap-1.5 py-2 px-4">
+                <Home size={13} /> List Property
+              </Link>
+              {!isProfessional && (
+                <button
+                  onClick={() => setActiveTab('professional')}
+                  className="text-xs flex items-center gap-1.5 py-2 px-4 rounded-2xl border border-gold text-gold font-semibold hover:bg-gold/5 transition-all"
+                >
+                  <Briefcase size={13} /> Upgrade Account
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Tabs */}

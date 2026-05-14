@@ -27,6 +27,8 @@ class AdminSettingsController extends Controller
         // SMTP Mail
         'mail_mailer', 'mail_host', 'mail_port', 'mail_username',
         'mail_password', 'mail_encryption', 'mail_from_address', 'mail_from_name',
+        // Google OAuth
+        'google_client_id', 'google_client_secret',
     ];
 
     public function show(): JsonResponse

@@ -10,8 +10,25 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
+    private function loadGoogleConfig(): void
+    {
+        $settings = \Illuminate\Support\Facades\DB::table('site_settings')
+            ->whereIn('key', ['google_client_id', 'google_client_secret'])
+            ->pluck('value', 'key');
+
+        $id     = $settings['google_client_id']     ?? config('services.google.client_id');
+        $secret = $settings['google_client_secret'] ?? config('services.google.client_secret');
+
+        config([
+            'services.google.client_id'     => $id,
+            'services.google.client_secret' => $secret,
+        ]);
+    }
+
     public function redirect()
     {
+        $this->loadGoogleConfig();
+
         return response()->json([
             'data'    => ['url' => Socialite::driver('google')->stateless()->redirect()->getTargetUrl()],
             'error'   => false,
@@ -21,6 +38,8 @@ class GoogleAuthController extends Controller
 
     public function callback()
     {
+        $this->loadGoogleConfig();
+
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Exception $e) {

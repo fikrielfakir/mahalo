@@ -5,17 +5,18 @@ import { FormField, Input, Textarea } from '../components/Modal'
 import {
   Save, Globe, Mail, Phone, Instagram, Facebook, Twitter, MapPin,
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
-  Server, Send, Lock, AlertCircle,
+  Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
 } from 'lucide-react'
 
 const TABS = [
-  { id: 'general',   label: 'General',   icon: Globe },
-  { id: 'theme',     label: 'Theme',     icon: Palette },
-  { id: 'watermark', label: 'Watermark', icon: Droplets },
-  { id: 'contact',   label: 'Contact',   icon: Mail },
-  { id: 'social',    label: 'Social',    icon: Instagram },
-  { id: 'seo',       label: 'SEO',       icon: Globe },
-  { id: 'mail',      label: 'Mail / SMTP', icon: Server },
+  { id: 'general',    label: 'General',     icon: Globe },
+  { id: 'theme',      label: 'Theme',       icon: Palette },
+  { id: 'watermark',  label: 'Watermark',   icon: Droplets },
+  { id: 'contact',    label: 'Contact',     icon: Mail },
+  { id: 'social',     label: 'Social',      icon: Instagram },
+  { id: 'seo',        label: 'SEO',         icon: Globe },
+  { id: 'mail',       label: 'Mail / SMTP', icon: Server },
+  { id: 'google',     label: 'Google Auth', icon: KeyRound },
 ]
 
 const DEFAULTS = {
@@ -55,6 +56,9 @@ const DEFAULTS = {
   mail_encryption: 'tls',
   mail_from_address: '',
   mail_from_name: 'Agentz',
+  // Google OAuth
+  google_client_id: '',
+  google_client_secret: '',
 }
 
 const WATERMARK_POSITIONS = [
@@ -72,9 +76,18 @@ export default function SettingsPage() {
   const [saved, setSaved]         = useState(false)
   const [loading, setLoading]     = useState(true)
   const [uploading, setUploading] = useState({})
-  const [showPwd, setShowPwd]     = useState(false)
-  const [testing, setTesting]     = useState(false)
-  const [testResult, setTestResult] = useState(null)
+  const [showPwd, setShowPwd]         = useState(false)
+  const [showSecret, setShowSecret]   = useState(false)
+  const [testing, setTesting]         = useState(false)
+  const [testResult, setTestResult]   = useState(null)
+  const [copied, setCopied]           = useState(false)
+
+  const copyRedirectUri = () => {
+    const uri = `${window.location.origin}/api/v1/auth/google/callback`
+    navigator.clipboard.writeText(uri)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   useEffect(() => {
     adminSettings.get()
@@ -516,6 +529,89 @@ export default function SettingsPage() {
                     {testResult.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                     {testResult.msg}
                   </span>
+                )}
+              </div>
+            </Section>
+          </>
+        )}
+
+        {/* ── GOOGLE AUTH TAB ── */}
+        {tab === 'google' && (
+          <>
+            <Section title="Google OAuth Credentials" icon={KeyRound}>
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 mb-2 leading-relaxed">
+                These credentials enable "Sign in with Google" for users and managers. Get them from{' '}
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="underline font-semibold inline-flex items-center gap-0.5">
+                  Google Cloud Console <ExternalLink size={10} />
+                </a>
+                {' '}→ Create OAuth 2.0 Client ID (Web application).
+              </div>
+
+              {/* Redirect URI copy box */}
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Authorized Redirect URI</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3.5 py-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-mono truncate">
+                    {window.location.origin}/api/v1/auth/google/callback
+                  </code>
+                  <button
+                    type="button"
+                    onClick={copyRedirectUri}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-600 transition-all flex-shrink-0"
+                  >
+                    <Copy size={13} />
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1.5">Add this exact URL to your Google OAuth app's authorized redirect URIs.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 pt-1">
+                <FormField label="Client ID" hint="Ends with .apps.googleusercontent.com">
+                  <Input
+                    value={form.google_client_id}
+                    onChange={f('google_client_id')}
+                    placeholder="123456789-xxxxxxxxxxxx.apps.googleusercontent.com"
+                  />
+                </FormField>
+
+                <FormField label="Client Secret">
+                  <div className="relative">
+                    <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type={showSecret ? 'text' : 'password'}
+                      value={form.google_client_secret}
+                      onChange={f('google_client_secret')}
+                      placeholder="GOCSPX-xxxxxxxxxxxxxxxx"
+                      className="w-full pl-9 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </FormField>
+              </div>
+
+              {/* Status indicator */}
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium mt-2 ${
+                form.google_client_id && form.google_client_secret
+                  ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                  : 'bg-amber-50 border-amber-100 text-amber-700'
+              }`}>
+                {form.google_client_id && form.google_client_secret ? (
+                  <>
+                    <CheckCircle size={15} />
+                    Google OAuth is configured — users and managers can sign in with Google.
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={15} />
+                    Google OAuth is not configured. Enter your Client ID and Secret above and save.
+                  </>
                 )}
               </div>
             </Section>

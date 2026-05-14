@@ -9,8 +9,25 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AdminGoogleAuthController extends Controller
 {
+    private function loadGoogleConfig(): void
+    {
+        $settings = \Illuminate\Support\Facades\DB::table('site_settings')
+            ->whereIn('key', ['google_client_id', 'google_client_secret'])
+            ->pluck('value', 'key');
+
+        $id     = $settings['google_client_id']     ?? config('services.google.client_id');
+        $secret = $settings['google_client_secret'] ?? config('services.google.client_secret');
+
+        config([
+            'services.google.client_id'     => $id,
+            'services.google.client_secret' => $secret,
+        ]);
+    }
+
     public function redirect()
     {
+        $this->loadGoogleConfig();
+
         $url = Socialite::driver('google')
             ->stateless()
             ->with(['state' => 'admin'])
@@ -26,6 +43,8 @@ class AdminGoogleAuthController extends Controller
 
     public function callback()
     {
+        $this->loadGoogleConfig();
+
         $frontendUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5000'));
         $redirectBase = $frontendUrl . '/admin/auth/google/callback';
 

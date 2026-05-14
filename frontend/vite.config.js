@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiUrl = env.API_BACKEND_URL || 'http://localhost:8000'
+  const apiUrl = process.env.API_BACKEND_URL || env.API_BACKEND_URL || 'http://localhost:8000'
   const isExternal = apiUrl.startsWith('https://')
 
   return {

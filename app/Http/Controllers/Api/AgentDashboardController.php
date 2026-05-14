@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\AgentReplyMail;
 use App\Models\Agent;
 use App\Models\Consult;
+use App\Models\ConsultReply;
 use App\Models\Property;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
@@ -209,13 +210,36 @@ class AgentDashboardController extends Controller
             $query->where(fn($q) => $q->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('email', 'like', "%$s%"));
         }
 
-        $result = $query->orderByDesc('created_at')->paginate((int)($request->per_page ?? 15));
+        $result = $query->withCount('replies')->orderByDesc('updated_at')->paginate((int)($request->per_page ?? 50));
 
         return response()->json([
             'data' => $result->items(),
             'meta' => ['total' => $result->total(), 'last_page' => $result->lastPage(), 'current_page' => $result->currentPage()],
             'error' => false, 'message' => null,
         ]);
+    }
+
+    public function getThread(Request $request, int $id): JsonResponse
+    {
+        $agent = $this->getAgent($request);
+        if (!$agent) return response()->json(['error' => true, 'message' => 'No agent profile found.'], 403);
+
+        $agentId     = $agent->id;
+        $propertyIds = Property::where('author_id', $agentId)->pluck('id')->toArray();
+        $projectIds  = Project::where('author_id', $agentId)->pluck('id')->toArray();
+
+        $consult = Consult::with(['property:id,name', 'project:id,name', 'replies'])
+            ->where(function ($q) use ($propertyIds, $projectIds, $agentId) {
+                $q->whereIn('property_id', $propertyIds)
+                  ->orWhereIn('project_id', $projectIds)
+                  ->orWhere('agent_id', $agentId);
+            })->findOrFail($id);
+
+        if ($consult->status === 'unread') {
+            $consult->update(['status' => 'read']);
+        }
+
+        return response()->json(['data' => $consult, 'error' => false, 'message' => null]);
     }
 
     public function replyToMessage(Request $request, int $id): JsonResponse
@@ -241,19 +265,29 @@ class AgentDashboardController extends Controller
             return response()->json(['error' => true, 'message' => 'This message has no email address to reply to.'], 422);
         }
 
-        Mail::to($consult->email)->send(new AgentReplyMail(
-            agentName:       $agent->name ?? trim($agent->first_name . ' ' . $agent->last_name),
-            replyBody:       $data['reply'],
-            recipientName:   $consult->name,
-            originalMessage: $consult->content,
-        ));
+        $reply = ConsultReply::create([
+            'consult_id' => $consult->id,
+            'body'       => $data['reply'],
+            'sender'     => 'agent',
+        ]);
+
+        $consult->touch();
+
+        if ($consult->email) {
+            Mail::to($consult->email)->send(new AgentReplyMail(
+                agentName:       $agent->name ?? trim($agent->first_name . ' ' . $agent->last_name),
+                replyBody:       $data['reply'],
+                recipientName:   $consult->name,
+                originalMessage: $consult->content,
+            ));
+        }
 
         $consult->update(['status' => 'done']);
 
         return response()->json([
-            'data'    => null,
+            'data'    => $reply,
             'error'   => false,
-            'message' => 'Reply sent successfully.',
+            'message' => $consult->email ? 'Reply sent successfully.' : 'Reply saved (no email on file).',
         ]);
     }
 

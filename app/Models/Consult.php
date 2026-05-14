@@ -27,4 +27,9 @@ class Consult extends Model
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
+
+    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ConsultReply::class, 'consult_id')->orderBy('created_at');
+    }
 }

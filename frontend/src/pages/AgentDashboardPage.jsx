@@ -4,7 +4,7 @@ import {
   Home, Building, MessageCircle, Eye, TrendingUp, User, Phone, Mail,
   MapPin, Edit2, Check, X, ArrowLeft, Camera, Loader2, BadgeCheck,
   ChevronLeft, ChevronRight, Search, Calendar, AlertCircle, Star,
-  BarChart2, Inbox, Settings, ExternalLink, Reply, Send,
+  BarChart2, Inbox, Settings, ExternalLink, Send,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -486,90 +486,163 @@ function ProjectsTab() {
   )
 }
 
-function ReplyModal({ message, onClose, onReplied }) {
+const MSG_STATUS_STYLES = { unread: 'bg-blue-50 text-blue-600', read: 'bg-gray-100 text-gray-400', processing: 'bg-amber-50 text-amber-600', done: 'bg-emerald-50 text-emerald-600' }
+
+function ChatThread({ consult, onReplied }) {
+  const [thread, setThread] = useState(null)
+  const [loadingThread, setLoadingThread] = useState(true)
   const [replyText, setReplyText] = useState('')
   const [sending, setSending] = useState(false)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(false)
+  const [sendError, setSendError] = useState(null)
+  const bottomRef = useRef(null)
+  const textareaRef = useRef(null)
+
+  useEffect(() => {
+    setLoadingThread(true)
+    setThread(null)
+    agentDashboardApi.getThread(consult.id)
+      .then(r => setThread(r.data))
+      .catch(() => {})
+      .finally(() => setLoadingThread(false))
+  }, [consult.id])
+
+  useEffect(() => {
+    if (thread) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [thread])
 
   const handleSend = () => {
-    if (!replyText.trim()) return
+    const body = replyText.trim()
+    if (!body || sending) return
     setSending(true)
-    setError(null)
-    agentDashboardApi.replyMessage(message.id, { reply: replyText.trim() })
-      .then(() => {
-        setSuccess(true)
-        setTimeout(() => { onReplied(); onClose() }, 1500)
+    setSendError(null)
+    agentDashboardApi.replyMessage(consult.id, { reply: body })
+      .then(r => {
+        setThread(prev => ({
+          ...prev,
+          replies: [...(prev.replies || []), r.data],
+          status: 'done',
+        }))
+        setReplyText('')
+        onReplied()
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       })
-      .catch(err => {
-        setError(err?.response?.data?.message || 'Failed to send reply.')
-      })
+      .catch(err => setSendError(err?.response?.data?.message || 'Failed to send.'))
       .finally(() => setSending(false))
   }
 
+  const handleKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+  }
+
+  if (loadingThread) return (
+    <div className="flex-1 flex items-center justify-center">
+      <Loader2 size={24} className="animate-spin text-[#730D26]" />
+    </div>
+  )
+
+  const messages = []
+  if (thread?.content) {
+    messages.push({ id: 'original', body: thread.content, sender: 'user', created_at: thread.created_at })
+  }
+  ;(thread?.replies || []).forEach(r => messages.push(r))
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Reply size={16} className="text-[#730D26]" />
-            <span className="font-semibold text-navy text-sm">Reply to {message.name}</span>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-navy/40 hover:bg-gray-100 transition-colors">
-            <X size={15} />
-          </button>
+    <div className="flex flex-col flex-1 min-h-0">
+      {/* Chat header */}
+      <div className="px-5 py-4 border-b border-gray-100 bg-white flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center text-[#730D26] font-bold text-sm shrink-0">
+          {consult.name?.[0]?.toUpperCase() || '?'}
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-navy text-sm truncate">{consult.name}</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            {consult.email && <span className="flex items-center gap-1 text-xs text-navy/45"><Mail size={10} />{consult.email}</span>}
+            {consult.phone && <span className="flex items-center gap-1 text-xs text-navy/45"><Phone size={10} />{consult.phone}</span>}
+          </div>
+        </div>
+        {thread?.status && (
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${MSG_STATUS_STYLES[thread.status] || 'bg-gray-100 text-gray-500'}`}>
+            {thread.status}
+          </span>
+        )}
+      </div>
 
-        <div className="px-5 py-4 space-y-4">
-          {message.email && (
-            <div className="flex items-center gap-2 text-xs text-navy/50 bg-gray-50 rounded-xl px-3 py-2">
-              <Mail size={12} className="text-[#730D26]" />
-              <span>Sending to: <strong className="text-navy">{message.email}</strong></span>
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-[#F7F7F8]">
+        {(consult.property?.name || consult.project?.name) && (
+          <div className="flex justify-center">
+            <span className="text-[11px] text-navy/40 bg-white border border-gray-100 rounded-full px-3 py-1 flex items-center gap-1">
+              {consult.property ? <Home size={10} /> : <Building size={10} />}
+              Re: {consult.property?.name || consult.project?.name}
+            </span>
+          </div>
+        )}
+
+        {messages.length === 0 && (
+          <div className="flex justify-center">
+            <span className="text-xs text-navy/30 italic">No message content — contact arrived with name/phone only.</span>
+          </div>
+        )}
+
+        {messages.map((msg) => {
+          const isAgent = msg.sender === 'agent'
+          return (
+            <div key={msg.id} className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}>
+              {!isAgent && (
+                <div className="w-7 h-7 rounded-lg bg-[#730D26]/10 flex items-center justify-center text-[#730D26] font-bold text-xs shrink-0 mr-2 mt-0.5">
+                  {consult.name?.[0]?.toUpperCase() || '?'}
+                </div>
+              )}
+              <div className={`max-w-[72%] ${isAgent ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                  isAgent
+                    ? 'bg-[#730D26] text-white rounded-br-sm'
+                    : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
+                }`}>
+                  {msg.body}
+                </div>
+                <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at)}</span>
+              </div>
+              {isAgent && (
+                <div className="w-7 h-7 rounded-lg bg-[#730D26] flex items-center justify-center text-white font-bold text-xs shrink-0 ml-2 mt-0.5">
+                  A
+                </div>
+              )}
             </div>
-          )}
+          )
+        })}
+        <div ref={bottomRef} />
+      </div>
 
-          {message.content && (
-            <div className="bg-gray-50 rounded-xl px-4 py-3 border-l-2 border-gray-200">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-navy/30 mb-1">Original message</p>
-              <p className="text-xs text-navy/50 leading-relaxed italic">{message.content}</p>
-            </div>
-          )}
-
+      {/* Input area */}
+      <div className="px-4 py-3 bg-white border-t border-gray-100">
+        {sendError && (
+          <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-2">
+            <AlertCircle size={12} />{sendError}
+          </div>
+        )}
+        {!consult.email && (
+          <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2 mb-2">
+            <AlertCircle size={12} />No email — reply will be saved but not emailed.
+          </div>
+        )}
+        <div className="flex items-end gap-2">
           <textarea
+            ref={textareaRef}
             value={replyText}
             onChange={e => setReplyText(e.target.value)}
-            placeholder="Write your reply here..."
-            rows={5}
-            disabled={sending || success}
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
-            autoFocus
+            onKeyDown={handleKey}
+            placeholder="Type a reply… (Enter to send, Shift+Enter for new line)"
+            rows={2}
+            disabled={sending}
+            className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
           />
-
-          {error && (
-            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2">
-              <AlertCircle size={13} />{error}
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2">
-              <Check size={13} />Reply sent successfully!
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100">
-          <button onClick={onClose} disabled={sending} className="px-4 py-2 rounded-xl text-sm text-navy/60 hover:bg-gray-100 transition-colors disabled:opacity-50">
-            Cancel
-          </button>
           <button
             onClick={handleSend}
-            disabled={!replyText.trim() || sending || success}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#5a0a1e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!replyText.trim() || sending}
+            className="w-10 h-10 rounded-xl bg-[#730D26] text-white flex items-center justify-center hover:bg-[#5a0a1e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
           >
-            {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-            {sending ? 'Sending…' : 'Send Reply'}
+            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>
         </div>
       </div>
@@ -579,139 +652,130 @@ function ReplyModal({ message, onClose, onReplied }) {
 
 function MessagesTab() {
   const [rows, setRows] = useState([])
-  const [meta, setMeta] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
-  const [page, setPage] = useState(1)
-  const [replyTarget, setReplyTarget] = useState(null)
+  const [selected, setSelected] = useState(null)
+  const [mobileView, setMobileView] = useState('list')
 
   const load = useCallback(() => {
     setLoading(true)
     setError(null)
-    agentDashboardApi.messages({ search, page, status, per_page: 15 })
-      .then(r => { setRows(r.data ?? []); setMeta(r.meta ?? {}) })
-      .catch(err => {
-        const msg = err?.response?.data?.message || 'Failed to load messages.'
-        setError(msg)
+    agentDashboardApi.messages({ search, status, per_page: 50 })
+      .then(r => {
+        const data = r.data ?? []
+        setRows(data)
+        if (!selected && data.length > 0) setSelected(data[0])
       })
+      .catch(err => setError(err?.response?.data?.message || 'Failed to load messages.'))
       .finally(() => setLoading(false))
-  }, [search, page, status])
+  }, [search, status])
 
   useEffect(() => { load() }, [load])
 
-  const MSG_STATUS = { unread: 'bg-blue-50 text-blue-600', read: 'bg-gray-100 text-gray-500', processing: 'bg-amber-50 text-amber-600', done: 'bg-emerald-50 text-emerald-600' }
+  const handleSelect = (m) => {
+    setSelected(m)
+    setMobileView('chat')
+    setRows(prev => prev.map(r => r.id === m.id ? { ...r, status: r.status === 'unread' ? 'read' : r.status } : r))
+  }
+
+  const handleReplied = () => {
+    setRows(prev => prev.map(r => r.id === selected?.id ? { ...r, status: 'done' } : r))
+  }
 
   return (
-    <>
-      {replyTarget && (
-        <ReplyModal
-          message={replyTarget}
-          onClose={() => setReplyTarget(null)}
-          onReplied={() => { setReplyTarget(null); load() }}
-        />
-      )}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: '600px' }}>
+      <div className="flex h-full">
 
-      <div className="space-y-4">
-        <div className="flex gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-            <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-              placeholder="Search by name, phone..." className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
+        {/* Left: conversation list */}
+        <div className={`flex flex-col border-r border-gray-100 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 shrink-0`}>
+          {/* List header */}
+          <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value) }}
+                placeholder="Search…"
+                className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white"
+              />
+            </div>
+            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white">
+              <option value="">All statuses</option>
+              <option value="unread">Unread</option>
+              <option value="read">Read</option>
+              <option value="processing">Processing</option>
+              <option value="done">Done</option>
+            </select>
           </div>
-          <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white">
-            <option value="">All statuses</option>
-            <option value="unread">Unread</option>
-            <option value="read">Read</option>
-            <option value="processing">Processing</option>
-            <option value="done">Done</option>
-          </select>
+
+          {/* List body */}
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-[#730D26]" /></div>
+            ) : error ? (
+              <div className="p-4 text-center">
+                <p className="text-xs text-red-500">{error}</p>
+                <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">Retry</button>
+              </div>
+            ) : rows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <MessageCircle size={28} className="text-navy/20 mb-2" />
+                <p className="text-xs text-navy/40">No messages yet</p>
+              </div>
+            ) : (
+              rows.map(m => {
+                const isActive = selected?.id === m.id
+                const isUnread = m.status === 'unread'
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => handleSelect(m)}
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors flex items-start gap-3 ${
+                      isActive ? 'bg-[#730D26]/5 border-l-2 border-l-[#730D26]' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${isActive ? 'bg-[#730D26] text-white' : 'bg-[#730D26]/10 text-[#730D26]'}`}>
+                      {m.name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-navy' : 'font-medium text-navy/70'}`}>{m.name}</p>
+                        <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(m.created_at)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-xs text-navy/40 truncate">{m.email || m.phone || '—'}</p>
+                        {isUnread && <span className="w-2 h-2 rounded-full bg-[#730D26] shrink-0 ml-1" />}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
-        ) : error ? (
-          <div className="text-center py-16 bg-red-50 rounded-2xl border border-red-100">
-            <MessageCircle size={32} className="mx-auto mb-3 text-red-300" />
-            <p className="text-red-600 font-medium text-sm">{error}</p>
-            <button onClick={load} className="mt-3 text-xs text-[#730D26] underline hover:no-underline">Try again</button>
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
-            <MessageCircle size={32} className="mx-auto mb-3 opacity-30" />
-            <p>No messages yet</p>
-            <p className="text-xs mt-1">Messages from users inquiring about your properties/projects will appear here</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {rows.map(m => (
-              <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center shrink-0 text-[#730D26] font-bold">
-                    {m.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-navy text-sm">{m.name}</p>
-                      {m.status && (
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${MSG_STATUS[m.status] || 'bg-gray-100 text-gray-500'}`}>{m.status}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      {m.phone && (
-                        <a href={`tel:${m.phone}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
-                          <Phone size={11} />{m.phone}
-                        </a>
-                      )}
-                      {m.email && (
-                        <a href={`mailto:${m.email}`} className="flex items-center gap-1 text-xs text-navy/60 hover:text-[#730D26] transition-colors">
-                          <Mail size={11} />{m.email}
-                        </a>
-                      )}
-                      <span className="flex items-center gap-1 text-xs text-navy/35">
-                        <Calendar size={10} />{fmtDate(m.created_at)}
-                      </span>
-                    </div>
-                    {m.content && <p className="text-sm text-navy/60 mt-2 leading-relaxed">{m.content}</p>}
-                    {(m.property?.name || m.project?.name) && (
-                      <p className="text-xs text-navy/40 mt-1.5 flex items-center gap-1">
-                        {m.property ? <Home size={10} /> : <Building size={10} />}
-                        Re: {m.property?.name || m.project?.name}
-                      </p>
-                    )}
-                  </div>
-                  {m.email && (
-                    <button
-                      onClick={() => setReplyTarget(m)}
-                      title="Reply by email"
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#730D26]/8 text-[#730D26] text-xs font-semibold hover:bg-[#730D26] hover:text-white transition-all"
-                    >
-                      <Reply size={13} />Reply
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {meta.last_page > 1 && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-navy/40">{meta.total} total</span>
-            <div className="flex gap-2">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
-                <ChevronLeft size={14} />
+        {/* Right: chat thread */}
+        <div className={`flex-1 flex flex-col min-w-0 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}>
+          {selected ? (
+            <>
+              {/* Mobile back button */}
+              <button onClick={() => setMobileView('list')} className="md:hidden flex items-center gap-2 px-4 py-2 text-xs text-[#730D26] font-semibold border-b border-gray-100">
+                <ChevronLeft size={14} />Back to messages
               </button>
-              <span className="text-xs text-navy/50 flex items-center px-2">{page} / {meta.last_page}</span>
-              <button onClick={() => setPage(p => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
-                <ChevronRight size={14} />
-              </button>
+              <ChatThread key={selected.id} consult={selected} onReplied={handleReplied} />
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+              <MessageCircle size={40} className="text-navy/15 mb-3" />
+              <p className="text-sm font-semibold text-navy/30">Select a conversation</p>
+              <p className="text-xs text-navy/20 mt-1">Click a message on the left to open the chat</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 

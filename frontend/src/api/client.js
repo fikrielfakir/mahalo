@@ -105,6 +105,7 @@ export const agentDashboardApi = {
   projects:       (params = {})  => api.get('/account/agent/projects', { params }),
   updateProject:  (id, data)     => api.put(`/account/agent/projects/${id}`, data),
   messages:       (params = {})  => api.get('/account/agent/messages', { params }),
+  getThread:      (id)           => api.get(`/account/agent/messages/${id}`),
   replyMessage:   (id, data)     => api.post(`/account/agent/messages/${id}/reply`, data),
   updateProfile:  (data)         => api.put('/account/agent/profile', data),
   uploadAvatar:   (formData)     => api.post('/account/agent/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

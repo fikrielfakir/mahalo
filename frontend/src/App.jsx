@@ -46,6 +46,7 @@ import ConsultsPage      from './admin/pages/ConsultsPage'
 import MediaPage         from './admin/pages/MediaPage'
 import UsersPage         from './admin/pages/UsersPage'
 import SettingsPage      from './admin/pages/SettingsPage'
+import ProfessionalApplicationsPage from './admin/pages/ProfessionalApplicationsPage'
 
 export default function App() {
   return (
@@ -96,8 +97,9 @@ export default function App() {
                   <Route path="cities"      element={<CitiesPage />} />
                   <Route path="consults"    element={<ConsultsPage />} />
                   <Route path="media"       element={<MediaPage />} />
-                  <Route path="users"       element={<UsersPage />} />
-                  <Route path="settings"    element={<SettingsPage />} />
+                  <Route path="users"                     element={<UsersPage />} />
+                  <Route path="professional-applications" element={<ProfessionalApplicationsPage />} />
+                  <Route path="settings"                  element={<SettingsPage />} />
                 </Route>
 
                 {/* Fallback */}

@@ -4,7 +4,7 @@ import axios from 'axios'
 import {
   Home, CheckCircle, ArrowRight, Phone, Mail, User,
   MapPin, Bed, Bath, Maximize2, DollarSign, FileText,
-  Building2, X, Video, AlertCircle, Image, ChevronDown,
+  Building2, X, Video, AlertCircle, Image, ChevronDown, LogIn,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -15,6 +15,7 @@ import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 
 const EMPTY_FORM = {
+  property_name: '',
   property_type: 'sale',
   city_id: '',
   location: '',
@@ -22,8 +23,6 @@ const EMPTY_FORM = {
   bedrooms: '', bathrooms: '', size: '', price: '',
   description: '',
 }
-
-const EMPTY_CONTACT = { name: '', phone: '', email: '' }
 
 const BENEFITS = [
   { icon: CheckCircle, text: 'Listed within 24 hours' },
@@ -216,7 +215,6 @@ function MediaUploader({ files, onChange }) {
 
 export default function ListProperty() {
   const [form, setForm]             = useState(EMPTY_FORM)
-  const [contact, setContact]       = useState(EMPTY_CONTACT)
   const [cities, setCities]         = useState([])
   const [geocoding, setGeocoding]   = useState(false)
   const [mediaFiles, setMediaFiles] = useState([])
@@ -225,12 +223,12 @@ export default function ListProperty() {
   const pendingSubmitRef            = useRef(false)
   const doSubmitRef                 = useRef(null)
   const prevLatLngRef               = useRef('')
+  const prevCityIdRef               = useRef('')
   const { toast, show: showToast, hide: hideToast } = useToast()
   const { isAuthenticated, user, loading: authLoading } = useUserAuth()
   const { openAuthModal } = useAuthModal()
 
-  const set  = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
-  const setC = (field) => (e) => setContact(c => ({ ...c, [field]: e.target.value }))
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   useEffect(() => {
     fetch('/api/v1/properties/filters')
@@ -240,19 +238,13 @@ export default function ListProperty() {
   }, [])
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      setContact({
-        name:  user.name  || '',
-        phone: user.phone || '',
-        email: user.email || '',
-      })
-      if (pendingSubmitRef.current) {
-        pendingSubmitRef.current = false
-        setTimeout(() => doSubmitRef.current?.(), 50)
-      }
+    if (isAuthenticated && user && pendingSubmitRef.current) {
+      pendingSubmitRef.current = false
+      setTimeout(() => doSubmitRef.current?.(), 50)
     }
   }, [isAuthenticated, user])
 
+  /* Map pin → city (reverse geocode) */
   useEffect(() => {
     const key = `${form.latitude},${form.longitude}`
     if (!form.latitude || !form.longitude || key === prevLatLngRef.current) return
@@ -271,21 +263,43 @@ export default function ListProperty() {
           const cn = c.name.toLowerCase()
           return cn === rawCity || rawCity.includes(cn) || cn.includes(rawCity)
         })
-        setForm(f => ({
-          ...f,
-          location: neighborhood || f.location,
-          city_id:  matchedCity ? String(matchedCity.id) : f.city_id,
-        }))
+        setForm(f => {
+          const newCityId = matchedCity ? String(matchedCity.id) : f.city_id
+          prevCityIdRef.current = newCityId
+          return {
+            ...f,
+            location: neighborhood || f.location,
+            city_id:  newCityId,
+          }
+        })
       })
       .catch(() => {})
       .finally(() => setGeocoding(false))
   }, [form.latitude, form.longitude, cities])
 
-  const doSubmit = useCallback(async () => {
-    const contactName  = isAuthenticated ? (user?.name  || '') : contact.name
-    const contactPhone = isAuthenticated ? (user?.phone || '') : contact.phone
-    const contactEmail = isAuthenticated ? (user?.email || '') : contact.email
+  /* City dropdown → map pin (forward geocode) */
+  useEffect(() => {
+    if (!form.city_id || form.city_id === prevCityIdRef.current) return
+    prevCityIdRef.current = form.city_id
+    const cityName = cities.find(c => String(c.id) === String(form.city_id))?.name
+    if (!cityName) return
+    fetch(
+      `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=Morocco&format=json&limit=1&accept-language=en`,
+      { headers: { 'Accept': 'application/json' } }
+    )
+      .then(r => r.json())
+      .then(data => {
+        const hit = data?.[0]
+        if (hit?.lat && hit?.lon) {
+          const key = `${hit.lat},${hit.lon}`
+          prevLatLngRef.current = key
+          setForm(f => ({ ...f, latitude: hit.lat, longitude: hit.lon }))
+        }
+      })
+      .catch(() => {})
+  }, [form.city_id, cities])
 
+  const doSubmit = useCallback(async () => {
     const selectedCity = cities.find(c => String(c.id) === String(form.city_id))
     if (!selectedCity) {
       showToast('Please select a city', 'error')
@@ -294,14 +308,8 @@ export default function ListProperty() {
 
     setSubmitting(true)
     try {
-      const descParts = [form.description]
-      if (!isAuthenticated) {
-        if (contactPhone) descParts.push(`Contact phone: ${contactPhone}`)
-        if (contactEmail) descParts.push(`Contact email: ${contactEmail}`)
-      }
-
       await userListingsApi.store({
-        name:             `${selectedCity.name} — ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
+        name:             form.property_name.trim() || `${selectedCity.name} — ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
         type:             form.property_type,
         location:         form.location || '',
         city_id:          parseInt(form.city_id),
@@ -309,7 +317,7 @@ export default function ListProperty() {
         number_bathroom:  form.bathrooms ? parseInt(form.bathrooms)  : null,
         square:           form.size      ? parseFloat(form.size)     : null,
         price:            form.price     ? parseFloat(form.price)    : null,
-        description:      descParts.filter(Boolean).join('\n'),
+        description:      form.description || '',
         latitude:         form.latitude  || null,
         longitude:        form.longitude || null,
         images:           mediaFiles.map(f => f.path),
@@ -320,7 +328,7 @@ export default function ListProperty() {
     } finally {
       setSubmitting(false)
     }
-  }, [isAuthenticated, user, contact, form, mediaFiles, cities])
+  }, [user, form, mediaFiles, cities])
 
   useEffect(() => {
     doSubmitRef.current = doSubmit
@@ -329,10 +337,6 @@ export default function ListProperty() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      if (!contact.name.trim()) {
-        showToast('Please fill in your full name', 'error')
-        return
-      }
       pendingSubmitRef.current = true
       openAuthModal()
       return
@@ -439,6 +443,7 @@ export default function ListProperty() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
 
+                  {/* Account / contact status */}
                   {isAuthenticated && user ? (
                     <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
                       <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
@@ -451,34 +456,38 @@ export default function ListProperty() {
                       <CheckCircle size={16} className="text-emerald-500 shrink-0 ml-auto" />
                     </div>
                   ) : (
-                    <div>
-                      <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Your Contact Info</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="relative">
-                          <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                          <input type="text" placeholder="Full name *" value={contact.name} onChange={setC('name')} required
-                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                        </div>
-                        <div className="relative">
-                          <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                          <input type="tel" placeholder="Phone *" value={contact.phone} onChange={setC('phone')} required
-                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                        </div>
-                        <div className="relative">
-                          <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                          <input type="email" placeholder="Email" value={contact.email} onChange={setC('email')}
-                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                        </div>
+                    <div className="flex items-center gap-4 px-4 py-3.5 bg-navy/4 border border-navy/10 rounded-2xl">
+                      <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
+                        <LogIn size={14} className="text-navy/60" />
                       </div>
-                      <p className="text-xs text-navy/35 mt-2">
-                        Already have an account?{' '}
-                        <button type="button" onClick={() => openAuthModal()} className="text-gold font-semibold hover:underline">
-                          Sign in
-                        </button>{' '}
-                        to auto-fill your details.
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-navy/80">Sign in to submit your listing</p>
+                        <p className="text-xs text-navy/40">Your contact details will be taken from your account.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal()}
+                        className="shrink-0 px-4 py-1.5 text-xs font-semibold text-white bg-navy rounded-xl hover:bg-navy/80 transition-colors"
+                      >
+                        Sign in
+                      </button>
                     </div>
                   )}
+
+                  {/* Property Name */}
+                  <div>
+                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Property Name</p>
+                    <div className="relative">
+                      <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Villa with Pool — Ain Diab (optional)"
+                        value={form.property_name}
+                        onChange={set('property_name')}
+                        className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
+                      />
+                    </div>
+                  </div>
 
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">I want to...</p>
@@ -597,7 +606,7 @@ export default function ListProperty() {
 
                   {!isAuthenticated && (
                     <p className="text-center text-navy/30 text-xs">
-                      You'll be asked to sign in or create an account before submitting.
+                      You'll be asked to sign in before your listing is submitted.
                     </p>
                   )}
                 </form>

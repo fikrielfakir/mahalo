@@ -38,6 +38,9 @@ Route::prefix('v1')->group(function () {
     // ── Video streaming (Range-request aware) ─────────────────────────────────
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
 
+    // ── Public: Cities (all, no property restriction) ─────────────────────────
+    Route::get('/cities',                          [AdminCityController::class, 'publicList']);
+
     // ── Public: Properties ────────────────────────────────────────────────────
     Route::get('/properties/filters',              [PropertyController::class, 'filters']);
     Route::get('/properties/search',               [PropertyController::class, 'search']);

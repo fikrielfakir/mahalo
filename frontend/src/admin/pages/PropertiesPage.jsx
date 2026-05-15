@@ -67,7 +67,7 @@ export default function PropertiesPage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    publicApi.cities().then((r) => setCities(r.data?.cities || []))
+    adminCities.list({ per_page: 500 }).then((r) => setCities(r.data || []))
     adminCategories.list().then((r) => setCategories(r.data || []))
     adminFeatures.list().then((r) => setFeatures(r.data || []))
     adminAgents.list({ per_page: 200 }).then((r) => setAgents(r.data || []))

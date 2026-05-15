@@ -30,9 +30,13 @@ use App\Http\Controllers\Api\Admin\AdminSettingsController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\MediaController;
+use App\Http\Controllers\Api\VideoStreamController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+
+    // ── Video streaming (Range-request aware) ─────────────────────────────────
+    Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
 
     // ── Public: Properties ────────────────────────────────────────────────────
     Route::get('/properties/filters',              [PropertyController::class, 'filters']);

@@ -17,6 +17,13 @@ function isVideoPath(path) {
   return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
 }
 
+function mediaUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http') || path.startsWith('blob:')) return path
+  if (isVideoPath(path)) return `/api/v1/stream/${path}`
+  return `/storage/${path}`
+}
+
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
 function saveFavorites(ids) { try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids)) } catch {} }
@@ -205,7 +212,7 @@ export default function PropertyDetail() {
 
   const images = property.images?.length ? property.images : [property.image].filter(Boolean)
   const mainImg = images[activeImg]
-    ? (images[activeImg].startsWith('http') ? images[activeImg] : `/storage/${images[activeImg]}`)
+    ? mediaUrl(images[activeImg])
     : `https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80`
 
   const avgRating = reviews.length
@@ -262,20 +269,17 @@ export default function PropertyDetail() {
 
           {images.length > 1 && (
             <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
-              {images.map((img, i) => {
-                const url = img.startsWith('http') ? img : `/storage/${img}`
-                return (
-                  <button key={i} onClick={() => setActiveImg(i)} className={`shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}>
-                    {isVideoPath(img) ? (
-                      <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                        <Video size={18} className="text-gray-300" />
-                      </div>
-                    ) : (
-                      <img src={url} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </button>
-                )
-              })}
+              {images.map((img, i) => (
+                <button key={i} onClick={() => setActiveImg(i)} className={`shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}>
+                  {isVideoPath(img) ? (
+                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                      <Video size={18} className="text-gray-300" />
+                    </div>
+                  ) : (
+                    <img src={mediaUrl(img)} alt="" className="w-full h-full object-cover" />
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>

@@ -6,11 +6,6 @@ import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
 import { projectsApi, consultsApi } from '../api/client'
 
-function isVideoPath(path) {
-  if (!path) return false
-  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
-}
-
 function formatPrice(price) {
   if (!price) return 'Price on request'
   const num = parseFloat(price)
@@ -19,9 +14,16 @@ function formatPrice(price) {
   return `${num.toLocaleString()} MAD`
 }
 
+function isVideoPath(path) {
+  if (!path) return false
+  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
+}
+
 function imgUrl(path) {
   if (!path) return null
-  return path.startsWith('http') ? path : `/storage/${path}`
+  if (path.startsWith('http') || path.startsWith('blob:')) return path
+  if (isVideoPath(path)) return `/api/v1/stream/${path}`
+  return `/storage/${path}`
 }
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80'

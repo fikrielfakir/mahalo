@@ -47,12 +47,7 @@ class AuthController extends Controller
                 'token'          => $token,
                 'token_type'     => 'Bearer',
                 'email_verified' => false,
-                'user'           => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
-                    'role'  => $user->role,
-                ],
+                'user'           => $this->formatUser($user),
             ],
             'error'   => false,
             'message' => 'Registration successful.',
@@ -90,12 +85,7 @@ class AuthController extends Controller
                 'token'          => $token,
                 'token_type'     => 'Bearer',
                 'email_verified' => ! is_null($user->email_verified_at),
-                'user'           => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
-                    'role'  => $user->role,
-                ],
+                'user'           => $this->formatUser($user),
             ],
             'error'   => false,
             'message' => null,
@@ -110,28 +100,8 @@ class AuthController extends Controller
 
     public function profile(Request $request): JsonResponse
     {
-        $user = $request->user();
         return response()->json([
-            'data' => [
-                'id'                          => $user->id,
-                'name'                        => $user->name,
-                'email'                       => $user->email,
-                'phone'                       => $user->phone ?? null,
-                'role'                        => $user->role,
-                'email_verified'              => ! is_null($user->email_verified_at),
-                'account_type'                => $user->account_type ?? 'individual',
-                'company_name'                => $user->company_name ?? null,
-                'license_number'              => $user->license_number ?? null,
-                'professional_status'         => $user->professional_status,
-                'professional_agent_id'       => $user->professional_agent_id,
-                'professional_bio'            => $user->professional_bio,
-                'professional_specialty'      => $user->professional_specialty,
-                'professional_experience_years' => $user->professional_experience_years,
-                'professional_phone'          => $user->professional_phone,
-                'professional_city_id'        => $user->professional_city_id,
-                'professional_applied_at'     => $user->professional_applied_at,
-                'professional_reject_reason'  => $user->professional_reject_reason,
-            ],
+            'data'    => $this->formatUser($request->user()),
             'error'   => false,
             'message' => null,
         ]);
@@ -220,6 +190,30 @@ class AuthController extends Controller
             'error'   => true,
             'message' => 'Invalid or expired reset token.',
         ], 422);
+    }
+
+    private function formatUser(User $user): array
+    {
+        return [
+            'id'                              => $user->id,
+            'name'                            => $user->name,
+            'email'                           => $user->email,
+            'phone'                           => $user->phone ?? null,
+            'role'                            => $user->role,
+            'email_verified'                  => ! is_null($user->email_verified_at),
+            'account_type'                    => $user->account_type ?? 'individual',
+            'company_name'                    => $user->company_name ?? null,
+            'license_number'                  => $user->license_number ?? null,
+            'professional_status'             => $user->professional_status,
+            'professional_agent_id'           => $user->professional_agent_id,
+            'professional_bio'                => $user->professional_bio,
+            'professional_specialty'          => $user->professional_specialty,
+            'professional_experience_years'   => $user->professional_experience_years,
+            'professional_phone'              => $user->professional_phone,
+            'professional_city_id'            => $user->professional_city_id,
+            'professional_applied_at'         => $user->professional_applied_at,
+            'professional_reject_reason'      => $user->professional_reject_reason,
+        ];
     }
 
     public function verifyEmail(Request $request, int $id, string $hash): JsonResponse

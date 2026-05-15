@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
@@ -67,6 +67,7 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [activeImg, setActiveImg] = useState(0)
+  const [playingVideo, setPlayingVideo] = useState(false)
   const [liked, setLiked]       = useState(false)
 
   const [form, setForm]             = useState(EMPTY_FORM)
@@ -233,26 +234,41 @@ export default function PropertyDetail() {
 
         {/* Hero Image / Video */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden">
+          <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden bg-gray-900">
             {isVideoPath(images[activeImg]) ? (
-              <video
-                key={mainImg}
-                src={mainImg}
-                controls
-                playsInline
-                className="w-full h-full object-cover"
-              />
+              playingVideo ? (
+                <video
+                  key={mainImg}
+                  src={mainImg}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain bg-black"
+                />
+              ) : (
+                <button
+                  onClick={() => setPlayingVideo(true)}
+                  className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-navy/90 to-navy/70 group"
+                >
+                  <div className="w-20 h-20 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/70 transition-all duration-200">
+                    <Play size={32} className="text-white fill-white ml-1" />
+                  </div>
+                  <span className="text-white/70 text-sm font-medium tracking-wide">Tap to play video</span>
+                </button>
+              )
             ) : (
               <img src={mainImg} alt={property.name} className="w-full h-full object-cover" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent pointer-events-none" />
-            {/* Watermark */}
-            {isVideoPath(images[activeImg]) && (
-              <div className="absolute bottom-10 right-4 pointer-events-none select-none">
-                <span className="text-white/40 font-bold text-lg tracking-widest uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>MAHALO</span>
+            {!playingVideo && (
+              <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent pointer-events-none" />
+            )}
+            {/* Watermark — shown when video is playing */}
+            {isVideoPath(images[activeImg]) && playingVideo && (
+              <div className="absolute bottom-14 right-4 pointer-events-none select-none">
+                <span className="text-white/30 font-bold text-base tracking-widest uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>MAHALO</span>
               </div>
             )}
-            <div className="absolute top-4 right-4 flex gap-2">
+            <div className="absolute top-4 right-4 flex gap-2 z-10">
               <button onClick={handleLike} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
                 <Heart size={18} className={liked ? 'fill-red-500 text-red-500' : 'text-navy'} />
               </button>
@@ -261,7 +277,7 @@ export default function PropertyDetail() {
               </button>
             </div>
             {property.is_featured && (
-              <div className="absolute top-4 left-4">
+              <div className="absolute top-4 left-4 z-10">
                 <span className="px-3 py-1 bg-gold text-navy text-xs font-bold rounded-xl uppercase">Featured</span>
               </div>
             )}
@@ -270,10 +286,16 @@ export default function PropertyDetail() {
           {images.length > 1 && (
             <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
               {images.map((img, i) => (
-                <button key={i} onClick={() => setActiveImg(i)} className={`shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}>
+                <button
+                  key={i}
+                  onClick={() => { setActiveImg(i); setPlayingVideo(false); }}
+                  className={`relative shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}
+                >
                   {isVideoPath(img) ? (
                     <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                      <Video size={18} className="text-gray-300" />
+                      <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
+                        <Play size={10} className="text-white fill-white ml-0.5" />
+                      </div>
                     </div>
                   ) : (
                     <img src={mediaUrl(img)} alt="" className="w-full h-full object-cover" />

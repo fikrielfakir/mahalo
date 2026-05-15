@@ -26,7 +26,7 @@ export default function ProfessionalApplicationsPage() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
-  const [status, setStatus]     = useState('pending')
+  const [status, setStatus]     = useState('all')
   const [selected, setSelected] = useState(null)
   const [rejectModal, setRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 const STATUS_FILTERS = [
+  { value: 'all',      label: 'All',      color: 'gray' },
   { value: 'pending',  label: 'Pending',  color: 'amber' },
   { value: 'approved', label: 'Approved', color: 'green' },
   { value: 'rejected', label: 'Rejected', color: 'red' },
@@ -33,7 +34,9 @@ export default function ProfessionalApplicationsPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    adminProfessionalApplications.list({ search, page, per_page: 15, status })
+    const params = { search, page, per_page: 15 }
+    if (status !== 'all') params.status = status
+    adminProfessionalApplications.list(params)
       .then((r) => { setRows(r.data || []); setMeta(r.meta || {}) })
       .catch(() => { setRows([]) })
       .finally(() => setLoading(false))

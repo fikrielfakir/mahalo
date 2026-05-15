@@ -9,7 +9,7 @@ import {
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
-import { userListingsApi } from '../api/client'
+import api, { userListingsApi } from '../api/client'
 import LocationPicker from '../components/LocationPicker'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -231,8 +231,7 @@ export default function ListProperty() {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   useEffect(() => {
-    fetch('/api/v1/cities')
-      .then(r => r.json())
+    api.get('/cities')
       .then(data => setCities(data?.data || []))
       .catch(() => {})
   }, [])

@@ -17,10 +17,8 @@ class AdminProfessionalApplicationController extends Controller
         $query = User::whereNotNull('professional_status')
             ->where('professional_status', '!=', '');
 
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('professional_status', $request->status);
-        } else {
-            $query->where('professional_status', 'pending');
         }
 
         if ($request->filled('search')) {

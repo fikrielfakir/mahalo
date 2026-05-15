@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/admin/media/upload',
+            'api/v1/admin/media/path',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Always return JSON for API routes — never redirect

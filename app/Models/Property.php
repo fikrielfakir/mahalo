@@ -14,6 +14,7 @@ class Property extends Model
     protected $fillable = [
         'name', 'type', 'description', 'content', 'location', 'images', 'floor_plans',
         'project_id', 'number_bedroom', 'number_bathroom', 'number_floor',
+        'condition', 'age_range', 'orientation', 'flooring',
         'square', 'price', 'currency_id', 'is_featured', 'featured_priority',
         'city_id', 'state_id', 'country_id', 'period', 'status',
         'author_id', 'author_type', 'moderation_status', 'reject_reason',

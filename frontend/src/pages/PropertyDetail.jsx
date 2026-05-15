@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
@@ -70,6 +70,52 @@ export default function PropertyDetail() {
   const { toast, show: showToast, hide: hideToast } = useToast()
   const { isAuthenticated } = useUserAuth()
   const { openAuthModal } = useAuthModal()
+
+  /* ── SEO meta tag management ─────────────────────────────── */
+  const prevTitle = useRef(document.title)
+  useEffect(() => {
+    if (!property) return
+    const title = `${property.name}${property.city ? ' — ' + property.city.name : ''} | Mahalo Real Estate`
+    const desc  = property.description
+      ? property.description.replace(/<[^>]*>/g, '').slice(0, 160)
+      : `${property.type === 'rent' ? 'For Rent' : 'For Sale'} • ${property.square ? property.square + ' m² • ' : ''}${property.number_bedroom ? property.number_bedroom + ' bed • ' : ''}${property.city?.name || ''}`
+    const imgUrl = property.images?.[0]
+      ? (property.images[0].startsWith('http') ? property.images[0] : `${window.location.origin}/storage/${property.images[0]}`)
+      : ''
+    const canonUrl = `${window.location.origin}/properties/${property.slug}`
+
+    document.title = title
+
+    const setMeta = (name, content, prop = false) => {
+      const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`
+      let el = document.querySelector(sel)
+      if (!el) {
+        el = document.createElement('meta')
+        prop ? el.setAttribute('property', name) : el.setAttribute('name', name)
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+    const setLink = (rel, href) => {
+      let el = document.querySelector(`link[rel="${rel}"]`)
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el) }
+      el.setAttribute('href', href)
+    }
+
+    setMeta('description', desc)
+    setMeta('og:title', title, true)
+    setMeta('og:description', desc, true)
+    setMeta('og:type', 'website', true)
+    setMeta('og:url', canonUrl, true)
+    if (imgUrl) setMeta('og:image', imgUrl, true)
+    setMeta('twitter:card', 'summary_large_image')
+    setMeta('twitter:title', title)
+    setMeta('twitter:description', desc)
+    if (imgUrl) setMeta('twitter:image', imgUrl)
+    setLink('canonical', canonUrl)
+
+    return () => { document.title = prevTitle.current }
+  }, [property])
 
   useEffect(() => {
     propertiesApi.bySlug(slug)
@@ -360,9 +406,87 @@ export default function PropertyDetail() {
                 </div>
               )}
 
+              {/* General Characteristics */}
+              {(property.categories?.length > 0 || property.condition || property.age_range ||
+                property.number_floor || property.orientation || property.flooring) && (
+                <div>
+                  <h2 className="text-navy font-bold text-xl mb-5">General Characteristics</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    {property.categories?.[0] && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <Home size={16} className="text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Type of property</p>
+                          <p className="text-navy font-bold text-sm">{property.categories[0].name}</p>
+                        </div>
+                      </div>
+                    )}
+                    {property.condition && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <Wrench size={16} className="text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Condition</p>
+                          <p className="text-navy font-bold text-sm">{property.condition}</p>
+                        </div>
+                      </div>
+                    )}
+                    {property.age_range && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <CalendarDays size={16} className="text-amber-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Age</p>
+                          <p className="text-navy font-bold text-sm">{property.age_range}</p>
+                        </div>
+                      </div>
+                    )}
+                    {property.number_floor != null && property.number_floor !== '' && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <Layers size={16} className="text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Floor number</p>
+                          <p className="text-navy font-bold text-sm">
+                            {property.number_floor}{property.number_floor === 1 ? 'st' : property.number_floor === 2 ? 'nd' : property.number_floor === 3 ? 'rd' : 'th'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {property.orientation && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <Compass size={16} className="text-cyan-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Orientation</p>
+                          <p className="text-navy font-bold text-sm">{property.orientation}</p>
+                        </div>
+                      </div>
+                    )}
+                    {property.flooring && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
+                          <Grid2X2 size={16} className="text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="text-navy/40 text-xs mb-0.5">Flooring</p>
+                          <p className="text-navy font-bold text-sm">{property.flooring}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {property.features?.length > 0 && (
                 <div>
-                  <h2 className="text-navy font-bold text-xl mb-4">Features</h2>
+                  <h2 className="text-navy font-bold text-xl mb-4">Features & Amenities</h2>
                   <div className="grid grid-cols-2 gap-2">
                     {property.features.map((f) => (
                       <div key={f.id} className="flex items-center gap-2 text-navy/70 text-sm">

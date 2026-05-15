@@ -13,7 +13,7 @@ class AdminPropertyController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Property::with(['city', 'categories', 'features', 'agent']);
+        $query = Property::with(['city', 'categories', 'features', 'agent', 'slug']);
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -61,10 +61,16 @@ class AdminPropertyController extends Controller
             'feature_ids'     => 'nullable|array',
             'latitude'        => 'nullable|string',
             'longitude'       => 'nullable|string',
+            'condition'       => 'nullable|string|max:80',
+            'age_range'       => 'nullable|string|max:80',
+            'orientation'     => 'nullable|string|max:80',
+            'flooring'        => 'nullable|string|max:80',
+            'slug'            => 'nullable|string|max:300',
         ]);
 
         $agentId = $data['agent_id'] ?? null;
-        unset($data['agent_id']);
+        $customSlug = $data['slug'] ?? null;
+        unset($data['agent_id'], $data['slug'], $data['category_ids'], $data['feature_ids']);
 
         $property = Property::create([
             ...$data,
@@ -76,21 +82,27 @@ class AdminPropertyController extends Controller
             'author_type'       => $agentId ? 'App\\Models\\Agent' : null,
         ]);
 
-        if (!empty($data['category_ids'])) {
-            $property->categories()->sync($data['category_ids']);
+        if (!empty($request->category_ids)) {
+            $property->categories()->sync($request->category_ids);
         }
-        if (!empty($data['feature_ids'])) {
-            $property->features()->sync($data['feature_ids']);
+        if (!empty($request->feature_ids)) {
+            $property->features()->sync($request->feature_ids);
         }
 
-        $slug = Slug::create([
-            'key'            => Str::slug($property->name) . '-' . $property->id,
+        $slugKey = $customSlug
+            ? Str::slug($customSlug)
+            : Str::slug($property->name) . '-' . $property->id;
+
+        if (!$slugKey) $slugKey = 'property-' . $property->id;
+
+        Slug::create([
+            'key'            => $slugKey,
             'reference_id'   => $property->id,
             'reference_type' => 'Botble\\RealEstate\\Models\\Property',
             'prefix'         => 'properties',
         ]);
 
-        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])), 'error' => false, 'message' => 'Property created.'], 201);
+        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent', 'slug'])), 'error' => false, 'message' => 'Property created.'], 201);
     }
 
     public function show(int $id): JsonResponse
@@ -122,7 +134,7 @@ class AdminPropertyController extends Controller
         $property->update($updates);
 
         return response()->json([
-            'data'    => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])),
+            'data'    => $this->format($property->fresh(['city', 'categories', 'features', 'agent', 'slug'])),
             'error'   => false,
             'message' => 'Moderation status updated.',
         ]);
@@ -154,6 +166,11 @@ class AdminPropertyController extends Controller
             'feature_ids'       => 'nullable|array',
             'latitude'          => 'nullable|string',
             'longitude'         => 'nullable|string',
+            'condition'         => 'nullable|string|max:80',
+            'age_range'         => 'nullable|string|max:80',
+            'orientation'       => 'nullable|string|max:80',
+            'flooring'          => 'nullable|string|max:80',
+            'slug'              => 'nullable|string|max:300',
         ]);
 
         if (isset($data['images'])) {
@@ -161,23 +178,46 @@ class AdminPropertyController extends Controller
         }
 
         $agentId = array_key_exists('agent_id', $data) ? $data['agent_id'] : false;
-        unset($data['agent_id']);
+        $newSlugKey = array_key_exists('slug', $data) ? $data['slug'] : false;
+        unset($data['agent_id'], $data['slug']);
 
         if ($agentId !== false) {
             $data['author_id']   = $agentId ?: null;
             $data['author_type'] = $agentId ? 'App\\Models\\Agent' : null;
         }
 
+        $categoryIds = array_key_exists('category_ids', $data) ? $data['category_ids'] : false;
+        $featureIds  = array_key_exists('feature_ids', $data)  ? $data['feature_ids']  : false;
+        unset($data['category_ids'], $data['feature_ids']);
+
         $property->update($data);
 
-        if (array_key_exists('category_ids', $data)) {
-            $property->categories()->sync($data['category_ids'] ?? []);
+        if ($categoryIds !== false) {
+            $property->categories()->sync($categoryIds ?? []);
         }
-        if (array_key_exists('feature_ids', $data)) {
-            $property->features()->sync($data['feature_ids'] ?? []);
+        if ($featureIds !== false) {
+            $property->features()->sync($featureIds ?? []);
         }
 
-        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])), 'error' => false, 'message' => 'Property updated.']);
+        // Update or create slug if a new value was sent
+        if ($newSlugKey !== false && $newSlugKey) {
+            $cleanSlug = Str::slug($newSlugKey) ?: 'property-' . $property->id;
+            $slugModel = Slug::where('reference_id', $id)
+                ->where('reference_type', 'Botble\\RealEstate\\Models\\Property')
+                ->first();
+            if ($slugModel) {
+                $slugModel->update(['key' => $cleanSlug]);
+            } else {
+                Slug::create([
+                    'key'            => $cleanSlug,
+                    'reference_id'   => $property->id,
+                    'reference_type' => 'Botble\\RealEstate\\Models\\Property',
+                    'prefix'         => 'properties',
+                ]);
+            }
+        }
+
+        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent', 'slug'])), 'error' => false, 'message' => 'Property updated.']);
     }
 
     public function destroy(int $id): JsonResponse
@@ -198,6 +238,7 @@ class AdminPropertyController extends Controller
         return [
             'id'                => $p->id,
             'name'              => $p->name,
+            'slug'              => $p->slug?->key ?? '',
             'type'              => $p->type,
             'description'       => $p->description,
             'content'           => $p->content,
@@ -206,6 +247,10 @@ class AdminPropertyController extends Controller
             'number_bedroom'    => (int) $p->number_bedroom,
             'number_bathroom'   => (int) $p->number_bathroom,
             'number_floor'      => $p->number_floor,
+            'condition'         => $p->condition,
+            'age_range'         => $p->age_range,
+            'orientation'       => $p->orientation,
+            'flooring'          => $p->flooring,
             'square'            => $p->square,
             'price'             => $p->price,
             'is_featured'       => (bool) $p->is_featured,

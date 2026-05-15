@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
-import { adminProperties, adminCategories, adminFeatures, adminAgents, adminCities, publicApi } from '../api/adminApi'
+import { adminProperties, adminCategories, adminFeatures, adminAgents, adminCities } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
-import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock, Link as LinkIcon } from 'lucide-react'
 
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
@@ -12,6 +12,8 @@ const EMPTY = {
   number_floor: '', square: '', city_id: '', agent_id: '', status: 'selling',
   is_featured: false, latitude: '', longitude: '',
   category_ids: [], feature_ids: [],
+  condition: '', age_range: '', orientation: '', flooring: '',
+  slug: '',
 }
 
 const MOD_TABS = [
@@ -20,6 +22,54 @@ const MOD_TABS = [
   { key: 'approved', label: 'Approved' },
   { key: 'rejected', label: 'Rejected' },
 ]
+
+const CONDITION_OPTIONS = [
+  { value: '', label: 'Select condition' },
+  { value: 'New development', label: 'New development' },
+  { value: 'Resale', label: 'Resale' },
+  { value: 'Off-plan', label: 'Off-plan' },
+  { value: 'Under construction', label: 'Under construction' },
+  { value: 'Renovated', label: 'Renovated' },
+]
+
+const AGE_OPTIONS = [
+  { value: '', label: 'Select age' },
+  { value: 'Less than 1 year', label: 'Less than 1 year' },
+  { value: '1-5 years', label: '1-5 years' },
+  { value: '5-10 years', label: '5-10 years' },
+  { value: '10-20 years', label: '10-20 years' },
+  { value: 'Over 20 years', label: 'Over 20 years' },
+]
+
+const ORIENTATION_OPTIONS = [
+  { value: '', label: 'Select orientation' },
+  { value: 'North', label: 'North' },
+  { value: 'South', label: 'South' },
+  { value: 'East', label: 'East' },
+  { value: 'West', label: 'West' },
+  { value: 'Northeast', label: 'Northeast' },
+  { value: 'Northwest', label: 'Northwest' },
+  { value: 'Southeast', label: 'Southeast' },
+  { value: 'Southwest', label: 'Southwest' },
+]
+
+const FLOORING_OPTIONS = [
+  { value: '', label: 'Select flooring' },
+  { value: 'Marble', label: 'Marble' },
+  { value: 'Wood', label: 'Wood' },
+  { value: 'Parquet', label: 'Parquet' },
+  { value: 'Tiles', label: 'Tiles' },
+  { value: 'Ceramic', label: 'Ceramic' },
+  { value: 'Concrete', label: 'Concrete' },
+  { value: 'Laminate', label: 'Laminate' },
+  { value: 'Other', label: 'Other' },
+]
+
+function slugify(str) {
+  return str.toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-')
+}
 
 function statusColor(s) {
   return s === 'selling' || s === 'renting' ? 'green' : s === 'sold' ? 'blue' : s === 'rented' ? 'gold' : 'gray'
@@ -54,6 +104,7 @@ export default function PropertiesPage() {
   const [moderating, setModerating] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [slugManual, setSlugManual] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -73,9 +124,10 @@ export default function PropertiesPage() {
     adminAgents.list({ per_page: 200 }).then((r) => setAgents(r.data || []))
   }, [])
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY); setModal(true) }
+  const openCreate = () => { setEditing(null); setForm(EMPTY); setSlugManual(false); setModal(true) }
   const openEdit   = (row) => {
     setEditing(row)
+    setSlugManual(false)
     setForm({
       ...row,
       images:       Array.isArray(row.images) ? row.images : [],
@@ -84,11 +136,25 @@ export default function PropertiesPage() {
       latitude:     row.latitude  || '',
       longitude:    row.longitude || '',
       agent_id:     row.agent_id  || '',
+      condition:    row.condition    || '',
+      age_range:    row.age_range    || '',
+      orientation:  row.orientation  || '',
+      flooring:     row.flooring     || '',
+      slug:         row.slug         || '',
     })
     setModal(true)
   }
 
-  const f = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target?.value ?? e }))
+  const f = (k) => (e) => {
+    const val = e.target?.value ?? e
+    setForm((p) => {
+      const next = { ...p, [k]: val }
+      if (k === 'name' && !slugManual && !editing) {
+        next.slug = slugify(val)
+      }
+      return next
+    })
+  }
 
   const toggleArr = (key, id) => {
     setForm((p) => ({
@@ -111,6 +177,11 @@ export default function PropertiesPage() {
         city_id:         form.city_id         || null,
         latitude:        form.latitude        || null,
         longitude:       form.longitude       || null,
+        condition:       form.condition       || null,
+        age_range:       form.age_range       || null,
+        orientation:     form.orientation     || null,
+        flooring:        form.flooring        || null,
+        slug:            form.slug            || null,
       }
       if (editing) await adminProperties.update(editing.id, payload)
       else await adminProperties.create(payload)
@@ -166,6 +237,9 @@ export default function PropertiesPage() {
         </div>
       </div>
     )},
+    { key: 'slug', label: 'Slug', render: (r) => r.slug ? (
+      <span className="text-xs font-mono text-gray-500 truncate max-w-[120px] block">{r.slug}</span>
+    ) : <span className="text-xs text-gray-300">—</span> },
     { key: 'agent',      label: 'Agent',      render: (r) => r.agent ? (
       <span className="text-xs font-medium text-gray-700">{r.agent.name}</span>
     ) : <span className="text-xs text-gray-300">—</span> },
@@ -292,6 +366,34 @@ export default function PropertiesPage() {
                 <Input value={form.name} onChange={f('name')} placeholder="Villa with Pool — Ain Diab" required />
               </FormField>
             </div>
+
+            {/* SEO Slug */}
+            <div className="col-span-2">
+              <FormField label="SEO Slug" hint="Auto-generated from name — edit to customise the URL">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-[#730D26]/40 focus-within:bg-white transition-all">
+                    <LinkIcon size={13} className="text-gray-400 shrink-0" />
+                    <span className="text-gray-400 text-xs shrink-0">/properties/</span>
+                    <input
+                      value={form.slug}
+                      onChange={(e) => { setSlugManual(true); setForm(p => ({ ...p, slug: e.target.value })) }}
+                      placeholder={editing ? 'property-slug' : 'auto-generated'}
+                      className="flex-1 bg-transparent text-sm text-navy outline-none font-mono min-w-0"
+                    />
+                  </div>
+                  {!editing && (
+                    <button
+                      type="button"
+                      onClick={() => { setSlugManual(false); setForm(p => ({ ...p, slug: slugify(p.name) })) }}
+                      className="text-xs text-[#730D26] hover:underline shrink-0"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </FormField>
+            </div>
+
             <FormField label="Type" required>
               <Select value={form.type} onChange={f('type')}>
                 <option value="sale">For Sale</option>
@@ -333,6 +435,29 @@ export default function PropertiesPage() {
             <FormField label="Floors">
               <Input type="number" value={form.number_floor} onChange={f('number_floor')} placeholder="2" />
             </FormField>
+
+            {/* General Characteristics */}
+            <FormField label="Condition">
+              <Select value={form.condition} onChange={f('condition')}>
+                {CONDITION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </FormField>
+            <FormField label="Age">
+              <Select value={form.age_range} onChange={f('age_range')}>
+                {AGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </FormField>
+            <FormField label="Orientation">
+              <Select value={form.orientation} onChange={f('orientation')}>
+                {ORIENTATION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </FormField>
+            <FormField label="Flooring">
+              <Select value={form.flooring} onChange={f('flooring')}>
+                {FLOORING_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </FormField>
+
             <div className="col-span-2">
               <FormField label="Address / Location">
                 <Input value={form.location} onChange={f('location')} placeholder="Ain Diab, Casablanca" />

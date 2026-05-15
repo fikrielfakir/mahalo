@@ -30,9 +30,13 @@ class VideoStreamController extends Controller
 
         if ($rangeHeader) {
             preg_match('/bytes=(\d*)-(\d*)/i', $rangeHeader, $matches);
-            $start  = $matches[1] !== '' ? (int) $matches[1] : 0;
-            $end    = $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
-            $end    = min($end, $fileSize - 1);
+            $start = max(0, $matches[1] !== '' ? (int) $matches[1] : 0);
+            $end   = $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
+            $end   = min($end, $fileSize - 1);
+            if ($start > $end || $start >= $fileSize) {
+                return response('Range Not Satisfiable', 416,
+                    ['Content-Range' => "bytes */{$fileSize}"]);
+            }
             $length = $end - $start + 1;
             $status = 206;
         }

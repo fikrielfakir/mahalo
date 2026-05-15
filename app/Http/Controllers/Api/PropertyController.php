@@ -10,6 +10,7 @@ use App\Models\Property;
 use App\Models\Slug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
 {
@@ -205,6 +206,18 @@ class PropertyController extends Controller
         ]);
     }
 
+    private function extractThumbnail(array $images): ?string
+    {
+        foreach ($images as $img) {
+            if (!preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $img)) {
+                return str_starts_with($img, 'http')
+                    ? $img
+                    : Storage::disk('public')->url($img);
+            }
+        }
+        return null;
+    }
+
     private function formatProperty(Property $property): array
     {
         $images = $property->images ?? [];
@@ -224,6 +237,7 @@ class PropertyController extends Controller
             'location'         => $property->location,
             'images'           => $images,
             'image'            => $images[0] ?? null,
+            'thumbnail_url'    => $this->extractThumbnail($images),
             'number_bedroom'   => (int) $property->number_bedroom,
             'number_bathroom'  => (int) $property->number_bathroom,
             'number_floor'     => $property->number_floor,

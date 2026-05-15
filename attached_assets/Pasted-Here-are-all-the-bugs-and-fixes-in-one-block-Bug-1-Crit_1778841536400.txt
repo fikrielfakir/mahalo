@@ -1,0 +1,159 @@
+Here are all the bugs and fixes in one block:
+
+Bug 1 — Critical: Thumbnail never generated for uploaded videos
+Files: MediaController.php → upload(), media_files table, ImageUploader.jsx, PropertyDetail.jsx
+When a video is uploaded, the backend detects $isVideo = true and skips watermarking — but also skips everything else. There is no FFmpeg call, no frame extraction, no thumbnail_url returned. The media_files table has no thumbnail_path column. On the frontend, ImageUploader.jsx and AgentDashboardPage.jsx show a generic grey Video icon for all videos. PropertyDetail.jsx uses a hidden <video preload="metadata"> with onLoadedMetadata seeking to 0.001s to capture a first frame — this forces the browser to download the moov atom (1–15 MB) on every page load just to show a placeholder.
+Fix in migration:
+php$table->string('thumbnail_path', 500)->nullable();
+$table->string('thumbnail_url', 500)->nullable();
+Fix in MediaFile.php $fillable:
+php'thumbnail_path', 'thumbnail_url',
+Fix in MediaController::upload() after storing the file:
+php$thumbnailPath = null;
+if ($isVideo) {
+    $thumbName = Str::uuid() . '.jpg';
+    $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+    $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
+    @mkdir(dirname($thumbDiskPath), 0755, true);
+    $videoFullPath = Storage::disk('public')->path($tmpPath);
+    exec("ffmpeg -ss 2 -i " . escapeshellarg($videoFullPath) .
+         " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
+         escapeshellarg($thumbDiskPath) . " 2>/dev/null");
+    if (file_exists($thumbDiskPath)) {
+        $thumbnailPath = $thumbStorePath;
+    }
+}
+// Add to MediaFile::create([...]):
+'thumbnail_path' => $thumbnailPath,
+'thumbnail_url'  => $thumbnailPath ? Storage::disk('public')->url($thumbnailPath) : null,
+Fix in PropertyDetail.jsx and ProjectDetail.jsx — replace the hidden video trick:
+jsx// REMOVE THIS:
+<video src={mainImg} preload="metadata" muted playsInline
+  onLoadedMetadata={e => { e.currentTarget.currentTime = 0.001 }} />
+
+// REPLACE WITH:
+<video src={mainImg} poster={property.thumbnail_url || ''} preload="none" muted playsInline />
+Fix in ImageUploader.jsx thumbnail grid:
+jsx// REMOVE:
+<div className="...bg-gray-800"><Video size={24} /></div>
+
+// REPLACE WITH:
+item.thumbnail_url
+  ? <img src={item.thumbnail_url} className="w-full h-full object-cover" />
+  : <div className="...bg-gray-800"><Video size={24} /></div>
+
+Bug 2 — Critical: Browser downloads entire .mp4 as a full file on card/listing pages
+Files: PropertyCard.jsx → getImageUrl(), Properties.jsx, PropertyController.php → format()
+getImageUrl() in PropertyCard.jsx takes images[0] blindly and returns /storage/videos/uuid.mp4 as the src of an <img> tag. The browser tries to load it as an image, fails after downloading a large portion of the file, then shows the fallback. This fires on every property card rendered in any listing.
+Fix in PropertyCard.jsx:
+jsfunction isVideoPath(p) {
+  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(p || '')
+}
+
+function getImageUrl(property) {
+  if (property?.thumbnail_url) return property.thumbnail_url
+  const images = Array.isArray(property?.images) ? property.images : []
+  const firstImage = images.find(img => !isVideoPath(img))
+  const img = firstImage || property?.image
+  if (!img || isVideoPath(img)) return FALLBACK
+  return img.startsWith('http') ? img : `/storage/${img}`
+}
+Fix in PropertyController.php → format():
+php'thumbnail_url' => $this->extractThumbnail($images),
+
+private function extractThumbnail(array $images): ?string {
+    foreach ($images as $img) {
+        if (!preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $img)) {
+            return str_starts_with($img, 'http')
+                ? $img
+                : Storage::disk('public')->url($img);
+        }
+    }
+    return null;
+}
+
+Bug 3 — Performance: preload="metadata" on hidden video forces partial MP4 download
+Files: PropertyDetail.jsx:253–256, ProjectDetail.jsx:150
+The play-button overlay is built by rendering a hidden <video preload="metadata"> and seeking to 0.001s on onLoadedMetadata to grab a first-frame thumbnail. This forces the browser to fetch the moov atom (can be megabytes at the start of an MP4) on every property detail page load — even when the user never clicks play. Covered by Bug 1 fix above: replace with poster={property.thumbnail_url || ''} and preload="none".
+
+Bug 4 — Conflict: MediaPage silently blocks video uploads but the backend accepts them
+Files: MediaPage.jsx:40, MediaController.php:15
+The admin Media Library page drops all video files silently:
+js// MediaPage.jsx line 40 — videos silently ignored, no error shown
+const allowed = [...fileList].filter(f => f.type.startsWith('image/'))
+if (!allowed.length) return
+The file input also has accept="image/*" only. Meanwhile the backend validates and stores mp4, mov, avi, mkv, webm, m4v correctly. Admins cannot upload videos through the Media Library at all.
+Fix in MediaPage.jsx:
+jsconst allowed = [...fileList].filter(f =>
+  f.type.startsWith('image/') || f.type.startsWith('video/')
+)
+
+// file input:
+accept="image/*,video/mp4,video/quicktime,video/webm,video/x-msvideo"
+
+Bug 5 — Conflict: adminMedia.upload() posts to a different endpoint than ImageUploader.jsx
+Files: adminApi.js, ImageUploader.jsx, routes/api.php
+js// adminApi.js
+upload: (formData) => client.post('/admin/media', formData, ...)
+
+// ImageUploader.jsx
+await client.post('/admin/media/upload', fd, ...)
+Both routes are registered in api.php pointing to the same controller, so it works today — but it's fragile and confusing. Standardise on /admin/media/upload everywhere and remove the duplicate route.
+
+Bug 6 — Conflict: Video path stored as raw path but only some components know to stream it
+Files: MediaController.php, ImageUploader.jsx, PropertyDetail.jsx, PropertyCard.jsx
+The backend stores path: "videos/uuid.mp4" and ImageUploader.jsx pushes this raw path into the property's images[] array. PropertyDetail.jsx has a local mediaUrl() function that correctly converts it to /api/v1/stream/videos/uuid.mp4. But PropertyCard.jsx, Properties.jsx, and the thumbnail strip all use /storage/{path} directly — so the video path reaches an <img src="/storage/videos/uuid.mp4"> and produces a broken image plus wasted bandwidth.
+Fix — create one shared utility used everywhere:
+js// src/utils/media.js
+export const VIDEO_EXTS = ['mp4','mov','avi','mkv','webm','m4v']
+
+export function isVideoPath(p = '') {
+  const ext = p.split('?')[0].split('.').pop().toLowerCase()
+  return VIDEO_EXTS.includes(ext)
+}
+
+export function mediaUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http') || path.startsWith('blob:')) return path
+  if (isVideoPath(path)) return `/api/v1/stream/${path}`
+  return `/storage/${path}`
+}
+Then remove the duplicated isVideoPath and mediaUrl/imgUrl definitions from PropertyDetail.jsx, ProjectDetail.jsx, ImageUploader.jsx, and AgentDashboardPage.jsx and import from this file instead.
+
+Bug 7 — Logic: VideoStreamController range header not fully validated
+File: VideoStreamController.php:27–33
+If start > end or start >= fileSize (malformed client request), the controller returns a garbled stream instead of a proper 416 response.
+Fix:
+php$start = max(0, $matches[1] !== '' ? (int) $matches[1] : 0);
+$end   = $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
+$end   = min($end, $fileSize - 1);
+if ($start > $end || $start >= $fileSize) {
+    return response('Range Not Satisfiable', 416,
+        ['Content-Range' => "bytes */{$fileSize}"]);
+}
+
+Bug 8 — Logic: isVideoPath() duplicated in 4 files with inconsistent regexes
+Files: PropertyDetail.jsx, ProjectDetail.jsx, ImageUploader.jsx, AgentDashboardPage.jsx
+Each file re-implements the same function slightly differently. Two match .mkv, two don't. Adding a new format requires editing 4 files. Fix: extract to src/utils/media.js as shown in Bug 6 fix above.
+
+Bug 9 — Logic: MediaFile model missing thumbnail fields in $fillable
+File: app/Models/MediaFile.php
+Even after the migration adds the columns, MediaFile::create() will silently ignore thumbnail_path and thumbnail_url because they are not in $fillable. Add them:
+phpprotected $fillable = [
+    'file_name', 'original_name', 'path', 'url',
+    'mime_type', 'size', 'collection',
+    'thumbnail_path', 'thumbnail_url',
+];
+
+Recommended fix order:
+
+Migration — add thumbnail_path + thumbnail_url columns
+MediaFile::$fillable — add the two new fields
+MediaController::upload() — add FFmpeg frame extraction for videos
+PropertyDetail.jsx + ProjectDetail.jsx — replace hidden video + preload="metadata" with poster + preload="none"
+Create src/utils/media.js — shared isVideoPath() and mediaUrl(), remove 4 duplicate copies
+PropertyCard.jsx — fix getImageUrl() to skip video paths
+PropertyController.php — add thumbnail_url to the format response
+MediaPage.jsx — allow video uploads in the filter and file input
+api.php — remove duplicate upload route, standardise on /admin/media/upload
+VideoStreamController.php — add range validation and 416 response

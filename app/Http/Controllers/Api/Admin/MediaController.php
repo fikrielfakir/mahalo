@@ -60,14 +60,31 @@ class MediaController extends Controller
 
         $url = Storage::disk('public')->url($tmpPath);
 
+        $thumbnailPath = null;
+        if ($isVideo) {
+            $thumbName      = Str::uuid() . '.jpg';
+            $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+            $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
+            @mkdir(dirname($thumbDiskPath), 0755, true);
+            $videoFullPath  = Storage::disk('public')->path($tmpPath);
+            exec("ffmpeg -ss 2 -i " . escapeshellarg($videoFullPath) .
+                 " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
+                 escapeshellarg($thumbDiskPath) . " 2>/dev/null");
+            if (file_exists($thumbDiskPath)) {
+                $thumbnailPath = $thumbStorePath;
+            }
+        }
+
         $record = MediaFile::create([
-            'file_name'     => $name,
-            'original_name' => $file->getClientOriginalName(),
-            'path'          => $tmpPath,
-            'url'           => $url,
-            'mime_type'     => $mime,
-            'size'          => Storage::disk('public')->size($tmpPath),
-            'collection'    => $folder,
+            'file_name'      => $name,
+            'original_name'  => $file->getClientOriginalName(),
+            'path'           => $tmpPath,
+            'url'            => $url,
+            'mime_type'      => $mime,
+            'size'           => Storage::disk('public')->size($tmpPath),
+            'collection'     => $folder,
+            'thumbnail_path' => $thumbnailPath,
+            'thumbnail_url'  => $thumbnailPath ? Storage::disk('public')->url($thumbnailPath) : null,
         ]);
 
         return response()->json([

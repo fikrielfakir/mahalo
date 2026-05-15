@@ -134,7 +134,6 @@ Route::prefix('v1')->group(function () {
 
     // ── Admin: Media (no Sanctum for upload — proxied through Vite in dev)
     Route::prefix('admin')->group(function () {
-        Route::post('/media',        [MediaController::class, 'upload']);
         Route::post('/media/upload', [MediaController::class, 'upload']);
         Route::delete('/media/path', [MediaController::class, 'deleteByPath']);
     });

@@ -16,5 +16,7 @@ class MediaFile extends Model
         'mime_type',
         'size',
         'collection',
+        'thumbnail_path',
+        'thumbnail_url',
     ];
 }

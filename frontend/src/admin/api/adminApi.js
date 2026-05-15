@@ -107,7 +107,7 @@ export const adminConsults = {
 
 export const adminMedia = {
   list:   (p = {})    => client.get('/admin/media', { params: p }),
-  upload: (formData)  => client.post('/admin/media', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  upload: (formData)  => client.post('/admin/media/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id)        => client.delete(`/admin/media/${id}`),
 }
 

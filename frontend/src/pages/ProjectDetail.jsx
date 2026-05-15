@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
 import { projectsApi, consultsApi } from '../api/client'
+import { isVideoPath, mediaUrl as imgUrl } from '../utils/media'
 
 function formatPrice(price) {
   if (!price) return 'Price on request'
@@ -12,18 +13,6 @@ function formatPrice(price) {
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M MAD`
   if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K MAD`
   return `${num.toLocaleString()} MAD`
-}
-
-function isVideoPath(path) {
-  if (!path) return false
-  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
-}
-
-function imgUrl(path) {
-  if (!path) return null
-  if (path.startsWith('http') || path.startsWith('blob:')) return path
-  if (isVideoPath(path)) return `/api/v1/stream/${path}`
-  return `/storage/${path}`
 }
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80'
@@ -149,11 +138,11 @@ export default function ProjectDetail() {
                 >
                   <video
                     src={mainSrc}
-                    preload="metadata"
+                    poster={project.thumbnail_url || ''}
+                    preload="none"
                     muted
                     playsInline
                     className="w-full h-full object-cover"
-                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.001 }}
                   />
                   <div className="absolute inset-0 bg-black/35 group-hover:bg-black/45 transition-colors flex flex-col items-center justify-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/25 group-hover:border-white/80 transition-all duration-200 shadow-lg">

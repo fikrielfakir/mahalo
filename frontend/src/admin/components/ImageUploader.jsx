@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Upload, X, Link, AlertCircle, Star, Video } from 'lucide-react'
 import axios from 'axios'
+import { isVideoPath, mediaUrl } from '../../utils/media'
 
 const client = axios.create({ baseURL: '/api/v1' })
 client.interceptors.request.use((cfg) => {
@@ -11,14 +12,7 @@ client.interceptors.request.use((cfg) => {
 
 function getDisplayUrl(path) {
   if (!path) return ''
-  if (path.startsWith('http') || path.startsWith('blob:')) return path
-  return `/storage/${path}`
-}
-
-function isVideoPath(path) {
-  if (!path) return false
-  const ext = path.split('.').pop().toLowerCase()
-  return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v'].includes(ext)
+  return mediaUrl(path)
 }
 
 function ProgressRing({ pct }) {
@@ -49,6 +43,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   const [showUrl, setShowUrl]     = useState(false)
   const [uploading, setUploading] = useState([])
   const [errors, setErrors]       = useState([])
+  const [thumbMap, setThumbMap]   = useState({})
   const inputRef = useRef()
 
   const imagesRef   = useRef(images)
@@ -83,9 +78,11 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
         },
       })
       const path = res.data?.path
+      const thumbUrl = res.data?.data?.thumbnail_url
       if (path) {
         const latest = imagesRef.current
         if (!latest.includes(path)) onChangeRef.current([...latest, path])
+        if (thumbUrl) setThumbMap((m) => ({ ...m, [path]: thumbUrl }))
       }
       setUploading((prev) => prev.filter((u) => u.id !== id))
     } catch (err) {
@@ -137,12 +134,14 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
           {images.map((img, idx) => (
             <div key={`${img}-${idx}`} className="relative rounded-xl overflow-hidden aspect-square bg-gray-100 group">
               {isVideoPath(img) ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
-                  <Video size={24} className="text-gray-400" />
-                  <span className="text-[9px] text-gray-400 truncate px-1 w-full text-center">
-                    {img.split('/').pop()}
-                  </span>
-                </div>
+                thumbMap[img]
+                  ? <img src={thumbMap[img]} alt="" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
+                      <Video size={24} className="text-gray-400" />
+                      <span className="text-[9px] text-gray-400 truncate px-1 w-full text-center">
+                        {img.split('/').pop()}
+                      </span>
+                    </div>
               ) : (
                 <img
                   src={getDisplayUrl(img)}

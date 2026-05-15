@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { adminMedia } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
-import { Upload, Trash2, Copy, Image, Check, X, RefreshCw } from 'lucide-react'
+import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video } from 'lucide-react'
+import { isVideoPath } from '../../utils/media'
 
 function bytesToSize(bytes) {
   if (!bytes) return '—'
@@ -37,7 +38,9 @@ export default function MediaPage() {
   useEffect(() => { load() }, [load])
 
   const handleFiles = async (fileList) => {
-    const allowed = [...fileList].filter(f => f.type.startsWith('image/'))
+    const allowed = [...fileList].filter(f =>
+      f.type.startsWith('image/') || f.type.startsWith('video/')
+    )
     if (!allowed.length) return
     setUploading(true)
     try {
@@ -79,7 +82,7 @@ export default function MediaPage() {
             <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload'}
           </Btn>
         </div>
-        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
+        <input ref={inputRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-msvideo" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
       </PageHeader>
 
       {error && (
@@ -97,8 +100,8 @@ export default function MediaPage() {
         onClick={() => inputRef.current?.click()}
       >
         <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-[#BA1932]' : 'text-gray-300'}`} />
-        <p className="text-gray-500 text-sm font-medium">Drop images here or click to browse</p>
-        <p className="text-gray-400 text-xs mt-1">PNG, JPG, WebP — any size</p>
+        <p className="text-gray-500 text-sm font-medium">Drop images or videos here or click to browse</p>
+        <p className="text-gray-400 text-xs mt-1">PNG, JPG, WebP · MP4, MOV, WebM</p>
       </div>
 
       {/* Grid */}
@@ -119,13 +122,24 @@ export default function MediaPage() {
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
           {files.map((item) => {
             const url = getUrl(item)
+            const isVid = isVideoPath(item.path || item.file_name || '')
+            const thumbUrl = item.thumbnail_url || (isVid ? null : url)
             return (
               <div
                 key={item.id}
                 onClick={() => setSelected(selected?.id === item.id ? null : item)}
                 className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selected?.id === item.id ? 'border-[#BA1932] ring-2 ring-[#BA1932]/30' : 'border-transparent hover:border-gray-200'}`}
               >
-                <img src={url} alt={item.name || item.file_name} className="w-full h-full object-cover" />
+                {isVid ? (
+                  thumbUrl
+                    ? <img src={thumbUrl} alt={item.file_name} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center gap-1">
+                        <Video size={24} className="text-gray-400" />
+                        <span className="text-[9px] text-gray-400 truncate px-1 w-full text-center">{item.file_name}</span>
+                      </div>
+                ) : (
+                  <img src={url} alt={item.name || item.file_name} className="w-full h-full object-cover" />
+                )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
                 <button
                   onClick={(e) => { e.stopPropagation(); remove(item) }}

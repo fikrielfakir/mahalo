@@ -11,18 +11,7 @@ import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
-
-function isVideoPath(path) {
-  if (!path) return false
-  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
-}
-
-function mediaUrl(path) {
-  if (!path) return ''
-  if (path.startsWith('http') || path.startsWith('blob:')) return path
-  if (isVideoPath(path)) return `/api/v1/stream/${path}`
-  return `/storage/${path}`
-}
+import { isVideoPath, mediaUrl } from '../utils/media'
 
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
@@ -252,11 +241,11 @@ export default function PropertyDetail() {
                 >
                   <video
                     src={mainImg}
-                    preload="metadata"
+                    poster={property.thumbnail_url || ''}
+                    preload="none"
                     muted
                     playsInline
                     className="w-full h-full object-cover"
-                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.001 }}
                   />
                   <div className="absolute inset-0 bg-black/35 group-hover:bg-black/45 transition-colors flex flex-col items-center justify-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/25 group-hover:border-white/80 transition-all duration-200 shadow-lg">

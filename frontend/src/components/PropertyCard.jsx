@@ -6,15 +6,17 @@ import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import { useFavorites } from '../context/FavoritesContext'
 
+import { isVideoPath } from '../utils/media'
+
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 
 function getImageUrl(property) {
-  const img = Array.isArray(property?.images) ? property.images[0] : property?.image
-  if (img) {
-    if (img.startsWith('http')) return img
-    return `/storage/${img}`
-  }
-  return FALLBACK
+  if (property?.thumbnail_url) return property.thumbnail_url
+  const images = Array.isArray(property?.images) ? property.images : []
+  const firstImage = images.find(img => !isVideoPath(img))
+  const img = firstImage || property?.image
+  if (!img || isVideoPath(img)) return FALLBACK
+  return img.startsWith('http') ? img : `/storage/${img}`
 }
 
 function formatPrice(price, isRent) {

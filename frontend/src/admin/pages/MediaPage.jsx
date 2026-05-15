@@ -19,8 +19,10 @@ export default function MediaPage() {
   const [selected, setSelected]       = useState(null)
   const [error, setError]             = useState(null)
   const [dragOver, setDragOver]       = useState(false)
-  const [thumbLoading, setThumbLoading] = useState(null)
-  const [thumbError, setThumbError]   = useState(null)
+  const [thumbLoading, setThumbLoading]   = useState(null)
+  const [thumbError, setThumbError]       = useState(null)
+  const [batchLoading, setBatchLoading]   = useState(false)
+  const [batchResult, setBatchResult]     = useState(null)
   const inputRef = useRef()
 
   const load = useCallback(() => {
@@ -78,15 +80,31 @@ export default function MediaPage() {
     setThumbError(null)
     try {
       const res = await adminMedia.rethumbnail(item.id)
-      setFiles(prev => prev.map(f => f.id === item.id ? { ...f, thumbnail_url: res.data?.data?.thumbnail_url || res.thumbnail_url } : f))
+      const newThumb = res.data?.thumbnail_url || res.thumbnail_url
+      setFiles(prev => prev.map(f => f.id === item.id ? { ...f, thumbnail_url: newThumb } : f))
       if (selected?.id === item.id) {
-        setSelected(prev => ({ ...prev, thumbnail_url: res.data?.data?.thumbnail_url || res.thumbnail_url }))
+        setSelected(prev => ({ ...prev, thumbnail_url: newThumb }))
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'FFmpeg failed'
+      const msg = err?.message || 'FFmpeg failed'
       setThumbError(msg)
     } finally {
       setThumbLoading(null)
+    }
+  }
+
+  const generateAllThumbnails = async () => {
+    setBatchLoading(true)
+    setBatchResult(null)
+    setThumbError(null)
+    try {
+      const res = await adminMedia.batchRethumbnail()
+      setBatchResult(res.message || `Done: ${res.done} generated`)
+      load()
+    } catch (err) {
+      setThumbError(err?.message || 'Batch thumbnail generation failed')
+    } finally {
+      setBatchLoading(false)
     }
   }
 
@@ -97,6 +115,9 @@ export default function MediaPage() {
       <PageHeader title="Media Library" subtitle={`${files.length} files`}>
         <div className="flex gap-2">
           <Btn variant="ghost" onClick={load}><RefreshCw size={14} /> Refresh</Btn>
+          <Btn variant="ghost" onClick={generateAllThumbnails} disabled={batchLoading} title="Generate thumbnails for all videos that are missing one">
+            {batchLoading ? <><Loader2 size={14} className="animate-spin" /> Processing…</> : <><Wand2 size={14} /> Re-thumbnail All</>}
+          </Btn>
           <Btn variant="gold" onClick={() => inputRef.current?.click()} disabled={uploading}>
             <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload'}
           </Btn>
@@ -107,6 +128,13 @@ export default function MediaPage() {
       {error && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 text-sm">
           <strong>Note:</strong> {error}
+        </div>
+      )}
+
+      {batchResult && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm flex items-center justify-between">
+          <span><strong>Done:</strong> {batchResult}</span>
+          <button onClick={() => setBatchResult(null)}><X size={14} /></button>
         </div>
       )}
 

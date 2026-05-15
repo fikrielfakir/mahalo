@@ -164,9 +164,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/users/{id}/unban',      [AdminUserController::class, 'unban']);
 
         // Media library
-        Route::get('/media',              [MediaController::class, 'index']);
-        Route::post('/media/{id}/thumbnail', [MediaController::class, 'rethumbnail']);
-        Route::delete('/media/{id}',      [MediaController::class, 'destroy']);
+        Route::get('/media',                      [MediaController::class, 'index']);
+        Route::post('/media/{id}/thumbnail',      [MediaController::class, 'rethumbnail']);
+        Route::post('/media/thumbnail/batch',     [MediaController::class, 'batchRethumbnail']);
+        Route::delete('/media/{id}',              [MediaController::class, 'destroy']);
 
         // Consults
         Route::get('/consults',           [AdminConsultController::class, 'index']);

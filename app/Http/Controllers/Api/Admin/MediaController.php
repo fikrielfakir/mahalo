@@ -415,6 +415,66 @@ class MediaController extends Controller
         }
     }
 
+    public function batchRethumbnail(Request $request)
+    {
+        $records = MediaFile::whereNull('thumbnail_url')
+            ->where(function ($q) {
+                $q->where('mime_type', 'like', 'video/%')
+                  ->orWhere('file_name', 'like', '%.mp4')
+                  ->orWhere('file_name', 'like', '%.mov')
+                  ->orWhere('file_name', 'like', '%.webm')
+                  ->orWhere('file_name', 'like', '%.avi');
+            })
+            ->get();
+
+        $done   = 0;
+        $failed = [];
+
+        foreach ($records as $record) {
+            $videoFullPath  = Storage::disk('public')->path($record->path);
+            $tempDownloaded = false;
+
+            if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) {
+                $remoteUrl = $record->url;
+                if (!$remoteUrl) { $failed[] = $record->id; continue; }
+                @mkdir(dirname($videoFullPath), 0755, true);
+                $ctx  = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
+                $data = @file_get_contents($remoteUrl, false, $ctx);
+                if (!$data) { $failed[] = $record->id; continue; }
+                file_put_contents($videoFullPath, $data);
+                $tempDownloaded = true;
+            }
+
+            $folder         = dirname($record->path);
+            $thumbName      = Str::uuid() . '.jpg';
+            $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+            $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
+            @mkdir(dirname($thumbDiskPath), 0755, true);
+
+            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+
+            if ($tempDownloaded) @unlink($videoFullPath);
+
+            if ($thumbnailPath) {
+                $record->update([
+                    'thumbnail_path' => $thumbnailPath,
+                    'thumbnail_url'  => Storage::disk('public')->url($thumbnailPath),
+                ]);
+                $done++;
+            } else {
+                $failed[] = $record->id;
+            }
+        }
+
+        return response()->json([
+            'error'   => false,
+            'message' => "Generated {$done} thumbnail(s)." . (count($failed) ? ' Failed IDs: ' . implode(', ', $failed) : ''),
+            'done'    => $done,
+            'failed'  => $failed,
+            'total'   => $records->count(),
+        ]);
+    }
+
     public function destroy(int $id)
     {
         $record = MediaFile::findOrFail($id);

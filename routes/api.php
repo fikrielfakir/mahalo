@@ -115,6 +115,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/account/agent/messages/{id}/reply', [AgentDashboardController::class, 'replyToMessage']);
         Route::put('/account/agent/profile',               [AgentDashboardController::class, 'updateProfile']);
         Route::post('/account/agent/avatar',               [AgentDashboardController::class, 'uploadAvatar']);
+        Route::post('/account/agent/avatar/preset',        [AgentDashboardController::class, 'setPresetAvatar']);
 
         // Favorites
         Route::get('/account/chats',              [UserChatController::class, 'index']);

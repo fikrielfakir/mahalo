@@ -129,9 +129,11 @@ export default function Navbar({ transparent = false }) {
                     : 'hover:bg-navy/6 text-navy'
                 }`}
               >
-                <div className="w-7 h-7 rounded-full bg-gold flex items-center justify-center text-white text-xs font-bold">
-                  {initials}
-                </div>
+                <img
+                  src={user?.avatar_url || '/avatars/man1.png'}
+                  alt="avatar"
+                  className="w-7 h-7 rounded-full object-cover"
+                />
                 <span className="text-sm font-medium max-w-[90px] truncate">
                   {user?.name?.split(' ')[0]}
                 </span>
@@ -239,9 +241,11 @@ export default function Navbar({ transparent = false }) {
             {isAuthenticated ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-2">
-                  <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {initials}
-                  </div>
+                  <img
+                    src={user?.avatar_url || '/avatars/man1.png'}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover shrink-0"
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-navy truncate">{user?.name}</p>
                     <p className="text-xs text-navy/40 truncate">{user?.email}</p>

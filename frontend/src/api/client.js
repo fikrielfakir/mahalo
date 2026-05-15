@@ -109,6 +109,7 @@ export const agentDashboardApi = {
   replyMessage:   (id, data)     => api.post(`/account/agent/messages/${id}/reply`, data),
   updateProfile:  (data)         => api.put('/account/agent/profile', data),
   uploadAvatar:   (formData)     => api.post('/account/agent/avatar', formData, { headers: { 'Content-Type': undefined } }),
+  setPresetAvatar:(data)         => api.post('/account/agent/avatar/preset', data),
 }
 
 export const userChatsApi = {

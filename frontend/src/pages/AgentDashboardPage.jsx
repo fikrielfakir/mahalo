@@ -4,7 +4,7 @@ import {
   Home, Building, MessageCircle, Eye, TrendingUp, User, Phone, Mail,
   MapPin, Edit2, Check, X, ArrowLeft, Camera, Loader2, BadgeCheck,
   ChevronLeft, ChevronRight, Search, Calendar, AlertCircle, Star,
-  BarChart2, Inbox, Settings, ExternalLink, Send,
+  BarChart2, Inbox, Settings, ExternalLink, Send, Upload,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -779,6 +779,13 @@ function MessagesTab() {
   )
 }
 
+const PRESET_AVATARS = [
+  { key: 'man1', label: 'Man 1' }, { key: 'man2', label: 'Man 2' }, { key: 'man3', label: 'Man 3' },
+  { key: 'man4', label: 'Man 4' }, { key: 'man5', label: 'Man 5' }, { key: 'man6', label: 'Man 6' },
+  { key: 'woman1', label: 'Woman 1' }, { key: 'woman2', label: 'Woman 2' }, { key: 'woman3', label: 'Woman 3' },
+  { key: 'woman4', label: 'Woman 4' }, { key: 'woman5', label: 'Woman 5' }, { key: 'woman6', label: 'Woman 6' },
+]
+
 function ProfileTab({ agent, onUpdated }) {
   const [form, setForm] = useState({
     first_name: agent.first_name || '',
@@ -792,6 +799,7 @@ function ProfileTab({ agent, onUpdated }) {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [avatarLoading, setAvatarLoading] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
   const fileRef = useRef(null)
   const f = (k) => (e) => { setForm(p => ({ ...p, [k]: e.target.value })); setSuccess(false); setError('') }
 
@@ -807,6 +815,17 @@ function ProfileTab({ agent, onUpdated }) {
     } finally { setSaving(false) }
   }
 
+  const selectPreset = async (preset) => {
+    setAvatarLoading(true); setError('')
+    try {
+      const res = await agentDashboardApi.setPresetAvatar({ preset })
+      onUpdated({ ...agent, avatar_url: res.data.avatar_url })
+      setShowPicker(false)
+    } catch {
+      setError('Failed to set avatar.')
+    } finally { setAvatarLoading(false) }
+  }
+
   const uploadAvatar = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -816,27 +835,22 @@ function ProfileTab({ agent, onUpdated }) {
     try {
       const res = await agentDashboardApi.uploadAvatar(fd)
       onUpdated({ ...agent, avatar_url: res.data.avatar_url })
+      setShowPicker(false)
     } catch {
       setError('Failed to upload avatar.')
     } finally { setAvatarLoading(false) }
   }
 
-  const avatarUrl = agent.avatar_url || null
+  const avatarUrl = agent.avatar_url || '/avatars/man1.png'
 
   return (
     <div className="max-w-xl space-y-6">
       {/* Avatar */}
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
         <h3 className="font-bold text-navy text-sm mb-4">Profile Photo</h3>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-2xl object-cover" />
-            ) : (
-              <div className="w-20 h-20 rounded-2xl bg-[#730D26] flex items-center justify-center text-white text-2xl font-bold">
-                {(agent.first_name?.[0] || '?').toUpperCase()}
-              </div>
-            )}
+        <div className="flex items-center gap-4 mb-1">
+          <div className="relative shrink-0">
+            <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-2xl object-cover" />
             {agent.is_verified && (
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
                 <BadgeCheck size={12} className="text-white" />
@@ -844,15 +858,44 @@ function ProfileTab({ agent, onUpdated }) {
             )}
           </div>
           <div>
-            <button onClick={() => fileRef.current?.click()} disabled={avatarLoading}
+            <button onClick={() => setShowPicker(v => !v)} disabled={avatarLoading}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-navy hover:bg-gray-100 transition-colors disabled:opacity-60">
               {avatarLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-              Change Photo
+              Change Avatar
             </button>
-            <p className="text-xs text-navy/35 mt-1.5">JPG, PNG — max 4MB</p>
+            <p className="text-xs text-navy/35 mt-1.5">Choose a preset or upload your own</p>
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
         </div>
+
+        {showPicker && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">Men</p>
+            <div className="grid grid-cols-6 gap-2 mb-4">
+              {PRESET_AVATARS.filter(p => p.key.startsWith('man')).map(p => (
+                <button key={p.key} onClick={() => selectPreset(p.key)} disabled={avatarLoading}
+                  className={`rounded-xl overflow-hidden border-2 transition-all hover:scale-105 disabled:opacity-50 ${agent.avatar_url === '/avatars/' + p.key + '.png' ? 'border-[#730D26] shadow-md' : 'border-transparent hover:border-gray-300'}`}>
+                  <img src={`/avatars/${p.key}.png`} alt={p.label} className="w-full aspect-square object-cover" />
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">Women</p>
+            <div className="grid grid-cols-6 gap-2 mb-4">
+              {PRESET_AVATARS.filter(p => p.key.startsWith('woman')).map(p => (
+                <button key={p.key} onClick={() => selectPreset(p.key)} disabled={avatarLoading}
+                  className={`rounded-xl overflow-hidden border-2 transition-all hover:scale-105 disabled:opacity-50 ${agent.avatar_url === '/avatars/' + p.key + '.png' ? 'border-[#730D26] shadow-md' : 'border-transparent hover:border-gray-300'}`}>
+                  <img src={`/avatars/${p.key}.png`} alt={p.label} className="w-full aspect-square object-cover" />
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-gray-100 pt-3">
+              <button onClick={() => { setShowPicker(false); fileRef.current?.click() }}
+                className="flex items-center gap-2 text-sm text-navy/60 hover:text-navy font-medium transition-colors">
+                <Upload size={13} /> Upload your own photo
+              </button>
+            </div>
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
       </div>
 
       {/* Info form */}
@@ -979,13 +1022,11 @@ export default function AgentDashboardPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6 flex items-center gap-4">
-            {agent?.avatar_url ? (
-              <img src={agent.avatar_url} alt={agent.name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
-            ) : (
-              <div className="w-14 h-14 rounded-xl bg-[#730D26] flex items-center justify-center text-white font-bold text-xl shrink-0">
-                {agent?.first_name?.[0]?.toUpperCase() || '?'}
-              </div>
-            )}
+            <img
+              src={agent?.avatar_url || '/avatars/man1.png'}
+              alt={agent?.name}
+              className="w-14 h-14 rounded-xl object-cover shrink-0"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="font-bold text-navy text-xl truncate">{agent?.name || 'Agent'}</h1>

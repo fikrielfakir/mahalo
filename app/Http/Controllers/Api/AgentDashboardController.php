@@ -340,10 +340,26 @@ class AgentDashboardController extends Controller
         return response()->json(['data' => ['avatar_url' => "/storage/$path"], 'error' => false, 'message' => 'Avatar updated.']);
     }
 
+    public function setPresetAvatar(Request $request): JsonResponse
+    {
+        $agent = $this->getAgent($request);
+        if (!$agent) return response()->json(['error' => true, 'message' => 'No agent profile found.'], 403);
+
+        $valid = ['man1','man2','man3','man4','man5','man6','woman1','woman2','woman3','woman4','woman5','woman6'];
+        $data  = $request->validate(['preset' => 'required|string|in:' . implode(',', $valid)]);
+
+        $url = '/avatars/' . $data['preset'] . '.png';
+        $agent->update(['avatar_id' => $url]);
+
+        return response()->json(['data' => ['avatar_url' => $url], 'error' => false, 'message' => 'Avatar updated.']);
+    }
+
     private function formatAgent(Agent $a): array
     {
         $avatar = $a->avatar_id;
-        $avatarUrl = $avatar ? (str_starts_with($avatar, 'http') ? $avatar : "/storage/$avatar") : null;
+        $avatarUrl = $avatar
+            ? (str_starts_with($avatar, 'http') || str_starts_with($avatar, '/') ? $avatar : "/storage/$avatar")
+            : null;
         return [
             'id'          => $a->id,
             'first_name'  => $a->first_name,

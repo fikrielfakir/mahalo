@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { adminProperties, adminCategories, adminFeatures, publicApi } from '../api/adminApi'
+import { adminProperties, adminCategories, adminFeatures, adminAgents, publicApi } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
@@ -9,7 +9,7 @@ import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock } fr
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
   images: [], price: '', number_bedroom: '', number_bathroom: '',
-  number_floor: '', square: '', city_id: '', status: 'selling',
+  number_floor: '', square: '', city_id: '', agent_id: '', status: 'selling',
   is_featured: false, latitude: '', longitude: '',
   category_ids: [], feature_ids: [],
 }
@@ -47,6 +47,7 @@ export default function PropertiesPage() {
   const [form, setForm]       = useState(EMPTY)
   const [saving, setSaving]   = useState(false)
   const [cities, setCities]   = useState([])
+  const [agents, setAgents]   = useState([])
   const [categories, setCategories] = useState([])
   const [features, setFeatures]     = useState([])
   const [deleting, setDeleting]     = useState(null)
@@ -69,6 +70,7 @@ export default function PropertiesPage() {
     publicApi.cities().then((r) => setCities(r.data?.cities || []))
     adminCategories.list().then((r) => setCategories(r.data || []))
     adminFeatures.list().then((r) => setFeatures(r.data || []))
+    adminAgents.list({ per_page: 200 }).then((r) => setAgents(r.data || []))
   }, [])
 
   const openCreate = () => { setEditing(null); setForm(EMPTY); setModal(true) }
@@ -81,6 +83,7 @@ export default function PropertiesPage() {
       feature_ids:  row.feature_ids  || (row.features?.map(f => f.id))  || [],
       latitude:     row.latitude  || '',
       longitude:    row.longitude || '',
+      agent_id:     row.agent_id  || '',
     })
     setModal(true)
   }
@@ -163,6 +166,9 @@ export default function PropertiesPage() {
         </div>
       </div>
     )},
+    { key: 'agent',      label: 'Agent',      render: (r) => r.agent ? (
+      <span className="text-xs font-medium text-gray-700">{r.agent.name}</span>
+    ) : <span className="text-xs text-gray-300">—</span> },
     { key: 'type',       label: 'Type',       render: (r) => <Badge color={r.type === 'sale' ? 'blue' : 'gold'}>{r.type}</Badge> },
     { key: 'price',      label: 'Price',      render: (r) => r.price ? `${Number(r.price).toLocaleString()} MAD` : '—' },
     { key: 'is_featured',label: 'Featured',   render: (r) => r.is_featured ? <Star size={14} className="text-amber-400 fill-amber-400" /> : <Star size={14} className="text-gray-200" /> },
@@ -307,6 +313,12 @@ export default function PropertiesPage() {
               <Select value={form.city_id} onChange={f('city_id')}>
                 <option value="">Select city</option>
                 {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </Select>
+            </FormField>
+            <FormField label="Agent">
+              <Select value={form.agent_id} onChange={f('agent_id')}>
+                <option value="">No agent</option>
+                {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </Select>
             </FormField>
             <FormField label="Bedrooms">

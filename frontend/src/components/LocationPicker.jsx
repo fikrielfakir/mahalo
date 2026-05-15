@@ -5,7 +5,10 @@ import { MapPin, X } from 'lucide-react'
 
 const STREET_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 
-export default function LocationPicker({ lat, lng, onChange, height = 280 }) {
+const MOROCCO_BOUNDS = [[-17.5, 20.5], [0.5, 36.5]]
+const MOROCCO_CENTER = [-7.09, 31.79]
+
+export default function LocationPicker({ lat, lng, onChange, height = 280, restrictToMorocco = false }) {
   const containerRef = useRef(null)
   const mapRef       = useRef(null)
   const markerRef    = useRef(null)
@@ -20,13 +23,18 @@ export default function LocationPicker({ lat, lng, onChange, height = 280 }) {
     const init = () => {
       if (!containerRef.current) return
       try {
-        map = new maplibregl.Map({
+        const mapOptions = {
           container: containerRef.current,
           style: STREET_STYLE,
-          center: latNum && lngNum ? [lngNum, latNum] : [-7.09, 31.79],
+          center: latNum && lngNum ? [lngNum, latNum] : MOROCCO_CENTER,
           zoom: latNum && lngNum ? 13 : 5,
           attributionControl: false,
-        })
+        }
+        if (restrictToMorocco) {
+          mapOptions.maxBounds = MOROCCO_BOUNDS
+          mapOptions.minZoom = 4
+        }
+        map = new maplibregl.Map(mapOptions)
       } catch (_) {
         return
       }

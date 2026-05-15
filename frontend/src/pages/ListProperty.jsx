@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import {
   Home, CheckCircle, ArrowRight, Phone, Mail, User,
   MapPin, Bed, Bath, Maximize2, DollarSign, FileText,
-  Building2, Upload, X, Video, AlertCircle, Image,
+  Building2, X, Video, AlertCircle, Image, ChevronDown,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -14,14 +14,16 @@ import LocationPicker from '../components/LocationPicker'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 
-const EMPTY = {
-  name: '', email: '', phone: '',
-  property_type: 'sale', listing_type: '',
-  city: '', location: '',
+const EMPTY_FORM = {
+  property_type: 'sale',
+  city_id: '',
+  location: '',
   latitude: '', longitude: '',
   bedrooms: '', bathrooms: '', size: '', price: '',
   description: '',
 }
+
+const EMPTY_CONTACT = { name: '', phone: '', email: '' }
 
 const BENEFITS = [
   { icon: CheckCircle, text: 'Listed within 24 hours' },
@@ -141,7 +143,6 @@ function MediaUploader({ files, onChange }) {
 
   return (
     <div className="space-y-3">
-      {/* Thumbnails */}
       {files.length > 0 && (
         <div className="grid grid-cols-4 gap-2">
           {files.map((f, i) => (
@@ -154,14 +155,12 @@ function MediaUploader({ files, onChange }) {
         </div>
       )}
 
-      {/* Upload progress */}
       {uploading.length > 0 && (
         <div className="space-y-2">
           {uploading.map(u => <ProgressBar key={u.id} name={u.name} pct={u.pct} />)}
         </div>
       )}
 
-      {/* Errors */}
       {errors.map((err, i) => (
         <div key={i} className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
           <AlertCircle size={13} className="shrink-0" />
@@ -169,7 +168,6 @@ function MediaUploader({ files, onChange }) {
         </div>
       ))}
 
-      {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
@@ -217,44 +215,101 @@ function MediaUploader({ files, onChange }) {
 }
 
 export default function ListProperty() {
-  const [form, setForm]             = useState(EMPTY)
+  const [form, setForm]             = useState(EMPTY_FORM)
+  const [contact, setContact]       = useState(EMPTY_CONTACT)
+  const [cities, setCities]         = useState([])
+  const [geocoding, setGeocoding]   = useState(false)
   const [mediaFiles, setMediaFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
+  const pendingSubmitRef            = useRef(false)
+  const doSubmitRef                 = useRef(null)
+  const prevLatLngRef               = useRef('')
   const { toast, show: showToast, hide: hideToast } = useToast()
-  const { isAuthenticated, loading: authLoading } = useUserAuth()
+  const { isAuthenticated, user, loading: authLoading } = useUserAuth()
   const { openAuthModal } = useAuthModal()
-  const navigate = useNavigate()
 
-  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+  const set  = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+  const setC = (field) => (e) => setContact(c => ({ ...c, [field]: e.target.value }))
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!isAuthenticated) {
-      openAuthModal()
+  useEffect(() => {
+    fetch('/api/v1/properties/filters')
+      .then(r => r.json())
+      .then(data => setCities(data?.data?.cities || []))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setContact({
+        name:  user.name  || '',
+        phone: user.phone || '',
+        email: user.email || '',
+      })
+      if (pendingSubmitRef.current) {
+        pendingSubmitRef.current = false
+        setTimeout(() => doSubmitRef.current?.(), 50)
+      }
+    }
+  }, [isAuthenticated, user])
+
+  useEffect(() => {
+    const key = `${form.latitude},${form.longitude}`
+    if (!form.latitude || !form.longitude || key === prevLatLngRef.current) return
+    prevLatLngRef.current = key
+    setGeocoding(true)
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${form.latitude}&lon=${form.longitude}&format=json&accept-language=en`,
+      { headers: { 'Accept': 'application/json' } }
+    )
+      .then(r => r.json())
+      .then(data => {
+        const addr = data.address || {}
+        const neighborhood = addr.suburb || addr.neighbourhood || addr.road || addr.village || ''
+        const rawCity = (addr.city || addr.town || addr.village || addr.county || '').toLowerCase()
+        const matchedCity = cities.find(c => {
+          const cn = c.name.toLowerCase()
+          return cn === rawCity || rawCity.includes(cn) || cn.includes(rawCity)
+        })
+        setForm(f => ({
+          ...f,
+          location: neighborhood || f.location,
+          city_id:  matchedCity ? String(matchedCity.id) : f.city_id,
+        }))
+      })
+      .catch(() => {})
+      .finally(() => setGeocoding(false))
+  }, [form.latitude, form.longitude, cities])
+
+  const doSubmit = useCallback(async () => {
+    const contactName  = isAuthenticated ? (user?.name  || '') : contact.name
+    const contactPhone = isAuthenticated ? (user?.phone || '') : contact.phone
+    const contactEmail = isAuthenticated ? (user?.email || '') : contact.email
+
+    const selectedCity = cities.find(c => String(c.id) === String(form.city_id))
+    if (!selectedCity) {
+      showToast('Please select a city', 'error')
       return
     }
-    if (!form.name.trim() || !form.city.trim()) {
-      showToast('Please fill in name and city', 'error')
-      return
-    }
+
     setSubmitting(true)
     try {
-      const description = [
-        form.description,
-        form.phone && `Contact phone: ${form.phone}`,
-        form.email && `Contact email: ${form.email}`,
-      ].filter(Boolean).join('\n')
+      const descParts = [form.description]
+      if (!isAuthenticated) {
+        if (contactPhone) descParts.push(`Contact phone: ${contactPhone}`)
+        if (contactEmail) descParts.push(`Contact email: ${contactEmail}`)
+      }
 
       await userListingsApi.store({
-        name:             form.name || `Property in ${form.city}`,
+        name:             `${selectedCity.name} — ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
         type:             form.property_type,
-        location:         [form.location, form.city].filter(Boolean).join(', '),
-        number_bedroom:   form.bedrooms  ? parseInt(form.bedrooms)  : null,
-        number_bathroom:  form.bathrooms ? parseInt(form.bathrooms) : null,
-        square:           form.size      ? parseFloat(form.size)    : null,
-        price:            form.price     ? parseFloat(form.price)   : null,
-        description,
+        location:         form.location || '',
+        city_id:          parseInt(form.city_id),
+        number_bedroom:   form.bedrooms  ? parseInt(form.bedrooms)   : null,
+        number_bathroom:  form.bathrooms ? parseInt(form.bathrooms)  : null,
+        square:           form.size      ? parseFloat(form.size)     : null,
+        price:            form.price     ? parseFloat(form.price)    : null,
+        description:      descParts.filter(Boolean).join('\n'),
         latitude:         form.latitude  || null,
         longitude:        form.longitude || null,
         images:           mediaFiles.map(f => f.path),
@@ -265,14 +320,33 @@ export default function ListProperty() {
     } finally {
       setSubmitting(false)
     }
+  }, [isAuthenticated, user, contact, form, mediaFiles, cities])
+
+  useEffect(() => {
+    doSubmitRef.current = doSubmit
+  }, [doSubmit])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!isAuthenticated) {
+      if (!contact.name.trim()) {
+        showToast('Please fill in your full name', 'error')
+        return
+      }
+      pendingSubmitRef.current = true
+      openAuthModal()
+      return
+    }
+    await doSubmit()
   }
+
+  const cityName = cities.find(c => String(c.id) === String(form.city_id))?.name || ''
 
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-      {/* Hero */}
       <section className="relative pt-28 pb-16 px-6 bg-navy overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
@@ -295,7 +369,6 @@ export default function ListProperty() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <div className="bg-white rounded-3xl p-6 shadow-card">
               <h3 className="text-navy font-bold text-lg mb-5">Why List with Mahalo?</h3>
@@ -334,7 +407,6 @@ export default function ListProperty() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="lg:col-span-2">
             {submitted ? (
               <div className="bg-white rounded-3xl shadow-card p-12 text-center">
@@ -348,14 +420,14 @@ export default function ListProperty() {
                   Pending Admin Review
                 </div>
                 <h2 className="text-2xl font-bold text-navy mb-3">Listing Submitted!</h2>
-                <p className="text-navy/60 mb-2">Your property <strong>{form.name || 'listing'}</strong> has been submitted for review.</p>
+                <p className="text-navy/60 mb-2">Your property listing in <strong>{cityName}</strong> has been submitted for review.</p>
                 <p className="text-navy/40 text-sm mb-2">An admin will review it within 24 hours. Once approved, it will be visible to all visitors.</p>
                 <p className="text-navy/40 text-sm mb-8">You can track the status of your listing in your <Link to="/profile" className="text-gold font-semibold hover:underline">Profile → My Listings</Link>.</p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Link to="/profile" className="btn-gold flex items-center gap-2">
                     View My Listings <ArrowRight size={15} />
                   </Link>
-                  <button onClick={() => { setSubmitted(false); setForm(EMPTY); setMediaFiles([]) }} className="btn-outline">
+                  <button onClick={() => { setSubmitted(false); setForm(EMPTY_FORM); setMediaFiles([]) }} className="btn-outline">
                     Submit Another
                   </button>
                 </div>
@@ -366,29 +438,48 @@ export default function ListProperty() {
                 <p className="text-navy/45 text-sm mb-7">Fill in as many details as you can — it helps us match you with the right agent.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Contact info */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Your Contact Info</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="relative">
-                        <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="text" placeholder="Full name *" value={form.name} onChange={set('name')} required
-                          className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                      <div className="relative">
-                        <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="tel" placeholder="Phone *" value={form.phone} onChange={set('phone')} required
-                          className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                      <div className="relative">
-                        <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="email" placeholder="Email" value={form.email} onChange={set('email')}
-                          className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Listing type */}
+                  {isAuthenticated && user ? (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                        <User size={14} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-emerald-700">Submitting as</p>
+                        <p className="text-sm font-medium text-navy truncate">{user.name}{user.phone ? ` · ${user.phone}` : ''}</p>
+                      </div>
+                      <CheckCircle size={16} className="text-emerald-500 shrink-0 ml-auto" />
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Your Contact Info</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="relative">
+                          <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
+                          <input type="text" placeholder="Full name *" value={contact.name} onChange={setC('name')} required
+                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                        </div>
+                        <div className="relative">
+                          <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
+                          <input type="tel" placeholder="Phone *" value={contact.phone} onChange={setC('phone')} required
+                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                        </div>
+                        <div className="relative">
+                          <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
+                          <input type="email" placeholder="Email" value={contact.email} onChange={setC('email')}
+                            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-navy/35 mt-2">
+                        Already have an account?{' '}
+                        <button type="button" onClick={() => openAuthModal()} className="text-gold font-semibold hover:underline">
+                          Sign in
+                        </button>{' '}
+                        to auto-fill your details.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">I want to...</p>
                     <div className="flex gap-3">
@@ -408,17 +499,31 @@ export default function ListProperty() {
                     </div>
                   </div>
 
-                  {/* Location */}
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Location</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div className="relative">
-                        <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="text" placeholder="City *" value={form.city} onChange={set('city')} required
-                          className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                        <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />
+                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />
+                        <select
+                          value={form.city_id}
+                          onChange={set('city_id')}
+                          required
+                          className="w-full pl-10 pr-9 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 appearance-none"
+                        >
+                          <option value="">City *</option>
+                          {cities.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="relative">
                         <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
+                        {geocoding && (
+                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-gold font-semibold">
+                            auto-filling…
+                          </span>
+                        )}
                         <input type="text" placeholder="Neighborhood / address" value={form.location} onChange={set('location')}
                           className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
                       </div>
@@ -426,18 +531,18 @@ export default function ListProperty() {
                     <div className="rounded-2xl border border-dashed border-navy/15 p-4 bg-surface/50">
                       <p className="text-navy/40 text-xs font-semibold mb-2 flex items-center gap-1.5">
                         <MapPin size={12} className="text-gold" />
-                        Pin your property on the map <span className="font-normal">(optional — click to place, drag to adjust)</span>
+                        Pin your property on the map <span className="font-normal">(optional — city & address will auto-fill from pin)</span>
                       </p>
                       <LocationPicker
                         lat={form.latitude}
                         lng={form.longitude}
                         onChange={({ lat, lng }) => setForm(f => ({ ...f, latitude: lat, longitude: lng }))}
                         height={260}
+                        restrictToMorocco
                       />
                     </div>
                   </div>
 
-                  {/* Property specs */}
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Property Specs</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -464,7 +569,6 @@ export default function ListProperty() {
                     </div>
                   </div>
 
-                  {/* Description */}
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Additional Details</p>
                     <div className="relative">
@@ -479,7 +583,6 @@ export default function ListProperty() {
                     </div>
                   </div>
 
-                  {/* Media upload */}
                   <div>
                     <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">
                       Photos & Videos <span className="normal-case font-normal">(optional)</span>
@@ -487,14 +590,16 @@ export default function ListProperty() {
                     <MediaUploader files={mediaFiles} onChange={setMediaFiles} />
                   </div>
 
-                  <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 py-4 text-base">
+                  <button type="submit" disabled={submitting || authLoading} className="w-full btn-gold justify-center flex gap-2 py-4 text-base">
                     {submitting ? 'Submitting...' : 'Submit Listing Request'}
                     {!submitting && <ArrowRight size={18} />}
                   </button>
 
-                  <p className="text-center text-navy/30 text-xs">
-                    By submitting you agree to be contacted by a Mahalo agent. No spam, ever.
-                  </p>
+                  {!isAuthenticated && (
+                    <p className="text-center text-navy/30 text-xs">
+                      You'll be asked to sign in or create an account before submitting.
+                    </p>
+                  )}
                 </form>
               </div>
             )}

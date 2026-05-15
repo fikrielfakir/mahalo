@@ -13,7 +13,7 @@ class AdminPropertyController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Property::with(['city', 'categories', 'features']);
+        $query = Property::with(['city', 'categories', 'features', 'agent']);
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -55,6 +55,7 @@ class AdminPropertyController extends Controller
             'price'           => 'nullable|numeric|min:0',
             'is_featured'     => 'boolean',
             'city_id'         => 'nullable|integer',
+            'agent_id'        => 'nullable|integer',
             'status'          => 'in:selling,pending,sold,rented',
             'category_ids'    => 'nullable|array',
             'feature_ids'     => 'nullable|array',
@@ -62,12 +63,17 @@ class AdminPropertyController extends Controller
             'longitude'       => 'nullable|string',
         ]);
 
+        $agentId = $data['agent_id'] ?? null;
+        unset($data['agent_id']);
+
         $property = Property::create([
             ...$data,
-            'images'           => json_encode($data['images'] ?? []),
-            'status'           => $data['status'] ?? 'selling',
+            'images'            => json_encode($data['images'] ?? []),
+            'status'            => $data['status'] ?? 'selling',
             'moderation_status' => 'approved',
-            'unique_id'        => 'PROP-' . strtoupper(Str::random(6)),
+            'unique_id'         => 'PROP-' . strtoupper(Str::random(6)),
+            'author_id'         => $agentId ?: null,
+            'author_type'       => $agentId ? 'App\\Models\\Agent' : null,
         ]);
 
         if (!empty($data['category_ids'])) {
@@ -84,12 +90,12 @@ class AdminPropertyController extends Controller
             'prefix'         => 'properties',
         ]);
 
-        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features'])), 'error' => false, 'message' => 'Property created.'], 201);
+        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])), 'error' => false, 'message' => 'Property created.'], 201);
     }
 
     public function show(int $id): JsonResponse
     {
-        $p = Property::with(['city', 'categories', 'features', 'slug'])->findOrFail($id);
+        $p = Property::with(['city', 'categories', 'features', 'agent', 'slug'])->findOrFail($id);
         return response()->json(['data' => $this->format($p), 'error' => false, 'message' => null]);
     }
 
@@ -116,7 +122,7 @@ class AdminPropertyController extends Controller
         $property->update($updates);
 
         return response()->json([
-            'data'    => $this->format($property->fresh(['city', 'categories', 'features'])),
+            'data'    => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])),
             'error'   => false,
             'message' => 'Moderation status updated.',
         ]);
@@ -141,6 +147,7 @@ class AdminPropertyController extends Controller
             'price'             => 'nullable|numeric|min:0',
             'is_featured'       => 'boolean',
             'city_id'           => 'nullable|integer',
+            'agent_id'          => 'nullable|integer',
             'status'            => 'sometimes|in:selling,pending,sold,rented,renting',
             'moderation_status' => 'sometimes|in:pending,approved,rejected',
             'category_ids'      => 'nullable|array',
@@ -153,6 +160,14 @@ class AdminPropertyController extends Controller
             $data['images'] = json_encode($data['images']);
         }
 
+        $agentId = array_key_exists('agent_id', $data) ? $data['agent_id'] : false;
+        unset($data['agent_id']);
+
+        if ($agentId !== false) {
+            $data['author_id']   = $agentId ?: null;
+            $data['author_type'] = $agentId ? 'App\\Models\\Agent' : null;
+        }
+
         $property->update($data);
 
         if (array_key_exists('category_ids', $data)) {
@@ -162,7 +177,7 @@ class AdminPropertyController extends Controller
             $property->features()->sync($data['feature_ids'] ?? []);
         }
 
-        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features'])), 'error' => false, 'message' => 'Property updated.']);
+        return response()->json(['data' => $this->format($property->fresh(['city', 'categories', 'features', 'agent'])), 'error' => false, 'message' => 'Property updated.']);
     }
 
     public function destroy(int $id): JsonResponse
@@ -199,6 +214,10 @@ class AdminPropertyController extends Controller
             'reject_reason'     => $p->reject_reason,
             'author_id'         => $p->author_id,
             'author_type'       => $p->author_type,
+            'agent_id'          => ($p->author_type === 'App\\Models\\Agent') ? $p->author_id : null,
+            'agent'             => ($p->author_type === 'App\\Models\\Agent' && $p->agent)
+                                     ? ['id' => $p->agent->id, 'name' => $p->agent->name]
+                                     : null,
             'city_id'           => $p->city_id,
             'city'              => $p->city ? ['id' => $p->city->id, 'name' => $p->city->name] : null,
             'latitude'          => $p->latitude,

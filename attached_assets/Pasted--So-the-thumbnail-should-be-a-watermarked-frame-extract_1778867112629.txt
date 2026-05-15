@@ -1,0 +1,130 @@
+ So the thumbnail should be a watermarked frame extracted from the video — same watermark logic already used for images. Here's the updated backend plan:
+
+Updated Bug 1 Fix — MediaController.php
+When a video is uploaded:
+
+Extract a frame at 2 seconds (or 1s fallback) using FFmpeg
+Save the raw frame as a .jpg
+Run the existing applyWatermark() method on that frame (reuse exactly as-is)
+Store the watermarked frame as the thumbnail
+Also burn the watermark into the full video using FFmpeg overlay
+
+php$thumbnailPath = null;
+$watermarkedVideoPath = null;
+
+if ($isVideo) {
+    // ── Step 1: Extract frame from video ──────────────────────────────
+    $thumbName      = Str::uuid() . '.jpg';
+    $thumbFolder    = $folder . '/thumbs';
+    $thumbStorePath = $thumbFolder . '/' . $thumbName;
+    $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
+    @mkdir(dirname($thumbDiskPath), 0755, true);
+
+    $videoFullPath = Storage::disk('public')->path($tmpPath);
+
+    // Try at 2s first, fall back to 0s if video is shorter
+    $extracted = false;
+    foreach (['2', '1', '0'] as $seek) {
+        exec("ffmpeg -ss {$seek} -i " . escapeshellarg($videoFullPath) .
+             " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
+             escapeshellarg($thumbDiskPath) . " -y 2>/dev/null", $out, $code);
+        if ($code === 0 && file_exists($thumbDiskPath)) {
+            $extracted = true;
+            break;
+        }
+    }
+
+    // ── Step 2: Apply watermark to the thumbnail frame ────────────────
+    if ($extracted) {
+        $this->applyWatermark($thumbStorePath, 'jpg'); // reuse existing method
+        $thumbnailPath = $thumbStorePath;
+    }
+
+    // ── Step 3: Burn watermark into the full video ────────────────────
+    $settings = DB::table('site_settings')
+        ->whereIn('key', ['watermark_enabled', 'watermark_logo_url',
+                          'watermark_position', 'watermark_opacity', 'watermark_size'])
+        ->pluck('value', 'key');
+
+    if (($settings['watermark_enabled'] ?? '1') !== '0') {
+        $logoUrl  = $settings['watermark_logo_url'] ?? '';
+        $position = $settings['watermark_position'] ?? 'bottom-right';
+        $opacity  = (int)($settings['watermark_opacity'] ?? 60) / 100; // FFmpeg needs 0.0–1.0
+        $sizeRatio = (int)($settings['watermark_size'] ?? 20);         // % of video width
+
+        // Resolve watermark image path (same logic as loadWatermarkImage)
+        $logoPath = null;
+        if ($logoUrl) {
+            if (str_starts_with($logoUrl, '/storage/')) {
+                $rel = Str::after($logoUrl, '/storage/');
+                $p   = Storage::disk('public')->path($rel);
+                if (file_exists($p)) $logoPath = $p;
+            } elseif (str_starts_with($logoUrl, '/')) {
+                $p = public_path(ltrim($logoUrl, '/'));
+                if (file_exists($p)) $logoPath = $p;
+            }
+        }
+        if (!$logoPath) {
+            $p = public_path('watermark.png');
+            if (file_exists($p)) $logoPath = $p;
+        }
+
+        if ($logoPath) {
+            $wmVideoName = Str::uuid() . '.' . $ext;
+            $wmStorePath = $folder . '/' . $wmVideoName;
+            $wmDiskPath  = Storage::disk('public')->path($wmStorePath);
+
+            // Map position setting to FFmpeg overlay expression
+            $margin = 10;
+            $overlayExpr = match($position) {
+                'top-left'     => "overlay={$margin}:{$margin}",
+                'top-right'    => "overlay=W-w-{$margin}:{$margin}",
+                'bottom-left'  => "overlay={$margin}:H-h-{$margin}",
+                'center'       => "overlay=(W-w)/2:(H-h)/2",
+                default        => "overlay=W-w-{$margin}:H-h-{$margin}", // bottom-right
+            };
+
+            // Scale watermark to sizeRatio% of video width, apply opacity, overlay
+            $filter = "[1:v]scale=iw*{$sizeRatio}/100:-1,format=rgba,"
+                    . "colorchannelmixer=aa={$opacity}[wm];"
+                    . "[0:v][wm]{$overlayExpr}[out]";
+
+            exec("ffmpeg -i " . escapeshellarg($videoFullPath) .
+                 " -i " . escapeshellarg($logoPath) .
+                 " -filter_complex " . escapeshellarg($filter) .
+                 " -map [out] -map 0:a? -c:v libx264 -preset fast -crf 23 -c:a copy " .
+                 escapeshellarg($wmDiskPath) . " -y 2>/dev/null", $out2, $code2);
+
+            if ($code2 === 0 && file_exists($wmDiskPath)) {
+                // Replace original with watermarked version
+                Storage::disk('public')->delete($tmpPath);
+                $tmpPath             = $wmStorePath;
+                $watermarkedVideoPath = $wmStorePath;
+            }
+        }
+    }
+}
+Then update MediaFile::create() to save the thumbnail:
+php$record = MediaFile::create([
+    'file_name'      => $name,
+    'original_name'  => $file->getClientOriginalName(),
+    'path'           => $tmpPath,
+    'url'            => Storage::disk('public')->url($tmpPath),
+    'mime_type'      => $mime,
+    'size'           => Storage::disk('public')->size($tmpPath),
+    'collection'     => $folder,
+    'thumbnail_path' => $thumbnailPath,
+    'thumbnail_url'  => $thumbnailPath
+                          ? Storage::disk('public')->url($thumbnailPath)
+                          : null,
+]);
+
+What this does end-to-end:
+
+Upload property-tour.mp4 →
+FFmpeg extracts frame at 2s → saves as videos/thumbs/uuid.jpg
+applyWatermark() runs on the .jpg → same watermark, same position, same opacity as images
+FFmpeg re-encodes the full video with the watermark PNG burned in via filter_complex overlay
+Original unwatermarked video is deleted, replaced by the watermarked one
+thumbnail_url is returned in the API response
+Frontend uses poster={thumbnail_url} + preload="none" — zero bytes downloaded until the user clicks play

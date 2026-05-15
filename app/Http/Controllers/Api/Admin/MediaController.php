@@ -53,22 +53,67 @@ class MediaController extends Controller
 
         $tmpPath = $file->storeAs($folder, $name, 'public');
 
-        // Only watermark images, not videos
-        if (!$isVideo) {
-            $this->applyWatermark($tmpPath, $ext);
-        }
-
-        $url = Storage::disk('public')->url($tmpPath);
-
         $thumbnailPath = null;
+
         if ($isVideo) {
+            // ── Step 1: Extract thumbnail frame ───────────────────────────────
             $thumbName      = Str::uuid() . '.jpg';
             $thumbStorePath = $folder . '/thumbs/' . $thumbName;
             $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
             @mkdir(dirname($thumbDiskPath), 0755, true);
             $videoFullPath  = Storage::disk('public')->path($tmpPath);
-            $thumbnailPath  = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+
+            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+
+            // ── Step 2: Apply watermark to thumbnail frame ────────────────────
+            if ($thumbnailPath) {
+                $this->applyWatermark($thumbStorePath, 'jpg');
+            }
+
+            // ── Step 3: Burn watermark into full video ────────────────────────
+            $wmSettings = DB::table('site_settings')
+                ->whereIn('key', ['watermark_enabled', 'watermark_logo_url', 'watermark_position', 'watermark_opacity', 'watermark_size'])
+                ->pluck('value', 'key');
+
+            if (($wmSettings['watermark_enabled'] ?? '1') !== '0') {
+                $logoPath = $this->resolveWatermarkPath($wmSettings['watermark_logo_url'] ?? '');
+                if ($logoPath) {
+                    $wmVideoName = Str::uuid() . '.' . $ext;
+                    $wmStorePath = $folder . '/' . $wmVideoName;
+                    $wmDiskPath  = Storage::disk('public')->path($wmStorePath);
+                    $opacity     = round((int)($wmSettings['watermark_opacity'] ?? 60) / 100, 2);
+                    $sizeRatio   = (int)($wmSettings['watermark_size'] ?? 20);
+                    $position    = $wmSettings['watermark_position'] ?? 'bottom-right';
+                    $margin      = 10;
+                    $overlayExpr = match($position) {
+                        'top-left'    => "overlay={$margin}:{$margin}",
+                        'top-right'   => "overlay=W-w-{$margin}:{$margin}",
+                        'bottom-left' => "overlay={$margin}:H-h-{$margin}",
+                        'center'      => "overlay=(W-w)/2:(H-h)/2",
+                        default       => "overlay=W-w-{$margin}:H-h-{$margin}",
+                    };
+                    $filter = "[1:v]scale=iw*{$sizeRatio}/100:-1,format=rgba,colorchannelmixer=aa={$opacity}[wm];[0:v][wm]{$overlayExpr}[out]";
+                    $ffmpegBin = $this->getFfmpegBin();
+                    exec(
+                        escapeshellarg($ffmpegBin) .
+                        " -i " . escapeshellarg($videoFullPath) .
+                        " -i " . escapeshellarg($logoPath) .
+                        " -filter_complex " . escapeshellarg($filter) .
+                        " -map [out] -map 0:a? -c:v libx264 -preset fast -crf 23 -c:a copy " .
+                        escapeshellarg($wmDiskPath) . " -y 2>/dev/null",
+                        $out2, $code2
+                    );
+                    if ($code2 === 0 && file_exists($wmDiskPath) && filesize($wmDiskPath) > 0) {
+                        Storage::disk('public')->delete($tmpPath);
+                        $tmpPath = $wmStorePath;
+                    }
+                }
+            }
+        } else {
+            $this->applyWatermark($tmpPath, $ext);
         }
+
+        $url = Storage::disk('public')->url($tmpPath);
 
         $record = MediaFile::create([
             'file_name'      => $name,
@@ -96,6 +141,22 @@ class MediaController extends Controller
     {
         $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
         return $bin ?: 'ffmpeg';
+    }
+
+    private function resolveWatermarkPath(string $logoUrl): ?string
+    {
+        if ($logoUrl) {
+            if (str_starts_with($logoUrl, '/storage/')) {
+                $rel  = Str::after($logoUrl, '/storage/');
+                $path = Storage::disk('public')->path($rel);
+                if (file_exists($path)) return $path;
+            } elseif (str_starts_with($logoUrl, '/') && !str_starts_with($logoUrl, '//')) {
+                $path = public_path(ltrim($logoUrl, '/'));
+                if (file_exists($path)) return $path;
+            }
+        }
+        $default = public_path('watermark.png');
+        return file_exists($default) ? $default : null;
     }
 
     private function generateVideoThumbnail(string $videoFullPath, string $thumbDiskPath, string $thumbStorePath): ?string

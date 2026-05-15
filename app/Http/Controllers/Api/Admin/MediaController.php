@@ -139,8 +139,27 @@ class MediaController extends Controller
 
     private function getFfmpegBin(): string
     {
+        // Try shell_exec first
         $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
-        return $bin ?: 'ffmpeg';
+        if ($bin && file_exists($bin)) return $bin;
+
+        // Try exec as fallback (web server PATH may differ from CLI)
+        @exec('which ffmpeg 2>/dev/null', $out, $ret);
+        $bin = trim($out[0] ?? '');
+        if ($bin && file_exists($bin)) return $bin;
+
+        // Check common NixOS / Replit runtime locations
+        $candidates = [
+            '/nix/store/y7m7h744qpw8hidkkxnhx7wzgv59w287-replit-runtime-path/bin/ffmpeg',
+            '/usr/bin/ffmpeg',
+            '/usr/local/bin/ffmpeg',
+            '/opt/homebrew/bin/ffmpeg',
+        ];
+        foreach ($candidates as $path) {
+            if (file_exists($path)) return $path;
+        }
+
+        return 'ffmpeg';
     }
 
     private function resolveWatermarkPath(string $logoUrl): ?string
@@ -167,17 +186,35 @@ class MediaController extends Controller
 
         $ffmpegBin = $this->getFfmpegBin();
 
-        foreach ([1, 0.5, 0.1] as $seek) {
+        // Ensure the thumbs directory exists with correct permissions
+        $thumbDir = dirname($thumbDiskPath);
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+
+        foreach ([1, 0.5, 0.1, 0] as $seek) {
             @unlink($thumbDiskPath);
-            exec(
+            $errFile = sys_get_temp_dir() . '/ffmpeg_thumb_' . getmypid() . '.log';
+            $cmd =
                 escapeshellarg($ffmpegBin) .
                 " -ss {$seek} -i " . escapeshellarg($videoFullPath) .
-                " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
-                escapeshellarg($thumbDiskPath) . " -y 2>/dev/null",
-                $out, $ret
-            );
+                " -frames:v 1 -vf scale=640:-1 -q:v 3 -update 1 " .
+                escapeshellarg($thumbDiskPath) . " -y 2>" . escapeshellarg($errFile);
+            exec($cmd, $out, $ret);
             if (file_exists($thumbDiskPath) && filesize($thumbDiskPath) > 0) {
+                @unlink($errFile);
                 return $thumbStorePath;
+            }
+            // Log ffmpeg error for debugging
+            if (file_exists($errFile)) {
+                \Illuminate\Support\Facades\Log::warning('ffmpeg thumbnail failed', [
+                    'seek'    => $seek,
+                    'ret'     => $ret,
+                    'ffmpeg'  => $ffmpegBin,
+                    'video'   => $videoFullPath,
+                    'stderr'  => file_get_contents($errFile),
+                ]);
+                @unlink($errFile);
             }
         }
         return null;

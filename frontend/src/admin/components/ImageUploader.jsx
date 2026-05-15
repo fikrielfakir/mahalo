@@ -51,6 +51,24 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   useEffect(() => { imagesRef.current = images }, [images])
   useEffect(() => { onChangeRef.current = onChange }, [onChange])
 
+  useEffect(() => {
+    const videoPaths = images.filter(isVideoPath).filter(p => !thumbMap[p])
+    if (!videoPaths.length) return
+    client.get('/admin/media', { params: { per_page: 200 } })
+      .then(res => {
+        const items = res.data?.data ?? []
+        const map = {}
+        items.forEach(item => {
+          if (item.thumbnail_url && videoPaths.includes(item.path)) {
+            map[item.path] = item.thumbnail_url
+          }
+        })
+        if (Object.keys(map).length) setThumbMap(m => ({ ...m, ...map }))
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.join(',')])
+
   const removeImage = (idx) => onChange(images.filter((_, i) => i !== idx))
 
   const setAsMain = (idx) => {

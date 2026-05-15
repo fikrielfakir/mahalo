@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Feature;
+use App\Models\MediaFile;
 use App\Models\Property;
 use App\Models\Slug;
 use Illuminate\Http\JsonResponse;
@@ -204,16 +205,37 @@ class PropertyController extends Controller
         ]);
     }
 
-    private function extractThumbnail(array $images): ?string
+    private function isVideoPath(string $path): bool
+    {
+        return (bool) preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $path);
+    }
+
+    private function extractThumbnail(array $images, array $videoThumbnails = []): ?string
     {
         foreach ($images as $img) {
-            if (!preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $img)) {
-                return str_starts_with($img, 'http')
-                    ? $img
-                    : Storage::disk('public')->url($img);
+            if ($this->isVideoPath($img)) {
+                if (isset($videoThumbnails[$img])) {
+                    return $videoThumbnails[$img];
+                }
+                continue;
             }
+            return str_starts_with($img, 'http')
+                ? $img
+                : Storage::disk('public')->url($img);
         }
         return null;
+    }
+
+    private function getVideoThumbnails(array $images): array
+    {
+        $videoPaths = array_values(array_filter($images, fn($img) => $this->isVideoPath($img)));
+        if (empty($videoPaths)) return [];
+
+        $records = MediaFile::whereIn('path', $videoPaths)
+            ->whereNotNull('thumbnail_url')
+            ->pluck('thumbnail_url', 'path');
+
+        return $records->toArray();
     }
 
     private function formatProperty(Property $property): array
@@ -224,6 +246,7 @@ class PropertyController extends Controller
         }
 
         $slug = $property->slug ? $property->slug->key : (string) $property->id;
+        $videoThumbnails = $this->getVideoThumbnails($images);
 
         return [
             'id'               => $property->id,
@@ -235,7 +258,8 @@ class PropertyController extends Controller
             'location'         => $property->location,
             'images'           => $images,
             'image'            => $images[0] ?? null,
-            'thumbnail_url'    => $this->extractThumbnail($images),
+            'video_thumbnails' => $videoThumbnails,
+            'thumbnail_url'    => $this->extractThumbnail($images, $videoThumbnails),
             'number_bedroom'   => (int) $property->number_bedroom,
             'number_bathroom'  => (int) $property->number_bathroom,
             'number_floor'     => $property->number_floor,

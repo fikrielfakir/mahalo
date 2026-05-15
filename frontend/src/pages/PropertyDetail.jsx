@@ -285,14 +285,20 @@ export default function PropertyDetail() {
                   className="relative w-full h-full cursor-pointer group"
                   onClick={() => setPlayingVideo(true)}
                 >
-                  <video
-                    src={mainImg}
-                    poster={property.thumbnail_url || ''}
-                    preload="none"
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
+                  {(() => {
+                    const posterUrl = property.video_thumbnails?.[images[activeImg]] || property.thumbnail_url || ''
+                    return posterUrl ? (
+                      <img src={posterUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <video
+                        src={mainImg}
+                        preload="metadata"
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    )
+                  })()}
                   <div className="absolute inset-0 bg-black/35 group-hover:bg-black/45 transition-colors flex flex-col items-center justify-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/25 group-hover:border-white/80 transition-all duration-200 shadow-lg">
                       <Play size={34} className="text-white fill-white ml-1" />
@@ -337,11 +343,20 @@ export default function PropertyDetail() {
                   className={`relative shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}
                 >
                   {isVideoPath(img) ? (
-                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                      <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
-                        <Play size={10} className="text-white fill-white ml-0.5" />
+                    property.video_thumbnails?.[img] ? (
+                      <div className="relative w-full h-full">
+                        <img src={property.video_thumbnails[img]} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <Play size={10} className="text-white fill-white ml-0.5" />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
+                          <Play size={10} className="text-white fill-white ml-0.5" />
+                        </div>
+                      </div>
+                    )
                   ) : (
                     <img src={mediaUrl(img)} alt="" className="w-full h-full object-cover" />
                   )}

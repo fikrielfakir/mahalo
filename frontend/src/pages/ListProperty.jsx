@@ -257,13 +257,24 @@ export default function ListProperty() {
       .then(data => {
         const addr = data.address || {}
         const neighborhood = addr.suburb || addr.neighbourhood || addr.road || addr.village || ''
-        const rawCity = (addr.city || addr.town || addr.village || addr.county || '').toLowerCase()
+
+        /* Strip diacritics for robust matching (e.g. "Fès"→"fes", "Kénitra"→"kenitra") */
+        const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+
+        /* Collect every location-related field Nominatim may return */
+        const candidates = [
+          addr.city, addr.town, addr.municipality, addr.city_district,
+          addr.village, addr.county, addr.state_district, addr.province, addr.state,
+        ].filter(Boolean).map(norm)
+
         const matchedCity = cities.find(c => {
-          const cn = c.name.toLowerCase()
-          return cn === rawCity || rawCity.includes(cn) || cn.includes(rawCity)
+          const cn = norm(c.name)
+          return candidates.some(cand => cand === cn || cand.includes(cn) || cn.includes(cand))
         })
+
         setForm(f => {
-          const newCityId = matchedCity ? String(matchedCity.id) : f.city_id
+          /* Use matched city; if nothing matched clear the field so it doesn't stay stale */
+          const newCityId = matchedCity ? String(matchedCity.id) : ''
           prevCityIdRef.current = newCityId
           return {
             ...f,

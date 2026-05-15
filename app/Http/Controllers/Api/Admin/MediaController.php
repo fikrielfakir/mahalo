@@ -67,9 +67,11 @@ class MediaController extends Controller
             $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
             @mkdir(dirname($thumbDiskPath), 0755, true);
             $videoFullPath  = Storage::disk('public')->path($tmpPath);
-            exec("ffmpeg -ss 2 -i " . escapeshellarg($videoFullPath) .
-                 " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
-                 escapeshellarg($thumbDiskPath) . " 2>/dev/null");
+            if (function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))))) {
+                @exec("ffmpeg -ss 2 -i " . escapeshellarg($videoFullPath) .
+                     " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
+                     escapeshellarg($thumbDiskPath) . " 2>/dev/null");
+            }
             if (file_exists($thumbDiskPath)) {
                 $thumbnailPath = $thumbStorePath;
             }

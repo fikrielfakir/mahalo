@@ -246,15 +246,25 @@ export default function PropertyDetail() {
                   className="w-full h-full object-contain bg-black"
                 />
               ) : (
-                <button
+                <div
+                  className="relative w-full h-full cursor-pointer group"
                   onClick={() => setPlayingVideo(true)}
-                  className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-navy/90 to-navy/70 group"
                 >
-                  <div className="w-20 h-20 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center group-hover:bg-white/20 group-hover:border-white/70 transition-all duration-200">
-                    <Play size={32} className="text-white fill-white ml-1" />
+                  <video
+                    src={mainImg}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.001 }}
+                  />
+                  <div className="absolute inset-0 bg-black/35 group-hover:bg-black/45 transition-colors flex flex-col items-center justify-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/25 group-hover:border-white/80 transition-all duration-200 shadow-lg">
+                      <Play size={34} className="text-white fill-white ml-1" />
+                    </div>
+                    <span className="text-white/80 text-sm font-semibold tracking-wide drop-shadow">Tap to play video</span>
                   </div>
-                  <span className="text-white/70 text-sm font-medium tracking-wide">Tap to play video</span>
-                </button>
+                </div>
               )
             ) : (
               <img src={mainImg} alt={property.name} className="w-full h-full object-cover" />

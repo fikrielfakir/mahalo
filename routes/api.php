@@ -143,6 +143,8 @@ Route::prefix('v1')->group(function () {
         Route::put('/properties/{id}/moderation', [AdminPropertyController::class, 'moderation']);
         Route::apiResource('projects',        AdminProjectController::class);
         Route::apiResource('agents',          AdminAgentController::class);
+        Route::post('/agents/{id}/ban',       [AdminAgentController::class, 'ban']);
+        Route::post('/agents/{id}/unban',     [AdminAgentController::class, 'unban']);
         Route::get('/professional-applications',              [AdminProfessionalApplicationController::class, 'index']);
         Route::post('/professional-applications/{id}/approve', [AdminProfessionalApplicationController::class, 'approve']);
         Route::post('/professional-applications/{id}/reject',  [AdminProfessionalApplicationController::class, 'reject']);
@@ -152,6 +154,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('investors',       AdminInvestorController::class);
         Route::apiResource('cities',          AdminCityController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('users',           AdminUserController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/users/{id}/ban',        [AdminUserController::class, 'ban']);
+        Route::post('/users/{id}/unban',      [AdminUserController::class, 'unban']);
 
         // Media library
         Route::get('/media',              [MediaController::class, 'index']);

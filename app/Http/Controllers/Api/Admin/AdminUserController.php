@@ -86,4 +86,28 @@ class AdminUserController extends Controller
 
         return response()->json(['data' => null, 'error' => false, 'message' => 'User deleted.']);
     }
+
+    public function ban(Request $request, int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            return response()->json(['data' => null, 'error' => true, 'message' => 'Admin users cannot be banned.'], 422);
+        }
+
+        $data = $request->validate(['reason' => 'nullable|string|max:500']);
+
+        $user->update(['is_banned' => true, 'ban_reason' => $data['reason'] ?? null]);
+        $user->tokens()->delete();
+
+        return response()->json(['data' => $user->fresh(), 'error' => false, 'message' => 'User banned.']);
+    }
+
+    public function unban(int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+        $user->update(['is_banned' => false, 'ban_reason' => null]);
+
+        return response()->json(['data' => $user->fresh(), 'error' => false, 'message' => 'User unbanned.']);
+    }
 }

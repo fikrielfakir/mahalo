@@ -74,6 +74,15 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->is_banned) {
+            $reason = $user->ban_reason ? ' Reason: ' . $user->ban_reason : '';
+            return response()->json([
+                'data'    => null,
+                'error'   => true,
+                'message' => 'Your account has been suspended.' . $reason,
+            ], 403);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([

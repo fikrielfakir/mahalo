@@ -81,6 +81,36 @@ class AdminAgentController extends Controller
         return response()->json(['data' => null, 'error' => false, 'message' => 'Agent deleted.']);
     }
 
+    public function ban(Request $request, int $id): JsonResponse
+    {
+        $agent = Agent::findOrFail($id);
+        $data  = $request->validate(['reason' => 'nullable|string|max:500']);
+
+        $agent->update(['is_banned' => true, 'ban_reason' => $data['reason'] ?? null]);
+
+        // Also ban the linked user account if one exists
+        $user = \App\Models\User::where('professional_agent_id', $id)->first();
+        if ($user) {
+            $user->update(['is_banned' => true, 'ban_reason' => $data['reason'] ?? null]);
+            $user->tokens()->delete();
+        }
+
+        return response()->json(['data' => $this->format($agent->fresh('city')), 'error' => false, 'message' => 'Agent banned.']);
+    }
+
+    public function unban(int $id): JsonResponse
+    {
+        $agent = Agent::findOrFail($id);
+        $agent->update(['is_banned' => false, 'ban_reason' => null]);
+
+        $user = \App\Models\User::where('professional_agent_id', $id)->first();
+        if ($user) {
+            $user->update(['is_banned' => false, 'ban_reason' => null]);
+        }
+
+        return response()->json(['data' => $this->format($agent->fresh('city')), 'error' => false, 'message' => 'Agent unbanned.']);
+    }
+
     private function format(Agent $a): array
     {
         return [
@@ -96,6 +126,8 @@ class AdminAgentController extends Controller
             'city'        => $a->city ? ['id' => $a->city->id, 'name' => $a->city->name] : null,
             'is_featured' => (bool) $a->is_featured,
             'is_verified' => (bool) $a->is_verified,
+            'is_banned'   => (bool) $a->is_banned,
+            'ban_reason'  => $a->ban_reason,
             'created_at'  => $a->created_at,
         ];
     }

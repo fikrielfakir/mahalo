@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { adminUsers } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Select } from '../components/Modal'
-import { Plus, Pencil, Trash2, Shield, UserCog } from 'lucide-react'
+import { Plus, Pencil, Trash2, Shield, UserCog, Ban, ShieldCheck } from 'lucide-react'
 
 const ROLES = ['admin', 'agent', 'viewer']
 const EMPTY = { name: '', email: '', password: '', role: 'viewer' }
@@ -14,16 +14,20 @@ function roleColor(role) {
 }
 
 export default function UsersPage() {
-  const [rows, setRows]       = useState([])
-  const [meta, setMeta]       = useState({})
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch]   = useState('')
-  const [page, setPage]       = useState(1)
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState(null)
-  const [form, setForm]       = useState(EMPTY)
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState(null)
+  const [rows, setRows]         = useState([])
+  const [meta, setMeta]         = useState({})
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState('')
+  const [page, setPage]         = useState(1)
+  const [modal, setModal]       = useState(false)
+  const [editing, setEditing]   = useState(null)
+  const [form, setForm]         = useState(EMPTY)
+  const [saving, setSaving]     = useState(false)
+  const [error, setError]       = useState(null)
+  const [banModal, setBanModal] = useState(false)
+  const [banTarget, setBanTarget] = useState(null)
+  const [banReason, setBanReason] = useState('')
+  const [banning, setBanning]   = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -70,6 +74,36 @@ export default function UsersPage() {
     load()
   }
 
+  const openBan = (row) => {
+    setBanTarget(row)
+    setBanReason('')
+    setBanModal(true)
+  }
+
+  const confirmBan = async () => {
+    if (!banTarget) return
+    setBanning(true)
+    try {
+      await adminUsers.ban(banTarget.id, { reason: banReason })
+      setBanModal(false)
+      load()
+    } catch (err) {
+      alert(err?.message || 'Error banning user')
+    } finally {
+      setBanning(false)
+    }
+  }
+
+  const unban = async (id) => {
+    if (!window.confirm('Unban this user? They will regain access to their account.')) return
+    try {
+      await adminUsers.unban(id)
+      load()
+    } catch (err) {
+      alert(err?.message || 'Error unbanning user')
+    }
+  }
+
   const cols = [
     {
       key: 'name', label: 'User',
@@ -95,6 +129,18 @@ export default function UsersPage() {
       ),
     },
     {
+      key: 'status', label: 'Status',
+      render: (r) => r.is_banned
+        ? <Badge color="red">Banned</Badge>
+        : <Badge color="green">Active</Badge>,
+    },
+    {
+      key: 'ban_reason', label: 'Ban Reason',
+      render: (r) => r.ban_reason
+        ? <span className="text-xs text-gray-500 max-w-[140px] truncate block" title={r.ban_reason}>{r.ban_reason}</span>
+        : <span className="text-gray-300 text-xs">—</span>,
+    },
+    {
       key: 'created_at', label: 'Joined',
       render: (r) => r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
     },
@@ -103,6 +149,11 @@ export default function UsersPage() {
       render: (r) => (
         <div className="flex gap-1 justify-end">
           <Btn size="sm" variant="ghost" onClick={() => open(r)}><Pencil size={13} /></Btn>
+          {r.role !== 'admin' && (
+            r.is_banned
+              ? <Btn size="sm" variant="ghost" onClick={() => unban(r.id)} title="Unban user"><ShieldCheck size={13} className="text-green-600" /></Btn>
+              : <Btn size="sm" variant="ghost" onClick={() => openBan(r)} title="Ban user"><Ban size={13} className="text-amber-600" /></Btn>
+          )}
           <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
         </div>
       ),
@@ -123,7 +174,6 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Role legend */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
           { role: 'admin',  color: 'bg-red-50 border-red-100',   text: 'text-red-700',  icon: '🔴', desc: 'Full access — manage all content, users and settings.' },
@@ -172,6 +222,32 @@ export default function UsersPage() {
             <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={banModal} onClose={() => setBanModal(false)} title="Ban User" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <Ban size={18} className="text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Suspend <span className="font-bold">{banTarget?.name}</span></p>
+              <p className="text-xs text-amber-600 mt-0.5">This user will be immediately signed out and blocked from logging in.</p>
+            </div>
+          </div>
+          <FormField label="Reason (optional)">
+            <Input
+              value={banReason}
+              onChange={e => setBanReason(e.target.value)}
+              placeholder="e.g. Violated terms of service"
+              maxLength={500}
+            />
+          </FormField>
+          <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
+            <Btn type="button" variant="ghost" onClick={() => setBanModal(false)}>Cancel</Btn>
+            <Btn variant="danger" disabled={banning} onClick={confirmBan}>
+              <Ban size={14} /> {banning ? 'Banning…' : 'Ban User'}
+            </Btn>
+          </div>
+        </div>
       </Modal>
     </div>
   )

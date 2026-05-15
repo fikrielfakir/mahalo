@@ -2,21 +2,25 @@ import { useEffect, useState, useCallback } from 'react'
 import { adminAgents, publicApi } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
-import { Plus, Pencil, Trash2, BadgeCheck } from 'lucide-react'
+import { Plus, Pencil, Trash2, BadgeCheck, Ban, ShieldCheck } from 'lucide-react'
 
 const EMPTY = { first_name: '', last_name: '', email: '', phone: '', whatsapp: '', description: '', city_id: '', is_featured: false, is_verified: false }
 
 export default function AgentsPage() {
-  const [rows, setRows]       = useState([])
-  const [meta, setMeta]       = useState({})
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch]   = useState('')
-  const [page, setPage]       = useState(1)
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState(null)
-  const [form, setForm]       = useState(EMPTY)
-  const [saving, setSaving]   = useState(false)
-  const [cities, setCities]   = useState([])
+  const [rows, setRows]           = useState([])
+  const [meta, setMeta]           = useState({})
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
+  const [page, setPage]           = useState(1)
+  const [modal, setModal]         = useState(false)
+  const [editing, setEditing]     = useState(null)
+  const [form, setForm]           = useState(EMPTY)
+  const [saving, setSaving]       = useState(false)
+  const [cities, setCities]       = useState([])
+  const [banModal, setBanModal]   = useState(false)
+  const [banTarget, setBanTarget] = useState(null)
+  const [banReason, setBanReason] = useState('')
+  const [banning, setBanning]     = useState(false)
 
   const loadAgents = useCallback(() => {
     setLoading(true)
@@ -46,6 +50,36 @@ export default function AgentsPage() {
     await adminAgents.delete(id); loadAgents()
   }
 
+  const openBan = (row) => {
+    setBanTarget(row)
+    setBanReason('')
+    setBanModal(true)
+  }
+
+  const confirmBan = async () => {
+    if (!banTarget) return
+    setBanning(true)
+    try {
+      await adminAgents.ban(banTarget.id, { reason: banReason })
+      setBanModal(false)
+      loadAgents()
+    } catch (err) {
+      alert(err?.message || 'Error banning agent')
+    } finally {
+      setBanning(false)
+    }
+  }
+
+  const unban = async (id) => {
+    if (!window.confirm('Unban this agent? They will regain access to their account.')) return
+    try {
+      await adminAgents.unban(id)
+      loadAgents()
+    } catch (err) {
+      alert(err?.message || 'Error unbanning agent')
+    }
+  }
+
   const agentCols = [
     { key: 'name', label: 'Agent', render: r => (
       <div className="flex items-center gap-2">
@@ -62,9 +96,17 @@ export default function AgentsPage() {
     { key: 'city',        label: 'City',     render: r => r.city?.name || '—' },
     { key: 'is_featured', label: 'Featured', render: r => <Badge color={r.is_featured ? 'gold' : 'gray'}>{r.is_featured ? 'Yes' : 'No'}</Badge> },
     { key: 'is_verified', label: 'Verified', render: r => <Badge color={r.is_verified ? 'blue' : 'gray'}>{r.is_verified ? 'Yes' : 'No'}</Badge> },
+    { key: 'status',      label: 'Status',   render: r => r.is_banned
+      ? <Badge color="red">Banned</Badge>
+      : <Badge color="green">Active</Badge>
+    },
     { key: 'actions', label: '', render: r => (
       <div className="flex gap-1 justify-end">
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
+        {r.is_banned
+          ? <Btn size="sm" variant="ghost" onClick={() => unban(r.id)} title="Unban agent"><ShieldCheck size={13} className="text-green-600" /></Btn>
+          : <Btn size="sm" variant="ghost" onClick={() => openBan(r)} title="Ban agent"><Ban size={13} className="text-amber-600" /></Btn>
+        }
         <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
       </div>
     )},
@@ -105,6 +147,32 @@ export default function AgentsPage() {
             <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={banModal} onClose={() => setBanModal(false)} title="Ban Agent" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <Ban size={18} className="text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Suspend <span className="font-bold">{banTarget?.name}</span></p>
+              <p className="text-xs text-amber-600 mt-0.5">This agent and their linked user account will be signed out and blocked from logging in.</p>
+            </div>
+          </div>
+          <FormField label="Reason (optional)">
+            <Input
+              value={banReason}
+              onChange={e => setBanReason(e.target.value)}
+              placeholder="e.g. Fraudulent listings"
+              maxLength={500}
+            />
+          </FormField>
+          <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
+            <Btn type="button" variant="ghost" onClick={() => setBanModal(false)}>Cancel</Btn>
+            <Btn variant="danger" disabled={banning} onClick={confirmBan}>
+              <Ban size={14} /> {banning ? 'Banning…' : 'Ban Agent'}
+            </Btn>
+          </div>
+        </div>
       </Modal>
     </div>
   )

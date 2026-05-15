@@ -58,6 +58,8 @@ export const adminAgents = {
   create: (d)      => client.post('/admin/agents', d),
   update: (id, d)  => client.put(`/admin/agents/${id}`, d),
   delete: (id)     => client.delete(`/admin/agents/${id}`),
+  ban:    (id, d)  => client.post(`/admin/agents/${id}/ban`, d),
+  unban:  (id)     => client.post(`/admin/agents/${id}/unban`),
 }
 
 export const adminCategories = {
@@ -114,6 +116,8 @@ export const adminUsers = {
   create: (d)      => client.post('/admin/users', d),
   update: (id, d)  => client.put(`/admin/users/${id}`, d),
   delete: (id)     => client.delete(`/admin/users/${id}`),
+  ban:    (id, d)  => client.post(`/admin/users/${id}/ban`, d),
+  unban:  (id)     => client.post(`/admin/users/${id}/unban`),
 }
 
 export const adminProfessionalApplications = {

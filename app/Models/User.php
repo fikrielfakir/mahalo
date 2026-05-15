@@ -41,6 +41,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'is_banned',
+        'ban_reason',
         'phone',
         'account_type',
         'company_name',
@@ -67,6 +69,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'is_banned'         => 'boolean',
         ];
     }
 

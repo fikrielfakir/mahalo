@@ -16,12 +16,14 @@ class Agent extends Model
         'first_name', 'last_name', 'description', 'gender', 'email',
         'username', 'password', 'avatar_id', 'phone', 'whatsapp',
         'is_featured', 'is_verified', 'verified_at', 'city_id',
+        'is_banned', 'ban_reason',
         'credits', 'package_id', 'package_started_at', 'package_ended_at',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
         'is_verified' => 'boolean',
+        'is_banned'   => 'boolean',
     ];
 
     public function getNameAttribute(): string

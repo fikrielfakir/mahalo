@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle } from 'lucide-react'
+import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle, LayoutDashboard } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -53,6 +53,8 @@ export default function Navbar({ transparent = false }) {
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '?'
+
+  const isAgent = !!(user?.professional_agent_id || user?.role === 'agent')
 
   return (
     <header
@@ -156,6 +158,15 @@ export default function Navbar({ transparent = false }) {
                   >
                     <MessageCircle size={14} /> My Messages
                   </Link>
+                  {isAgent && (
+                    <Link
+                      to="/agent-dashboard"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#730D26] hover:bg-[#730D26]/8 transition-colors rounded-xl mx-1 font-semibold"
+                      style={{ width: 'calc(100% - 8px)' }}
+                    >
+                      <LayoutDashboard size={14} /> Agent Dashboard
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
@@ -248,6 +259,14 @@ export default function Navbar({ transparent = false }) {
                 >
                   <MessageCircle size={15} /> My Messages
                 </Link>
+                {isAgent && (
+                  <Link
+                    to="/agent-dashboard"
+                    className="flex items-center gap-2 w-full px-4 py-3 text-[#730D26] hover:bg-[#730D26]/8 rounded-2xl font-semibold text-sm transition-all"
+                  >
+                    <LayoutDashboard size={15} /> Agent Dashboard
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all"

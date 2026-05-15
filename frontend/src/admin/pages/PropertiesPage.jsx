@@ -224,13 +224,20 @@ export default function PropertiesPage() {
   const cols = [
     { key: 'name', label: 'Property', render: (r) => (
       <div className="flex items-center gap-2">
-        {r.images?.[0] ? (
-          <img src={`/storage/${r.images[0]}`} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
-        ) : (
-          <div className="w-8 h-8 rounded-xl bg-[#730D26]/5 flex items-center justify-center shrink-0">
-            <Building2 size={14} className="text-[#730D26]/40" />
-          </div>
-        )}
+        {(() => {
+          const firstImg = r.images?.[0]
+          const isVid = firstImg && /\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(firstImg)
+          const src = isVid
+            ? (r.video_thumbnails?.[firstImg] || r.thumbnail_url || null)
+            : r.thumbnail_url || (firstImg ? (firstImg.startsWith('http') ? firstImg : `/storage/${firstImg}`) : null)
+          return src ? (
+            <img src={src} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-[#730D26]/5 flex items-center justify-center shrink-0">
+              <Building2 size={14} className="text-[#730D26]/40" />
+            </div>
+          )
+        })()}
         <div>
           <p className="font-medium text-gray-800 text-sm">{r.name}</p>
           <p className="text-xs text-gray-400">{r.city?.name || '—'}</p>

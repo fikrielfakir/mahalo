@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MediaFile;
 use App\Models\Property;
 use App\Models\Slug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminPropertyController extends Controller
@@ -231,10 +233,38 @@ class AdminPropertyController extends Controller
         return response()->json(['data' => null, 'error' => false, 'message' => 'Property deleted.']);
     }
 
+    private function isVideoPath(string $path): bool
+    {
+        return (bool) preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $path);
+    }
+
+    private function getVideoThumbnails(array $images): array
+    {
+        $videoPaths = array_values(array_filter($images, fn($img) => $this->isVideoPath($img)));
+        if (empty($videoPaths)) return [];
+        return MediaFile::whereIn('path', $videoPaths)
+            ->whereNotNull('thumbnail_url')
+            ->pluck('thumbnail_url', 'path')
+            ->toArray();
+    }
+
     private function format(Property $p): array
     {
         $images = $p->images ?? [];
         if (is_string($images)) $images = json_decode($images, true) ?? [];
+
+        $videoThumbnails = $this->getVideoThumbnails($images);
+
+        $thumbnailUrl = null;
+        foreach ($images as $img) {
+            if ($this->isVideoPath($img)) {
+                if (isset($videoThumbnails[$img])) { $thumbnailUrl = $videoThumbnails[$img]; break; }
+                continue;
+            }
+            $thumbnailUrl = str_starts_with($img, 'http') ? $img : Storage::disk('public')->url($img);
+            break;
+        }
+
         return [
             'id'                => $p->id,
             'name'              => $p->name,
@@ -244,6 +274,8 @@ class AdminPropertyController extends Controller
             'content'           => $p->content,
             'location'          => $p->location,
             'images'            => $images,
+            'thumbnail_url'     => $thumbnailUrl,
+            'video_thumbnails'  => $videoThumbnails,
             'number_bedroom'    => (int) $p->number_bedroom,
             'number_bathroom'   => (int) $p->number_bathroom,
             'number_floor'      => $p->number_floor,

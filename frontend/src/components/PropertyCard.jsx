@@ -11,10 +11,19 @@ import { isVideoPath } from '../utils/media'
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 
 function getImageUrl(property) {
-  if (property?.thumbnail_url) return property.thumbnail_url
   const images = Array.isArray(property?.images) ? property.images : []
+  const firstImg = images[0] || property?.image
+
+  if (firstImg && isVideoPath(firstImg)) {
+    const videoThumb = property?.video_thumbnails?.[firstImg]
+    if (videoThumb) return videoThumb
+    return FALLBACK
+  }
+
+  if (property?.thumbnail_url) return property.thumbnail_url
+
   const firstImage = images.find(img => !isVideoPath(img))
-  const img = firstImage || property?.image
+  const img = firstImage || firstImg
   if (!img || isVideoPath(img)) return FALLBACK
   return img.startsWith('http') ? img : `/storage/${img}`
 }

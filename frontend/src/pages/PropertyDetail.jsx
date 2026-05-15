@@ -286,17 +286,13 @@ export default function PropertyDetail() {
                   onClick={() => setPlayingVideo(true)}
                 >
                   {(() => {
-                    const posterUrl = property.video_thumbnails?.[images[activeImg]] || property.thumbnail_url || ''
+                    const posterUrl = property.video_thumbnails?.[images[activeImg]] || null
                     return posterUrl ? (
                       <img src={posterUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <video
-                        src={mainImg}
-                        preload="metadata"
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                      />
+                      <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                        <Video size={48} className="text-white/20" />
+                      </div>
                     )
                   })()}
                   <div className="absolute inset-0 bg-black/35 group-hover:bg-black/45 transition-colors flex flex-col items-center justify-center gap-4">

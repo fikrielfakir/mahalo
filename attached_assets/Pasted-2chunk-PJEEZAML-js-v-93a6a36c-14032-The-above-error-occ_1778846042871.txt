@@ -1,0 +1,134 @@
+2chunk-PJEEZAML.js?v=93a6a36c:14032 The above error occurred in the <PropertiesPage> component:
+
+    at PropertiesPage (http://192.168.56.2:5000/src/admin/pages/PropertiesPage.jsx:78:27)
+    at RenderedRoute (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:4131:5)
+    at Outlet (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:4537:26)
+    at main
+    at div
+    at div
+    at AdminLayout (http://192.168.56.2:5000/src/admin/components/AdminLayout.jsx:25:29)
+    at RenderedRoute (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:4131:5)
+    at Routes (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:4601:5)
+    at AuthProvider (http://192.168.56.2:5000/src/admin/context/AuthContext.jsx:21:32)
+    at AuthModalProvider (http://192.168.56.2:5000/src/context/AuthModalContext.jsx:20:37)
+    at FavoritesProvider (http://192.168.56.2:5000/src/context/FavoritesContext.jsx:31:37)
+    at VerifyEmailProvider (http://192.168.56.2:5000/src/context/VerifyEmailContext.jsx:20:39)
+    at UserAuthProvider (http://192.168.56.2:5000/src/context/UserAuthContext.jsx:22:36)
+    at CompareProvider (http://192.168.56.2:5000/src/context/CompareContext.jsx:21:35)
+    at Router (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:4544:15)
+    at BrowserRouter (http://192.168.56.2:5000/node_modules/.vite/deps/react-router-dom.js?v=93a6a36c:5290:5)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-PJEEZAML.js?v=93a6a36c:14032
+update.callback @ chunk-PJEEZAML.js?v=93a6a36c:14052
+callCallback @ chunk-PJEEZAML.js?v=93a6a36c:11248
+commitUpdateQueue @ chunk-PJEEZAML.js?v=93a6a36c:11265
+commitLayoutEffectOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:17093
+commitLayoutMountEffects_complete @ chunk-PJEEZAML.js?v=93a6a36c:17980
+commitLayoutEffects_begin @ chunk-PJEEZAML.js?v=93a6a36c:17969
+commitLayoutEffects @ chunk-PJEEZAML.js?v=93a6a36c:17920
+commitRootImpl @ chunk-PJEEZAML.js?v=93a6a36c:19353
+commitRoot @ chunk-PJEEZAML.js?v=93a6a36c:19277
+performSyncWorkOnRoot @ chunk-PJEEZAML.js?v=93a6a36c:18895
+flushSyncCallbacks @ chunk-PJEEZAML.js?v=93a6a36c:9119
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=93a6a36c:19506
+flushPassiveEffects @ chunk-PJEEZAML.js?v=93a6a36c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=93a6a36c:19328
+workLoop @ chunk-PJEEZAML.js?v=93a6a36c:197
+flushWork @ chunk-PJEEZAML.js?v=93a6a36c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:387
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+requestHostCallback @ chunk-PJEEZAML.js?v=93a6a36c:418
+unstable_scheduleCallback @ chunk-PJEEZAML.js?v=93a6a36c:330
+scheduleCallback$1 @ chunk-PJEEZAML.js?v=93a6a36c:19826
+ensureRootIsScheduled @ chunk-PJEEZAML.js?v=93a6a36c:18652
+scheduleUpdateOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18562
+dispatchSetState @ chunk-PJEEZAML.js?v=93a6a36c:12403
+(anonymous) @ AuthContext.jsx:14
+Promise.then
+(anonymous) @ AuthContext.jsx:14
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=93a6a36c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=93a6a36c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=93a6a36c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=93a6a36c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=93a6a36c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=93a6a36c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=93a6a36c:19328
+workLoop @ chunk-PJEEZAML.js?v=93a6a36c:197
+flushWork @ chunk-PJEEZAML.js?v=93a6a36c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+requestHostCallback @ chunk-PJEEZAML.js?v=93a6a36c:418
+unstable_scheduleCallback @ chunk-PJEEZAML.js?v=93a6a36c:330
+scheduleCallback$1 @ chunk-PJEEZAML.js?v=93a6a36c:19826
+ensureRootIsScheduled @ chunk-PJEEZAML.js?v=93a6a36c:18652
+scheduleUpdateOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18562
+updateContainer @ chunk-PJEEZAML.js?v=93a6a36c:20776
+ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-PJEEZAML.js?v=93a6a36c:21116
+(anonymous) @ main.jsx:6Understand this error
+chunk-PJEEZAML.js?v=93a6a36c:9129 Uncaught ReferenceError: adminCities is not defined
+    at PropertiesPage.jsx:70:5
+    at commitHookEffectListMount (chunk-PJEEZAML.js?v=93a6a36c:16915:34)
+    at commitPassiveMountOnFiber (chunk-PJEEZAML.js?v=93a6a36c:18156:19)
+    at commitPassiveMountEffects_complete (chunk-PJEEZAML.js?v=93a6a36c:18129:17)
+    at commitPassiveMountEffects_begin (chunk-PJEEZAML.js?v=93a6a36c:18119:15)
+    at commitPassiveMountEffects (chunk-PJEEZAML.js?v=93a6a36c:18109:11)
+    at flushPassiveEffectsImpl (chunk-PJEEZAML.js?v=93a6a36c:19490:11)
+    at flushPassiveEffects (chunk-PJEEZAML.js?v=93a6a36c:19447:22)
+    at chunk-PJEEZAML.js?v=93a6a36c:19328:17
+    at workLoop (chunk-PJEEZAML.js?v=93a6a36c:197:42)
+(anonymous) @ PropertiesPage.jsx:70
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=93a6a36c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=93a6a36c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=93a6a36c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=93a6a36c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=93a6a36c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=93a6a36c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=93a6a36c:19328
+workLoop @ chunk-PJEEZAML.js?v=93a6a36c:197
+flushWork @ chunk-PJEEZAML.js?v=93a6a36c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:387
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+requestHostCallback @ chunk-PJEEZAML.js?v=93a6a36c:418
+unstable_scheduleCallback @ chunk-PJEEZAML.js?v=93a6a36c:330
+scheduleCallback$1 @ chunk-PJEEZAML.js?v=93a6a36c:19826
+ensureRootIsScheduled @ chunk-PJEEZAML.js?v=93a6a36c:18652
+scheduleUpdateOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18562
+dispatchSetState @ chunk-PJEEZAML.js?v=93a6a36c:12403
+(anonymous) @ AuthContext.jsx:14
+Promise.then
+(anonymous) @ AuthContext.jsx:14
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=93a6a36c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=93a6a36c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=93a6a36c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=93a6a36c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=93a6a36c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=93a6a36c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=93a6a36c:19328
+workLoop @ chunk-PJEEZAML.js?v=93a6a36c:197
+flushWork @ chunk-PJEEZAML.js?v=93a6a36c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-PJEEZAML.js?v=93a6a36c:407
+requestHostCallback @ chunk-PJEEZAML.js?v=93a6a36c:418
+unstable_scheduleCallback @ chunk-PJEEZAML.js?v=93a6a36c:330
+scheduleCallback$1 @ chunk-PJEEZAML.js?v=93a6a36c:19826
+ensureRootIsScheduled @ chunk-PJEEZAML.js?v=93a6a36c:18652
+scheduleUpdateOnFiber @ chunk-PJEEZAML.js?v=93a6a36c:18562
+updateContainer @ chunk-PJEEZAML.js?v=93a6a36c:20776
+ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-PJEEZAML.js?v=93a6a36c:21116
+(anonymous) @ main.jsx:6Understand this error

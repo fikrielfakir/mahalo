@@ -178,9 +178,7 @@ class PropertyController extends Controller
 
     public function filters(): JsonResponse
     {
-        $cities = City::whereHas('properties', fn($q) => $q->whereIn('status', ['selling', 'renting']))
-            ->select('id', 'name')
-            ->get();
+        $cities = City::orderBy('name')->select('id', 'name')->get();
 
         $categories = Category::where('status', 'published')
             ->select('id', 'name')

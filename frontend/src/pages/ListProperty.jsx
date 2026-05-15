@@ -231,8 +231,8 @@ export default function ListProperty() {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   useEffect(() => {
-    api.get('/cities')
-      .then(data => setCities(data?.data || []))
+    api.get('/properties/filters')
+      .then(data => setCities(data?.data?.cities || []))
       .catch(() => {})
   }, [])
 

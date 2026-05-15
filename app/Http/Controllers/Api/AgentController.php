@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Models\Project;
+use App\Models\Property;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -65,7 +68,25 @@ class AgentController extends Controller
             return response()->json(['data' => null, 'error' => true, 'message' => 'Agent not found'], 404);
         }
 
-        $properties = $agent->properties()->with(['city', 'slug'])->paginate(10);
+        // Find the user account linked to this agent (has professional_agent_id = agent.id)
+        $linkedUser = User::where('professional_agent_id', $agent->id)->first();
+
+        $properties = Property::with(['city', 'slug'])
+            ->where(function ($q) use ($agent, $linkedUser) {
+                // Agent-authored listings
+                $q->where(function ($inner) use ($agent) {
+                    $inner->where('author_id', $agent->id)
+                          ->where('author_type', Agent::class);
+                });
+                // Also include legacy listings submitted under the linked user account
+                if ($linkedUser) {
+                    $q->orWhere(function ($inner) use ($linkedUser) {
+                        $inner->where('author_id', $linkedUser->id)
+                              ->where('author_type', User::class);
+                    });
+                }
+            })
+            ->paginate(10);
 
         return response()->json([
             'data'    => $properties->items(),
@@ -83,7 +104,22 @@ class AgentController extends Controller
             return response()->json(['data' => null, 'error' => true, 'message' => 'Agent not found'], 404);
         }
 
-        $projects = $agent->projects()->with(['city', 'slug'])->paginate(10);
+        $linkedUser = User::where('professional_agent_id', $agent->id)->first();
+
+        $projects = Project::with(['city', 'slug'])
+            ->where(function ($q) use ($agent, $linkedUser) {
+                $q->where(function ($inner) use ($agent) {
+                    $inner->where('author_id', $agent->id)
+                          ->where('author_type', Agent::class);
+                });
+                if ($linkedUser) {
+                    $q->orWhere(function ($inner) use ($linkedUser) {
+                        $inner->where('author_id', $linkedUser->id)
+                              ->where('author_type', User::class);
+                    });
+                }
+            })
+            ->paginate(10);
 
         return response()->json([
             'data'    => $projects->items(),

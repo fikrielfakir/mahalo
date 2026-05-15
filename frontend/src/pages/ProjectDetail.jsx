@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { MapPin, Heart, Share2, ArrowLeft, Building, Phone, Mail, Calendar, Loader2 } from 'lucide-react'
+import { MapPin, Heart, Share2, ArrowLeft, Building, Phone, Mail, Calendar, Loader2, Video } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
 import { projectsApi, consultsApi } from '../api/client'
+
+function isVideoPath(path) {
+  if (!path) return false
+  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
+}
 
 function formatPrice(price) {
   if (!price) return 'Price on request'
@@ -121,11 +126,27 @@ export default function ProjectDetail() {
           </Link>
         </div>
 
-        {/* Hero Image */}
+        {/* Hero Image / Video */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
           <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden">
-            <img src={mainSrc || FALLBACK} alt={project.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = FALLBACK }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent" />
+            {isVideoPath(images[activeImg]) ? (
+              <video
+                key={mainSrc}
+                src={mainSrc}
+                controls
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img src={mainSrc || FALLBACK} alt={project.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = FALLBACK }} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent pointer-events-none" />
+            {/* Watermark */}
+            {isVideoPath(images[activeImg]) && (
+              <div className="absolute bottom-10 right-4 pointer-events-none select-none">
+                <span className="text-white/40 font-bold text-lg tracking-widest uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>MAHALO</span>
+              </div>
+            )}
             <div className="absolute top-4 right-4 flex gap-2">
               <button
                 onClick={() => setLiked(l => !l)}
@@ -156,7 +177,13 @@ export default function ProjectDetail() {
                   onClick={() => setActiveImg(i)}
                   className={`shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}
                 >
-                  <img src={imgUrl(img) || FALLBACK} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = FALLBACK }} />
+                  {isVideoPath(img) ? (
+                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                      <Video size={18} className="text-gray-300" />
+                    </div>
+                  ) : (
+                    <img src={imgUrl(img) || FALLBACK} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = FALLBACK }} />
+                  )}
                 </button>
               ))}
             </div>

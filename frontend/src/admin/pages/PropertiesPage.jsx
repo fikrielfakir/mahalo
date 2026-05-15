@@ -350,8 +350,8 @@ export default function PropertiesPage() {
             </div>
 
             <div className="col-span-2">
-              <FormField label="Images" hint="Upload files or add URLs — first image is the main photo">
-                <ImageUploader images={form.images} onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))} folder="properties" />
+              <FormField label="Images & Videos" hint="Upload files or add URLs — first image is the main photo. Videos will be watermarked.">
+                <ImageUploader images={form.images} onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))} folder="properties" allowVideo />
               </FormField>
             </div>
 

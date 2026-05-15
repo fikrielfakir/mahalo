@@ -15,12 +15,25 @@ class UserListingController extends Controller
     {
         $user = $request->user();
 
-        $listings = Property::with(['city'])
-            ->where('author_id', $user->id)
-            ->where('author_type', 'App\\Models\\User')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn($p) => $this->format($p));
+        $query = Property::with(['city'])
+            ->orderBy('created_at', 'desc');
+
+        if ($user->professional_agent_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where(function ($q2) use ($user) {
+                    $q2->where('author_id', $user->id)
+                       ->where('author_type', 'App\\Models\\User');
+                })->orWhere(function ($q2) use ($user) {
+                    $q2->where('author_id', $user->professional_agent_id)
+                       ->where('author_type', 'App\\Models\\Agent');
+                });
+            });
+        } else {
+            $query->where('author_id', $user->id)
+                  ->where('author_type', 'App\\Models\\User');
+        }
+
+        $listings = $query->get()->map(fn($p) => $this->format($p));
 
         return response()->json([
             'data'    => $listings,
@@ -50,13 +63,21 @@ class UserListingController extends Controller
             'content'         => 'nullable|string',
         ]);
 
+        if ($user->professional_agent_id) {
+            $authorId   = $user->professional_agent_id;
+            $authorType = 'App\\Models\\Agent';
+        } else {
+            $authorId   = $user->id;
+            $authorType = 'App\\Models\\User';
+        }
+
         $property = Property::create([
             ...$data,
             'images'            => json_encode($data['images'] ?? []),
             'status'            => 'pending',
             'moderation_status' => 'pending',
-            'author_id'         => $user->id,
-            'author_type'       => 'App\\Models\\User',
+            'author_id'         => $authorId,
+            'author_type'       => $authorType,
             'unique_id'         => 'USER-' . strtoupper(Str::random(6)),
         ]);
 

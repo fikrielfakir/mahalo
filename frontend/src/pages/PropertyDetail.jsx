@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2 } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
@@ -11,6 +11,11 @@ import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
+
+function isVideoPath(path) {
+  if (!path) return false
+  return /\.(mp4|mov|avi|mkv|webm|m4v)(\?.*)?$/i.test(path)
+}
 
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
@@ -219,11 +224,27 @@ export default function PropertyDetail() {
           </Link>
         </div>
 
-        {/* Hero Image */}
+        {/* Hero Image / Video */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
           <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden">
-            <img src={mainImg} alt={property.name} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent" />
+            {isVideoPath(images[activeImg]) ? (
+              <video
+                key={mainImg}
+                src={mainImg}
+                controls
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img src={mainImg} alt={property.name} className="w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent pointer-events-none" />
+            {/* Watermark */}
+            {isVideoPath(images[activeImg]) && (
+              <div className="absolute bottom-10 right-4 pointer-events-none select-none">
+                <span className="text-white/40 font-bold text-lg tracking-widest uppercase" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>MAHALO</span>
+              </div>
+            )}
             <div className="absolute top-4 right-4 flex gap-2">
               <button onClick={handleLike} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors">
                 <Heart size={18} className={liked ? 'fill-red-500 text-red-500' : 'text-navy'} />
@@ -245,7 +266,13 @@ export default function PropertyDetail() {
                 const url = img.startsWith('http') ? img : `/storage/${img}`
                 return (
                   <button key={i} onClick={() => setActiveImg(i)} className={`shrink-0 w-20 h-16 rounded-2xl overflow-hidden border-2 transition-all ${i === activeImg ? 'border-gold' : 'border-transparent'}`}>
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    {isVideoPath(img) ? (
+                      <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                        <Video size={18} className="text-gray-300" />
+                      </div>
+                    ) : (
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                    )}
                   </button>
                 )
               })}

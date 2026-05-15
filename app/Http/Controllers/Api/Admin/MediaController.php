@@ -184,39 +184,55 @@ class MediaController extends Controller
         $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
         if (in_array('exec', $disabled)) return null;
 
+        if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) return null;
+
         $ffmpegBin = $this->getFfmpegBin();
 
-        // Ensure the thumbs directory exists with correct permissions
+        // Ensure the thumbs directory exists
         $thumbDir = dirname($thumbDiskPath);
         if (!is_dir($thumbDir)) {
             mkdir($thumbDir, 0755, true);
         }
 
-        foreach ([1, 0.5, 0.1, 0] as $seek) {
+        $base = escapeshellarg($ffmpegBin) . ' -y';
+        $out_arg = ' -frames:v 1 -vf scale=640:-2 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath);
+        $in_arg  = ' -i ' . escapeshellarg($videoFullPath);
+
+        // Ordered strategies: most compatible first
+        $strategies = [
+            // 1. No seek — grab the very first decodable frame (most reliable)
+            $base . $in_arg . $out_arg,
+            // 2. Slow seek (after -i) at 1 s — better quality frame if video is long enough
+            $base . $in_arg . ' -ss 1' . $out_arg,
+            // 3. Fast seek (before -i) at 0.5 s
+            $base . ' -ss 0.5' . $in_arg . $out_arg,
+            // 4. Fast seek at 0.1 s
+            $base . ' -ss 0.1' . $in_arg . $out_arg,
+            // 5. Force mjpeg decoder, no seek
+            $base . ' -c:v mjpeg' . $in_arg . $out_arg,
+        ];
+
+        $errFile = sys_get_temp_dir() . '/ffmpeg_thumb_' . getmypid() . '.log';
+
+        foreach ($strategies as $strategyIndex => $cmd) {
             @unlink($thumbDiskPath);
-            $errFile = sys_get_temp_dir() . '/ffmpeg_thumb_' . getmypid() . '.log';
-            $cmd =
-                escapeshellarg($ffmpegBin) .
-                " -ss {$seek} -i " . escapeshellarg($videoFullPath) .
-                " -frames:v 1 -vf scale=640:-1 -q:v 3 -update 1 " .
-                escapeshellarg($thumbDiskPath) . " -y 2>" . escapeshellarg($errFile);
-            exec($cmd, $out, $ret);
+            exec($cmd . ' 2>' . escapeshellarg($errFile), $cmdOut, $ret);
+
             if (file_exists($thumbDiskPath) && filesize($thumbDiskPath) > 0) {
                 @unlink($errFile);
                 return $thumbStorePath;
             }
-            // Log ffmpeg error for debugging
-            if (file_exists($errFile)) {
-                \Illuminate\Support\Facades\Log::warning('ffmpeg thumbnail failed', [
-                    'seek'    => $seek,
-                    'ret'     => $ret,
-                    'ffmpeg'  => $ffmpegBin,
-                    'video'   => $videoFullPath,
-                    'stderr'  => file_get_contents($errFile),
-                ]);
-                @unlink($errFile);
-            }
+
+            $stderr = file_exists($errFile) ? trim(file_get_contents($errFile)) : '';
+            \Illuminate\Support\Facades\Log::warning('ffmpeg thumbnail strategy failed', [
+                'strategy' => $strategyIndex + 1,
+                'cmd'      => $cmd,
+                'ret'      => $ret,
+                'stderr'   => mb_substr($stderr, -800),
+            ]);
         }
+
+        @unlink($errFile);
         return null;
     }
 

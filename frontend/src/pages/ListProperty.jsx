@@ -56,12 +56,16 @@ function MediaThumb({ file, onRemove }) {
   return (
     <div className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
       {isVideo ? (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
-          <Video size={22} className="text-gray-400" />
-          <span className="text-[9px] text-gray-300 px-1 text-center truncate w-full">
-            {file.name}
-          </span>
-        </div>
+        file.thumbnailUrl ? (
+          <img src={file.thumbnailUrl} alt={file.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 gap-1">
+            <Video size={22} className="text-gray-400" />
+            <span className="text-[9px] text-gray-300 px-1 text-center truncate w-full">
+              {file.name}
+            </span>
+          </div>
+        )
       ) : (
         <img
           src={file.previewUrl || (file.url ? `/storage/${file.url}` : '')}
@@ -120,8 +124,9 @@ function MediaUploader({ files, onChange }) {
       })
       const path = res.data?.path
       const mime = file.type
+      const thumbnailUrl = res.data?.data?.thumbnail_url || null
       if (path) {
-        onChange([...filesRef.current, { path, name: file.name, mime, previewUrl, url: path }])
+        onChange([...filesRef.current, { path, name: file.name, mime, previewUrl, url: path, thumbnailUrl }])
       }
     } catch {
       addError(`Failed to upload ${file.name}. Please try again.`)

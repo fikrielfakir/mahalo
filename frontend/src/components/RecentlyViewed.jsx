@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight } from 'lucide-react'
 
@@ -38,8 +38,27 @@ function getImg(image) {
 }
 
 export default function RecentlyViewed() {
-  const items = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem(KEY)) || [] } catch { return [] }
+  const [items, setItems] = useState([])
+
+  useEffect(() => {
+    let stored = []
+    try { stored = JSON.parse(localStorage.getItem(KEY)) || [] } catch {}
+    if (stored.length === 0) return
+
+    const validate = async () => {
+      const results = await Promise.all(
+        stored.map(p =>
+          fetch(`/api/v1/properties/id/${p.id}`)
+            .then(r => (r.ok ? p : null))
+            .catch(() => null)
+        )
+      )
+      const valid = results.filter(Boolean)
+      setItems(valid)
+      try { localStorage.setItem(KEY, JSON.stringify(valid)) } catch {}
+    }
+
+    validate()
   }, [])
 
   if (items.length === 0) return null

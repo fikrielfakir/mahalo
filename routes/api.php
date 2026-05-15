@@ -165,6 +165,7 @@ Route::prefix('v1')->group(function () {
 
         // Media library
         Route::get('/media',              [MediaController::class, 'index']);
+        Route::post('/media/{id}/thumbnail', [MediaController::class, 'rethumbnail']);
         Route::delete('/media/{id}',      [MediaController::class, 'destroy']);
 
         // Consults

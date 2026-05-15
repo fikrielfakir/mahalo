@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { adminMedia } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
-import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video } from 'lucide-react'
+import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video, Wand2, Loader2 } from 'lucide-react'
 import { isVideoPath } from '../../utils/media'
 
 function bytesToSize(bytes) {
@@ -12,13 +12,15 @@ function bytesToSize(bytes) {
 }
 
 export default function MediaPage() {
-  const [files, setFiles]         = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [uploading, setUploading] = useState(false)
-  const [copiedId, setCopiedId]   = useState(null)
-  const [selected, setSelected]   = useState(null)
-  const [error, setError]         = useState(null)
-  const [dragOver, setDragOver]   = useState(false)
+  const [files, setFiles]             = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [uploading, setUploading]     = useState(false)
+  const [copiedId, setCopiedId]       = useState(null)
+  const [selected, setSelected]       = useState(null)
+  const [error, setError]             = useState(null)
+  const [dragOver, setDragOver]       = useState(false)
+  const [thumbLoading, setThumbLoading] = useState(null)
+  const [thumbError, setThumbError]   = useState(null)
   const inputRef = useRef()
 
   const load = useCallback(() => {
@@ -71,6 +73,23 @@ export default function MediaPage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
+  const generateThumbnail = async (item) => {
+    setThumbLoading(item.id)
+    setThumbError(null)
+    try {
+      const res = await adminMedia.rethumbnail(item.id)
+      setFiles(prev => prev.map(f => f.id === item.id ? { ...f, thumbnail_url: res.data?.data?.thumbnail_url || res.thumbnail_url } : f))
+      if (selected?.id === item.id) {
+        setSelected(prev => ({ ...prev, thumbnail_url: res.data?.data?.thumbnail_url || res.thumbnail_url }))
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'FFmpeg failed'
+      setThumbError(msg)
+    } finally {
+      setThumbLoading(null)
+    }
+  }
+
   const getUrl = (item) => item.original_url || item.url || `/storage/${item.file_name}`
 
   return (
@@ -88,6 +107,13 @@ export default function MediaPage() {
       {error && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 text-sm">
           <strong>Note:</strong> {error}
+        </div>
+      )}
+
+      {thumbError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center justify-between">
+          <span><strong>Thumbnail error:</strong> {thumbError}</span>
+          <button onClick={() => setThumbError(null)}><X size={14} /></button>
         </div>
       )}
 
@@ -124,6 +150,7 @@ export default function MediaPage() {
             const url = getUrl(item)
             const isVid = isVideoPath(item.path || item.file_name || '')
             const thumbUrl = item.thumbnail_url || (isVid ? null : url)
+            const isGenerating = thumbLoading === item.id
             return (
               <div
                 key={item.id}
@@ -141,6 +168,19 @@ export default function MediaPage() {
                   <img src={url} alt={item.name || item.file_name} className="w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+
+                {/* Generate thumbnail button for videos missing thumbnail */}
+                {isVid && !thumbUrl && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); generateThumbnail(item) }}
+                    disabled={isGenerating}
+                    title="Generate thumbnail"
+                    className="absolute bottom-1.5 left-1.5 w-6 h-6 rounded-lg bg-[#BA1932] text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity disabled:opacity-50"
+                  >
+                    {isGenerating ? <Loader2 size={10} className="animate-spin" /> : <Wand2 size={10} />}
+                  </button>
+                )}
+
                 <button
                   onClick={(e) => { e.stopPropagation(); remove(item) }}
                   className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-red-500 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
@@ -154,41 +194,74 @@ export default function MediaPage() {
       )}
 
       {/* Selected file detail panel */}
-      {selected && (
-        <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-2xl border-l border-gray-100 z-40 flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-800 text-sm">File Details</h3>
-            <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><X size={15} /></button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="aspect-square rounded-xl overflow-hidden bg-gray-50">
-              <img src={getUrl(selected)} alt={selected.name} className="w-full h-full object-cover" />
+      {selected && (() => {
+        const selIsVid = isVideoPath(selected.path || selected.file_name || '')
+        const selThumb = selected.thumbnail_url
+        const selUrl   = getUrl(selected)
+        return (
+          <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-2xl border-l border-gray-100 z-40 flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800 text-sm">File Details</h3>
+              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><X size={15} /></button>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">File name</p>
-              <p className="text-sm text-gray-800 break-all">{selected.file_name || selected.name}</p>
-            </div>
-            {selected.size && (
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Size</p>
-                <p className="text-sm text-gray-800">{bytesToSize(selected.size)}</p>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="aspect-square rounded-xl overflow-hidden bg-gray-50">
+                {selIsVid ? (
+                  selThumb
+                    ? <img src={selThumb} alt={selected.file_name} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center gap-2">
+                        <Video size={32} className="text-gray-400" />
+                        <span className="text-xs text-gray-400">No thumbnail</span>
+                      </div>
+                ) : (
+                  <img src={selUrl} alt={selected.name} className="w-full h-full object-cover" />
+                )}
               </div>
-            )}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">URL</p>
-              <p className="text-xs text-gray-600 break-all bg-gray-50 rounded-lg p-2">{getUrl(selected)}</p>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">File name</p>
+                <p className="text-sm text-gray-800 break-all">{selected.file_name || selected.name}</p>
+              </div>
+              {selected.size && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Size</p>
+                  <p className="text-sm text-gray-800">{bytesToSize(selected.size)}</p>
+                </div>
+              )}
+              {selIsVid && selThumb && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Thumbnail URL</p>
+                  <p className="text-xs text-gray-600 break-all bg-gray-50 rounded-lg p-2">{selThumb}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">URL</p>
+                <p className="text-xs text-gray-600 break-all bg-gray-50 rounded-lg p-2">{selUrl}</p>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 space-y-2">
+              {selIsVid && !selThumb && (
+                <Btn
+                  variant="ghost"
+                  className="w-full justify-center"
+                  disabled={thumbLoading === selected.id}
+                  onClick={() => generateThumbnail(selected)}
+                >
+                  {thumbLoading === selected.id
+                    ? <><Loader2 size={14} className="animate-spin" /> Generating…</>
+                    : <><Wand2 size={14} /> Generate Thumbnail</>
+                  }
+                </Btn>
+              )}
+              <Btn variant="gold" className="w-full justify-center" onClick={() => copy(selUrl, selected.id)}>
+                {copiedId === selected.id ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy URL</>}
+              </Btn>
+              <Btn variant="danger" className="w-full justify-center" onClick={() => remove(selected)}>
+                <Trash2 size={14} /> Delete
+              </Btn>
             </div>
           </div>
-          <div className="p-4 border-t border-gray-100 space-y-2">
-            <Btn variant="gold" className="w-full justify-center" onClick={() => copy(getUrl(selected), selected.id)}>
-              {copiedId === selected.id ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy URL</>}
-            </Btn>
-            <Btn variant="danger" className="w-full justify-center" onClick={() => remove(selected)}>
-              <Trash2 size={14} /> Delete
-            </Btn>
-          </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

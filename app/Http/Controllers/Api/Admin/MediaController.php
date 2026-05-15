@@ -67,16 +67,7 @@ class MediaController extends Controller
             $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
             @mkdir(dirname($thumbDiskPath), 0755, true);
             $videoFullPath  = Storage::disk('public')->path($tmpPath);
-            if (function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))))) {
-                $ffmpegBin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
-                if (!$ffmpegBin) $ffmpegBin = 'ffmpeg';
-                @exec(escapeshellarg($ffmpegBin) . " -ss 2 -i " . escapeshellarg($videoFullPath) .
-                     " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
-                     escapeshellarg($thumbDiskPath) . " 2>/dev/null");
-            }
-            if (file_exists($thumbDiskPath)) {
-                $thumbnailPath = $thumbStorePath;
-            }
+            $thumbnailPath  = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
         }
 
         $record = MediaFile::create([
@@ -98,6 +89,91 @@ class MediaController extends Controller
             'is_video'=> $isVideo,
             'error'   => false,
             'message' => 'File uploaded.',
+        ]);
+    }
+
+    private function getFfmpegBin(): string
+    {
+        $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
+        return $bin ?: 'ffmpeg';
+    }
+
+    private function generateVideoThumbnail(string $videoFullPath, string $thumbDiskPath, string $thumbStorePath): ?string
+    {
+        if (!function_exists('exec')) return null;
+        $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
+        if (in_array('exec', $disabled)) return null;
+
+        $ffmpegBin = $this->getFfmpegBin();
+
+        foreach ([1, 0.5, 0.1] as $seek) {
+            @unlink($thumbDiskPath);
+            exec(
+                escapeshellarg($ffmpegBin) .
+                " -ss {$seek} -i " . escapeshellarg($videoFullPath) .
+                " -frames:v 1 -vf scale=640:-1 -q:v 3 " .
+                escapeshellarg($thumbDiskPath) . " -y 2>/dev/null",
+                $out, $ret
+            );
+            if (file_exists($thumbDiskPath) && filesize($thumbDiskPath) > 0) {
+                return $thumbStorePath;
+            }
+        }
+        return null;
+    }
+
+    public function rethumbnail(int $id)
+    {
+        $record = MediaFile::findOrFail($id);
+
+        if (!str_starts_with($record->mime_type ?? '', 'video/')) {
+            return response()->json(['error' => true, 'message' => 'Not a video file.'], 422);
+        }
+
+        $videoFullPath = Storage::disk('public')->path($record->path);
+        $tempDownloaded = false;
+
+        if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) {
+            $remoteUrl = $record->url;
+            if (!$remoteUrl) {
+                return response()->json(['error' => true, 'message' => 'Video file not found on disk and no remote URL available.'], 404);
+            }
+            @mkdir(dirname($videoFullPath), 0755, true);
+            $ctx = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
+            $data = @file_get_contents($remoteUrl, false, $ctx);
+            if (!$data) {
+                return response()->json(['error' => true, 'message' => 'Video file not on disk and could not be downloaded from: ' . $remoteUrl], 404);
+            }
+            file_put_contents($videoFullPath, $data);
+            $tempDownloaded = true;
+        }
+
+        $folder         = dirname($record->path);
+        $thumbName      = Str::uuid() . '.jpg';
+        $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+        $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
+        @mkdir(dirname($thumbDiskPath), 0755, true);
+
+        $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+
+        if ($tempDownloaded) {
+            @unlink($videoFullPath);
+        }
+
+        if (!$thumbnailPath) {
+            return response()->json(['error' => true, 'message' => 'FFmpeg could not extract a frame from this video.'], 500);
+        }
+
+        $record->update([
+            'thumbnail_path' => $thumbnailPath,
+            'thumbnail_url'  => Storage::disk('public')->url($thumbnailPath),
+        ]);
+
+        return response()->json([
+            'error'         => false,
+            'message'       => 'Thumbnail generated.',
+            'thumbnail_url' => $record->fresh()->thumbnail_url,
+            'data'          => $record->fresh(),
         ]);
     }
 

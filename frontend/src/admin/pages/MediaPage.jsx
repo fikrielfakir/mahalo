@@ -3,7 +3,6 @@ import { adminMedia } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video, Wand2, Loader2 } from 'lucide-react'
 import { isVideoPath } from '../../utils/media'
-import { captureVideoThumbnail } from '../../utils/videoThumbnail'
 
 function bytesToSize(bytes) {
   if (!bytes) return '—'

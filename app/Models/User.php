@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use App\Notifications\CustomVerifyEmail;
-use App\Notifications\CustomResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -17,13 +17,24 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    public function sendEmailVerificationNotification(): void
+    /**
+     * Resolve the frontend base URL from config (safe with config:cache).
+     */
+    private function frontendUrl(): string
     {
-        $frontendUrl = rtrim(
-            env('FRONTEND_URL')
+        return rtrim(
+            config('app.frontend_url')
                 ?: (env('REPLIT_DEV_DOMAIN') ? 'https://' . env('REPLIT_DEV_DOMAIN') : 'http://localhost:5000'),
             '/'
         );
+    }
+
+    /**
+     * Override to send verification link pointing at the React frontend.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $frontendUrl = $this->frontendUrl();
 
         $id      = $this->getKey();
         $hash    = sha1($this->getEmailForVerification());
@@ -31,21 +42,26 @@ class User extends Authenticatable implements MustVerifyEmail
         $sig     = hash_hmac('sha256', "{$id}|{$hash}|{$expires}", config('app.key'));
         $url     = "{$frontendUrl}/email/verify/{$id}/{$hash}?expires={$expires}&signature={$sig}";
 
-        $notification = new CustomVerifyEmail();
+        $notification = new VerifyEmail();
         $notification::createUrlUsing(fn () => $url);
 
         $this->notify($notification);
     }
 
-    public function sendPasswordResetNotification($token): void
+    /**
+     * Override to send password-reset link pointing at the React frontend.
+     * This bypasses Laravel's route('password.reset') lookup entirely.
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
-        $frontendUrl = rtrim(
-            env('FRONTEND_URL')
-                ?: (env('REPLIT_DEV_DOMAIN') ? 'https://' . env('REPLIT_DEV_DOMAIN') : 'http://localhost:5000'),
-            '/'
-        );
-        $url = "{$frontendUrl}/reset-password?token={$token}&email=" . urlencode($this->email);
-        $this->notify(new CustomResetPassword($token, $url));
+        $frontendUrl = $this->frontendUrl();
+        $email       = urlencode($this->getEmailForPasswordReset());
+        $url         = "{$frontendUrl}/reset-password?token={$token}&email={$email}";
+
+        $notification = new ResetPassword($token);
+        $notification::createUrlUsing(fn ($notifiable, $token) => $url);
+
+        $this->notify($notification);
     }
 
     protected $fillable = [

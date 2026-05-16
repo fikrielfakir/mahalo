@@ -581,7 +581,7 @@ function Step4({ form, setForm, cities, categories, features, mediaPaths, setMed
 
       {/* Photos & Videos */}
       <div>
-        <SectionLabel>Photos & Videos <span className="normal-case font-normal text-navy/30">(optional)</span></SectionLabel>
+        <SectionLabel>Photos & Videos <span className="text-gold">*</span></SectionLabel>
         <ImageUploader
           images={mediaPaths}
           onChange={setMediaPaths}
@@ -854,6 +854,10 @@ export default function ListProperty() {
   const handleSubmit = async e => {
     e.preventDefault()
     if (step !== STEPS.length - 1) return
+    if (mediaPaths.length === 0) {
+      showToast('Please upload at least one photo or video', 'error')
+      return
+    }
     if (!isAuthenticated) {
       pendingSubmitRef.current = true
       openAuthModal()

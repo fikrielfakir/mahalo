@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ListingListSkeleton, AgentDashboardSkeleton, MessageListSkeleton, ThreadSkeleton } from '../components/Skeletons'
 import {
   Home, Building, MessageCircle, Eye, TrendingUp, User, Phone, Mail,
   MapPin, Edit2, Check, X, ArrowLeft, Camera, Loader2, BadgeCheck,
-  ChevronLeft, ChevronRight, Search, Calendar, AlertCircle, Star,
+  ChevronLeft, ChevronRight, Search, AlertCircle,
   BarChart2, Inbox, Settings, ExternalLink, Send, Upload,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -22,20 +23,20 @@ function fmt(price) {
 
 function fmtDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const STATUS_COLORS = {
-  selling: 'bg-emerald-50 text-emerald-600',
-  renting: 'bg-blue-50 text-blue-600',
-  sold: 'bg-gray-100 text-gray-500',
-  rented: 'bg-gray-100 text-gray-500',
-  pending: 'bg-amber-50 text-amber-600',
+  selling:   'bg-emerald-50 text-emerald-600',
+  renting:   'bg-blue-50 text-blue-600',
+  sold:      'bg-gray-100 text-gray-500',
+  rented:    'bg-gray-100 text-gray-500',
+  pending:   'bg-amber-50 text-amber-600',
   completed: 'bg-blue-50 text-blue-600',
 }
 const MOD_COLORS = {
   approved: 'bg-emerald-50 text-emerald-600',
-  pending: 'bg-amber-50 text-amber-600',
+  pending:  'bg-amber-50 text-amber-600',
   rejected: 'bg-red-50 text-red-500',
 }
 
@@ -55,19 +56,20 @@ function StatCard({ icon: Icon, label, value, color = '#730D26', sub }) {
 }
 
 function EditPropertyModal({ property, onClose, onSaved }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
-    name: property.name || '',
-    type: property.type || 'sale',
-    description: property.description || '',
-    location: property.location || '',
-    price: property.price || '',
-    number_bedroom: property.number_bedroom || '',
-    number_bathroom: property.number_bathroom || '',
-    square: property.square || '',
-    status: property.status || 'selling',
+    name:             property.name || '',
+    type:             property.type || 'sale',
+    description:      property.description || '',
+    location:         property.location || '',
+    price:            property.price || '',
+    number_bedroom:   property.number_bedroom || '',
+    number_bathroom:  property.number_bathroom || '',
+    square:           property.square || '',
+    status:           property.status || 'selling',
   })
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]   = useState('')
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
 
   const submit = async (e) => {
@@ -85,66 +87,66 @@ function EditPropertyModal({ property, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm">
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-bold text-navy text-lg">Edit Property</h2>
+          <h2 className="font-bold text-navy text-lg">{t('agentDashboard.editProperty')}</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
             <X size={16} />
           </button>
         </div>
         <form onSubmit={submit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Title *</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.titleLabel')}</label>
             <input value={form.name} onChange={f('name')} required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Type</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.typeLabel')}</label>
               <select value={form.type} onChange={f('type')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]">
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
+                <option value="sale">{t('agentDashboard.forSale')}</option>
+                <option value="rent">{t('agentDashboard.forRent')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Status</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.statusLabel')}</label>
               <select value={form.status} onChange={f('status')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]">
-                <option value="selling">Selling</option>
-                <option value="renting">Renting</option>
-                <option value="pending">Pending</option>
-                <option value="sold">Sold</option>
-                <option value="rented">Rented</option>
+                <option value="selling">{t('agentDashboard.selling')}</option>
+                <option value="renting">{t('agentDashboard.renting')}</option>
+                <option value="pending">{t('agentDashboard.pending')}</option>
+                <option value="sold">{t('agentDashboard.sold')}</option>
+                <option value="rented">{t('agentDashboard.rented')}</option>
               </select>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Location</label>
-            <input value={form.location} onChange={f('location')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" placeholder="Street, neighborhood..." />
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.locationLabel')}</label>
+            <input value={form.location} onChange={f('location')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" placeholder={t('agentDashboard.locationPlaceholder')} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Price (MAD)</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.priceLabel')}</label>
             <input type="number" value={form.price} onChange={f('price')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="0" />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Beds</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.bedsLabel')}</label>
               <input type="number" min="0" value={form.number_bedroom} onChange={f('number_bedroom')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Baths</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.bathsLabel')}</label>
               <input type="number" min="0" value={form.number_bathroom} onChange={f('number_bathroom')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">m²</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.sqmLabel')}</label>
               <input type="number" min="0" value={form.square} onChange={f('square')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Description</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.descLabel')}</label>
             <textarea value={form.description} onChange={f('description')} rows={3} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] resize-none" />
           </div>
           {error && <p className="text-red-500 text-sm flex items-center gap-2"><AlertCircle size={14} />{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-navy/60 hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-navy/60 hover:bg-gray-50">{t('agentDashboard.cancel')}</button>
             <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
-              {saving ? <><Loader2 size={14} className="animate-spin" />Saving…</> : <><Check size={14} />Save Changes</>}
+              {saving ? <><Loader2 size={14} className="animate-spin" />{t('agentDashboard.saving')}</> : <><Check size={14} />{t('agentDashboard.saveChanges')}</>}
             </button>
           </div>
         </form>
@@ -154,16 +156,17 @@ function EditPropertyModal({ property, onClose, onSaved }) {
 }
 
 function EditProjectModal({ project, onClose, onSaved }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
-    name: project.name || '',
+    name:        project.name || '',
     description: project.description || '',
-    location: project.location || '',
-    price_from: project.price_from || '',
-    price_to: project.price_to || '',
-    status: project.status || 'selling',
+    location:    project.location || '',
+    price_from:  project.price_from || '',
+    price_to:    project.price_to || '',
+    status:      project.status || 'selling',
   })
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]   = useState('')
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
 
   const submit = async (e) => {
@@ -181,47 +184,47 @@ function EditProjectModal({ project, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm">
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-bold text-navy text-lg">Edit Project</h2>
+          <h2 className="font-bold text-navy text-lg">{t('agentDashboard.editProject')}</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
             <X size={16} />
           </button>
         </div>
         <form onSubmit={submit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Project Name *</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.projectNameLabel')}</label>
             <input value={form.name} onChange={f('name')} required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Price From</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.priceFromLabel')}</label>
               <input type="number" value={form.price_from} onChange={f('price_from')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="0" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Price To</label>
+              <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.priceToLabel')}</label>
               <input type="number" value={form.price_to} onChange={f('price_to')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="0" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Status</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.statusLabel')}</label>
             <select value={form.status} onChange={f('status')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]">
-              <option value="selling">Selling</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
+              <option value="selling">{t('agentDashboard.selling')}</option>
+              <option value="pending">{t('agentDashboard.pending')}</option>
+              <option value="completed">{t('agentDashboard.completed')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Location</label>
-            <input value={form.location} onChange={f('location')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="City, area..." />
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.locationLabel')}</label>
+            <input value={form.location} onChange={f('location')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder={t('agentDashboard.cityArea')} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Description</label>
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.descLabel')}</label>
             <textarea value={form.description} onChange={f('description')} rows={3} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] resize-none" />
           </div>
           {error && <p className="text-red-500 text-sm flex items-center gap-2"><AlertCircle size={14} />{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-navy/60 hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-navy/60 hover:bg-gray-50">{t('agentDashboard.cancel')}</button>
             <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
-              {saving ? <><Loader2 size={14} className="animate-spin" />Saving…</> : <><Check size={14} />Save Changes</>}
+              {saving ? <><Loader2 size={14} className="animate-spin" />{t('agentDashboard.saving')}</> : <><Check size={14} />{t('agentDashboard.saveChanges')}</>}
             </button>
           </div>
         </form>
@@ -231,14 +234,15 @@ function EditProjectModal({ project, onClose, onSaved }) {
 }
 
 function OverviewTab({ stats, recentMessages, topProperties }) {
+  const { t } = useTranslation()
   const maxViews = Math.max(...(topProperties || []).map(p => p.views || 0), 1)
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Home} label="Properties" value={stats.properties} color="#730D26" />
-        <StatCard icon={Building} label="Projects" value={stats.projects} color="#B5860D" />
-        <StatCard icon={Eye} label="Total Views" value={stats.total_views.toLocaleString()} color="#2563eb" />
-        <StatCard icon={MessageCircle} label="Messages" value={stats.messages} color="#059669" />
+        <StatCard icon={Home}          label={t('agentDashboard.statProperties')} value={stats.properties}                   color="#730D26" />
+        <StatCard icon={Building}      label={t('agentDashboard.statProjects')}   value={stats.projects}                     color="#B5860D" />
+        <StatCard icon={Eye}           label={t('agentDashboard.statViews')}      value={stats.total_views.toLocaleString()} color="#2563eb" />
+        <StatCard icon={MessageCircle} label={t('agentDashboard.statMessages')}   value={stats.messages}                     color="#059669" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -246,17 +250,17 @@ function OverviewTab({ stats, recentMessages, topProperties }) {
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <BarChart2 size={16} className="text-[#730D26]" />
-            <h3 className="font-bold text-navy text-sm">Top Properties by Views</h3>
+            <h3 className="font-bold text-navy text-sm">{t('agentDashboard.topByViews')}</h3>
           </div>
           {topProperties?.length === 0 ? (
-            <p className="text-navy/40 text-sm text-center py-6">No properties yet</p>
+            <p className="text-navy/40 text-sm text-center py-6">{t('agentDashboard.noPropertiesYet')}</p>
           ) : (
             <div className="space-y-3">
               {topProperties?.map(p => (
                 <div key={p.id}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-navy truncate max-w-[200px]">{p.name}</span>
-                    <span className="text-xs text-navy/50 shrink-0 ml-2">{(p.views || 0).toLocaleString()} views</span>
+                    <span className="text-xs text-navy/50 shrink-0 ml-2">{(p.views || 0).toLocaleString()} {t('agentDashboard.views')}</span>
                   </div>
                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-full bg-[#730D26] rounded-full transition-all" style={{ width: `${Math.round(((p.views || 0) / maxViews) * 100)}%` }} />
@@ -271,10 +275,10 @@ function OverviewTab({ stats, recentMessages, topProperties }) {
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Inbox size={16} className="text-[#730D26]" />
-            <h3 className="font-bold text-navy text-sm">Recent Messages</h3>
+            <h3 className="font-bold text-navy text-sm">{t('agentDashboard.recentMessages')}</h3>
           </div>
           {recentMessages?.length === 0 ? (
-            <p className="text-navy/40 text-sm text-center py-6">No messages yet</p>
+            <p className="text-navy/40 text-sm text-center py-6">{t('agentDashboard.noMessagesYet')}</p>
           ) : (
             <div className="space-y-3">
               {recentMessages?.map(m => (
@@ -284,7 +288,7 @@ function OverviewTab({ stats, recentMessages, topProperties }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-navy truncate">{m.name}</p>
-                    <p className="text-xs text-navy/40 truncate">{m.property?.name || m.project?.name || 'General inquiry'}</p>
+                    <p className="text-xs text-navy/40 truncate">{m.property?.name || m.project?.name || t('agentDashboard.noMessagesYet')}</p>
                     <p className="text-xs text-navy/30 mt-0.5">{fmtDate(m.created_at)}</p>
                   </div>
                   {m.phone && (
@@ -301,11 +305,12 @@ function OverviewTab({ stats, recentMessages, topProperties }) {
 }
 
 function PropertiesTab({ agentId }) {
-  const [rows, setRows] = useState([])
-  const [meta, setMeta] = useState({})
+  const { t } = useTranslation()
+  const [rows, setRows]       = useState([])
+  const [meta, setMeta]       = useState({})
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch]   = useState('')
+  const [page, setPage]       = useState(1)
   const [editing, setEditing] = useState(null)
 
   const load = useCallback(() => {
@@ -330,7 +335,7 @@ function PropertiesTab({ agentId }) {
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
           <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Search properties..." className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
+            placeholder={t('agentDashboard.searchProperties')} className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
         </div>
       </div>
 
@@ -339,7 +344,7 @@ function PropertiesTab({ agentId }) {
       ) : rows.length === 0 ? (
         <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
           <Home size={32} className="mx-auto mb-3 opacity-30" />
-          <p>No properties yet</p>
+          <p>{t('agentDashboard.noPropertiesYet')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -355,19 +360,19 @@ function PropertiesTab({ agentId }) {
                   {p.location && <p className="text-xs text-navy/40 flex items-center gap-1 mt-0.5 truncate"><MapPin size={10} />{p.location}</p>}
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-500'}`}>
-                      {p.status}
+                      {t(`agentDashboard.${p.status}`) || p.status}
                     </span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${MOD_COLORS[p.moderation_status] || 'bg-gray-100 text-gray-500'}`}>
                       {p.moderation_status}
                     </span>
                     <span className="text-[11px] text-navy/40 flex items-center gap-1"><Eye size={10} />{(p.views || 0).toLocaleString()}</span>
-                    <span className="text-[11px] text-navy/40 flex items-center gap-1"><MessageCircle size={10} />{p.inquiries || 0} inquiries</span>
+                    <span className="text-[11px] text-navy/40 flex items-center gap-1"><MessageCircle size={10} />{p.inquiries || 0} {t('agentDashboard.inquiries')}</span>
                   </div>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-2">
                   <p className="font-bold text-[#730D26] text-sm">{fmt(p.price)}</p>
                   <button onClick={() => setEditing(p)} className="flex items-center gap-1.5 text-xs font-semibold text-navy/60 hover:text-navy px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <Edit2 size={12} /> Edit
+                    <Edit2 size={12} /> {t('agentDashboard.edit')}
                   </button>
                 </div>
               </div>
@@ -378,7 +383,7 @@ function PropertiesTab({ agentId }) {
 
       {meta.last_page > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-navy/40">{meta.total} total</span>
+          <span className="text-xs text-navy/40">{meta.total} {t('agentDashboard.total')}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
               <ChevronLeft size={14} />
@@ -397,11 +402,12 @@ function PropertiesTab({ agentId }) {
 }
 
 function ProjectsTab() {
-  const [rows, setRows] = useState([])
-  const [meta, setMeta] = useState({})
+  const { t } = useTranslation()
+  const [rows, setRows]       = useState([])
+  const [meta, setMeta]       = useState({})
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch]   = useState('')
+  const [page, setPage]       = useState(1)
   const [editing, setEditing] = useState(null)
 
   const load = useCallback(() => {
@@ -425,7 +431,7 @@ function ProjectsTab() {
       <div className="relative">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-          placeholder="Search projects..." className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
+          placeholder={t('agentDashboard.searchProjects')} className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] bg-white" />
       </div>
 
       {loading ? (
@@ -433,7 +439,7 @@ function ProjectsTab() {
       ) : rows.length === 0 ? (
         <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
           <Building size={32} className="mx-auto mb-3 opacity-30" />
-          <p>No projects yet</p>
+          <p>{t('agentDashboard.noProjectsYet')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -449,16 +455,16 @@ function ProjectsTab() {
                   {p.location && <p className="text-xs text-navy/40 flex items-center gap-1 mt-0.5"><MapPin size={10} />{p.location}</p>}
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${STATUS_COLORS[p.status] || 'bg-gray-100 text-gray-500'}`}>
-                      {p.status}
+                      {t(`agentDashboard.${p.status}`) || p.status}
                     </span>
                     <span className="text-[11px] text-navy/40 flex items-center gap-1"><Eye size={10} />{(p.views || 0).toLocaleString()}</span>
-                    <span className="text-[11px] text-navy/40 flex items-center gap-1"><MessageCircle size={10} />{p.inquiries || 0} inquiries</span>
+                    <span className="text-[11px] text-navy/40 flex items-center gap-1"><MessageCircle size={10} />{p.inquiries || 0} {t('agentDashboard.inquiries')}</span>
                   </div>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-2">
                   <p className="font-bold text-[#730D26] text-sm">{fmt(p.price_from)}{p.price_to ? ` – ${fmt(p.price_to)}` : ''}</p>
                   <button onClick={() => setEditing(p)} className="flex items-center gap-1.5 text-xs font-semibold text-navy/60 hover:text-navy px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <Edit2 size={12} /> Edit
+                    <Edit2 size={12} /> {t('agentDashboard.edit')}
                   </button>
                 </div>
               </div>
@@ -469,7 +475,7 @@ function ProjectsTab() {
 
       {meta.last_page > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-navy/40">{meta.total} total</span>
+          <span className="text-xs text-navy/40">{meta.total} {t('agentDashboard.total')}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-navy/50 hover:bg-gray-50 disabled:opacity-30">
               <ChevronLeft size={14} />
@@ -490,12 +496,13 @@ function ProjectsTab() {
 const MSG_STATUS_STYLES = { unread: 'bg-blue-50 text-blue-600', read: 'bg-gray-100 text-gray-400', processing: 'bg-amber-50 text-amber-600', done: 'bg-emerald-50 text-emerald-600' }
 
 function ChatThread({ consult, onReplied }) {
-  const [thread, setThread] = useState(null)
+  const { t } = useTranslation()
+  const [thread, setThread]         = useState(null)
   const [loadingThread, setLoadingThread] = useState(true)
-  const [replyText, setReplyText] = useState('')
-  const [sending, setSending] = useState(false)
-  const [sendError, setSendError] = useState(null)
-  const bottomRef = useRef(null)
+  const [replyText, setReplyText]   = useState('')
+  const [sending, setSending]       = useState(false)
+  const [sendError, setSendError]   = useState(null)
+  const bottomRef  = useRef(null)
   const textareaRef = useRef(null)
 
   useEffect(() => {
@@ -518,11 +525,7 @@ function ChatThread({ consult, onReplied }) {
     setSendError(null)
     agentDashboardApi.replyMessage(consult.id, { reply: body })
       .then(r => {
-        setThread(prev => ({
-          ...prev,
-          replies: [...(prev.replies || []), r.data],
-          status: 'done',
-        }))
+        setThread(prev => ({ ...prev, replies: [...(prev.replies || []), r.data], status: 'done' }))
         setReplyText('')
         onReplied()
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -545,7 +548,6 @@ function ChatThread({ consult, onReplied }) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Chat header */}
       <div className="px-5 py-4 border-b border-gray-100 bg-white flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center text-[#730D26] font-bold text-sm shrink-0">
           {consult.name?.[0]?.toUpperCase() || '?'}
@@ -559,25 +561,24 @@ function ChatThread({ consult, onReplied }) {
         </div>
         {thread?.status && (
           <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${MSG_STATUS_STYLES[thread.status] || 'bg-gray-100 text-gray-500'}`}>
-            {thread.status}
+            {t(`messages.${thread.status}`) || thread.status}
           </span>
         )}
       </div>
 
-      {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-[#F7F7F8]">
         {(consult.property?.name || consult.project?.name) && (
           <div className="flex justify-center">
             <span className="text-[11px] text-navy/40 bg-white border border-gray-100 rounded-full px-3 py-1 flex items-center gap-1">
               {consult.property ? <Home size={10} /> : <Building size={10} />}
-              Re: {consult.property?.name || consult.project?.name}
+              {t('messages.reLabel')} {consult.property?.name || consult.project?.name}
             </span>
           </div>
         )}
 
         {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="text-xs text-navy/30 italic">No message content — contact arrived with name/phone only.</span>
+            <span className="text-xs text-navy/30 italic">{t('messages.noContent')}</span>
           </div>
         )}
 
@@ -592,18 +593,14 @@ function ChatThread({ consult, onReplied }) {
               )}
               <div className={`max-w-[72%] ${isAgent ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                 <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                  isAgent
-                    ? 'bg-[#730D26] text-white rounded-br-sm'
-                    : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
+                  isAgent ? 'bg-[#730D26] text-white rounded-br-sm' : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
                 }`}>
                   {msg.body}
                 </div>
                 <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at)}</span>
               </div>
               {isAgent && (
-                <div className="w-7 h-7 rounded-lg bg-[#730D26] flex items-center justify-center text-white font-bold text-xs shrink-0 ml-2 mt-0.5">
-                  A
-                </div>
+                <div className="w-7 h-7 rounded-lg bg-[#730D26] flex items-center justify-center text-white font-bold text-xs shrink-0 ml-2 mt-0.5">A</div>
               )}
             </div>
           )
@@ -611,7 +608,6 @@ function ChatThread({ consult, onReplied }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input area */}
       <div className="px-4 py-3 bg-white border-t border-gray-100">
         {sendError && (
           <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-2">
@@ -620,7 +616,7 @@ function ChatThread({ consult, onReplied }) {
         )}
         {!consult.email && (
           <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2 mb-2">
-            <AlertCircle size={12} />No email — reply will be saved but not emailed.
+            <AlertCircle size={12} />{t('messages.noEmail')}
           </div>
         )}
         <div className="flex items-end gap-2">
@@ -629,7 +625,7 @@ function ChatThread({ consult, onReplied }) {
             value={replyText}
             onChange={e => setReplyText(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Type a reply… (Enter to send, Shift+Enter for new line)"
+            placeholder={t('messages.typeReply')}
             rows={2}
             disabled={sending}
             className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
@@ -648,12 +644,13 @@ function ChatThread({ consult, onReplied }) {
 }
 
 function MessagesTab() {
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
-  const [selected, setSelected] = useState(null)
+  const { t } = useTranslation()
+  const [rows, setRows]             = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState(null)
+  const [search, setSearch]         = useState('')
+  const [status, setStatus]         = useState('')
+  const [selected, setSelected]     = useState(null)
   const [mobileView, setMobileView] = useState('list')
 
   const load = useCallback(() => {
@@ -665,7 +662,7 @@ function MessagesTab() {
         setRows(data)
         if (!selected && data.length > 0) setSelected(data[0])
       })
-      .catch(err => setError(err?.response?.data?.message || 'Failed to load messages.'))
+      .catch(err => setError(err?.response?.data?.message || t('messages.failedLoad')))
       .finally(() => setLoading(false))
   }, [search, status])
 
@@ -684,42 +681,38 @@ function MessagesTab() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: '600px' }}>
       <div className="flex h-full">
-
-        {/* Left: conversation list */}
         <div className={`flex flex-col border-r border-gray-100 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-72 lg:w-80 shrink-0`}>
-          {/* List header */}
           <div className="px-4 py-3 border-b border-gray-100 space-y-2">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
               <input
                 value={search}
                 onChange={e => { setSearch(e.target.value) }}
-                placeholder="Search…"
+                placeholder={t('messages.searchConversations')}
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white"
               />
             </div>
             <select value={status} onChange={e => setStatus(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white">
-              <option value="">All statuses</option>
-              <option value="unread">Unread</option>
-              <option value="read">Read</option>
-              <option value="processing">Processing</option>
-              <option value="done">Done</option>
+              <option value="">{t('messages.allStatuses')}</option>
+              <option value="unread">{t('messages.unread')}</option>
+              <option value="read">{t('messages.read')}</option>
+              <option value="processing">{t('messages.processing')}</option>
+              <option value="done">{t('messages.done')}</option>
             </select>
           </div>
 
-          {/* List body */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <MessageListSkeleton />
             ) : error ? (
               <div className="p-4 text-center">
                 <p className="text-xs text-red-500">{error}</p>
-                <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">Retry</button>
+                <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">{t('messages.retry')}</button>
               </div>
             ) : rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageCircle size={28} className="text-navy/20 mb-2" />
-                <p className="text-xs text-navy/40">No messages yet</p>
+                <p className="text-xs text-navy/40">{t('messages.noMessages')}</p>
               </div>
             ) : (
               rows.map(m => {
@@ -753,21 +746,19 @@ function MessagesTab() {
           </div>
         </div>
 
-        {/* Right: chat thread */}
         <div className={`flex-1 flex flex-col min-w-0 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}>
           {selected ? (
             <>
-              {/* Mobile back button */}
               <button onClick={() => setMobileView('list')} className="md:hidden flex items-center gap-2 px-4 py-2 text-xs text-[#730D26] font-semibold border-b border-gray-100">
-                <ChevronLeft size={14} />Back to messages
+                <ChevronLeft size={14} />{t('messages.backToMessages')}
               </button>
               <ChatThread key={selected.id} consult={selected} onReplied={handleReplied} />
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
               <MessageCircle size={40} className="text-navy/15 mb-3" />
-              <p className="text-sm font-semibold text-navy/30">Select a conversation</p>
-              <p className="text-xs text-navy/20 mt-1">Click a message on the left to open the chat</p>
+              <p className="text-sm font-semibold text-navy/30">{t('messages.selectConversation')}</p>
+              <p className="text-xs text-navy/20 mt-1">{t('messages.clickToOpen')}</p>
             </div>
           )}
         </div>
@@ -784,19 +775,20 @@ const PRESET_AVATARS = [
 ]
 
 function ProfileTab({ agent, onUpdated }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
-    first_name: agent.first_name || '',
-    last_name: agent.last_name || '',
-    email: agent.email || '',
-    phone: agent.phone || '',
-    whatsapp: agent.whatsapp || '',
+    first_name:  agent.first_name || '',
+    last_name:   agent.last_name || '',
+    email:       agent.email || '',
+    phone:       agent.phone || '',
+    whatsapp:    agent.whatsapp || '',
     description: agent.description || '',
   })
-  const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [saving, setSaving]           = useState(false)
+  const [success, setSuccess]         = useState(false)
+  const [error, setError]             = useState('')
   const [avatarLoading, setAvatarLoading] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
+  const [showPicker, setShowPicker]   = useState(false)
   const fileRef = useRef(null)
   const f = (k) => (e) => { setForm(p => ({ ...p, [k]: e.target.value })); setSuccess(false); setError('') }
 
@@ -844,7 +836,7 @@ function ProfileTab({ agent, onUpdated }) {
     <div className="max-w-xl space-y-6">
       {/* Avatar */}
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-        <h3 className="font-bold text-navy text-sm mb-4">Profile Photo</h3>
+        <h3 className="font-bold text-navy text-sm mb-4">{t('agentDashboard.profilePhoto')}</h3>
         <div className="flex items-center gap-4 mb-1">
           <div className="relative shrink-0">
             <img src={avatarUrl} alt="avatar" className="w-20 h-20 rounded-2xl object-cover" />
@@ -858,15 +850,15 @@ function ProfileTab({ agent, onUpdated }) {
             <button onClick={() => setShowPicker(v => !v)} disabled={avatarLoading}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-navy hover:bg-gray-100 transition-colors disabled:opacity-60">
               {avatarLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-              Change Avatar
+              {t('agentDashboard.changeAvatar')}
             </button>
-            <p className="text-xs text-navy/35 mt-1.5">Choose a preset or upload your own</p>
+            <p className="text-xs text-navy/35 mt-1.5">{t('agentDashboard.choosePreset')}</p>
           </div>
         </div>
 
         {showPicker && (
           <div className="mt-4 border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">Men</p>
+            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">{t('agentDashboard.men')}</p>
             <div className="grid grid-cols-6 gap-2 mb-4">
               {PRESET_AVATARS.filter(p => p.key.startsWith('man')).map(p => (
                 <button key={p.key} onClick={() => selectPreset(p.key)} disabled={avatarLoading}
@@ -875,7 +867,7 @@ function ProfileTab({ agent, onUpdated }) {
                 </button>
               ))}
             </div>
-            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">Women</p>
+            <p className="text-xs font-semibold text-navy/40 uppercase tracking-wider mb-3">{t('agentDashboard.women')}</p>
             <div className="grid grid-cols-6 gap-2 mb-4">
               {PRESET_AVATARS.filter(p => p.key.startsWith('woman')).map(p => (
                 <button key={p.key} onClick={() => selectPreset(p.key)} disabled={avatarLoading}
@@ -887,7 +879,7 @@ function ProfileTab({ agent, onUpdated }) {
             <div className="border-t border-gray-100 pt-3">
               <button onClick={() => { setShowPicker(false); fileRef.current?.click() }}
                 className="flex items-center gap-2 text-sm text-navy/60 hover:text-navy font-medium transition-colors">
-                <Upload size={13} /> Upload your own photo
+                <Upload size={13} /> {t('agentDashboard.uploadOwn')}
               </button>
             </div>
           </div>
@@ -897,83 +889,66 @@ function ProfileTab({ agent, onUpdated }) {
 
       {/* Info form */}
       <form onSubmit={submit} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
-        <h3 className="font-bold text-navy text-sm">Personal Information</h3>
+        <h3 className="font-bold text-navy text-sm">{t('agentDashboard.personalInfo')}</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">First Name</label>
-            <input value={form.first_name} onChange={f('first_name')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" />
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.firstName')}</label>
+            <input value={form.first_name} onChange={f('first_name')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Last Name</label>
-            <input value={form.last_name} onChange={f('last_name')} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] focus:ring-2 focus:ring-[#730D26]/10" />
+            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.lastName')}</label>
+            <input value={form.last_name} onChange={f('last_name')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Email</label>
-          <div className="relative">
-            <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-            <input type="email" value={form.email} onChange={f('email')} className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Phone</label>
-            <div className="relative">
-              <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-              <input type="tel" value={form.phone} onChange={f('phone')} className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="+212..." />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">WhatsApp</label>
-            <div className="relative">
-              <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-              <input type="tel" value={form.whatsapp} onChange={f('whatsapp')} className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" placeholder="+212..." />
-            </div>
-          </div>
+          <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.phone')}</label>
+          <input value={form.phone} onChange={f('phone')} placeholder={t('agentDashboard.phonePlaceholder')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">Bio / Description</label>
-          <textarea value={form.description} onChange={f('description')} rows={4} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] resize-none" placeholder="Tell clients about your experience..." />
+          <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.whatsapp')}</label>
+          <input value={form.whatsapp} onChange={f('whatsapp')} placeholder={t('agentDashboard.phonePlaceholder')} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26]" />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">{t('agentDashboard.bio')}</label>
+          <textarea value={form.description} onChange={f('description')} rows={4}
+            placeholder={t('agentDashboard.bioPlaceholder')}
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#730D26] resize-none" />
+        </div>
+
         {success && (
-          <div className="flex items-center gap-2 text-emerald-600 text-sm bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
-            <Check size={15} /> Profile saved successfully.
+          <div className="flex items-center gap-2 text-emerald-700 text-sm bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
+            <Check size={14} /> {t('agentDashboard.savedSuccess')}
           </div>
         )}
         {error && (
-          <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-            <AlertCircle size={15} /> {error}
-          </div>
+          <p className="text-red-500 text-sm flex items-center gap-2"><AlertCircle size={14} />{error}</p>
         )}
-        <button type="submit" disabled={saving} className="w-full py-3 rounded-xl bg-[#730D26] text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
-          {saving ? <><Loader2 size={14} className="animate-spin" />Saving…</> : <><Check size={14} />Save Profile</>}
+
+        <button type="submit" disabled={saving}
+          className="w-full py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
+          {saving ? <><Loader2 size={14} className="animate-spin" />{t('agentDashboard.saving')}</> : <><Check size={14} />{t('agentDashboard.saveProfile')}</>}
         </button>
       </form>
 
+      {/* Public profile link */}
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-        <h3 className="font-bold text-navy text-sm mb-3">Your Public Profile</h3>
-        <p className="text-xs text-navy/50 mb-3">View how your profile appears to clients on the site.</p>
-        <Link to={`/agents/${agent.id}`} target="_blank" className="inline-flex items-center gap-2 text-sm font-semibold text-[#730D26] hover:underline">
-          <ExternalLink size={14} /> View Public Profile
+        <h3 className="font-bold text-navy text-sm mb-1">{t('agentDashboard.publicProfileTitle')}</h3>
+        <p className="text-xs text-navy/45 mb-3">{t('agentDashboard.publicProfileDesc')}</p>
+        <Link to={`/agents/${agent.id}`}
+          className="flex items-center gap-2 text-sm text-[#730D26] font-semibold hover:underline">
+          <ExternalLink size={14} /> {t('agentDashboard.viewPublicProfile')}
         </Link>
       </div>
     </div>
   )
 }
 
-const TABS = [
-  { key: 'overview',    label: 'Overview',    icon: TrendingUp },
-  { key: 'properties', label: 'Properties',  icon: Home },
-  { key: 'projects',   label: 'Projects',    icon: Building },
-  { key: 'messages',   label: 'Messages',    icon: MessageCircle },
-  { key: 'profile',    label: 'Profile',     icon: Settings },
-]
-
 export default function AgentDashboardPage() {
+  const { t } = useTranslation()
   const { user, isAuthenticated, loading: authLoading, refreshUser } = useUserAuth()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('overview')
-  const [overview, setOverview] = useState(null)
+  const [tab, setTab]                   = useState('overview')
+  const [overview, setOverview]         = useState(null)
   const [overviewLoading, setOverviewLoading] = useState(true)
 
   useEffect(() => {
@@ -1002,6 +977,14 @@ export default function AgentDashboardPage() {
   const agent = overview?.agent
   const stats = overview?.stats || { properties: 0, projects: 0, total_views: 0, messages: 0 }
 
+  const TABS = [
+    { key: 'overview',    label: t('agentDashboard.tabOverview'),    icon: TrendingUp },
+    { key: 'properties', label: t('agentDashboard.tabProperties'),  icon: Home },
+    { key: 'projects',   label: t('agentDashboard.tabProjects'),    icon: Building },
+    { key: 'messages',   label: t('agentDashboard.tabMessages'),    icon: MessageCircle },
+    { key: 'profile',    label: t('agentDashboard.tabProfile'),     icon: Settings },
+  ]
+
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
       <Navbar />
@@ -1011,7 +994,7 @@ export default function AgentDashboardPage() {
           {/* Header */}
           <div className="flex items-center gap-3 mb-6 mt-4">
             <Link to="/profile" className="flex items-center gap-1.5 text-navy/50 hover:text-navy text-sm transition-colors">
-              <ArrowLeft size={15} /> Back to Profile
+              <ArrowLeft size={15} /> {t('agentDashboard.backToProfile')}
             </Link>
           </div>
 
@@ -1032,22 +1015,22 @@ export default function AgentDashboardPage() {
               )}
             </div>
             <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 shrink-0">
-              ✓ Verified Agent
+              {t('agentDashboard.verifiedAgent')}
             </span>
           </div>
 
           {/* Tab bar */}
           <div className="flex gap-1 bg-white rounded-2xl p-1 shadow-sm border border-gray-100 mb-6 overflow-x-auto">
-            {TABS.map(t => {
-              const Icon = t.icon
-              const isActive = tab === t.key
+            {TABS.map(tabItem => {
+              const Icon = tabItem.icon
+              const isActive = tab === tabItem.key
               return (
-                <button key={t.key} onClick={() => setTab(t.key)}
+                <button key={tabItem.key} onClick={() => setTab(tabItem.key)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all flex-1 justify-center ${
                     isActive ? 'bg-[#730D26] text-white shadow-sm' : 'text-navy/50 hover:text-navy'
                   }`}>
                   <Icon size={14} />
-                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="hidden sm:inline">{tabItem.label}</span>
                 </button>
               )
             })}

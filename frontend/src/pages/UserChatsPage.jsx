@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   MessageCircle, Send, Loader2, ChevronLeft, Mail, Phone,
   AlertCircle, Building, Home, Search, UserCircle,
@@ -11,22 +12,22 @@ import { useUserAuth } from '../context/UserAuthContext'
 
 /* ─── shared helpers ───────────────────────────────────────────────────── */
 
-function fmtDate(str) {
+function fmtDate(str, t) {
   if (!str) return ''
   const d = new Date(str)
   const now = new Date()
   const diff = now - d
-  if (diff < 60000) return 'Just now'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  if (diff < 60000) return t('messages.justNow')
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}${t('messages.mAgo')}`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}${t('messages.hAgo')}`
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const MSG_STATUS_STYLES = {
-  unread: 'bg-blue-50 text-blue-600',
-  read: 'bg-gray-100 text-gray-400',
+  unread:     'bg-blue-50 text-blue-600',
+  read:       'bg-gray-100 text-gray-400',
   processing: 'bg-amber-50 text-amber-600',
-  done: 'bg-emerald-50 text-emerald-600',
+  done:       'bg-emerald-50 text-emerald-600',
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -34,10 +35,11 @@ const MSG_STATUS_STYLES = {
    ══════════════════════════════════════════════════════════════════════════ */
 
 function AgentChatThread({ consult, onReplied }) {
-  const [thread, setThread]     = useState(null)
-  const [loading, setLoading]   = useState(true)
+  const { t } = useTranslation()
+  const [thread, setThread]       = useState(null)
+  const [loading, setLoading]     = useState(true)
   const [replyText, setReplyText] = useState('')
-  const [sending, setSending]   = useState(false)
+  const [sending, setSending]     = useState(false)
   const [sendError, setSendError] = useState(null)
   const bottomRef = useRef(null)
 
@@ -94,7 +96,7 @@ function AgentChatThread({ consult, onReplied }) {
         </div>
         {thread?.status && (
           <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${MSG_STATUS_STYLES[thread.status] || 'bg-gray-100 text-gray-500'}`}>
-            {thread.status}
+            {t(`messages.${thread.status}`) || thread.status}
           </span>
         )}
       </div>
@@ -105,13 +107,13 @@ function AgentChatThread({ consult, onReplied }) {
           <div className="flex justify-center">
             <span className="text-[11px] text-navy/40 bg-white border border-gray-100 rounded-full px-3 py-1 flex items-center gap-1">
               {consult.property ? <Home size={10} /> : <Building size={10} />}
-              Re: {consult.property?.name || consult.project?.name}
+              {t('messages.reLabel')} {consult.property?.name || consult.project?.name}
             </span>
           </div>
         )}
         {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="text-xs text-navy/30 italic">No message content — contact arrived with name/phone only.</span>
+            <span className="text-xs text-navy/30 italic">{t('messages.noContent')}</span>
           </div>
         )}
         {messages.map(msg => {
@@ -127,7 +129,7 @@ function AgentChatThread({ consult, onReplied }) {
                 <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   isAgent ? 'bg-[#730D26] text-white rounded-br-sm' : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
                 }`}>{msg.body}</div>
-                <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at)}</span>
+                <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at, t)}</span>
               </div>
               {isAgent && (
                 <div className="w-7 h-7 rounded-lg bg-[#730D26] flex items-center justify-center text-white font-bold text-xs shrink-0 ml-2 mt-0.5">A</div>
@@ -147,13 +149,13 @@ function AgentChatThread({ consult, onReplied }) {
         )}
         {!consult.email && (
           <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2 mb-2">
-            <AlertCircle size={12} />No email — reply will be saved but not emailed.
+            <AlertCircle size={12} />{t('messages.noEmail')}
           </div>
         )}
         <div className="flex items-end gap-2">
           <textarea
             value={replyText} onChange={e => setReplyText(e.target.value)} onKeyDown={handleKey}
-            placeholder="Type a reply… (Enter to send, Shift+Enter for new line)"
+            placeholder={t('messages.typeReply')}
             rows={2} disabled={sending}
             className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60 bg-white"
           />
@@ -168,12 +170,13 @@ function AgentChatThread({ consult, onReplied }) {
 }
 
 function AgentMessagesView() {
-  const [rows, setRows]       = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
-  const [search, setSearch]   = useState('')
-  const [status, setStatus]   = useState('')
-  const [selected, setSelected] = useState(null)
+  const { t } = useTranslation()
+  const [rows, setRows]             = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState(null)
+  const [search, setSearch]         = useState('')
+  const [status, setStatus]         = useState('')
+  const [selected, setSelected]     = useState(null)
   const [mobileView, setMobileView] = useState('list')
 
   const load = useCallback(() => {
@@ -185,7 +188,7 @@ function AgentMessagesView() {
         setRows(data)
         if (!selected && data.length > 0) setSelected(data[0])
       })
-      .catch(err => setError(err?.response?.data?.message || 'Failed to load messages.'))
+      .catch(err => setError(err?.response?.data?.message || t('messages.failedLoad')))
       .finally(() => setLoading(false))
   }, [search, status])
 
@@ -209,16 +212,16 @@ function AgentMessagesView() {
           <div className="px-4 py-3 border-b border-gray-100 space-y-2">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('messages.searchConversations')}
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white" />
             </div>
             <select value={status} onChange={e => setStatus(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white">
-              <option value="">All statuses</option>
-              <option value="unread">Unread</option>
-              <option value="read">Read</option>
-              <option value="processing">Processing</option>
-              <option value="done">Done</option>
+              <option value="">{t('messages.allStatuses')}</option>
+              <option value="unread">{t('messages.unread')}</option>
+              <option value="read">{t('messages.read')}</option>
+              <option value="processing">{t('messages.processing')}</option>
+              <option value="done">{t('messages.done')}</option>
             </select>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -227,12 +230,12 @@ function AgentMessagesView() {
             ) : error ? (
               <div className="p-4 text-center">
                 <p className="text-xs text-red-500">{error}</p>
-                <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">Retry</button>
+                <button onClick={load} className="mt-2 text-xs text-[#730D26] underline">{t('messages.retry')}</button>
               </div>
             ) : rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageCircle size={28} className="text-navy/20 mb-2" />
-                <p className="text-xs text-navy/40">No messages yet</p>
+                <p className="text-xs text-navy/40">{t('messages.noMessages')}</p>
               </div>
             ) : rows.map(m => {
               const isActive = selected?.id === m.id
@@ -248,7 +251,7 @@ function AgentMessagesView() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <p className={`text-sm truncate ${isUnread ? 'font-bold text-navy' : 'font-medium text-navy/70'}`}>{m.name}</p>
-                      <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(m.created_at)}</span>
+                      <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(m.created_at, t)}</span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
                       <p className="text-xs text-navy/40 truncate">{m.email || m.phone || '—'}</p>
@@ -266,15 +269,15 @@ function AgentMessagesView() {
           {selected ? (
             <>
               <button onClick={() => setMobileView('list')} className="md:hidden flex items-center gap-2 px-4 py-2 text-xs text-[#730D26] font-semibold border-b border-gray-100">
-                <ChevronLeft size={14} />Back to messages
+                <ChevronLeft size={14} />{t('messages.backToMessages')}
               </button>
               <AgentChatThread key={selected.id} consult={selected} onReplied={handleReplied} />
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
               <MessageCircle size={40} className="text-navy/15 mb-3" />
-              <p className="text-sm font-semibold text-navy/30">Select a conversation</p>
-              <p className="text-xs text-navy/20 mt-1">Click a message on the left to open the chat</p>
+              <p className="text-sm font-semibold text-navy/30">{t('messages.selectConversation')}</p>
+              <p className="text-xs text-navy/20 mt-1">{t('messages.clickToOpen')}</p>
             </div>
           )}
         </div>
@@ -301,6 +304,7 @@ function AgentAvatar({ agent, size = 10 }) {
 }
 
 function UserChatPane({ chat, onMessageSent }) {
+  const { t } = useTranslation()
   const [thread, setThread]   = useState(null)
   const [loading, setLoading] = useState(true)
   const [text, setText]       = useState('')
@@ -358,14 +362,14 @@ function UserChatPane({ chat, onMessageSent }) {
           </div>
         </div>
         {agent?.id && (
-          <Link to={`/agents/${agent.id}`} className="text-xs text-[#730D26] font-semibold hover:underline shrink-0">View Profile</Link>
+          <Link to={`/agents/${agent.id}`} className="text-xs text-[#730D26] font-semibold hover:underline shrink-0">{t('messages.viewProfile')}</Link>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-[#F7F7F8]">
         {messages.length === 0 && (
           <div className="flex justify-center">
-            <span className="text-xs text-navy/30 italic bg-white px-4 py-2 rounded-full border border-gray-100">Chat started — say hello!</span>
+            <span className="text-xs text-navy/30 italic bg-white px-4 py-2 rounded-full border border-gray-100">{t('messages.chatStarted')}</span>
           </div>
         )}
         {messages.map(msg => {
@@ -378,11 +382,11 @@ function UserChatPane({ chat, onMessageSent }) {
                 <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   isUser ? 'bg-[#730D26] text-white rounded-br-sm' : 'bg-white text-navy border border-gray-100 rounded-bl-sm shadow-sm'
                 }`}>{msg.body}</div>
-                <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at)}</span>
+                <span className="text-[10px] text-navy/30 px-1">{fmtDate(msg.created_at, t)}</span>
               </div>
               {isUser && <div className="w-2" />}
               {isUser && (
-                <div className="w-7 h-7 rounded-xl bg-[#730D26] flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">Me</div>
+                <div className="w-7 h-7 rounded-xl bg-[#730D26] flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">{t('messages.me')}</div>
               )}
             </div>
           )
@@ -398,7 +402,7 @@ function UserChatPane({ chat, onMessageSent }) {
         )}
         <div className="flex items-end gap-2">
           <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKey}
-            placeholder="Type a message… (Enter to send)" rows={2} disabled={sending}
+            placeholder={t('messages.typeMessageEnter')} rows={2} disabled={sending}
             className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-navy focus:outline-none focus:border-[#730D26] resize-none disabled:opacity-60" />
           <button onClick={handleSend} disabled={!text.trim() || sending}
             className="w-10 h-10 rounded-xl bg-[#730D26] text-white flex items-center justify-center hover:bg-[#5a0a1e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0">
@@ -411,15 +415,16 @@ function UserChatPane({ chat, onMessageSent }) {
 }
 
 function UserChatsView() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const agentIdParam = searchParams.get('agent_id')
   const chatIdParam  = searchParams.get('id')
 
-  const [chats, setChats]         = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [selected, setSelected]   = useState(null)
+  const [chats, setChats]           = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [selected, setSelected]     = useState(null)
   const [mobileView, setMobileView] = useState('list')
-  const [search, setSearch]       = useState('')
+  const [search, setSearch]         = useState('')
 
   const loadChats = useCallback(() => {
     setLoading(true)
@@ -474,7 +479,7 @@ function UserChatsView() {
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/30" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agent…"
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('messages.searchAgent')}
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#730D26] bg-white" />
             </div>
           </div>
@@ -484,14 +489,14 @@ function UserChatsView() {
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageCircle size={28} className="text-navy/20 mb-2" />
-                <p className="text-xs text-navy/40 font-medium">No conversations yet</p>
-                <p className="text-xs text-navy/30 mt-1">Visit an agent's profile to start chatting</p>
-                <Link to="/agents" className="mt-3 text-xs text-[#730D26] font-semibold hover:underline">Browse agents →</Link>
+                <p className="text-xs text-navy/40 font-medium">{t('messages.noConversations')}</p>
+                <p className="text-xs text-navy/30 mt-1">{t('messages.visitAgent')}</p>
+                <Link to="/agents" className="mt-3 text-xs text-[#730D26] font-semibold hover:underline">{t('messages.browseAgents')} →</Link>
               </div>
             ) : filtered.map(chat => {
               const isActive = selected?.id === chat.id
               const lastReply = chat.replies?.[chat.replies.length - 1]
-              const preview = lastReply?.body || chat.content || 'No messages yet'
+              const preview = lastReply?.body || chat.content || t('messages.noMessages')
               const hasAgentReply = chat.replies?.some(r => r.sender === 'agent')
               return (
                 <button key={chat.id} onClick={() => { setSelected(chat); setMobileView('chat') }}
@@ -502,7 +507,7 @@ function UserChatsView() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <p className="text-sm font-semibold text-navy truncate">{agentName(chat.agent)}</p>
-                      <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(chat.updated_at || chat.created_at)}</span>
+                      <span className="text-[10px] text-navy/30 shrink-0">{fmtDate(chat.updated_at || chat.created_at, t)}</span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
                       <p className="text-xs text-navy/40 truncate">{preview}</p>
@@ -515,7 +520,7 @@ function UserChatsView() {
           </div>
           <div className="px-4 py-3 border-t border-gray-100">
             <Link to="/agents" className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-[#730D26]/8 text-[#730D26] text-xs font-semibold hover:bg-[#730D26]/15 transition-colors">
-              <UserCircle size={13} /> Chat with a new agent
+              <UserCircle size={13} /> {t('messages.chatNewAgent')}
             </Link>
           </div>
         </div>
@@ -524,17 +529,17 @@ function UserChatsView() {
           {selected ? (
             <>
               <button onClick={() => setMobileView('list')} className="md:hidden flex items-center gap-2 px-4 py-2 text-xs text-[#730D26] font-semibold border-b border-gray-100">
-                <ChevronLeft size={14} />Back
+                <ChevronLeft size={14} />{t('messages.backToMessages')}
               </button>
               <UserChatPane key={selected.id} chat={selected} onMessageSent={handleMessageSent} />
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
               <MessageCircle size={44} className="text-navy/15 mb-4" />
-              <p className="text-sm font-bold text-navy/30">No conversation selected</p>
-              <p className="text-xs text-navy/20 mt-1">Pick one from the list, or start a new chat from any agent's profile</p>
+              <p className="text-sm font-bold text-navy/30">{t('messages.selectConversation')}</p>
+              <p className="text-xs text-navy/20 mt-1">{t('messages.clickToOpen')}</p>
               <Link to="/agents" className="mt-4 px-5 py-2 rounded-xl text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg,#730D26,#BA1932)' }}>Browse Agents</Link>
+                style={{ background: 'linear-gradient(135deg,#730D26,#BA1932)' }}>{t('messages.browseAgents')}</Link>
             </div>
           )}
         </div>
@@ -548,6 +553,7 @@ function UserChatsView() {
    ══════════════════════════════════════════════════════════════════════════ */
 
 export default function UserChatsPage() {
+  const { t } = useTranslation()
   const { user, isAuthenticated, loading: authLoading } = useUserAuth()
   const navigate = useNavigate()
 
@@ -568,9 +574,9 @@ export default function UserChatsPage() {
       <Navbar />
       <div className="flex-1 max-w-6xl mx-auto w-full px-4 pt-24 pb-10">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-navy">My Messages</h1>
+          <h1 className="text-2xl font-bold text-navy">{t('messages.myMessages')}</h1>
           <p className="text-sm text-navy/50 mt-1">
-            {isAgent ? 'Inquiries and conversations from your clients' : 'Your conversations with real estate agents'}
+            {isAgent ? t('messages.clientInquiries') : t('messages.userConversations')}
           </p>
         </div>
         {isAgent ? <AgentMessagesView /> : <UserChatsView />}

@@ -26,7 +26,7 @@ const groups = [
     label: 'Taxonomy',
     links: [
       { to: '/admin/categories', label: 'Categories', icon: Tag },
-      { to: '/admin/features',   label: 'Features',   icon: Star },
+      { to: '/admin/features',   label: 'Amenities',  icon: Star },
       { to: '/admin/facilities', label: 'Facilities', icon: MapPin },
       { to: '/admin/investors',  label: 'Investors',  icon: TrendingUp },
       { to: '/admin/cities',     label: 'Cities',     icon: Globe },

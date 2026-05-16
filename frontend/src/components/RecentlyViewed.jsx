@@ -49,7 +49,25 @@ export default function RecentlyViewed() {
       const results = await Promise.all(
         stored.map(p =>
           fetch(`/api/v1/properties/id/${p.id}`)
-            .then(r => (r.ok ? p : null))
+            .then(r => {
+              if (!r.ok) return null
+              return r.json().then(body => {
+                const fresh = body?.data
+                if (!fresh) return p
+                return {
+                  id:              fresh.id,
+                  slug:            fresh.slug || fresh.id,
+                  name:            fresh.name,
+                  price:           fresh.price,
+                  type:            fresh.type,
+                  image:           Array.isArray(fresh.images) ? fresh.images.find(img => !/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(img)) || fresh.images[0] : (fresh.image || null),
+                  city:            fresh.city?.name,
+                  number_bedroom:  fresh.number_bedroom,
+                  number_bathroom: fresh.number_bathroom,
+                  square:          fresh.square,
+                }
+              })
+            })
             .catch(() => null)
         )
       )

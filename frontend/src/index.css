@@ -2,10 +2,24 @@
 
 @font-face {
   font-family: 'NeoSansArabic';
-  src: url('/fonts/NeoSansArabicRegular.woff2') format('woff2'),
-       url('/fonts/NeoSansArabicRegular.woff') format('woff'),
-       url('/fonts/NeoSansArabicRegular.ttf') format('truetype');
-  font-weight: normal;
+  src: url('/fonts/NeoSansArabicRegular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NeoSansArabic';
+  src: url('/fonts/NeoSansArabicMedium.woff') format('woff');
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NeoSansArabic';
+  src: url('/fonts/NeoSansArabicBold.woff') format('woff');
+  font-weight: 700 900;
   font-style: normal;
   font-display: swap;
 }

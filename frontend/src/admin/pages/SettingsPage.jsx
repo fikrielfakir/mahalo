@@ -6,6 +6,7 @@ import {
   Save, Globe, Mail, Phone, Instagram, Facebook, Twitter, MapPin,
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
+  Wrench, Clock, FileText, Shield, Info,
 } from 'lucide-react'
 
 const TABS = [
@@ -17,6 +18,8 @@ const TABS = [
   { id: 'seo',        label: 'SEO',         icon: Globe },
   { id: 'mail',       label: 'Mail / SMTP', icon: Server  },
   { id: 'google',     label: 'Google Auth', icon: KeyRound },
+  { id: 'site_mode',  label: 'Site Mode',   icon: Wrench },
+  { id: 'pages',      label: 'Pages',       icon: FileText },
 ]
 
 const DEFAULTS = {
@@ -50,6 +53,16 @@ const DEFAULTS = {
   // Google OAuth
   google_client_id: '',
   google_client_secret: '',
+  // Site mode
+  maintenance_mode: '0',
+  maintenance_message: 'Notre site est temporairement hors ligne pour maintenance. Nous serons de retour très bientôt.',
+  coming_soon_mode: '0',
+  coming_soon_date: '',
+  coming_soon_message: "Nous préparons quelque chose d'exceptionnel. Restez à l'écoute.",
+  // Pages
+  page_about: '',
+  page_privacy: '',
+  page_terms: '',
 }
 
 const WATERMARK_POSITIONS = [
@@ -552,6 +565,188 @@ export default function SettingsPage() {
                   </>
                 )}
               </div>
+            </Section>
+          </>
+        )}
+
+        {/* ── SITE MODE TAB ── */}
+        {tab === 'site_mode' && (
+          <>
+            {/* Maintenance Mode */}
+            <Section title="Mode Maintenance" icon={Wrench}>
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 flex items-start gap-3 mb-2">
+                <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
+                <div>
+                  <p className="font-semibold mb-0.5">Attention</p>
+                  <p className="text-xs text-amber-700">
+                    Activer le mode maintenance bloquera tous les visiteurs (sauf les admins qui peuvent accéder via <code className="bg-amber-100 px-1 rounded">?bypass=1</code>).
+                  </p>
+                </div>
+              </div>
+
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Activer le mode maintenance</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Affiche la page de maintenance à tous les visiteurs</p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, maintenance_mode: p.maintenance_mode === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                    form.maintenance_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.maintenance_mode === '1' ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </div>
+              </div>
+
+              {form.maintenance_mode === '1' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 font-medium">
+                  <Wrench size={14} /> Le site est actuellement en mode maintenance
+                </div>
+              )}
+
+              <FormField label="Message de maintenance" hint="Affiché sur la page de maintenance">
+                <Textarea
+                  value={form.maintenance_message}
+                  onChange={f('maintenance_message')}
+                  rows={3}
+                  placeholder="Notre site est temporairement hors ligne pour maintenance…"
+                />
+              </FormField>
+            </Section>
+
+            {/* Coming Soon */}
+            <Section title="Mode Bientôt disponible" icon={Clock}>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 flex items-start gap-3 mb-2">
+                <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+                <p className="text-xs text-blue-700">
+                  Le mode "Bientôt disponible" est prioritaire sur la maintenance. Si les deux sont actifs, c'est la maintenance qui s'affiche.
+                  Accès admin via <code className="bg-blue-100 px-1 rounded">?bypass=1</code>.
+                </p>
+              </div>
+
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Activer "Bientôt disponible"</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Affiche une page coming soon avec un compte à rebours</p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, coming_soon_mode: p.coming_soon_mode === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                    form.coming_soon_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.coming_soon_mode === '1' ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </div>
+              </div>
+
+              {form.coming_soon_mode === '1' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                  <Clock size={14} /> Le mode "Bientôt disponible" est actif
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Date de lancement" hint="Affichée dans le compte à rebours">
+                  <input
+                    type="datetime-local"
+                    value={form.coming_soon_date}
+                    onChange={f('coming_soon_date')}
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                  />
+                </FormField>
+              </div>
+
+              <FormField label="Message" hint="Affiché sur la page bientôt disponible">
+                <Textarea
+                  value={form.coming_soon_message}
+                  onChange={f('coming_soon_message')}
+                  rows={3}
+                  placeholder="Nous préparons quelque chose d'exceptionnel…"
+                />
+              </FormField>
+            </Section>
+          </>
+        )}
+
+        {/* ── PAGES TAB ── */}
+        {tab === 'pages' && (
+          <>
+            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-start gap-3 mb-2">
+              <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+              <p className="text-xs leading-relaxed">
+                Le contenu ci-dessous est rendu sur les pages publiques correspondantes. Vous pouvez utiliser des titres avec <code className="bg-blue-100 px-1 rounded">## Titre</code>,
+                des listes avec <code className="bg-blue-100 px-1 rounded">- item</code>, et des paragraphes séparés par une ligne vide.
+              </p>
+            </div>
+
+            <Section title="Page À propos" icon={Info}>
+              <FormField
+                label="Contenu de la section Notre Mission"
+                hint="Affiché dans la section mission de la page /about. Séparez les paragraphes par une ligne vide."
+              >
+                <textarea
+                  value={form.page_about}
+                  onChange={f('page_about')}
+                  rows={10}
+                  placeholder={"Fondée à Casablanca, Mahalo a été créée sur une conviction simple…\n\nNous avons démarré parce que…\n\nAujourd'hui, nous avons construit une plateforme…"}
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
+                />
+              </FormField>
+              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                <span>Prévisualiser sur</span>
+                <a href="/about" target="_blank" rel="noreferrer" className="text-[#BA1932] hover:underline inline-flex items-center gap-1">
+                  /about <ExternalLink size={10} />
+                </a>
+              </p>
+            </Section>
+
+            <Section title="Politique de confidentialité" icon={Shield}>
+              <FormField
+                label="Contenu"
+                hint="Affiché sur la page /privacy. Utilisez ## pour les titres de section."
+              >
+                <textarea
+                  value={form.page_privacy}
+                  onChange={f('page_privacy')}
+                  rows={14}
+                  placeholder={"## 1. Collecte des données\nNous collectons les informations…\n\n## 2. Utilisation des données\n…"}
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
+                />
+              </FormField>
+              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                <span>Prévisualiser sur</span>
+                <a href="/privacy" target="_blank" rel="noreferrer" className="text-[#BA1932] hover:underline inline-flex items-center gap-1">
+                  /privacy <ExternalLink size={10} />
+                </a>
+              </p>
+            </Section>
+
+            <Section title="Conditions d'utilisation" icon={FileText}>
+              <FormField
+                label="Contenu"
+                hint="Affiché sur la page /terms. Utilisez ## pour les titres de section."
+              >
+                <textarea
+                  value={form.page_terms}
+                  onChange={f('page_terms')}
+                  rows={14}
+                  placeholder={"## 1. Acceptation des conditions\nEn accédant à notre plateforme…\n\n## 2. Description du service\n…"}
+                  className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
+                />
+              </FormField>
+              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                <span>Prévisualiser sur</span>
+                <a href="/terms" target="_blank" rel="noreferrer" className="text-[#BA1932] hover:underline inline-flex items-center gap-1">
+                  /terms <ExternalLink size={10} />
+                </a>
+              </p>
             </Section>
           </>
         )}

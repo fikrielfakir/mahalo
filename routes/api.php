@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Admin\AdminInvestorController;
 use App\Http\Controllers\Api\Admin\AdminProjectController;
 use App\Http\Controllers\Api\Admin\AdminPropertyController;
 use App\Http\Controllers\Api\Admin\AdminSettingsController;
+use App\Http\Controllers\Api\PublicSettingsController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\MediaController;
@@ -66,6 +67,9 @@ Route::prefix('v1')->group(function () {
 
     // ── Video streaming (Range-request aware) ─────────────────────────────────
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
+
+    // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
+    Route::get('/public-settings', [PublicSettingsController::class, 'show']);
 
     // ── Public: Cities (all, no property restriction) ─────────────────────────
     Route::get('/cities', [AdminCityController::class, 'publicList']);

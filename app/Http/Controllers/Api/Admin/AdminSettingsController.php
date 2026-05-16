@@ -26,6 +26,11 @@ class AdminSettingsController extends Controller
         'watermark_opacity', 'watermark_size',
         // Google OAuth
         'google_client_id', 'google_client_secret',
+        // Site mode
+        'maintenance_mode', 'maintenance_message',
+        'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
+        // Content pages
+        'page_about', 'page_privacy', 'page_terms',
     ];
 
     public function show(): JsonResponse

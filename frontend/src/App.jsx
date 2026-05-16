@@ -13,7 +13,10 @@ import NotFoundPage from './pages/NotFoundPage'
 import ForbiddenPage from './pages/ForbiddenPage'
 import ServerErrorPage from './pages/ServerErrorPage'
 import OfflinePage from './pages/OfflinePage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
 import ErrorBoundary from './components/ErrorBoundary'
+import SiteModeGate from './components/SiteModeGate'
 import CompareBar from './components/CompareBar'
 import AuthModal from './components/AuthModal'
 import { CompareProvider } from './context/CompareContext'
@@ -76,6 +79,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <OfflineGate>
+        <SiteModeGate>
         <BrowserRouter>
           <CompareProvider>
             <UserAuthProvider>
@@ -108,6 +112,10 @@ export default function App() {
                     <Route path="/reset-password"         element={<ResetPasswordPage />} />
                     <Route path="/email/verify/:id/:hash" element={<VerifyEmailPage />} />
                     <Route path="/auth/google/callback"   element={<GoogleCallbackPage />} />
+
+                    {/* Legal / content pages */}
+                    <Route path="/privacy"                element={<PrivacyPage />} />
+                    <Route path="/terms"                  element={<TermsPage />} />
 
                     {/* Error pages — directly accessible */}
                     <Route path="/403"                    element={<ForbiddenPage />} />
@@ -151,6 +159,7 @@ export default function App() {
             </UserAuthProvider>
           </CompareProvider>
         </BrowserRouter>
+        </SiteModeGate>
       </OfflineGate>
     </ErrorBoundary>
   )

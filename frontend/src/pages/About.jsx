@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Award, Users, Building2, Globe, Shield, TrendingUp, Heart, Star, ArrowRight, MapPin } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { propertiesApi, agentsApi } from '../api/client'
+import { propertiesApi, agentsApi, publicSettingsApi } from '../api/client'
 
 const VALUES = [
   {
@@ -43,10 +43,23 @@ function fmtCount(n, fallback) {
   return `${n}+`
 }
 
+const DEFAULT_ABOUT = `Fondée à Casablanca, Mahalo a été créée sur une conviction simple : trouver votre propriété idéale devrait être excitant, pas stressant. Nous mettons en relation acheteurs, locataires et investisseurs avec les meilleurs biens immobiliers du Maroc.
+
+Nous avons démarré parce que nous avons vécu de première main à quel point le marché immobilier marocain était fragmenté et opaque. Trouver une propriété nécessitait des dizaines d'appels, des visites d'annonces peu fiables, et une incertitude interminable sur les prix.
+
+Aujourd'hui, nous avons construit une plateforme où chaque annonce est vérifiée, chaque agent est certifié, et chaque transaction est accompagnée par notre équipe — du premier contact jusqu'à la remise des clés.`
+
+function renderAboutText(text) {
+  return text.split('\n\n').filter(p => p.trim()).map((para, i) => (
+    <p key={i} className="text-navy/60 leading-relaxed mb-5">{para.trim()}</p>
+  ))
+}
+
 export default function About() {
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
+  const [aboutText, setAboutText]             = useState(DEFAULT_ABOUT)
 
   useEffect(() => {
     propertiesApi.list({ per_page: 1 })
@@ -59,6 +72,10 @@ export default function About() {
 
     propertiesApi.filters()
       .then(r => { if (Array.isArray(r?.data?.cities)) setCitiesCount(r.data.cities.length) })
+      .catch(() => {})
+
+    publicSettingsApi.get()
+      .then(r => { if (r?.data?.page_about) setAboutText(r.data.page_about) })
       .catch(() => {})
   }, [])
 
@@ -117,19 +134,13 @@ export default function About() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="section-label mb-3">Our Mission</p>
+            <p className="section-label mb-3">Notre Mission</p>
             <h2 className="text-3xl md:text-4xl font-bold text-navy mb-6 leading-tight">
-              Making homeownership accessible to every Moroccan
+              Rendre l'accès à la propriété accessible à tous les Marocains
             </h2>
-            <p className="text-navy/60 leading-relaxed mb-5">
-              We started Agenz because we experienced firsthand how fragmented and opaque the Moroccan
-              real estate market was. Finding a property meant dozens of calls, visits to unreliable listings,
-              and endless uncertainty about pricing.
-            </p>
-            <p className="text-navy/60 leading-relaxed mb-8">
-              Today, we've built a platform where every listing is verified, every agent is certified, and
-              every transaction is supported by our team from first inquiry to final handover.
-            </p>
+            <div className="mb-8">
+              {renderAboutText(aboutText)}
+            </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/properties" className="btn-navy flex items-center gap-2">
                 Browse Properties <ArrowRight size={15} />

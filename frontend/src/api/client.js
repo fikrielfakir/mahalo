@@ -123,6 +123,10 @@ export const userChatsApi = {
   startChat:   (data)         => api.post('/account/chats/start', data),
 }
 
+export const publicSettingsApi = {
+  get: () => api.get('/public-settings'),
+}
+
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`

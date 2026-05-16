@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
+        $middleware->api(append: [
+            \App\Http\Middleware\TrackPageView::class,
+        ]);
         $middleware->validateCsrfTokens(except: [
             'api/v1/admin/media/upload',
             'api/v1/admin/media/path',

@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard, Building2, FolderKanban, Users, Tag,
   Star, MapPin, MessageSquare, LogOut, X, TrendingUp,
-  Image, Settings, UserCog, Globe, Briefcase, PackageOpen
+  Image, Settings, UserCog, Globe, Briefcase, PackageOpen,
+  BarChart2
 } from 'lucide-react'
 import logoLight from '/logo-light.png'
 
@@ -11,7 +12,8 @@ const groups = [
   {
     label: 'Overview',
     links: [
-      { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/admin/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/admin/analytics',  label: 'Analytics', icon: BarChart2 },
     ],
   },
   {

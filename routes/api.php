@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\Admin\AdminStatsController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\MediaController;
 use App\Http\Controllers\Api\Admin\AdminAppUpdateController;
+use App\Http\Controllers\Api\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Api\VideoStreamController;
 use Illuminate\Support\Facades\Route;
 
@@ -222,5 +223,17 @@ Route::prefix('v1')->group(function () {
         Route::get('/app-update/history', [AdminAppUpdateController::class, 'history']);
         Route::post('/app-update/upload', [AdminAppUpdateController::class, 'upload']);
         Route::delete('/app-update/history/{id}', [AdminAppUpdateController::class, 'deleteHistory']);
+
+        // Analytics
+        Route::prefix('analytics')->group(function () {
+            Route::get('/overview',       [AdminAnalyticsController::class, 'overview']);
+            Route::get('/time-series',    [AdminAnalyticsController::class, 'timeSeries']);
+            Route::get('/top-pages',      [AdminAnalyticsController::class, 'topPages']);
+            Route::get('/countries',      [AdminAnalyticsController::class, 'countries']);
+            Route::get('/devices',        [AdminAnalyticsController::class, 'devices']);
+            Route::get('/browsers',       [AdminAnalyticsController::class, 'browsers']);
+            Route::get('/os',             [AdminAnalyticsController::class, 'os']);
+            Route::get('/recent',         [AdminAnalyticsController::class, 'recentVisitors']);
+        });
     });
 });

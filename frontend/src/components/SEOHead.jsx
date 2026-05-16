@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 const SITE = 'Mahalo Real Estate'
 const SITE_URL = 'https://mahalo.ma'
@@ -31,6 +32,9 @@ export default function SEOHead({
   jsonLd = null,
   breadcrumbs = null,
 }) {
+  const siteSettings = useSiteSettings()
+  const resolvedKeywords = keywords || siteSettings.seo_keywords || null
+
   const fullTitle = title ? `${title} | ${SITE}` : SITE
   const resolvedRobots = noIndex ? 'noindex,nofollow' : (robots || 'index,follow')
 
@@ -49,7 +53,7 @@ export default function SEOHead({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
+      {resolvedKeywords && <meta name="keywords" content={resolvedKeywords} />}
       <meta name="robots" content={resolvedRobots} />
       {canonical && <link rel="canonical" href={canonical} />}
 

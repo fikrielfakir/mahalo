@@ -9,6 +9,7 @@ import { UserAuthProvider } from './context/UserAuthContext'
 import { AuthModalProvider } from './context/AuthModalContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 import { VerifyEmailProvider } from './context/VerifyEmailContext'
+import { SiteSettingsProvider } from './context/SiteSettingsContext'
 import VerifyEmailBanner from './components/VerifyEmailBanner'
 import VerifyEmailPopup from './components/VerifyEmailPopup'
 import { useState, useEffect } from 'react'
@@ -98,6 +99,7 @@ export default function App() {
       <OfflineGate>
         <SiteModeGate>
         <BrowserRouter>
+          <SiteSettingsProvider>
           <CompareProvider>
             <UserAuthProvider>
               <VerifyEmailProvider>
@@ -178,6 +180,7 @@ export default function App() {
               </VerifyEmailProvider>
             </UserAuthProvider>
           </CompareProvider>
+          </SiteSettingsProvider>
         </BrowserRouter>
         </SiteModeGate>
       </OfflineGate>

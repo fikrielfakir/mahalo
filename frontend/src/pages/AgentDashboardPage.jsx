@@ -970,7 +970,7 @@ const TABS = [
 ]
 
 export default function AgentDashboardPage() {
-  const { user, isAuthenticated, loading: authLoading } = useUserAuth()
+  const { user, isAuthenticated, loading: authLoading, refreshUser } = useUserAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState('overview')
   const [overview, setOverview] = useState(null)
@@ -992,6 +992,9 @@ export default function AgentDashboardPage() {
 
   const updateAgent = (updated) => {
     setOverview(prev => prev ? { ...prev, agent: { ...prev.agent, ...updated } } : prev)
+    if (updated.avatar_url !== undefined) {
+      refreshUser()
+    }
   }
 
   if (authLoading || overviewLoading) return <AgentDashboardSkeleton />

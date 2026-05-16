@@ -194,6 +194,18 @@ class AuthController extends Controller
 
     private function formatUser(User $user): array
     {
+        // Resolve avatar_url from the linked agent profile
+        $avatarUrl = null;
+        if ($user->professional_agent_id) {
+            $agent    = \App\Models\Agent::find($user->professional_agent_id);
+            $avatarId = $agent?->avatar_id;
+            if ($avatarId) {
+                $avatarUrl = (str_starts_with($avatarId, 'http') || str_starts_with($avatarId, '/'))
+                    ? $avatarId
+                    : "/storage/{$avatarId}";
+            }
+        }
+
         return [
             'id'                              => $user->id,
             'name'                            => $user->name,
@@ -213,6 +225,7 @@ class AuthController extends Controller
             'professional_city_id'            => $user->professional_city_id,
             'professional_applied_at'         => $user->professional_applied_at,
             'professional_reject_reason'      => $user->professional_reject_reason,
+            'avatar_url'                      => $avatarUrl,
         ];
     }
 

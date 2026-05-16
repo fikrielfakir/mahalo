@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
 import logoLight from '/logo-light.png'
-import axios from 'axios'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 const DEFAULT_DESC = 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.'
 
@@ -30,24 +29,8 @@ const footerLinks = {
   ],
 }
 
-function getCachedSettings() {
-  try { return JSON.parse(localStorage.getItem('mahalo_settings') || '{}') } catch { return {} }
-}
-
 export default function Footer() {
-  const [settings, setSettings] = useState(getCachedSettings)
-
-  useEffect(() => {
-    axios.get('/api/v1/public-settings')
-      .then(r => {
-        const data = r.data?.data || r.data || {}
-        if (Object.keys(data).length) {
-          localStorage.setItem('mahalo_settings', JSON.stringify(data))
-          setSettings(data)
-        }
-      })
-      .catch(() => {})
-  }, [])
+  const settings = useSiteSettings()
 
   const socials = [
     { Icon: Facebook,  href: settings.facebook_url,  label: 'Facebook' },

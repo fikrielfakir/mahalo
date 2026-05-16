@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { adminFeatures } from '../api/adminApi'
-import LogoLoader from '../../components/LogoLoader'
+import { AdminTableSkeleton } from '../../components/Skeletons'
 import { PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input } from '../components/Modal'
 import {
@@ -189,7 +189,7 @@ export default function FeaturesPage() {
       {/* Content */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <LogoLoader fullScreen={false} />
+          <AdminTableSkeleton rows={8} />
         ) : filtered.length === 0 ? (
           <div className="p-16 text-center">
             <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">

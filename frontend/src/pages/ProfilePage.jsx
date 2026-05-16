@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import LogoLoader from '../components/LogoLoader'
+import { ProfilePageSkeleton, ProfessionalTabSkeleton } from '../components/Skeletons'
+import { PropertyCardSkeleton } from '../components/PropertyCard'
 import {
   User, Mail, Phone, Building2, FileText, Check, AlertCircle,
   ChevronRight, Clock, CheckCircle, XCircle, Home, MapPin, Bed, Bath, Maximize2, Heart,
@@ -407,7 +408,7 @@ export default function ProfilePage() {
     { key: 'favorites', label: 'Favorites' },
   ]
 
-  if (loading) return <LogoLoader />
+  if (loading) return <ProfilePageSkeleton />
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
@@ -525,7 +526,7 @@ export default function ProfilePage() {
           {activeTab === 'professional' && (
             <div className="space-y-6">
               {profLoading ? (
-                <LogoLoader fullScreen={false} />
+                <ProfessionalTabSkeleton />
               ) : profStatus?.status && !showAppForm ? (
                 <ProfessionalStatus
                   status={profStatus.status}
@@ -567,7 +568,9 @@ export default function ProfilePage() {
           {activeTab === 'favorites' && (
             <div>
               {favoritesLoading ? (
-                <LogoLoader fullScreen={false} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
+                </div>
               ) : favorites.length === 0 ? (
                 <div className="bg-white rounded-3xl shadow-card p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
@@ -594,7 +597,9 @@ export default function ProfilePage() {
           {activeTab === 'listings' && (
             <div>
               {listingsLoading ? (
-                <LogoLoader fullScreen={false} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
+                </div>
               ) : listings.length === 0 ? (
                 <div className="bg-white rounded-3xl shadow-card p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">

@@ -3,13 +3,13 @@ import { Outlet, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from './Sidebar'
 import { Menu } from 'lucide-react'
-import LogoLoader from '../../components/LogoLoader'
+import { AdminLayoutSkeleton } from '../../components/Skeletons'
 
 export default function AdminLayout() {
   const { user, loading } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  if (loading) return <LogoLoader />
+  if (loading) return <AdminLayoutSkeleton />
 
   if (!user) return <Navigate to="/admin/login" replace />
 

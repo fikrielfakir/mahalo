@@ -12,20 +12,23 @@ const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w
 
 function getImageUrl(property) {
   const images = Array.isArray(property?.images) ? property.images : []
-  const firstImg = images[0] || property?.image
-
-  if (firstImg && isVideoPath(firstImg)) {
-    const videoThumb = property?.video_thumbnails?.[firstImg]
-    if (videoThumb) return videoThumb
-    return FALLBACK
-  }
-
-  if (property?.thumbnail_url) return property.thumbnail_url
 
   const firstImage = images.find(img => !isVideoPath(img))
-  const img = firstImage || firstImg
-  if (!img || isVideoPath(img)) return FALLBACK
-  return img.startsWith('http') ? img : `/storage/${img}`
+  if (firstImage) {
+    return firstImage.startsWith('http') ? firstImage : `/storage/${firstImage}`
+  }
+
+  const firstVideo = images.find(img => isVideoPath(img))
+  if (firstVideo && property?.video_thumbnails?.[firstVideo]) {
+    return property.video_thumbnails[firstVideo]
+  }
+
+  const fallbackImg = property?.image
+  if (fallbackImg && !isVideoPath(fallbackImg)) {
+    return fallbackImg.startsWith('http') ? fallbackImg : `/storage/${fallbackImg}`
+  }
+
+  return FALLBACK
 }
 
 function formatPrice(price, isRent) {

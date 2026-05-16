@@ -36,20 +36,23 @@ const FALLBACK_IMG = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?
 
 function getListingImageUrl(listing) {
   const images = Array.isArray(listing?.images) ? listing.images : []
-  const firstImg = images[0] || listing?.image
-
-  if (firstImg && isVideoPath(firstImg)) {
-    const videoThumb = listing?.video_thumbnails?.[firstImg]
-    if (videoThumb) return videoThumb
-    return FALLBACK_IMG
-  }
-
-  if (listing?.thumbnail_url) return listing.thumbnail_url
 
   const firstImage = images.find(img => !isVideoPath(img))
-  const img = firstImage || firstImg
-  if (!img || isVideoPath(img)) return FALLBACK_IMG
-  return img.startsWith('http') ? img : `/storage/${img}`
+  if (firstImage) {
+    return firstImage.startsWith('http') ? firstImage : `/storage/${firstImage}`
+  }
+
+  const firstVideo = images.find(img => isVideoPath(img))
+  if (firstVideo && listing?.video_thumbnails?.[firstVideo]) {
+    return listing.video_thumbnails[firstVideo]
+  }
+
+  const fallbackImg = listing?.image
+  if (fallbackImg && !isVideoPath(fallbackImg)) {
+    return fallbackImg.startsWith('http') ? fallbackImg : `/storage/${fallbackImg}`
+  }
+
+  return FALLBACK_IMG
 }
 
 function ListingCard({ listing }) {
@@ -57,9 +60,10 @@ function ListingCard({ listing }) {
   const Icon = mod.icon
   const isPending = listing.moderation_status === 'pending'
   const img = getListingImageUrl(listing)
+  const slug = listing.slug || listing.id
 
-  return (
-    <div className={`relative bg-white rounded-2xl overflow-hidden border transition-all ${isPending ? 'opacity-60 border-amber-100' : 'border-gray-100'}`}
+  const inner = (
+    <div className={`relative bg-white rounded-2xl overflow-hidden border transition-all ${isPending ? 'opacity-60 border-amber-100' : 'border-gray-100 hover:-translate-y-1'}`}
       style={{ boxShadow: isPending ? 'none' : '0 2px 12px rgba(115,13,38,0.07)' }}>
       <div className={`absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold ${mod.color}`}>
         <Icon size={11} />{mod.label}
@@ -101,6 +105,16 @@ function ListingCard({ listing }) {
       </div>
     </div>
   )
+
+  if (!isPending) {
+    return (
+      <Link to={`/properties/${slug}`} className="block">
+        {inner}
+      </Link>
+    )
+  }
+
+  return inner
 }
 
 function ProfessionalStatus({ status, specialty, appliedAt, rejectReason, onReapply }) {

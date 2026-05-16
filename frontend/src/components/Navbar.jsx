@@ -160,16 +160,6 @@ export default function Navbar({ transparent = false }) {
             )}
           </div>
 
-          {/* Favorites */}
-          <button
-            title={t('nav.favorites')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
-              isTransparent ? 'text-white/80 hover:text-white hover:bg-white/12' : 'text-navy/60 hover:text-navy hover:bg-navy/6'
-            }`}
-          >
-            <Heart size={17} />
-          </button>
-
           {/* Auth section */}
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>

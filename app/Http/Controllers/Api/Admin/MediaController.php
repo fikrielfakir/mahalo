@@ -65,21 +65,18 @@ class MediaController extends Controller
                 if ($thumbnailPath) {
                     $this->applyWatermark($thumbnailPath, 'jpg');
                 }
-            } else {
-                // Try FFmpeg as fallback (works on VPS/dedicated, silently skipped on shared hosting)
-                $videoFullPath = Storage::disk('public')->path($tmpPath);
-                $thumbName = Str::uuid() . '.jpg';
-                $thumbStorePath = $folder . '/thumbs/' . $thumbName;
-                $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
-                @mkdir(dirname($thumbDiskPath), 0755, true);
-                $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
-                if ($thumbnailPath) {
-                    $this->applyWatermark($thumbStorePath, 'jpg');
-                }
+        } else {
+            // Try FFmpeg as fallback (works on VPS/dedicated, silently skipped on shared hosting)
+            $videoFullPath = Storage::disk('public')->path($tmpPath);
+            $thumbName = Str::uuid() . '.jpg';
+            $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+            $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
+            @mkdir(dirname($thumbDiskPath), 0755, true);
+            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+            if ($thumbnailPath) {
+                $this->applyWatermark($thumbStorePath, 'jpg');
             }
-
-            // Watermark the video itself (FFmpeg-based, skip silently if unavailable)
-            $this->applyVideoWatermark($tmpPath, $ext);
+        }
 
         } else {
             $this->applyWatermark($tmpPath, $ext);

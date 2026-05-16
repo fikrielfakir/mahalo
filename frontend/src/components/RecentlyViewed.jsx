@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight } from 'lucide-react'
+import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { pickBestImage, RECENTLY_VIEWED_KEY as KEY } from '../utils/recentlyViewed'
 
@@ -23,6 +23,9 @@ function getImg(image) {
 
 export default function RecentlyViewed() {
   const [items, setItems] = useState([])
+  const [canLeft, setCanLeft]   = useState(false)
+  const [canRight, setCanRight] = useState(false)
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     let stored = []
@@ -63,6 +66,29 @@ export default function RecentlyViewed() {
     validate()
   }, [])
 
+  const updateArrows = () => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanLeft(el.scrollLeft > 4)
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    updateArrows()
+    el.addEventListener('scroll', updateArrows, { passive: true })
+    const ro = new ResizeObserver(updateArrows)
+    ro.observe(el)
+    return () => { el.removeEventListener('scroll', updateArrows); ro.disconnect() }
+  }, [items])
+
+  const scroll = (dir) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * 280, behavior: 'smooth' })
+  }
+
   if (items.length === 0) return null
 
   return (
@@ -76,12 +102,39 @@ export default function RecentlyViewed() {
             </div>
             <h2 className="text-2xl font-bold text-navy">Where you left off</h2>
           </div>
-          <Link to="/properties" className="flex items-center gap-1.5 text-sm font-semibold text-navy/50 hover:text-navy transition-colors">
-            All properties <ArrowRight size={14} />
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {/* Nav buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => scroll(-1)}
+                disabled={!canLeft}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-navy/50 hover:text-navy hover:border-navy/30 disabled:opacity-30 disabled:cursor-default transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => scroll(1)}
+                disabled={!canRight}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-navy/50 hover:text-navy hover:border-navy/30 disabled:opacity-30 disabled:cursor-default transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            <Link to="/properties" className="flex items-center gap-1.5 text-sm font-semibold text-navy/50 hover:text-navy transition-colors">
+              All properties <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2">
+        {/* Scrollable row — scrollbar hidden */}
+        <style>{`.rv-scroll::-webkit-scrollbar { display: none; }`}</style>
+        <div
+          ref={scrollRef}
+          className="rv-scroll flex gap-4 overflow-x-auto -mx-2 px-2"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {items.map((p) => (
             <Link
               key={p.id}

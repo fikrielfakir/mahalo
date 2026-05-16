@@ -1,0 +1,33 @@
+#4 - Admin Translation Manager
+What & Why
+Build a full in-app translation editor so non-technical admins can update any UI string for any of the 4 languages (EN, FR, ES, AR) without touching code or redeploying. Translations edited in the admin panel are saved to the database and served via the public settings API, overriding the bundled JSON files at runtime.
+
+Done looks like
+A new "Translations" page appears in the admin sidebar
+The admin can select a language (EN / FR / ES / AR) and see a searchable table of all translation keys with their current values
+Editing a value inline and clicking Save writes the change to the database
+The frontend fetches overrides from the API on load and merges them over the bundled JSON defaults, so changes appear on the live site without a rebuild
+A "Reset to default" button per key restores the bundled JSON value and deletes the database override
+Out of scope
+Machine translation / AI auto-translate (manual editing only)
+Translating API-returned content (property titles, descriptions — that is data, not UI)
+Exporting/importing translation files (future feature)
+Steps
+Database migration — Create a translation_overrides table with columns: id, locale (en/fr/es/ar), key (dot-notation string), value (text), timestamps. Add a unique index on (locale, key).
+Backend CRUD API — Create AdminTranslationController with endpoints: GET /api/v1/admin/translations?locale=fr (list all keys + DB overrides merged), PUT /api/v1/admin/translations/{locale}/{key} (upsert an override), DELETE /api/v1/admin/translations/{locale}/{key} (reset to default). Register routes in the admin group.
+Public overrides endpoint — Extend PublicSettingsController (or add a new GET /api/v1/translations/{locale}) to return the merged translation map (bundled JSON defaults + DB overrides) for the requested locale. No auth required.
+Frontend runtime merge — In i18n.js, after initialisation, fetch the public overrides endpoint for the active locale and call i18n.addResourceBundle to deep-merge overrides so DB values win over bundled JSON.
+Admin Translations page — Create frontend/src/admin/pages/TranslationsPage.jsx with: a locale tab bar (EN / FR / ES / AR), a search/filter input, a virtualized table of key → editable value rows, inline save (PUT) and reset (DELETE) per row, and a bulk-save option.
+Sidebar link — Add a "Translations" entry with a Languages icon to the admin sidebar navigation.
+Relevant files
+frontend/src/i18n.js (created by foundation task)
+frontend/src/locales/ (created by foundation task)
+frontend/src/admin/pages/ (add TranslationsPage.jsx)
+frontend/src/admin/components/AdminLayout.jsx (sidebar)
+app/Http/Controllers/Api/Admin/ (add AdminTranslationController.php)
+app/Http/Controllers/Api/PublicSettingsController.php
+routes/api.php
+database/migrations/
+Dependencies
+
+i18n Foundation & Language Switcher

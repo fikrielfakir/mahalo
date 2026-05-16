@@ -34,6 +34,8 @@ use App\Http\Controllers\Api\Admin\MediaController;
 use App\Http\Controllers\Api\Admin\AdminAppUpdateController;
 use App\Http\Controllers\Api\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Api\VideoStreamController;
+use App\Http\Controllers\Api\PublicTranslationsController;
+use App\Http\Controllers\Api\Admin\AdminTranslationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -72,6 +74,9 @@ Route::prefix('v1')->group(function () {
 
     // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
     Route::get('/public-settings', [PublicSettingsController::class, 'show']);
+
+    // ── Public: Translation overrides (no auth — served to frontend at runtime) ──
+    Route::get('/translations/{locale}', [PublicTranslationsController::class, 'show']);
 
     // ── Public: Cities (all, no property restriction) ─────────────────────────
     Route::get('/cities', [AdminCityController::class, 'publicList']);
@@ -211,6 +216,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/consults/{id}', [AdminConsultController::class, 'destroy']);
         Route::post('/consults/bulk', [AdminConsultController::class, 'bulkUpdate']);
         Route::post('/consults/bulk-delete', [AdminConsultController::class, 'bulkDelete']);
+
+        // Translations
+        Route::get('/translations', [AdminTranslationController::class, 'index']);
+        Route::put('/translations/{locale}/{key}', [AdminTranslationController::class, 'upsert'])->where('key', '.+');
+        Route::delete('/translations/{locale}/{key}', [AdminTranslationController::class, 'destroy'])->where('key', '.+');
 
         // Settings
         Route::get('/settings', [AdminSettingsController::class, 'show']);

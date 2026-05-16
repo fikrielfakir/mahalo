@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Building2, FolderKanban, Users, Tag,
   Star, MapPin, MessageSquare, LogOut, X, TrendingUp,
   Image, Settings, UserCog, Globe, Briefcase, PackageOpen,
-  BarChart2
+  BarChart2, Languages
 } from 'lucide-react'
 import logoLight from '/logo-light.png'
 
@@ -44,10 +44,11 @@ const groups = [
   {
     label: 'System',
     links: [
-      { to: '/admin/users',                     label: 'Users',        icon: UserCog },
-      { to: '/admin/professional-applications', label: 'Applications', icon: Briefcase },
-      { to: '/admin/settings',                  label: 'Settings',     icon: Settings },
-      { to: '/admin/app-update',                label: 'App Update',   icon: PackageOpen },
+      { to: '/admin/users',                     label: 'Users',         icon: UserCog },
+      { to: '/admin/professional-applications', label: 'Applications',  icon: Briefcase },
+      { to: '/admin/translations',              label: 'Translations',  icon: Languages },
+      { to: '/admin/settings',                  label: 'Settings',      icon: Settings },
+      { to: '/admin/app-update',                label: 'App Update',    icon: PackageOpen },
     ],
   },
 ]

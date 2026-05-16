@@ -69,6 +69,7 @@ const SettingsPage                  = lazy(() => import('./admin/pages/SettingsP
 const ProfessionalApplicationsPage  = lazy(() => import('./admin/pages/ProfessionalApplicationsPage'))
 const AppUpdatePage                 = lazy(() => import('./admin/pages/AppUpdatePage'))
 const AnalyticsPage                 = lazy(() => import('./admin/pages/AnalyticsPage'))
+const TranslationsPage              = lazy(() => import('./admin/pages/TranslationsPage'))
 
 // ── Inline fallback spinner ──────────────────────────────────────
 function PageLoader() {
@@ -170,6 +171,7 @@ export default function App() {
                         <Route path="settings"                  element={<SettingsPage />} />
                         <Route path="app-update"                element={<AppUpdatePage />} />
                         <Route path="analytics"                 element={<AnalyticsPage />} />
+                        <Route path="translations"              element={<TranslationsPage />} />
                       </Route>
 
                       {/* 404 — catches everything else */}

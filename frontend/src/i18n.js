@@ -47,8 +47,25 @@ i18n
 
 applyDirection(i18n.language)
 
+async function fetchAndApplyOverrides(lng) {
+  if (!SUPPORTED_LOCALES.includes(lng)) return
+  try {
+    const res = await fetch(`/api/v1/translations/${lng}`)
+    if (!res.ok) return
+    const json = await res.json()
+    if (json?.data) {
+      i18n.addResourceBundle(lng, 'common', json.data, true, true)
+    }
+  } catch {
+    // silently ignore — bundled JSON is the fallback
+  }
+}
+
+fetchAndApplyOverrides(i18n.language)
+
 i18n.on('languageChanged', (lng) => {
   applyDirection(lng)
+  fetchAndApplyOverrides(lng)
 })
 
 export { SUPPORTED_LOCALES, RTL_LOCALES }

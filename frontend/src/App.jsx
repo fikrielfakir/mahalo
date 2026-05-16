@@ -9,11 +9,12 @@ import { UserAuthProvider } from './context/UserAuthContext'
 import { AuthModalProvider } from './context/AuthModalContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 import { VerifyEmailProvider } from './context/VerifyEmailContext'
-import { SiteSettingsProvider } from './context/SiteSettingsContext'
+import { SiteSettingsProvider, useSiteSettings } from './context/SiteSettingsContext'
 import VerifyEmailBanner from './components/VerifyEmailBanner'
 import VerifyEmailPopup from './components/VerifyEmailPopup'
 import { useState, useEffect } from 'react'
 import { AuthProvider } from './admin/context/AuthContext'
+import CookieBanner from './components/CookieBanner'
 
 // ── Lazy: Public pages ──────────────────────────────────────────
 const Home               = lazy(() => import('./pages/Home'))
@@ -76,6 +77,11 @@ function PageLoader() {
       <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
     </div>
   )
+}
+
+function CookieBannerWrapper() {
+  const settings = useSiteSettings()
+  return <CookieBanner settings={settings} />
 }
 
 function OfflineGate({ children }) {
@@ -176,6 +182,7 @@ export default function App() {
                   <AuthModal />
                   <VerifyEmailBanner />
                   <VerifyEmailPopup />
+                  <CookieBannerWrapper />
                 </AuthProvider>
               </AuthModalProvider>
               </FavoritesProvider>

@@ -6,7 +6,7 @@ import {
   Save, Globe, Mail, Phone, Instagram, Facebook, Twitter, MapPin,
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
-  Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag,
+  Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
 } from 'lucide-react'
 
 const TABS = [
@@ -20,6 +20,7 @@ const TABS = [
   { id: 'google',     label: 'Google Auth', icon: KeyRound },
   { id: 'site_mode',  label: 'Site Mode',   icon: Wrench },
   { id: 'pages',      label: 'Pages',       icon: FileText },
+  { id: 'cookies',    label: 'Cookies',     icon: Cookie },
 ]
 
 const DEFAULTS = {
@@ -67,6 +68,13 @@ const DEFAULTS = {
   footer_description: 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.',
   seo_keywords: 'immobilier maroc, real estate morocco, appartement vendre maroc, villa maroc, casablanca immobilier',
   google_site_verification: '',
+  // Cookies
+  cookie_consent_enabled: '1',
+  cookie_consent_title: 'We use cookies',
+  cookie_consent_message: 'We use cookies to enhance your experience, analyse traffic, and personalise content. You can manage your preferences below.',
+  cookie_accept_text: 'Accept All',
+  cookie_decline_text: 'Decline',
+  cookie_policy_url: '/privacy',
 }
 
 const WATERMARK_POSITIONS = [
@@ -830,6 +838,69 @@ export default function SettingsPage() {
                 </a>
               </p>
             </Section>
+          </>
+        )}
+
+        {/* ── COOKIES TAB ── */}
+        {tab === 'cookies' && (
+          <>
+            <Section title="Cookie Consent Banner" icon={Cookie}>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Enable Cookie Banner</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Show a cookie consent popup to all new visitors</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={form.cookie_consent_enabled === '1'}
+                    onChange={fBool('cookie_consent_enabled')}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#730D26]" />
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Banner Title">
+                  <Input value={form.cookie_consent_title} onChange={f('cookie_consent_title')} placeholder="We use cookies" />
+                </FormField>
+                <FormField label="Cookie Policy URL" hint="Link shown in the banner footer">
+                  <Input value={form.cookie_policy_url} onChange={f('cookie_policy_url')} placeholder="/privacy" />
+                </FormField>
+              </div>
+
+              <FormField label="Banner Message" hint="Explain what cookies you use and why">
+                <Textarea
+                  value={form.cookie_consent_message}
+                  onChange={f('cookie_consent_message')}
+                  rows={3}
+                  placeholder="We use cookies to enhance your experience…"
+                />
+              </FormField>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Accept Button Text">
+                  <Input value={form.cookie_accept_text} onChange={f('cookie_accept_text')} placeholder="Accept All" />
+                </FormField>
+                <FormField label="Decline Button Text">
+                  <Input value={form.cookie_decline_text} onChange={f('cookie_decline_text')} placeholder="Decline" />
+                </FormField>
+              </div>
+            </Section>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+              <div className="flex items-start gap-3">
+                <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Preview</p>
+                  <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                    The banner appears in the bottom-right corner for all new visitors. Returning visitors who have already made a choice will not see it again until they clear their browser storage.
+                    The banner respects analytics preferences — if a visitor declines, analytics cookies will not be set.
+                  </p>
+                </div>
+              </div>
+            </div>
           </>
         )}
 

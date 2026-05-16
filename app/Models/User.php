@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\CustomVerifyEmail;
+use App\Notifications\CustomResetPassword;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -30,10 +31,21 @@ class User extends Authenticatable implements MustVerifyEmail
         $sig     = hash_hmac('sha256', "{$id}|{$hash}|{$expires}", config('app.key'));
         $url     = "{$frontendUrl}/email/verify/{$id}/{$hash}?expires={$expires}&signature={$sig}";
 
-        $notification = new VerifyEmail();
+        $notification = new CustomVerifyEmail();
         $notification::createUrlUsing(fn () => $url);
 
         $this->notify($notification);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $frontendUrl = rtrim(
+            env('FRONTEND_URL')
+                ?: (env('REPLIT_DEV_DOMAIN') ? 'https://' . env('REPLIT_DEV_DOMAIN') : 'http://localhost:5000'),
+            '/'
+        );
+        $url = "{$frontendUrl}/reset-password?token={$token}&email=" . urlencode($this->email);
+        $this->notify(new CustomResetPassword($token, $url));
     }
 
     protected $fillable = [

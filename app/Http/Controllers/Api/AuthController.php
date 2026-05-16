@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewDeviceLoginMail;
 use App\Models\User;
+use App\Models\UserLoginSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -77,6 +80,9 @@ class AuthController extends Controller
                 'message' => 'Your account has been suspended.' . $reason,
             ], 403);
         }
+
+        // Device / IP tracking
+        $this->trackLogin($request, $user);
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -192,43 +198,6 @@ class AuthController extends Controller
         ], 422);
     }
 
-    private function formatUser(User $user): array
-    {
-        // Resolve avatar_url from the linked agent profile
-        $avatarUrl = null;
-        if ($user->professional_agent_id) {
-            $agent    = \App\Models\Agent::find($user->professional_agent_id);
-            $avatarId = $agent?->avatar_id;
-            if ($avatarId) {
-                $avatarUrl = (str_starts_with($avatarId, 'http') || str_starts_with($avatarId, '/'))
-                    ? $avatarId
-                    : "/storage/{$avatarId}";
-            }
-        }
-
-        return [
-            'id'                              => $user->id,
-            'name'                            => $user->name,
-            'email'                           => $user->email,
-            'phone'                           => $user->phone ?? null,
-            'role'                            => $user->role,
-            'email_verified'                  => ! is_null($user->email_verified_at),
-            'account_type'                    => $user->account_type ?? 'individual',
-            'company_name'                    => $user->company_name ?? null,
-            'license_number'                  => $user->license_number ?? null,
-            'professional_status'             => $user->professional_status,
-            'professional_agent_id'           => $user->professional_agent_id,
-            'professional_bio'                => $user->professional_bio,
-            'professional_specialty'          => $user->professional_specialty,
-            'professional_experience_years'   => $user->professional_experience_years,
-            'professional_phone'              => $user->professional_phone,
-            'professional_city_id'            => $user->professional_city_id,
-            'professional_applied_at'         => $user->professional_applied_at,
-            'professional_reject_reason'      => $user->professional_reject_reason,
-            'avatar_url'                      => $avatarUrl,
-        ];
-    }
-
     public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
     {
         $expires   = $request->query('expires');
@@ -280,5 +249,125 @@ class AuthController extends Controller
             'error'   => false,
             'message' => 'Verification email sent.',
         ]);
+    }
+
+    // ─── Device / IP tracking ─────────────────────────────────────────────────
+
+    private function trackLogin(Request $request, User $user): void
+    {
+        try {
+            $ua          = $request->userAgent() ?? '';
+            $ip          = $request->ip();
+            $deviceType  = $this->detectDevice($ua);
+            $browser     = $this->detectBrowser($ua);
+            $os          = $this->detectOS($ua);
+            $country     = $this->detectCountry($request);
+            $fingerprint = md5($ip . $deviceType . $browser . $os);
+
+            $isKnown = UserLoginSession::where('user_id', $user->id)
+                ->where('fingerprint', $fingerprint)
+                ->exists();
+
+            UserLoginSession::create([
+                'user_id'     => $user->id,
+                'ip_address'  => $ip,
+                'device_type' => $deviceType,
+                'browser'     => $browser,
+                'os'          => $os,
+                'country'     => $country,
+                'user_agent'  => substr($ua, 0, 500),
+                'fingerprint' => $fingerprint,
+            ]);
+
+            if (! $isKnown) {
+                $frontendUrl = rtrim(
+                    env('FRONTEND_URL') ?: 'http://localhost:5000', '/'
+                );
+
+                Mail::to($user->email)->send(new NewDeviceLoginMail(
+                    userName:          $user->name,
+                    ipAddress:         $ip,
+                    deviceType:        $deviceType,
+                    browser:           $browser,
+                    os:                $os,
+                    country:           $country,
+                    loginTime:         now()->format('D, d M Y H:i') . ' UTC',
+                    changePasswordUrl: $frontendUrl . '/forgot-password',
+                ));
+            }
+        } catch (\Throwable) {
+            // Never block login due to tracking errors
+        }
+    }
+
+    private function detectDevice(string $ua): string
+    {
+        if (preg_match('/tablet|ipad|playbook|silk/i', $ua)) return 'tablet';
+        if (preg_match('/mobile|android|iphone|ipod|blackberry|opera mini|iemobile/i', $ua)) return 'mobile';
+        return 'desktop';
+    }
+
+    private function detectBrowser(string $ua): string
+    {
+        if (preg_match('/Edg\//i', $ua))     return 'Edge';
+        if (preg_match('/OPR\//i', $ua))     return 'Opera';
+        if (preg_match('/Chrome\//i', $ua))  return 'Chrome';
+        if (preg_match('/Safari\//i', $ua))  return 'Safari';
+        if (preg_match('/Firefox\//i', $ua)) return 'Firefox';
+        if (preg_match('/MSIE|Trident/i', $ua)) return 'IE';
+        return 'Other';
+    }
+
+    private function detectOS(string $ua): string
+    {
+        if (preg_match('/Windows NT/i', $ua))      return 'Windows';
+        if (preg_match('/Mac OS X/i', $ua))        return 'macOS';
+        if (preg_match('/Android/i', $ua))         return 'Android';
+        if (preg_match('/iPhone|iPad|iPod/i', $ua)) return 'iOS';
+        if (preg_match('/Linux/i', $ua))           return 'Linux';
+        return 'Other';
+    }
+
+    private function detectCountry(Request $request): ?string
+    {
+        $cf = $request->header('CF-IPCountry');
+        if ($cf && $cf !== 'XX') return $cf;
+        return null;
+    }
+
+    private function formatUser(User $user): array
+    {
+        $avatarUrl = null;
+        if ($user->professional_agent_id) {
+            $agent    = \App\Models\Agent::find($user->professional_agent_id);
+            $avatarId = $agent?->avatar_id;
+            if ($avatarId) {
+                $avatarUrl = (str_starts_with($avatarId, 'http') || str_starts_with($avatarId, '/'))
+                    ? $avatarId
+                    : "/storage/{$avatarId}";
+            }
+        }
+
+        return [
+            'id'                              => $user->id,
+            'name'                            => $user->name,
+            'email'                           => $user->email,
+            'phone'                           => $user->phone ?? null,
+            'role'                            => $user->role,
+            'email_verified'                  => ! is_null($user->email_verified_at),
+            'account_type'                    => $user->account_type ?? 'individual',
+            'company_name'                    => $user->company_name ?? null,
+            'license_number'                  => $user->license_number ?? null,
+            'professional_status'             => $user->professional_status,
+            'professional_agent_id'           => $user->professional_agent_id,
+            'professional_bio'                => $user->professional_bio,
+            'professional_specialty'          => $user->professional_specialty,
+            'professional_experience_years'   => $user->professional_experience_years,
+            'professional_phone'              => $user->professional_phone,
+            'professional_city_id'            => $user->professional_city_id,
+            'professional_applied_at'         => $user->professional_applied_at,
+            'professional_reject_reason'      => $user->professional_reject_reason,
+            'avatar_url'                      => $avatarUrl,
+        ];
     }
 }

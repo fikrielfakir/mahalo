@@ -34,6 +34,9 @@ class AdminSettingsController extends Controller
         'page_about', 'page_privacy', 'page_terms',
         // Footer & SEO
         'footer_description', 'seo_keywords', 'google_site_verification',
+        // Cookie consent
+        'cookie_consent_enabled', 'cookie_consent_title', 'cookie_consent_message',
+        'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
     ];
 
     public function show(): JsonResponse

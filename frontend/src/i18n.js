@@ -33,13 +33,13 @@ i18n
       ar: { common: arCommon },
     },
     defaultNS: 'common',
-    fallbackLng: 'en',
+    fallbackLng: 'fr',
     supportedLngs: SUPPORTED_LOCALES,
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       lookupLocalStorage: 'mahalo_lang',
       caches: ['localStorage'],
     },

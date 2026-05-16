@@ -261,26 +261,6 @@ class MediaController extends Controller
         }
 
         $videoFullPath = Storage::disk('public')->path($record->path);
-        $tempDownloaded = false;
-
-        if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) {
-            $remoteUrl = $record->url;
-            if (!$remoteUrl) {
-                return response()->json(['error' => true, 'message' => 'Video file not found on disk and no remote URL available.'], 404);
-            }
-            @mkdir(dirname($videoFullPath), 0755, true);
-            $ctx  = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
-            $data = @file_get_contents($remoteUrl, false, $ctx);
-            if (!$data || strlen($data) < 512) {
-                return response()->json(['error' => true, 'message' => 'Video file not on disk and could not be downloaded from: ' . $remoteUrl], 404);
-            }
-            // Reject HTML error pages returned instead of video data
-            if (!$this->looksLikeVideo($data)) {
-                return response()->json(['error' => true, 'message' => 'Remote URL did not return a valid video file (got HTML or unsupported content).'], 422);
-            }
-            file_put_contents($videoFullPath, $data);
-            $tempDownloaded = true;
-        }
 
         $folder         = dirname($record->path);
         $thumbName      = Str::uuid() . '.jpg';
@@ -288,10 +268,32 @@ class MediaController extends Controller
         $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
         @mkdir(dirname($thumbDiskPath), 0755, true);
 
-        $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+        $thumbnailPath = null;
 
-        if ($tempDownloaded) {
-            @unlink($videoFullPath);
+        if (file_exists($videoFullPath) && filesize($videoFullPath) > 0) {
+            // File is local — extract thumbnail directly
+            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+        } else {
+            $remoteUrl = $record->url;
+            if (!$remoteUrl) {
+                return response()->json(['error' => true, 'message' => 'Video file not found on disk and no remote URL is stored.'], 404);
+            }
+
+            // Strategy A: Pass URL directly to ffmpeg — no PHP memory download required.
+            // ffmpeg streams the video over HTTP and extracts the frame efficiently.
+            $thumbnailPath = $this->generateVideoThumbnailFromUrl($remoteUrl, $thumbDiskPath, $thumbStorePath);
+
+            // Strategy B: Fall back to PHP download only if ffmpeg URL input failed
+            if (!$thumbnailPath) {
+                @mkdir(dirname($videoFullPath), 0755, true);
+                $ctx  = stream_context_create(['http' => ['timeout' => 90, 'follow_location' => true]]);
+                $data = @file_get_contents($remoteUrl, false, $ctx);
+                if ($data && strlen($data) >= 512 && $this->looksLikeVideo($data)) {
+                    file_put_contents($videoFullPath, $data);
+                    $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+                    @unlink($videoFullPath);
+                }
+            }
         }
 
         if (!$thumbnailPath) {
@@ -467,22 +469,8 @@ class MediaController extends Controller
         $failed = [];
 
         foreach ($records as $record) {
-            $videoFullPath  = Storage::disk('public')->path($record->path);
-            $tempDownloaded = false;
-
-            if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) {
-                $remoteUrl = $record->url;
-                if (!$remoteUrl) { $failed[] = $record->id; continue; }
-                @mkdir(dirname($videoFullPath), 0755, true);
-                $ctx  = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
-                $data = @file_get_contents($remoteUrl, false, $ctx);
-                if (!$data || strlen($data) < 512 || !$this->looksLikeVideo($data)) {
-                    $failed[] = $record->id;
-                    continue;
-                }
-                file_put_contents($videoFullPath, $data);
-                $tempDownloaded = true;
-            }
+            $videoFullPath = Storage::disk('public')->path($record->path);
+            $thumbnailPath = null;
 
             $folder         = dirname($record->path);
             $thumbName      = Str::uuid() . '.jpg';
@@ -490,9 +478,28 @@ class MediaController extends Controller
             $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
             @mkdir(dirname($thumbDiskPath), 0755, true);
 
-            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+            if (file_exists($videoFullPath) && filesize($videoFullPath) > 0) {
+                // File is local
+                $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+            } else {
+                $remoteUrl = $record->url;
+                if (!$remoteUrl) { $failed[] = $record->id; continue; }
 
-            if ($tempDownloaded) @unlink($videoFullPath);
+                // Strategy A: ffmpeg reads directly from URL (no PHP download)
+                $thumbnailPath = $this->generateVideoThumbnailFromUrl($remoteUrl, $thumbDiskPath, $thumbStorePath);
+
+                // Strategy B: PHP download fallback
+                if (!$thumbnailPath) {
+                    @mkdir(dirname($videoFullPath), 0755, true);
+                    $ctx  = stream_context_create(['http' => ['timeout' => 90, 'follow_location' => true]]);
+                    $data = @file_get_contents($remoteUrl, false, $ctx);
+                    if ($data && strlen($data) >= 512 && $this->looksLikeVideo($data)) {
+                        file_put_contents($videoFullPath, $data);
+                        $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+                        @unlink($videoFullPath);
+                    }
+                }
+            }
 
             if ($thumbnailPath) {
                 $record->update([
@@ -512,6 +519,58 @@ class MediaController extends Controller
             'failed'  => $failed,
             'total'   => $records->count(),
         ]);
+    }
+
+    /**
+     * Generate a video thumbnail by pointing ffmpeg at an HTTP/HTTPS URL directly.
+     * ffmpeg streams the video; no PHP memory download required.
+     */
+    private function generateVideoThumbnailFromUrl(string $videoUrl, string $thumbDiskPath, string $thumbStorePath): ?string
+    {
+        if (!function_exists('exec')) return null;
+        $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
+        if (in_array('exec', $disabled)) return null;
+
+        $ffmpegBin = $this->getFfmpegBin();
+
+        $thumbDir = dirname($thumbDiskPath);
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+
+        $base    = escapeshellarg($ffmpegBin) . ' -y';
+        $in_arg  = ' -i ' . escapeshellarg($videoUrl);
+        $out_arg = ' -frames:v 1 -vf scale=640:-2 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath);
+
+        $strategies = [
+            $base . $in_arg . $out_arg,
+            $base . $in_arg . ' -ss 1' . $out_arg,
+            $base . ' -ss 0.5' . $in_arg . $out_arg,
+            $base . $in_arg . ' -vf "thumbnail,scale=640:-2" -frames:v 1 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath),
+        ];
+
+        $errFile = sys_get_temp_dir() . '/ffmpeg_url_' . getmypid() . '.log';
+
+        foreach ($strategies as $idx => $cmd) {
+            @unlink($thumbDiskPath);
+            exec($cmd . ' 2>' . escapeshellarg($errFile), $out, $ret);
+
+            if (file_exists($thumbDiskPath) && filesize($thumbDiskPath) > 0) {
+                @unlink($errFile);
+                return $thumbStorePath;
+            }
+
+            $stderr = file_exists($errFile) ? trim(file_get_contents($errFile)) : '';
+            \Illuminate\Support\Facades\Log::warning('ffmpeg URL strategy failed', [
+                'strategy' => $idx + 1,
+                'url'      => $videoUrl,
+                'ret'      => $ret,
+                'stderr'   => mb_substr($stderr, -400),
+            ]);
+        }
+
+        @unlink($errFile);
+        return null;
     }
 
     /**

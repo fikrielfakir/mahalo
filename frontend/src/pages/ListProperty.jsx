@@ -660,9 +660,10 @@ export default function ListProperty() {
 
   const [step, setStep]             = useState(0)
   const [mediaPaths, setMediaPaths] = useState([])
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted]   = useState(false)
-  const [draftSaved, setDraftSaved] = useState(false)
+  const [submitting, setSubmitting]   = useState(false)
+  const [submitted, setSubmitted]     = useState(false)
+  const [draftSaved, setDraftSaved]   = useState(false)
+  const [navigating, setNavigating]   = useState(false)
 
   // DB data states
   const [cities,      setCities]      = useState([])
@@ -829,23 +830,30 @@ export default function ListProperty() {
   useEffect(() => { doSubmitRef.current = doSubmit }, [doSubmit])
 
   const handleNext = () => {
+    if (navigating) return
     if (step === 0 && !form.category_id) {
       showToast('Please select a property type', 'error'); return
     }
     if (step === 1 && !form.city_id) {
       showToast('Please select a city', 'error'); return
     }
+    setNavigating(true)
     setStep(s => Math.min(s + 1, STEPS.length - 1))
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    setTimeout(() => setNavigating(false), 600)
   }
 
   const handleBack = () => {
+    if (navigating) return
+    setNavigating(true)
     setStep(s => Math.max(s - 1, 0))
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    setTimeout(() => setNavigating(false), 600)
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
+    if (step !== STEPS.length - 1) return
     if (!isAuthenticated) {
       pendingSubmitRef.current = true
       openAuthModal()
@@ -1068,14 +1076,15 @@ export default function ListProperty() {
                       <button
                         type="button"
                         onClick={handleNext}
-                        className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors"
+                        disabled={navigating}
+                        className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors disabled:opacity-60"
                       >
                         Next <ArrowRight size={16} />
                       </button>
                     ) : (
                       <button
                         type="submit"
-                        disabled={submitting || authLoading}
+                        disabled={submitting || authLoading || navigating}
                         className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors disabled:opacity-60"
                       >
                         {submitting

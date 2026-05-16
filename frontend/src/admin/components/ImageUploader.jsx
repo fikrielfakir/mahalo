@@ -37,7 +37,7 @@ function ProgressRing({ pct }) {
   )
 }
 
-async function burnWatermarkIntoVideo(file, onProgress) {
+async function burnWatermarkIntoVideo(file, onProgress, watermarkInfo) {
   return new Promise((resolve) => {
     if (
       typeof MediaRecorder === 'undefined' ||
@@ -95,28 +95,41 @@ async function burnWatermarkIntoVideo(file, onProgress) {
         ctx.fillStyle = grad
         ctx.fillRect(0, H * 0.72, W, H * 0.28)
 
-        const fontSize = Math.round(W * 0.072)
-        ctx.font = `900 ${fontSize}px 'Arial Black', Arial, sans-serif`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'bottom'
-        ctx.letterSpacing = `${Math.round(W * 0.018)}px`
+        if (watermarkInfo?.img) {
+          const { img, opacity, size } = watermarkInfo
+          const ratio = (size || 20) / 100
+          const wmW = Math.round(W * Math.max(ratio, 0.08))
+          const wmH = Math.round((img.naturalHeight || img.height) * wmW / (img.naturalWidth || img.width))
+          const wmX = Math.round((W - wmW) / 2)
+          const wmY = H - wmH - Math.round(H * 0.04)
 
-        ctx.shadowColor = 'rgba(0,0,0,0.7)'
-        ctx.shadowBlur = Math.round(W * 0.012)
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = Math.round(H * 0.004)
+          ctx.globalAlpha = (opacity || 60) / 100
+          ctx.drawImage(img, wmX, wmY, wmW, wmH)
+          ctx.globalAlpha = 1
+        } else {
+          const fontSize = Math.round(W * 0.072)
+          ctx.font = `900 ${fontSize}px 'Arial Black', Arial, sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'bottom'
+          ctx.letterSpacing = `${Math.round(W * 0.018)}px`
 
-        ctx.strokeStyle = 'rgba(0,0,0,0.6)'
-        ctx.lineWidth = Math.round(W * 0.004)
-        ctx.strokeText('MAHALO', W / 2, H - Math.round(H * 0.04))
+          ctx.shadowColor = 'rgba(0,0,0,0.7)'
+          ctx.shadowBlur = Math.round(W * 0.012)
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = Math.round(H * 0.004)
 
-        ctx.fillStyle = 'rgba(255,255,255,0.92)'
-        ctx.fillText('MAHALO', W / 2, H - Math.round(H * 0.04))
+          ctx.strokeStyle = 'rgba(0,0,0,0.6)'
+          ctx.lineWidth = Math.round(W * 0.004)
+          ctx.strokeText('MAHALO', W / 2, H - Math.round(H * 0.04))
 
-        ctx.shadowColor = 'transparent'
-        ctx.shadowBlur = 0
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
+          ctx.fillStyle = 'rgba(255,255,255,0.92)'
+          ctx.fillText('MAHALO', W / 2, H - Math.round(H * 0.04))
+
+          ctx.shadowColor = 'transparent'
+          ctx.shadowBlur = 0
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 0
+        }
       }
 
       let rafId
@@ -176,12 +189,40 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   const [uploading, setUploading] = useState([])
   const [errors, setErrors] = useState([])
   const [thumbMap, setThumbMap] = useState({})
+  const [watermarkInfo, setWatermarkInfo] = useState(null)
   const inputRef = useRef()
 
   const imagesRef = useRef(images)
   const onChangeRef = useRef(onChange)
   useEffect(() => { imagesRef.current = images }, [images])
   useEffect(() => { onChangeRef.current = onChange }, [onChange])
+
+  useEffect(() => {
+    if (!allowVideo) return
+    let cancelled = false
+    client.get('/admin/settings').then(res => {
+      if (cancelled) return
+      const settings = res.data?.data || {}
+      const logoUrl = settings.watermark_logo_url
+      const opacity = parseInt(settings.watermark_opacity) || 60
+      const size = parseInt(settings.watermark_size) || 20
+
+      const tryLoad = (src) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => { if (!cancelled) setWatermarkInfo({ img, opacity, size }) }
+        img.onerror = () => { if (!cancelled && src !== '/watermark.png') tryLoad('/watermark.png') }
+        img.src = src
+      }
+
+      if (logoUrl) {
+        tryLoad(logoUrl.startsWith('http') || logoUrl.startsWith('/') ? logoUrl : `/storage/${logoUrl}`)
+      } else {
+        tryLoad('/watermark.png')
+      }
+    }).catch(() => { if (!cancelled) setWatermarkInfo({ img: null, opacity: 60, size: 20 }) })
+    return () => { cancelled = true }
+  }, [allowVideo])
 
   useEffect(() => {
     const videoPaths = images.filter(isVideoPath).filter(p => !thumbMap[p])
@@ -232,7 +273,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
               ? { ...u, pct: Math.round(wPct * 0.6), stage: `Burning watermark… ${wPct}%` }
               : u
           ))
-        })
+        }, watermarkInfo)
         setUploading(prev => prev.map(u =>
           u.id === id ? { ...u, pct: 60, stage: 'Generating thumbnail…' } : u
         ))

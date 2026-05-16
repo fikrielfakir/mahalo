@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Building } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { projectsApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80&auto=format&fit=crop',
@@ -20,6 +21,7 @@ function formatPrice(price) {
 }
 
 export default function NewProjects() {
+  const { t } = useTranslation()
   const [projects, setProjects] = useState([])
   const [loading, setLoading]   = useState(true)
   const [active, setActive]     = useState(0)
@@ -41,16 +43,16 @@ export default function NewProjects() {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex items-end justify-between mb-14">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: '#BA1932' }}>Off-Plan & New</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: '#BA1932' }}>{t('sections.projectsLabel')}</p>
             <h2 className="text-4xl font-bold text-white leading-tight mb-3"
               style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", letterSpacing: '-0.01em' }}>
-              New Projects
+              {t('sections.newProjects')}
             </h2>
-            <p className="text-sm font-medium text-white/40">Invest early in Morocco's finest developments</p>
+            <p className="text-sm font-medium text-white/40">{t('sections.projectsSub')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/projects" className="hidden sm:flex items-center gap-1.5 font-semibold text-sm mr-2 transition-all duration-300 hover:gap-2.5" style={{ color: '#BA1932' }}>
-              View All <ArrowRight size={15} />
+              {t('sections.viewAll')} <ArrowRight size={15} />
             </Link>
             <button
               onClick={prev}
@@ -129,7 +131,7 @@ export default function NewProjects() {
                         <p className="text-white/55 text-xs mb-4 line-clamp-2">{project.description}</p>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">From</div>
+                            <div className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">{t('property.from')}</div>
                             <div className="font-bold text-base" style={{ color: '#f5748a' }}>{formatPrice(project.price_from)}</div>
                           </div>
                           {project.city?.name && (

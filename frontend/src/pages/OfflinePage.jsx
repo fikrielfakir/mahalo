@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom'
 import { WifiOff, RotateCcw, Home } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { useTranslation } from 'react-i18next'
 
 export default function OfflinePage() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <Navbar />
@@ -28,13 +31,13 @@ export default function OfflinePage() {
 
           {/* Message */}
           <h1 className="text-3xl sm:text-4xl font-bold text-navy mb-3">
-            Hors ligne
+            {t('errors.offlineTitle')}
           </h1>
           <p className="text-navy/55 text-base mb-2">
-            Impossible de se connecter au réseau.
+            {t('errors.offlineDesc')}
           </p>
           <p className="text-navy/35 text-sm mb-10">
-            Vérifiez votre connexion internet et réessayez.
+            {t('errors.offlineSub')}
           </p>
 
           {/* CTA */}
@@ -43,13 +46,13 @@ export default function OfflinePage() {
               onClick={() => window.location.reload()}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:opacity-90 transition-opacity"
             >
-              <RotateCcw size={16} /> Réessayer
+              <RotateCcw size={16} /> {t('errors.retry')}
             </button>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors"
             >
-              <Home size={16} /> Accueil
+              <Home size={16} /> {t('errors.home')}
             </Link>
           </div>
 

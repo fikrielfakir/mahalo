@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
-const tabs = ['Buy', 'Rent', 'New Projects']
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
 const priceRanges = [
   { label: 'Any',        min: '',        max: '' },
@@ -15,6 +15,7 @@ const priceRanges = [
 ]
 
 export default function Hero() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab]       = useState('Buy')
   const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
@@ -27,6 +28,7 @@ export default function Hero() {
   const [citiesCount, setCitiesCount]         = useState(null)
 
   const navigate = useNavigate()
+  const tabs = [t('hero.tabBuy'), t('hero.tabRent'), t('hero.tabProjects')]
 
   useEffect(() => {
     propertiesApi.filters()
@@ -60,23 +62,23 @@ export default function Hero() {
 
   const handleSearch = () => {
     const params = new URLSearchParams()
-    if (activeTab === 'Rent') params.set('type', 'rent')
-    else if (activeTab === 'Buy') params.set('type', 'sale')
+    if (activeTab === t('hero.tabRent')) params.set('type', 'rent')
+    else if (activeTab === t('hero.tabBuy')) params.set('type', 'sale')
     if (location)            params.set('search', location)
     if (propertyType)        params.set('category_id', propertyType)
     if (bedrooms !== 'Any')  params.set('number_bedroom', bedrooms)
     const selected = priceRanges.find(r => r.label === priceRange)
     if (selected?.min) params.set('min_price', selected.min)
     if (selected?.max) params.set('max_price', selected.max)
-    const path = activeTab === 'New Projects' ? '/projects' : '/properties'
+    const path = activeTab === t('hero.tabProjects') ? '/projects' : '/properties'
     navigate(`${path}?${params.toString()}`)
   }
 
   const stats = [
-    { icon: Home,        value: fmtCount(propertiesCount, '1K+'), label: 'Properties' },
-    { icon: Users,       value: '8K+',                             label: 'Happy Clients' },
-    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),      label: 'Verified Agents' },
-    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities' },
+    { icon: Home,        value: fmtCount(propertiesCount, '1K+'), label: t('stats.properties') },
+    { icon: Users,       value: '8K+',                             label: t('stats.happyClients') },
+    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),      label: t('stats.verifiedAgents') },
+    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+', label: t('stats.cities') },
   ]
 
   return (
@@ -119,7 +121,7 @@ export default function Hero() {
           >
             <span style={{ color: '#BA1932', fontSize: '11px' }}>◆</span>
             <span className="text-white/80 text-[10px] sm:text-xs font-semibold uppercase tracking-widest">
-              Premium Real Estate Platform
+              {t('hero.badge')}
             </span>
           </div>
 
@@ -131,8 +133,8 @@ export default function Hero() {
               fontSize: 'clamp(2.4rem, 6.5vw, 4.5rem)',
             }}
           >
-            Find Your Dream<br />
-            Home in{' '}
+            {t('hero.title1')}<br />
+            {t('hero.title2').split(' ').slice(0, -1).join(' ')}{' '}
             <span style={{
               WebkitTextFillColor: 'transparent',
               WebkitBackgroundClip: 'text',
@@ -148,7 +150,7 @@ export default function Hero() {
             className="text-white/50 text-sm sm:text-base font-light max-w-xs sm:max-w-sm mb-7 sm:mb-9 animate-fade-up"
             style={{ animationDelay: '80ms' }}
           >
-            Discover premium properties across Morocco's most prestigious neighborhoods.
+            {t('hero.subtitle')}
           </p>
 
           {/* ── Tabs ── */}
@@ -206,10 +208,10 @@ export default function Hero() {
               >
                 <MapPin size={15} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Location</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.location')}</div>
                   <input
                     type="text"
-                    placeholder="City or neighborhood..."
+                    placeholder={t('hero.locationPlaceholder')}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -235,7 +237,7 @@ export default function Hero() {
               >
                 <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Type</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
                   <select
                     value={propertyType}
                     onChange={(e) => setPropertyType(e.target.value)}
@@ -254,7 +256,7 @@ export default function Hero() {
                       padding: 0,
                     }}
                   >
-                    <option value="">All Types</option>
+                    <option value="">{t('filters.allTypes')}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -269,7 +271,7 @@ export default function Hero() {
               >
                 <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Bedrooms</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
                   <select
                     value={bedrooms}
                     onChange={(e) => setBedrooms(e.target.value)}
@@ -289,7 +291,7 @@ export default function Hero() {
                     }}
                   >
                     {bedroomOptions.map((b) => (
-                      <option key={b} value={b}>{b === 'Any' ? 'Any' : `${b} bd`}</option>
+                      <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b} ${t('property.beds')}`}</option>
                     ))}
                   </select>
                 </div>
@@ -302,7 +304,7 @@ export default function Hero() {
               >
                 <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Price Range</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.priceRange')}</div>
                   <select
                     value={priceRange}
                     onChange={(e) => setPriceRange(e.target.value)}
@@ -344,7 +346,7 @@ export default function Hero() {
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
                 >
                   <Search size={16} />
-                  Search
+                  {t('hero.searchBtn')}
                 </button>
               </div>
             </div>
@@ -368,10 +370,10 @@ export default function Hero() {
               >
                 <MapPin size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div className="flex-1">
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Location</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.location')}</div>
                   <input
                     type="text"
-                    placeholder="City or neighborhood..."
+                    placeholder={t('hero.locationPlaceholder')}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -389,14 +391,14 @@ export default function Hero() {
                 >
                   <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Type</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
                     <select
                       value={propertyType}
                       onChange={(e) => setPropertyType(e.target.value)}
                       className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none"
                       style={{ color: '#730D26' }}
                     >
-                      <option value="">All Types</option>
+                      <option value="">{t('filters.allTypes')}</option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
@@ -409,7 +411,7 @@ export default function Hero() {
                 >
                   <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Bedrooms</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
                     <select
                       value={bedrooms}
                       onChange={(e) => setBedrooms(e.target.value)}
@@ -417,7 +419,7 @@ export default function Hero() {
                       style={{ color: '#730D26' }}
                     >
                       {bedroomOptions.map((b) => (
-                        <option key={b} value={b}>{b === 'Any' ? 'Any' : `${b}`}</option>
+                        <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b}`}</option>
                       ))}
                     </select>
                   </div>
@@ -429,7 +431,7 @@ export default function Hero() {
                 <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5">
                   <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>Price</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.price')}</div>
                     <select
                       value={priceRange}
                       onChange={(e) => setPriceRange(e.target.value)}
@@ -453,7 +455,7 @@ export default function Hero() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <Search size={15} /> Search
+                    <Search size={15} /> {t('hero.searchBtn')}
                   </button>
                 </div>
               </div>

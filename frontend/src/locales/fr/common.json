@@ -95,6 +95,8 @@
     "discoverPremium": "Découvrez des propriétés premium",
     "failedLoad": "Impossible de charger les biens.",
     "noPropertiesFound": "Aucun bien trouvé",
+    "noProperties": "Aucun bien trouvé",
+    "total": "au total",
     "realEstate": "Immobilier",
     "onMap": "{{count}} sur carte · {{total}} au total",
     "noMapLocation": "Pas de localisation",
@@ -138,7 +140,8 @@
     "baths": "sdb",
     "removeFromCompare": "Retirer de la comparaison",
     "maxCompare": "Max 3 biens",
-    "addToCompare": "Ajouter à la comparaison"
+    "addToCompare": "Ajouter à la comparaison",
+    "from": "À partir de"
   },
   "compare": {
     "title": "Comparer ({{count}}/{{max}})",
@@ -236,7 +239,16 @@
     "verificationFailed": "Échec de la vérification",
     "invalidVerification": "Lien de vérification invalide.",
     "verificationError": "Échec de la vérification.",
-    "verificationEmailSent": "E-mail de vérification envoyé !"
+    "verificationEmailSent": "E-mail de vérification envoyé !",
+    "signInPrompt": "Connectez-vous pour sauvegarder vos biens favoris",
+    "createAccount": "Créer un compte",
+    "googleError": "Impossible de se connecter à Google. Veuillez réessayer.",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "registerFailed": "Échec de l'inscription. Veuillez réessayer.",
+    "passwordPlaceholder": "Mot de passe",
+    "continueGoogle": "Continuer avec Google",
+    "creating": "Création du compte…",
+    "signUpGoogle": "S'inscrire avec Google"
   },
   "cookies": {
     "title": "Nous utilisons des cookies",
@@ -269,6 +281,7 @@
     "newsletterPlaceholder": "Votre adresse e-mail",
     "subscribe": "S'abonner",
     "stayUpdated": "Restez informé",
+    "defaultDesc": "La première marketplace immobilière du Maroc. Nous mettons en relation acheteurs, locataires et investisseurs avec des annonces vérifiées dans tout le royaume.",
     "newsletterDesc": "Recevez les dernières annonces et analyses du marché",
     "emailPlaceholder": "Entrez votre e-mail",
     "discover": "Découvrir",
@@ -318,7 +331,18 @@
     "from": "À partir de",
     "developer": "Promoteur",
     "contactAgent": "Contacter l'agent",
-    "handpicked": "Sélection premium choisie pour vous"
+    "handpicked": "Sélection premium choisie pour vous",
+    "curatedLabel": "Sélection Curatée",
+    "featured": "Biens en vedette",
+    "featuredSub": "Sélection premium choisie pour vous",
+    "noFeatured": "Aucun bien en vedette disponible.",
+    "primeLabel": "Emplacements de choix",
+    "neighborhoodsSub": "Découvrez les plus beaux endroits où vivre au Maroc",
+    "agentsLabel": "Nos Experts",
+    "agents": "Meilleurs Agents Immobiliers",
+    "agentsSub": "Des professionnels de confiance prêts à vous aider",
+    "projectsLabel": "Sur plan & Nouveaux",
+    "projectsSub": "Investissez tôt dans les meilleurs projets du Maroc"
   },
   "mortgage": {
     "title": "Simulateur de crédit",
@@ -333,6 +357,7 @@
     "loanAmount": "Montant du prêt",
     "totalRepayment": "Remboursement total : {{amount}}",
     "estimates": "Estimation uniquement. Consultez votre banque pour des conditions précises.",
+    "disclaimer": "Estimation uniquement. Consultez votre banque pour des conditions précises.",
     "perMonth": "/mo",
     "yrs": "ans"
   },
@@ -340,6 +365,7 @@
     "title": "Agents Immobiliers",
     "subtitle": "Trouvez le professionnel qu'il vous faut",
     "listings": "Annonces",
+    "contactAgent": "Contacter l'agent",
     "experience": "Expérience",
     "languages": "Langues",
     "contact": "Contacter",
@@ -421,7 +447,16 @@
     "offlineDesc": "Impossible de se connecter au réseau.",
     "checkInternet": "Vérifiez votre connexion internet et réessayez.",
     "connectLogin": "Connectez-vous avec un compte autorisé ou retournez à l'accueil.",
-    "checkUrl": "Vérifiez l'URL ou utilisez les liens ci-dessous pour continuer."
+    "checkUrl": "Vérifiez l'URL ou utilisez les liens ci-dessous pour continuer.",
+    "404Desc": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "404Sub": "Vérifiez l'URL ou utilisez les liens ci-dessous pour continuer.",
+    "goBack": "Retour",
+    "maybeLooking": "Vous cherchez peut-être…",
+    "500Desc": "Une erreur inattendue s'est produite. Notre équipe a été notifiée.",
+    "500Sub": "Veuillez réessayer dans quelques instants ou contactez-nous si le problème persiste.",
+    "403Desc": "Vous n'avez pas la permission d'accéder à cette page.",
+    "403Sub": "Connectez-vous avec un compte autorisé ou retournez à l'accueil.",
+    "offlineSub": "Vérifiez votre connexion internet et réessayez."
   },
   "listProperty": {
     "title": "Publier un bien",

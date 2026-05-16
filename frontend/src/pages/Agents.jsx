@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { agentsApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
 const AVATAR_COLORS = [
   'linear-gradient(135deg,#730D26,#BA1932)',
@@ -16,6 +17,7 @@ const AVATAR_COLORS = [
 ]
 
 export default function Agents() {
+  const { t } = useTranslation()
   const [agents, setAgents]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
@@ -41,13 +43,13 @@ export default function Agents() {
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">
 
         <div className="mb-10">
-          <p className="section-label mb-2">Our Experts</p>
-          <h1 className="text-3xl font-bold text-navy">Real Estate Agents</h1>
-          <p className="text-navy/45 text-sm mt-1.5">Trusted professionals ready to find your dream home</p>
+          <p className="section-label mb-2">{t('agents.ourExperts')}</p>
+          <h1 className="text-3xl font-bold text-navy">{t('agents.pageTitle')}</h1>
+          <p className="text-navy/45 text-sm mt-1.5">{t('agents.pageSubtitle')}</p>
         </div>
 
         {error ? (
-          <div className="text-center py-24 text-navy/40">Failed to load agents.</div>
+          <div className="text-center py-24 text-navy/40">{t('agents.failedLoad')}</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {loading
@@ -60,7 +62,7 @@ export default function Agents() {
                   </div>
                 ))
               : agents.length === 0 ? (
-                  <div className="col-span-4 text-center py-24 text-navy/40">No agents found.</div>
+                  <div className="col-span-4 text-center py-24 text-navy/40">{t('agents.noAgents')}</div>
                 )
               : agents.map((agent, i) => {
                   const rawAvatar  = agent.avatar_url || agent.avatar
@@ -99,7 +101,7 @@ export default function Agents() {
                           {displayName}
                         </h3>
                         <div className="flex items-center gap-1 text-navy/40 text-xs mb-3">
-                          <MapPin size={10} /> {agent.city?.name || agent.city || 'Morocco'}
+                          <MapPin size={10} /> {agent.city?.name || agent.city || t('agents.morocco')}
                         </div>
 
                         <div className="flex items-center gap-4 mb-4">
@@ -119,7 +121,7 @@ export default function Agents() {
                         </div>
 
                         <div className="w-full py-2.5 rounded-xl bg-navy/4 group-hover:bg-navy group-hover:text-white text-navy text-xs font-semibold transition-all duration-200">
-                          View Profile
+                          {t('agents.viewProfile')}
                         </div>
                       </div>
                     </Link>

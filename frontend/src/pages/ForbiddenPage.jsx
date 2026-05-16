@@ -2,8 +2,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Lock, Home, ArrowLeft, LogIn } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { useTranslation } from 'react-i18next'
 
 export default function ForbiddenPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
@@ -30,13 +32,13 @@ export default function ForbiddenPage() {
 
           {/* Message */}
           <h1 className="text-3xl sm:text-4xl font-bold text-navy mb-3">
-            Accès refusé
+            {t('errors.403Title')}
           </h1>
           <p className="text-navy/55 text-base mb-2">
-            Vous n'avez pas les autorisations nécessaires pour accéder à cette page.
+            {t('errors.403Desc')}
           </p>
           <p className="text-navy/35 text-sm mb-10">
-            Connectez-vous avec un compte autorisé ou retournez à l'accueil.
+            {t('errors.403Sub')}
           </p>
 
           {/* CTA */}
@@ -45,19 +47,19 @@ export default function ForbiddenPage() {
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors"
             >
-              <ArrowLeft size={16} /> Retour
+              <ArrowLeft size={16} /> {t('errors.goBack')}
             </button>
             <Link
               to="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:opacity-90 transition-opacity"
             >
-              <LogIn size={16} /> Se connecter
+              <LogIn size={16} /> {t('auth.signIn')}
             </Link>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors"
             >
-              <Home size={16} /> Accueil
+              <Home size={16} /> {t('errors.home')}
             </Link>
           </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, Star, BadgeCheck, MapPin, Home, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { agentsApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
 const AVATAR_COLORS = [
   'linear-gradient(135deg,#730D26,#BA1932)',
@@ -10,7 +11,7 @@ const AVATAR_COLORS = [
   'linear-gradient(135deg,#9b1232,#BA1932)',
 ]
 
-function AgentCard({ agent, index }) {
+function AgentCard({ agent, index, t }) {
   const displayName = agent.display_name || agent.name || 'Agent'
   const rawAvatar   = agent.avatar_url || agent.avatar
   const avatarUrl   = rawAvatar
@@ -64,7 +65,7 @@ function AgentCard({ agent, index }) {
         {agent.properties_count !== undefined && (
           <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(115,13,38,0.40)' }}>
             <Home size={11} style={{ color: '#BA1932', opacity: 0.65 }} />
-            {agent.properties_count} listings
+            {agent.properties_count} {t('agents.listings')}
           </div>
         )}
       </div>
@@ -73,13 +74,14 @@ function AgentCard({ agent, index }) {
         className="w-full py-2.5 rounded-xl text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-300 group-hover:gap-2.5"
         style={{ background: 'linear-gradient(135deg, #730D26, #BA1932)', boxShadow: '0 4px 16px rgba(186,25,50,0.25)' }}
       >
-        <MessageCircle size={12} /> Contact Agent
+        <MessageCircle size={12} /> {t('agents.contactAgent')}
       </div>
     </Link>
   )
 }
 
 export default function AgentsSection() {
+  const { t } = useTranslation()
   const [agents, setAgents]   = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -100,12 +102,12 @@ export default function AgentsSection() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between mb-14">
           <div>
-            <p className="section-label mb-3">Our Experts</p>
-            <h2 className="section-title text-4xl mb-3">Top Real Estate Agents</h2>
-            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>Trusted professionals ready to help you</p>
+            <p className="section-label mb-3">{t('sections.agentsLabel')}</p>
+            <h2 className="section-title text-4xl mb-3">{t('sections.agents')}</h2>
+            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.agentsSub')}</p>
           </div>
           <Link to="/agents" className="section-link hidden sm:flex shrink-0">
-            View All <ArrowRight size={15} />
+            {t('sections.viewAll')} <ArrowRight size={15} />
           </Link>
         </div>
 
@@ -119,7 +121,7 @@ export default function AgentsSection() {
                   <div className="h-10 skeleton rounded-xl" />
                 </div>
               ))
-            : agents.map((agent, i) => <AgentCard key={agent.id} agent={agent} index={i} />)
+            : agents.map((agent, i) => <AgentCard key={agent.id} agent={agent} index={i} t={t} />)
           }
         </div>
       </div>

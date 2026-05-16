@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { propertiesApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
 const CITY_IMAGES = {
   'Casablanca':    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80&auto=format&fit=crop',
@@ -39,6 +40,7 @@ function extractCitiesFromProperties(properties) {
 }
 
 export default function Neighborhoods() {
+  const { t } = useTranslation()
   const [cities, setCities]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
@@ -79,13 +81,13 @@ export default function Neighborhoods() {
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">
 
         <div className="mb-10">
-          <p className="section-label mb-2">Prime Locations</p>
-          <h1 className="text-3xl font-bold text-navy">Explore Neighborhoods</h1>
-          <p className="text-navy/45 text-sm mt-1.5">Discover the finest areas across the globe</p>
+          <p className="section-label mb-2">{t('neighborhoods.primeLocations')}</p>
+          <h1 className="text-3xl font-bold text-navy">{t('neighborhoods.title')}</h1>
+          <p className="text-navy/45 text-sm mt-1.5">{t('neighborhoods.subtitle')}</p>
         </div>
 
         {error ? (
-          <div className="text-center py-24 text-navy/40">Failed to load neighborhoods.</div>
+          <div className="text-center py-24 text-navy/40">{t('neighborhoods.failedLoad')}</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {loading
@@ -93,7 +95,7 @@ export default function Neighborhoods() {
                   <div key={i} className="rounded-3xl skeleton h-72" />
                 ))
               : cities.length === 0 ? (
-                  <div className="col-span-3 text-center py-24 text-navy/40">No neighborhoods available.</div>
+                  <div className="col-span-3 text-center py-24 text-navy/40">{t('neighborhoods.noNeighborhoods')}</div>
                 )
               : cities.map((city) => (
                   <Link
@@ -111,14 +113,14 @@ export default function Neighborhoods() {
                     {/* Glass pill */}
                     <div className="absolute top-4 left-4">
                       <span className="glass-pill text-[10px]">
-                        <MapPin size={9} /> Explore
+                        <MapPin size={9} /> {t('sections.explore')}
                       </span>
                     </div>
 
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="text-white font-bold text-2xl mb-0.5">{city.name}</h3>
                       <p className="text-white/50 text-xs font-medium group-hover:text-white/70 transition-colors">
-                        Browse properties →
+                        {t('neighborhoods.browseProperties')} →
                       </p>
                     </div>
                   </Link>

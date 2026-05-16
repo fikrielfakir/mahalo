@@ -2,35 +2,35 @@ import { Link } from 'react-router-dom'
 import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
 import logoLight from '/logo-light.png'
 import { useSiteSettings } from '../context/SiteSettingsContext'
-
-const DEFAULT_DESC = 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.'
-
-const footerLinks = {
-  Company:   [
-    { label: 'About Us',       to: '/about' },
-    { label: 'Agents',         to: '/agents' },
-    { label: 'Contact',        to: '/contact' },
-  ],
-  Discover:  [
-    { label: 'Buy',            to: '/properties?type=sale' },
-    { label: 'Rent',           to: '/properties?type=rent' },
-    { label: 'New Projects',   to: '/projects' },
-    { label: 'Neighborhoods',  to: '/neighborhoods' },
-  ],
-  Resources: [
-    { label: 'List Property',  to: '/list-property' },
-    { label: 'Help Center',    to: '#' },
-    { label: 'Market Insights',to: '#' },
-  ],
-  Legal:     [
-    { label: 'Terms of Use',   to: '#' },
-    { label: 'Privacy Policy', to: '#' },
-    { label: 'Cookie Policy',  to: '#' },
-  ],
-}
+import { useTranslation } from 'react-i18next'
 
 export default function Footer() {
+  const { t } = useTranslation()
   const settings = useSiteSettings()
+
+  const footerLinks = {
+    [t('footer.company')]:   [
+      { label: t('footer.aboutUs'),        to: '/about' },
+      { label: t('footer.agents'),         to: '/agents' },
+      { label: t('footer.contact'),        to: '/contact' },
+    ],
+    [t('footer.discover')]:  [
+      { label: t('footer.buy'),            to: '/properties?type=sale' },
+      { label: t('footer.rent'),           to: '/properties?type=rent' },
+      { label: t('footer.newProjects'),    to: '/projects' },
+      { label: t('footer.neighborhoods'),  to: '/neighborhoods' },
+    ],
+    [t('footer.resources')]: [
+      { label: t('footer.listProperty'),   to: '/list-property' },
+      { label: t('footer.helpCenter'),     to: '#' },
+      { label: t('footer.marketInsights'), to: '#' },
+    ],
+    [t('footer.legal')]:     [
+      { label: t('footer.termsOfUse'),    to: '#' },
+      { label: t('footer.privacy'),       to: '#' },
+      { label: t('footer.cookiePolicy'),  to: '#' },
+    ],
+  }
 
   const socials = [
     { Icon: Facebook,  href: settings.facebook_url,  label: 'Facebook' },
@@ -39,7 +39,7 @@ export default function Footer() {
     { Icon: Youtube,   href: settings.youtube_url,   label: 'YouTube' },
   ].filter(s => s.href)
 
-  const footerDesc = settings.footer_description || DEFAULT_DESC
+  const footerDesc = settings.footer_description || t('footer.defaultDesc')
   const year = new Date().getFullYear()
 
   return (
@@ -123,14 +123,14 @@ export default function Footer() {
                 <Mail size={16} className="text-gold" />
               </div>
               <div>
-                <h4 className="text-white font-semibold mb-0.5">Stay Updated</h4>
-                <p className="text-white/40 text-sm">Get the latest listings and market insights</p>
+                <h4 className="text-white font-semibold mb-0.5">{t('footer.stayUpdated')}</h4>
+                <p className="text-white/40 text-sm">{t('footer.newsletterDesc')}</p>
               </div>
             </div>
             <form className="flex gap-2 w-full md:w-auto" onSubmit={(e) => e.preventDefault()}>
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('footer.emailPlaceholder')}
                 className="flex-1 md:w-64 text-sm text-white placeholder-white/25 outline-none px-4 py-2.5 rounded-xl transition-all duration-200"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
                 onFocus={e => { e.target.style.borderColor = 'rgba(200,169,126,0.4)'; e.target.style.background = 'rgba(255,255,255,0.1)' }}
@@ -149,8 +149,8 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-6"
           style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Agenz'}. All rights reserved.</p>
-          <p className="text-white/25 text-sm">Morocco (MAD) · Premium Real Estate</p>
+          <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Agenz'}. {t('footer.rights')}.</p>
+          <p className="text-white/25 text-sm">{t('footer.premiumRealEstate')}</p>
         </div>
       </div>
     </footer>

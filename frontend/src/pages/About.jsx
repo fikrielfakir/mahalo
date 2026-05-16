@@ -5,29 +5,7 @@ import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { propertiesApi, agentsApi, publicSettingsApi } from '../api/client'
-
-const VALUES = [
-  {
-    icon: Shield,
-    title: 'Trust & Transparency',
-    desc: 'Every listing is verified by our team. We show real prices, real photos, and real availability — no surprises at the door.',
-  },
-  {
-    icon: Award,
-    title: 'Premium Quality',
-    desc: 'We handpick properties that meet our standards for quality, location, and value. Only the best makes it onto Agenz.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Market Expertise',
-    desc: 'Our agents live and breathe Moroccan real estate. From Casablanca to Marrakech, we know every neighborhood intimately.',
-  },
-  {
-    icon: Heart,
-    title: 'Client-First',
-    desc: 'Your dream home is our mission. We listen, we guide, and we stay with you from the first search to the final signature.',
-  },
-]
+import { useTranslation } from 'react-i18next'
 
 const TEAM = [
   { name: 'Youssef Alami',      role: 'Founder & CEO',           city: 'Casablanca', initial: 'Y', color: '#730D26' },
@@ -57,6 +35,7 @@ function renderAboutText(text) {
 }
 
 export default function About() {
+  const { t } = useTranslation()
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
@@ -80,11 +59,18 @@ export default function About() {
       .catch(() => {})
   }, [])
 
+  const VALUES = [
+    { icon: Shield,    title: t('about.value1Title'), desc: t('about.value1Desc') },
+    { icon: Award,     title: t('about.value2Title'), desc: t('about.value2Desc') },
+    { icon: TrendingUp,title: t('about.value3Title'), desc: t('about.value3Desc') },
+    { icon: Heart,     title: t('about.value4Title'), desc: t('about.value4Desc') },
+  ]
+
   const STATS = [
-    { value: fmtCount(propertiesCount, '1K+'), label: 'Properties Listed',  icon: Building2 },
-    { value: fmtCount(agentsCount, '50+'),     label: 'Verified Agents',     icon: Users },
-    { value: '8K+',                            label: 'Happy Clients',       icon: Heart },
-    { value: citiesCount ? `${citiesCount}+` : '10+', label: 'Cities Covered', icon: Globe },
+    { value: fmtCount(propertiesCount, '1K+'), label: t('about.propertiesListed'), icon: Building2 },
+    { value: fmtCount(agentsCount, '50+'),     label: t('about.verifiedAgents'),   icon: Users },
+    { value: '8K+',                            label: t('about.happyClients'),     icon: Heart },
+    { value: citiesCount ? `${citiesCount}+` : '10+', label: t('about.citiesCovered'), icon: Globe },
   ]
 
   return (
@@ -112,18 +98,17 @@ export default function About() {
         />
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur text-gold text-xs font-semibold uppercase tracking-widest mb-6">
-            <Star size={12} className="fill-gold" /> Our Story
+            <Star size={12} className="fill-gold" /> {t('about.ourStory')}
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Morocco's Most Trusted<br />
-            <span className="text-gold">Real Estate Platform</span>
+            {t('about.mostTrusted')}<br />
+            <span className="text-gold">{t('about.realEstatePlatform')}</span>
           </h1>
           <p className="text-white/70 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
-            Founded in Casablanca, Agenz was built on a simple belief: finding your dream property should be exciting,
-            not stressful. We connect buyers, renters, and investors with Morocco's finest real estate.
+            {t('about.heroSubtitle')}
           </p>
           <Link to="/properties" className="inline-flex items-center gap-2 btn-gold">
-            Explore Properties <ArrowRight size={16} />
+            {t('about.exploreProperties')} <ArrowRight size={16} />
           </Link>
         </div>
       </section>
@@ -147,19 +132,19 @@ export default function About() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="section-label mb-3">Notre Mission</p>
+            <p className="section-label mb-3">{t('about.missionLabel')}</p>
             <h2 className="text-3xl md:text-4xl font-bold text-navy mb-6 leading-tight">
-              Rendre l'accès à la propriété accessible à tous les Marocains
+              {t('about.missionTitle')}
             </h2>
             <div className="mb-8">
               {renderAboutText(aboutText)}
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/properties" className="btn-navy flex items-center gap-2">
-                Browse Properties <ArrowRight size={15} />
+                {t('about.browseProperties')} <ArrowRight size={15} />
               </Link>
               <Link to="/agents" className="btn-outline flex items-center gap-2">
-                Meet Our Agents
+                {t('about.meetAgents')}
               </Link>
             </div>
           </div>
@@ -177,8 +162,8 @@ export default function About() {
                   <Award size={18} className="text-gold" />
                 </div>
                 <div>
-                  <div className="text-navy font-bold text-sm">Since 2019</div>
-                  <div className="text-navy/40 text-xs">Trusted by thousands</div>
+                  <div className="text-navy font-bold text-sm">{t('about.since')}</div>
+                  <div className="text-navy/40 text-xs">{t('about.trustedBy')}</div>
                 </div>
               </div>
             </div>
@@ -190,8 +175,8 @@ export default function About() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="section-label mb-3">Why Choose Agenz</p>
-            <h2 className="text-3xl font-bold text-navy">Built on four core values</h2>
+            <p className="section-label mb-3">{t('about.whyChoose')}</p>
+            <h2 className="text-3xl font-bold text-navy">{t('about.coreValues')}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {VALUES.map(({ icon: Icon, title, desc }) => (
@@ -211,8 +196,8 @@ export default function About() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="section-label mb-3">The Team</p>
-            <h2 className="text-3xl font-bold text-navy">Meet the people behind Agenz</h2>
+            <p className="section-label mb-3">{t('about.theTeam')}</p>
+            <h2 className="text-3xl font-bold text-navy">{t('about.meetPeople')}</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
             {TEAM.map(({ name, role, city, initial, color }) => (
@@ -237,14 +222,14 @@ export default function About() {
       {/* CTA */}
       <section className="py-20 px-6 bg-navy">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to find your dream property?</h2>
-          <p className="text-white/60 mb-8">Browse verified listings across Morocco's most sought-after locations.</p>
+          <h2 className="text-3xl font-bold text-white mb-4">{t('about.readyToFind')}</h2>
+          <p className="text-white/60 mb-8">{t('about.browseVerified')}</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link to="/properties" className="btn-gold flex items-center gap-2">
-              Browse Properties <ArrowRight size={15} />
+              {t('about.browseProperties')} <ArrowRight size={15} />
             </Link>
             <Link to="/list-property" className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-colors">
-              List Your Property
+              {t('about.listProperty')}
             </Link>
           </div>
         </div>

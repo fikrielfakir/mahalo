@@ -5,6 +5,7 @@ import { useCompare } from '../context/CompareContext'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import { useFavorites } from '../context/FavoritesContext'
+import { useTranslation } from 'react-i18next'
 
 import { isVideoPath } from '../utils/media'
 
@@ -40,6 +41,7 @@ function formatPrice(price, isRent) {
 }
 
 export default function PropertyCard({ property, className = '' }) {
+  const { t } = useTranslation()
   const [imgError, setImgError] = useState(false)
   const { toggle: toggleCompare, isIn, isFull } = useCompare()
   const { isAuthenticated } = useUserAuth()
@@ -50,7 +52,7 @@ export default function PropertyCard({ property, className = '' }) {
 
   const slug    = property.slug || property.id
   const isRent  = property.type === 'rent'
-  const badge   = property.is_featured ? 'Featured' : null
+  const badge   = property.is_featured ? t('property.featured') : null
   const inCmp   = isIn(property.id)
   const liked   = isFavorited(property.id)
 
@@ -100,12 +102,12 @@ export default function PropertyCard({ property, className = '' }) {
           {isRent && (
             <span className="px-2.5 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur-sm"
               style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              Rent
+              {t('property.forRent')}
             </span>
           )}
           {property.is_verified && (
             <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold backdrop-blur-sm bg-blue-500/90 text-white">
-              <BadgeCheck size={10} /> Verified
+              <BadgeCheck size={10} /> {t('property.verified')}
             </span>
           )}
         </div>
@@ -128,7 +130,7 @@ export default function PropertyCard({ property, className = '' }) {
           </button>
           <button
             onClick={handleCompare}
-            title={inCmp ? 'Remove from compare' : isFull ? 'Max 3 properties' : 'Add to compare'}
+            title={inCmp ? t('compare.remove') : isFull ? t('compare.max') : t('compare.add')}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
               inCmp ? 'scale-110' : isFull ? 'cursor-not-allowed' : 'hover:scale-110'
             }`}
@@ -151,7 +153,7 @@ export default function PropertyCard({ property, className = '' }) {
               style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
               {formatPrice(property.price, isRent)}
             </span>
-            {isRent && <span className="text-white/60 text-xs">/mo</span>}
+            {isRent && <span className="text-white/60 text-xs">{t('property.perMonth')}</span>}
           </div>
         </div>
       </div>
@@ -174,13 +176,13 @@ export default function PropertyCard({ property, className = '' }) {
           {property.number_bedroom > 0 && (
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
               <Bed size={12} style={{ color: '#BA1932', opacity: 0.7 }} />
-              <span className="font-semibold">{property.number_bedroom} bd</span>
+              <span className="font-semibold">{property.number_bedroom} {t('property.beds')}</span>
             </div>
           )}
           {property.number_bathroom > 0 && (
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
               <Bath size={12} style={{ color: '#BA1932', opacity: 0.7 }} />
-              <span className="font-semibold">{property.number_bathroom} ba</span>
+              <span className="font-semibold">{property.number_bathroom} {t('property.baths')}</span>
             </div>
           )}
           {property.square && (

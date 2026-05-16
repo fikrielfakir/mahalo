@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Cookie, X, ChevronDown, ChevronUp, Shield, BarChart2, Settings } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const STORAGE_KEY = 'mahalo_cookie_consent'
 
@@ -12,16 +13,17 @@ function writeConsent(val) {
 }
 
 export default function CookieBanner({ settings }) {
+  const { t } = useTranslation()
   const [visible, setVisible]     = useState(false)
   const [expanded, setExpanded]   = useState(false)
   const [prefs, setPrefs]         = useState({ analytics: true, marketing: false })
   const [mounted, setMounted]     = useState(false)
 
   const enabled  = settings?.cookie_consent_enabled !== '0'
-  const title    = settings?.cookie_consent_title    || 'We use cookies'
-  const message  = settings?.cookie_consent_message  || 'We use cookies to enhance your experience, analyse traffic, and personalise content. You can manage your preferences below.'
-  const acceptTxt = settings?.cookie_accept_text     || 'Accept All'
-  const declineTxt = settings?.cookie_decline_text   || 'Decline'
+  const title    = settings?.cookie_consent_title    || t('cookies.title')
+  const message  = settings?.cookie_consent_message  || t('cookies.message')
+  const acceptTxt = settings?.cookie_accept_text     || t('cookies.acceptAll')
+  const declineTxt = settings?.cookie_decline_text   || t('cookies.decline')
   const policyUrl = settings?.cookie_policy_url      || '/privacy'
 
   useEffect(() => {
@@ -85,11 +87,11 @@ export default function CookieBanner({ settings }) {
                 <div className="flex items-center gap-2.5">
                   <Shield size={15} className="text-emerald-600 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">Essential</p>
-                    <p className="text-xs text-gray-400">Required for the site to function</p>
+                    <p className="text-sm font-semibold text-gray-800">{t('cookies.essential')}</p>
+                    <p className="text-xs text-gray-400">{t('cookies.essentialDesc')}</p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Always on</span>
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{t('cookies.alwaysOn')}</span>
               </div>
 
               {expanded && (
@@ -99,8 +101,8 @@ export default function CookieBanner({ settings }) {
                     <div className="flex items-center gap-2.5">
                       <BarChart2 size={15} className="text-blue-500 shrink-0" />
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">Analytics</p>
-                        <p className="text-xs text-gray-400">Help us improve the site</p>
+                        <p className="text-sm font-semibold text-gray-800">{t('cookies.analytics')}</p>
+                        <p className="text-xs text-gray-400">{t('cookies.analyticsDesc')}</p>
                       </div>
                     </div>
                     <button
@@ -116,8 +118,8 @@ export default function CookieBanner({ settings }) {
                     <div className="flex items-center gap-2.5">
                       <Settings size={15} className="text-purple-500 shrink-0" />
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">Marketing</p>
-                        <p className="text-xs text-gray-400">Personalised ads & content</p>
+                        <p className="text-sm font-semibold text-gray-800">{t('cookies.marketing')}</p>
+                        <p className="text-xs text-gray-400">{t('cookies.marketingDesc')}</p>
                       </div>
                     </div>
                     <button
@@ -137,7 +139,7 @@ export default function CookieBanner({ settings }) {
               className="text-xs text-[#730D26] font-semibold flex items-center gap-1 mb-4 hover:underline"
             >
               {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              {expanded ? 'Hide preferences' : 'Manage preferences'}
+              {expanded ? t('cookies.hidePreferences') : t('cookies.managePreferences')}
             </button>
 
             {/* Actions */}
@@ -153,7 +155,7 @@ export default function CookieBanner({ settings }) {
                   onClick={handleSavePrefs}
                   className="flex-1 py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#BA1932] transition-colors"
                 >
-                  Save Preferences
+                  {t('cookies.savePreferences')}
                 </button>
               ) : (
                 <button
@@ -166,9 +168,9 @@ export default function CookieBanner({ settings }) {
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-3">
-              <a href={policyUrl} className="text-[#730D26] hover:underline">Cookie Policy</a>
+              <a href={policyUrl} className="text-[#730D26] hover:underline">{t('cookies.policyLink')}</a>
               {' · '}
-              <a href="/privacy" className="text-[#730D26] hover:underline">Privacy Policy</a>
+              <a href="/privacy" className="text-[#730D26] hover:underline">{t('cookies.privacyLink')}</a>
             </p>
           </div>
         </div>

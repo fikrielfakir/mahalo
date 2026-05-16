@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, BarChart2, ArrowRight, Bed, Bath, Maximize2, MapPin, Star, BadgeCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
+import { useTranslation } from 'react-i18next'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=300&q=80'
 
@@ -19,22 +20,24 @@ function fmt(price) {
   return `${n.toLocaleString()} MAD`
 }
 
-const ROWS = [
-  { label: 'Price',      render: p => fmt(p.price) },
-  { label: 'Type',       render: p => p.type === 'rent' ? 'For Rent' : 'For Sale' },
-  { label: 'City',       render: p => p.city?.name || '—' },
-  { label: 'Category',   render: p => p.category?.name || '—' },
-  { label: 'Bedrooms',   render: p => p.number_bedroom || '—' },
-  { label: 'Bathrooms',  render: p => p.number_bathroom || '—' },
-  { label: 'Area',       render: p => p.square ? `${p.square} m²` : '—' },
-  { label: 'Verified',   render: p => p.is_verified ? '✓ Yes' : 'No' },
-  { label: 'Featured',   render: p => p.is_featured ? '✓ Yes' : 'No' },
-  { label: 'Features',   render: p => p.features?.map(f => f.name).join(', ') || '—' },
-]
 
 export default function CompareBar() {
+  const { t } = useTranslation()
   const { list, remove, clear, MAX } = useCompare()
   const [open, setOpen] = useState(false)
+
+  const ROWS = [
+    { label: t('compare.price'),      render: p => fmt(p.price) },
+    { label: t('compare.type'),       render: p => p.type === 'rent' ? t('property.forRent') : t('property.forSale') },
+    { label: t('compare.city'),       render: p => p.city?.name || '—' },
+    { label: t('compare.category'),   render: p => p.category?.name || '—' },
+    { label: t('property.beds'),      render: p => p.number_bedroom || '—' },
+    { label: t('property.baths'),     render: p => p.number_bathroom || '—' },
+    { label: t('compare.area'),       render: p => p.square ? `${p.square} m²` : '—' },
+    { label: t('compare.verified'),   render: p => p.is_verified ? `✓ ${t('compare.yes')}` : t('compare.no') },
+    { label: t('compare.featured'),   render: p => p.is_featured ? `✓ ${t('compare.yes')}` : t('compare.no') },
+    { label: t('compare.features'),   render: p => p.features?.map(f => f.name).join(', ') || '—' },
+  ]
 
   if (list.length === 0) return null
 
@@ -45,7 +48,7 @@ export default function CompareBar() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 text-white font-semibold text-sm shrink-0">
             <BarChart2 size={16} className="text-gold" />
-            Compare ({list.length}/{MAX})
+            {t('compare.title')} ({list.length}/{MAX})
           </div>
 
           <div className="flex items-center gap-3 flex-1 overflow-x-auto">
@@ -60,7 +63,7 @@ export default function CompareBar() {
             ))}
             {Array.from({ length: MAX - list.length }).map((_, i) => (
               <div key={i} className="w-32 h-10 border border-dashed border-white/20 rounded-xl flex items-center justify-center text-white/25 text-xs shrink-0">
-                + Add
+                + {t('compare.add')}
               </div>
             ))}
           </div>
@@ -70,14 +73,14 @@ export default function CompareBar() {
               onClick={clear}
               className="px-3 py-2 rounded-xl text-white/50 hover:text-white text-xs font-medium transition-colors"
             >
-              Clear all
+              {t('compare.clearAll')}
             </button>
             <button
               onClick={() => setOpen(true)}
               disabled={list.length < 2}
               className="flex items-center gap-1.5 px-4 py-2 bg-gold text-white rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Compare <ArrowRight size={14} />
+              {t('compare.title')} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -92,7 +95,7 @@ export default function CompareBar() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2">
                 <BarChart2 size={18} className="text-gold" />
-                <h2 className="font-bold text-navy text-lg">Property Comparison</h2>
+                <h2 className="font-bold text-navy text-lg">{t('compare.modalTitle')}</h2>
               </div>
               <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
                 <X size={18} />
@@ -104,7 +107,7 @@ export default function CompareBar() {
                 {/* Property headers */}
                 <thead>
                   <tr>
-                    <th className="w-36 p-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide sticky left-0 bg-white">Attribute</th>
+                    <th className="w-36 p-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide sticky left-0 bg-white">{t('compare.attribute')}</th>
                     {list.map(p => (
                       <th key={p.id} className="p-4 min-w-[220px]">
                         <div className="text-center">
@@ -124,7 +127,7 @@ export default function CompareBar() {
                             </div>
                           )}
                           <button onClick={() => remove(p.id)} className="mt-2 text-xs text-red-400 hover:text-red-600 transition-colors">
-                            Remove
+                            {t('compare.remove')}
                           </button>
                         </div>
                       </th>
@@ -133,7 +136,7 @@ export default function CompareBar() {
                     {Array.from({ length: MAX - list.length }).map((_, i) => (
                       <th key={i} className="p-4 min-w-[180px]">
                         <div className="aspect-video rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center mb-3">
-                          <span className="text-gray-300 text-xs">Add property</span>
+                          <span className="text-gray-300 text-xs">{t('compare.addProperty')}</span>
                         </div>
                       </th>
                     ))}

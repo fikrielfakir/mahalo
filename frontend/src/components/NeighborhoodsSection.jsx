@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { propertiesApi } from '../api/client'
+import { useTranslation } from 'react-i18next'
 
 const CITY_IMAGES = {
   'Casablanca':  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80&auto=format&fit=crop',
@@ -36,6 +37,7 @@ function extractCitiesFromProperties(properties) {
 }
 
 export default function NeighborhoodsSection() {
+  const { t } = useTranslation()
   const [cities, setCities]   = useState([])
   const [loading, setLoading] = useState(true)
   const scrollRef             = useRef(null)
@@ -78,13 +80,13 @@ export default function NeighborhoodsSection() {
       <div className="max-w-7xl mx-auto px-5 relative z-10">
         <div className="flex items-end justify-between mb-14">
           <div>
-            <p className="section-label mb-3">Prime Locations</p>
-            <h2 className="section-title text-4xl mb-3">Explore Neighborhoods</h2>
-            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>Discover the finest areas to live in Morocco</p>
+            <p className="section-label mb-3">{t('sections.primeLabel')}</p>
+            <h2 className="section-title text-4xl mb-3">{t('sections.neighborhoods')}</h2>
+            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.neighborhoodsSub')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/neighborhoods" className="section-link hidden sm:flex mr-3">
-              View All <ArrowRight size={15} />
+              {t('sections.viewAll')} <ArrowRight size={15} />
             </Link>
             <button
               onClick={() => scroll(-1)}
@@ -135,7 +137,7 @@ export default function NeighborhoodsSection() {
 
                   <div className="absolute top-4 left-4">
                     <span className="glass-pill text-[10px]">
-                      <MapPin size={9} /> Explore
+                      <MapPin size={9} /> {t('sections.explore')}
                     </span>
                   </div>
 
@@ -145,7 +147,7 @@ export default function NeighborhoodsSection() {
                       {city.name}
                     </h3>
                     <p className="text-white/55 text-xs font-medium flex items-center gap-1">
-                      View properties <ArrowRight size={10} />
+                      {t('sections.viewProperties')} <ArrowRight size={10} />
                     </p>
                   </div>
                 </Link>

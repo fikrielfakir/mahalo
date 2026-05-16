@@ -2,15 +2,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Home, Search, ArrowLeft, Building2, MapPin, Phone } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-
-const QUICK_LINKS = [
-  { to: '/properties', label: 'Browse Properties', icon: Building2 },
-  { to: '/projects',   label: 'New Projects',      icon: MapPin     },
-  { to: '/agents',     label: 'Find an Agent',     icon: Phone      },
-]
+import { useTranslation } from 'react-i18next'
 
 export default function NotFoundPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+
+  const QUICK_LINKS = [
+    { to: '/properties', label: t('errors.browseProperties'), icon: Building2 },
+    { to: '/projects',   label: t('errors.newProjects'),      icon: MapPin     },
+    { to: '/agents',     label: t('errors.findAgent'),        icon: Phone      },
+  ]
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -36,13 +38,13 @@ export default function NotFoundPage() {
 
           {/* Message */}
           <h1 className="text-3xl sm:text-4xl font-bold text-navy mb-3">
-            Page introuvable
+            {t('errors.404Title')}
           </h1>
           <p className="text-navy/55 text-base mb-2">
-            La page que vous cherchez n'existe pas ou a été déplacée.
+            {t('errors.404Desc')}
           </p>
           <p className="text-navy/35 text-sm mb-10">
-            Vérifiez l'URL ou utilisez les liens ci-dessous pour continuer.
+            {t('errors.404Sub')}
           </p>
 
           {/* CTA buttons */}
@@ -51,20 +53,20 @@ export default function NotFoundPage() {
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors"
             >
-              <ArrowLeft size={16} /> Retour
+              <ArrowLeft size={16} /> {t('errors.goBack')}
             </button>
             <Link
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:opacity-90 transition-opacity"
             >
-              <Home size={16} /> Accueil
+              <Home size={16} /> {t('errors.home')}
             </Link>
           </div>
 
           {/* Quick links */}
           <div className="border-t border-navy/10 pt-10">
             <p className="text-navy/40 text-xs font-semibold uppercase tracking-widest mb-5">
-              Peut-être cherchez-vous…
+              {t('errors.maybeLooking')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {QUICK_LINKS.map(({ to, label, icon: Icon }) => (

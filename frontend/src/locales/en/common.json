@@ -343,7 +343,11 @@
     "agentsSub": "Trusted professionals ready to help you",
     "projectsLabel": "Off-Plan & New",
     "projectsSub": "Invest early in Morocco's finest developments",
-    "viewProperties": "View properties"
+    "recentlyViewedLabel": "Recently Viewed",
+    "recentlyViewed": "Where you left off",
+    "allProperties": "All properties",
+    "similarProperties": "Similar Properties",
+    "youMightLike": "You might also like these"
   },
   "mortgage": {
     "title": "Mortgage Calculator",

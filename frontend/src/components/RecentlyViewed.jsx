@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { pickBestImage, RECENTLY_VIEWED_KEY as KEY } from '../utils/recentlyViewed'
@@ -22,6 +23,7 @@ function getImg(image) {
 }
 
 export default function RecentlyViewed() {
+  const { t } = useTranslation()
   const [items, setItems] = useState([])
   const [canLeft, setCanLeft]   = useState(false)
   const [canRight, setCanRight] = useState(false)
@@ -98,9 +100,9 @@ export default function RecentlyViewed() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Clock size={16} className="text-gold" />
-              <p className="text-xs font-bold uppercase tracking-widest text-gold">Recently Viewed</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-gold">{t('sections.recentlyViewedLabel')}</p>
             </div>
-            <h2 className="text-2xl font-bold text-navy">Where you left off</h2>
+            <h2 className="text-2xl font-bold text-navy">{t('sections.recentlyViewed')}</h2>
           </div>
 
           <div className="flex items-center gap-3">
@@ -123,7 +125,7 @@ export default function RecentlyViewed() {
             </div>
 
             <Link to="/properties" className="flex items-center gap-1.5 text-sm font-semibold text-navy/50 hover:text-navy transition-colors">
-              All properties <ArrowRight size={14} />
+              {t('sections.allProperties')} <ArrowRight size={14} />
             </Link>
           </div>
         </div>

@@ -342,7 +342,12 @@
     "agents": "Meilleurs Agents Immobiliers",
     "agentsSub": "Des professionnels de confiance prêts à vous aider",
     "projectsLabel": "Sur plan & Nouveaux",
-    "projectsSub": "Investissez tôt dans les meilleurs projets du Maroc"
+    "projectsSub": "Investissez tôt dans les meilleurs projets du Maroc",
+    "recentlyViewedLabel": "Récemment consultés",
+    "recentlyViewed": "Là où vous vous êtes arrêté",
+    "allProperties": "Tous les biens",
+    "similarProperties": "Biens similaires",
+    "youMightLike": "Vous pourriez aussi aimer"
   },
   "mortgage": {
     "title": "Simulateur de crédit",

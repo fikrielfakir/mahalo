@@ -342,7 +342,12 @@
     "agents": "Mejores Agentes Inmobiliarios",
     "agentsSub": "Profesionales de confianza listos para ayudarte",
     "projectsLabel": "En plano & Nuevas",
-    "projectsSub": "Invierte pronto en los mejores desarrollos de Marruecos"
+    "projectsSub": "Invierte pronto en los mejores desarrollos de Marruecos",
+    "recentlyViewedLabel": "Vistos recientemente",
+    "recentlyViewed": "Donde lo dejaste",
+    "allProperties": "Todos los inmuebles",
+    "similarProperties": "Propiedades similares",
+    "youMightLike": "También te puede gustar"
   },
   "mortgage": {
     "title": "Calculadora hipotecaria",

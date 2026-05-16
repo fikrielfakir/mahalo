@@ -342,7 +342,12 @@
     "agents": "أفضل وكلاء العقارات",
     "agentsSub": "محترفون موثوقون مستعدون لمساعدتك",
     "projectsLabel": "على الخارطة وجديد",
-    "projectsSub": "استثمر مبكراً في أفضل مشاريع المغرب"
+    "projectsSub": "استثمر مبكراً في أفضل مشاريع المغرب",
+    "recentlyViewedLabel": "شوهد مؤخراً",
+    "recentlyViewed": "حيث توقفت",
+    "allProperties": "جميع العقارات",
+    "similarProperties": "عقارات مماثلة",
+    "youMightLike": "قد يعجبك أيضاً"
   },
   "mortgage": {
     "title": "حاسبة التمويل العقاري",

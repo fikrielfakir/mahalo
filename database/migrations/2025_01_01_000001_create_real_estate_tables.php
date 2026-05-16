@@ -139,7 +139,7 @@ return new class extends Migration
             $table->string('email', 255)->nullable()->unique();
             $table->string('username', 60)->nullable()->unique();
             $table->string('password');
-            $table->unsignedBigInteger('avatar_id')->nullable();
+            $table->string('avatar_id', 500)->nullable();
             $table->string('phone', 25)->nullable();
             $table->string('whatsapp', 25)->nullable();
             $table->boolean('is_featured')->default(false);

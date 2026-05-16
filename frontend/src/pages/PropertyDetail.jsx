@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -72,51 +72,6 @@ export default function PropertyDetail() {
   const { isAuthenticated } = useUserAuth()
   const { openAuthModal } = useAuthModal()
 
-  /* ── SEO meta tag management ─────────────────────────────── */
-  const prevTitle = useRef(document.title)
-  useEffect(() => {
-    if (!property) return
-    const title = `${property.name}${property.city ? ' — ' + property.city.name : ''} | Mahalo Real Estate`
-    const desc  = property.description
-      ? property.description.replace(/<[^>]*>/g, '').slice(0, 160)
-      : `${property.type === 'rent' ? 'For Rent' : 'For Sale'} • ${property.square ? property.square + ' m² • ' : ''}${property.number_bedroom ? property.number_bedroom + ' bed • ' : ''}${property.city?.name || ''}`
-    const imgUrl = property.images?.[0]
-      ? (property.images[0].startsWith('http') ? property.images[0] : `${window.location.origin}/storage/${property.images[0]}`)
-      : ''
-    const canonUrl = `${window.location.origin}/properties/${property.slug}`
-
-    document.title = title
-
-    const setMeta = (name, content, prop = false) => {
-      const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`
-      let el = document.querySelector(sel)
-      if (!el) {
-        el = document.createElement('meta')
-        prop ? el.setAttribute('property', name) : el.setAttribute('name', name)
-        document.head.appendChild(el)
-      }
-      el.setAttribute('content', content)
-    }
-    const setLink = (rel, href) => {
-      let el = document.querySelector(`link[rel="${rel}"]`)
-      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el) }
-      el.setAttribute('href', href)
-    }
-
-    setMeta('description', desc)
-    setMeta('og:title', title, true)
-    setMeta('og:description', desc, true)
-    setMeta('og:type', 'website', true)
-    setMeta('og:url', canonUrl, true)
-    if (imgUrl) setMeta('og:image', imgUrl, true)
-    setMeta('twitter:card', 'summary_large_image')
-    setMeta('twitter:title', title)
-    setMeta('twitter:description', desc)
-    if (imgUrl) setMeta('twitter:image', imgUrl)
-    setLink('canonical', canonUrl)
-
-    return () => { document.title = prevTitle.current }
-  }, [property])
 
   useEffect(() => {
     propertiesApi.bySlug(slug)

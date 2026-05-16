@@ -199,6 +199,15 @@ class UserListingController extends Controller
         return (bool) preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $path);
     }
 
+    private function toStorageUrl(string $path): string
+    {
+        if (str_starts_with($path, 'http')) {
+            if (preg_match('|/storage/(.+)$|', $path, $m)) return '/storage/' . $m[1];
+            return $path;
+        }
+        return str_starts_with($path, '/') ? $path : '/storage/' . $path;
+    }
+
     private function getVideoThumbnails(array $images): array
     {
         $videoPaths = array_values(array_filter($images, fn($img) => $this->isVideoPath($img)));
@@ -208,21 +217,17 @@ class UserListingController extends Controller
             ->whereNotNull('thumbnail_url')
             ->pluck('thumbnail_url', 'path');
 
-        return $records->toArray();
+        return $records->map(fn($url) => $this->toStorageUrl($url))->toArray();
     }
 
     private function extractThumbnail(array $images, array $videoThumbnails = []): ?string
     {
         foreach ($images as $img) {
             if ($this->isVideoPath($img)) {
-                if (isset($videoThumbnails[$img])) {
-                    return $videoThumbnails[$img];
-                }
+                if (isset($videoThumbnails[$img])) return $videoThumbnails[$img];
                 continue;
             }
-            return str_starts_with($img, 'http')
-                ? $img
-                : Storage::disk('public')->url($img);
+            return str_starts_with($img, 'http') ? $img : '/storage/' . $img;
         }
         return null;
     }

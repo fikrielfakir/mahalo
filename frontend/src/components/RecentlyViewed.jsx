@@ -2,27 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Bed, Bath, Maximize2, MapPin, ArrowRight } from 'lucide-react'
 
-const KEY = 'mahalo_recently_viewed'
-
-export function trackRecentlyViewed(property) {
-  try {
-    const existing = JSON.parse(localStorage.getItem(KEY)) || []
-    const filtered = existing.filter(p => p.id !== property.id)
-    const entry = {
-      id:              property.id,
-      slug:            property.slug || property.id,
-      name:            property.name,
-      price:           property.price,
-      type:            property.type,
-      image:           Array.isArray(property.images) ? property.images[0] : property.image,
-      city:            property.city?.name,
-      number_bedroom:  property.number_bedroom,
-      number_bathroom: property.number_bathroom,
-      square:          property.square,
-    }
-    localStorage.setItem(KEY, JSON.stringify([entry, ...filtered].slice(0, 6)))
-  } catch {}
-}
+import { pickBestImage, RECENTLY_VIEWED_KEY as KEY } from '../utils/recentlyViewed'
 
 function formatPrice(price, isRent) {
   if (!price) return 'On request'
@@ -34,7 +14,11 @@ function formatPrice(price, isRent) {
 
 function getImg(image) {
   if (!image) return 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&q=80'
-  return image.startsWith('http') ? image : `/storage/${image}`
+  if (image.startsWith('http')) {
+    const m = image.match(/\/storage\/(.+)$/)
+    return m ? `/storage/${m[1]}` : image
+  }
+  return image.startsWith('/') ? image : `/storage/${image}`
 }
 
 export default function RecentlyViewed() {
@@ -60,7 +44,7 @@ export default function RecentlyViewed() {
                   name:            fresh.name,
                   price:           fresh.price,
                   type:            fresh.type,
-                  image:           Array.isArray(fresh.images) ? fresh.images.find(img => !/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(img)) || fresh.images[0] : (fresh.image || null),
+                  image:           pickBestImage(fresh),
                   city:            fresh.city?.name,
                   number_bedroom:  fresh.number_bedroom,
                   number_bathroom: fresh.number_bathroom,

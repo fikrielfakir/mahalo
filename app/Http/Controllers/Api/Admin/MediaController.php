@@ -93,7 +93,7 @@ class MediaController extends Controller
             'size' => Storage::disk('public')->size($tmpPath),
             'collection' => $folder,
             'thumbnail_path' => $thumbnailPath,
-            'thumbnail_url' => $thumbnailPath ? Storage::disk('public')->url($thumbnailPath) : null,
+            'thumbnail_url' => $thumbnailPath ? '/storage/' . $thumbnailPath : null,
         ]);
 
         return response()->json([
@@ -265,7 +265,7 @@ class MediaController extends Controller
 
         $record->update([
             'thumbnail_path' => $thumbnailPath,
-            'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
+            'thumbnail_url' => '/storage/' . $thumbnailPath,
         ]);
 
         return response()->json([
@@ -490,7 +490,7 @@ class MediaController extends Controller
             if ($thumbnailPath) {
                 $record->update([
                     'thumbnail_path' => $thumbnailPath,
-                    'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
+                    'thumbnail_url' => '/storage/' . $thumbnailPath,
                 ]);
                 $done++;
             } else {

@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\PublicSettingsController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\MediaController;
+use App\Http\Controllers\Api\Admin\AdminAppUpdateController;
 use App\Http\Controllers\Api\VideoStreamController;
 use Illuminate\Support\Facades\Route;
 
@@ -215,5 +216,10 @@ Route::prefix('v1')->group(function () {
         Route::put('/settings', [AdminSettingsController::class, 'update']);
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
+
+        // App Update Manager
+        Route::get('/app-update/history', [AdminAppUpdateController::class, 'history']);
+        Route::post('/app-update/upload', [AdminAppUpdateController::class, 'upload']);
+        Route::delete('/app-update/history/{id}', [AdminAppUpdateController::class, 'deleteHistory']);
     });
 });

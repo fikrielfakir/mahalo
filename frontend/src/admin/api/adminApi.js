@@ -144,3 +144,5 @@ export const publicApi = {
   categories: () => client.get('/categories'),
   investors:  () => client.get('/admin/investors'),
 }
+
+export const adminApi = client

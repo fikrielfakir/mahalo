@@ -1,0 +1,177 @@
+You are building a "List Property" page for Mahalo, a premium real estate platform in Morocco (prices in MAD). The page allows homeowners, developers, and investors to submit a property listing request. An agent contacts them within 24 hours.
+
+Below is the full specification for the form and page. Build it as a complete, polished, mobile-responsive page.
+
+---
+
+## PAGE STRUCTURE
+
+### Hero Section
+- Headline: "Sell or Rent Your Property With Confidence"
+- Subtext: "Tell us about your property and one of our expert agents will contact you within 24 hours to get you listed."
+- Background: dark crimson/maroon gradient with large watermark number (e.g. "74")
+
+### Left Sidebar (trust signals)
+- "Why List with Mahalo?" card with 4 checkpoints:
+  - Listed within 24 hours
+  - Verified badge on your listing
+  - Dedicated agent support
+  - Free professional consultation
+- "Prefer to talk?" card with phone icon and "Call Us Now" CTA button
+- "15,000+ Listings" social proof card
+
+### Right Section (main form)
+The form is titled "Property Details" with subtitle: "Fill in as many details as you can — it helps us match you with the right agent."
+
+---
+
+## FORM FIELDS (in order)
+
+### 1. Submitting As (auto-filled)
+- Show logged-in user avatar, name, and phone number
+- Display a verified green checkmark badge
+- Read-only — not editable in the form
+
+### 2. Property Name (optional)
+- Text input
+- Placeholder: "e.g. Villa with Pool — Ain Diab (optional)"
+
+### 3. Property Type (NEW — required)
+- Icon button group (single select):
+  - 🏢 Apartment
+  - 🏡 Villa
+  - 🕌 Riad
+  - 🏗️ Land / Plot
+  - 🏬 Commercial
+  - 🏘️ Other
+- Selected state: filled crimson background, white text
+
+### 4. Listing Intent (required)
+- Two toggle buttons: "Sell my property" | "Rent out my property"
+- Active state: crimson border and label
+
+### 5. Location (required)
+- City dropdown (searchable)
+- Neighborhood / address text input
+- Interactive map: "Pin your property on the map (optional)"
+  - Leaflet.js or Google Maps embed
+  - Clicking places a draggable pin
+  - Shows tooltip: "Click on the map to place a pin"
+
+### 6. Property Specs
+- Bedrooms (number input with icon)
+- Bathrooms (number input with icon)
+- Size in m² (number input with icon)
+- Price in MAD (number input with icon)
+- Floor number (e.g. 2nd floor) — NEW
+- Total floors in building — NEW
+- Year built — NEW
+
+### 7. Amenities (NEW — multi-select checkboxes or pill toggles)
+Options:
+- Swimming Pool
+- Parking / Garage
+- Garden / Terrace
+- Elevator
+- Furnished
+- Balcony
+- Air Conditioning
+- Security / Concierge
+- Sea View
+- City View
+
+### 8. Ownership & Legal (NEW — optional)
+- Titre Foncier number (text input)
+- Upload ownership document (PDF/image, optional)
+- Tooltip: "Providing this helps us verify and list your property faster"
+
+### 9. Availability (NEW)
+- For sale: checkbox "Available immediately" OR date picker "Available from"
+- For rent: date picker for availability start date
+
+### 10. Additional Details
+- Textarea
+- Placeholder: "Describe your property — features, condition, nearby amenities..."
+- NEW: "Generate description ✨" button below textarea
+  - On click: auto-populates textarea using filled-in specs and amenities
+  - Show loading spinner while generating
+
+### 11. Photos & Videos (optional)
+- Drag & drop zone for images (JPG, PNG, WEBP — max 20MB each)
+- Drag & drop zone for videos (MP4, MOV, WEBM — max 100MB)
+- Note: "Logo watermark will be applied to all video frames automatically"
+- NEW: Photo reorder — drag to sort uploaded images; first image = cover photo
+- NEW: "Add image URL" text input below
+
+### 12. Virtual Tour (NEW — optional)
+- Text input: "Virtual tour or 360° video link"
+- Placeholder: "e.g. Matterport, YouTube 360, or any tour URL"
+- Icon: 360° or play icon
+
+### 13. Preferred Contact Method (NEW)
+- Radio or icon toggle:
+  - 📞 Phone call
+  - 💬 WhatsApp
+  - 📧 Email
+- Best time to reach: Morning / Afternoon / Evening (pill select)
+
+### 14. Submit Button
+- Full-width crimson button: "Submit Listing Request →"
+- On submit: show success state with confirmation message and expected callback time
+
+---
+
+## FORM UX — STEP-BY-STEP WIZARD (NEW)
+
+Convert the single-page form into a 4-step wizard with a progress bar at the top:
+
+Step 1 — Basic Info
+  - Property Name, Property Type, Listing Intent
+
+Step 2 — Location
+  - City, Neighborhood, Map pin
+
+Step 3 — Property Details
+  - Specs (beds, baths, size, price, floor, year built)
+  - Amenities checklist
+  - Ownership & Legal fields
+  - Availability date
+
+Step 4 — Media & Contact
+  - Additional Details + AI description generator
+  - Photos & Videos upload
+  - Virtual tour link
+  - Preferred contact method
+
+Progress bar:
+- 4 labeled steps shown at top
+- Active step highlighted in crimson
+- Completed steps show a checkmark
+- "Back" and "Next" navigation buttons
+- Final step shows "Submit Listing Request" instead of "Next"
+
+---
+
+## DESIGN SYSTEM
+
+- Primary color: Crimson (#8B0000 or similar deep red)
+- Background: Light gray (#F5F5F0)
+- Cards: White with subtle border-radius and shadow
+- Typography: Clean sans-serif (Inter or similar)
+- Mobile-responsive: Stack sidebar below the form on mobile
+- Form inputs: 44px height, subtle border, focus ring in crimson
+- Pill/toggle buttons: outlined default, crimson filled active state
+- Icons: Use a consistent icon library (Lucide, Tabler, or Heroicons)
+
+---
+
+## ADDITIONAL NOTES
+
+- All fields marked (NEW) are additions to the existing form
+- The "Submitting as" block should reflect logged-in user session data
+- City dropdown should include major Moroccan cities: Casablanca, Rabat, Marrakech, Fes, Tanger, Agadir, Meknes, Oujda, Kenitra, Tetouan, etc.
+- Price input should format with MAD suffix and thousand separators
+- The AI description generator button should call an internal API endpoint or LLM with the property specs as context
+- WhatsApp contact toggle is especially important for the Moroccan market
+- Form should auto-save draft to localStorage so users don't lose progress on refresh
+- Show a floating "Your progress is saved" toast when auto-saving

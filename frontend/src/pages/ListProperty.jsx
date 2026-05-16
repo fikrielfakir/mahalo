@@ -1,9 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Home, CheckCircle, ArrowRight, Phone,
+  Home, CheckCircle, ArrowRight, ArrowLeft, Phone,
   MapPin, Bed, Bath, Maximize2, DollarSign, FileText,
-  Building2, LogIn, User, ChevronDown,
+  Building2, LogIn, User, ChevronDown, Star, Layers,
+  Building, Trees, Car, Wind, Shield, Eye, Wifi,
+  CalendarDays, Upload, Link2, PhoneCall, MessageCircle,
+  Mail, Sparkles, Loader2, RotateCcw, X, Check,
+  GripVertical, Hash,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -14,46 +18,621 @@ import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import ImageUploader from '../admin/components/ImageUploader'
 
-const EMPTY_FORM = {
-  property_name: '',
-  property_type: 'sale',
-  city_id: '',
-  location: '',
-  latitude: '', longitude: '',
-  bedrooms: '', bathrooms: '', size: '', price: '',
-  description: '',
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const BENEFITS = [
-  { icon: CheckCircle, text: 'Listed within 24 hours' },
-  { icon: CheckCircle, text: 'Verified badge on your listing' },
-  { icon: CheckCircle, text: 'Dedicated agent support' },
-  { icon: CheckCircle, text: 'Free professional consultation' },
+const MOROCCAN_CITIES = [
+  'Casablanca','Rabat','Marrakech','Fes','Tanger','Agadir','Meknes','Oujda',
+  'Kenitra','Tetouan','Safi','El Jadida','Beni Mellal','Nador','Khouribga',
+  'Settat','Berrechid','Mohammedia','Khemisset','Laayoune',
 ]
 
+const PROPERTY_TYPES = [
+  { value: 'apartment', label: 'Apartment', emoji: '🏢' },
+  { value: 'villa',     label: 'Villa',     emoji: '🏡' },
+  { value: 'riad',      label: 'Riad',      emoji: '🕌' },
+  { value: 'land',      label: 'Land / Plot',emoji: '🏗️' },
+  { value: 'commercial',label: 'Commercial', emoji: '🏬' },
+  { value: 'other',     label: 'Other',      emoji: '🏘️' },
+]
+
+const AMENITIES = [
+  { id: 'pool',      label: 'Swimming Pool',       icon: Star },
+  { id: 'parking',   label: 'Parking / Garage',    icon: Car },
+  { id: 'garden',    label: 'Garden / Terrace',    icon: Trees },
+  { id: 'elevator',  label: 'Elevator',            icon: Layers },
+  { id: 'furnished', label: 'Furnished',           icon: Home },
+  { id: 'balcony',   label: 'Balcony',             icon: Building },
+  { id: 'ac',        label: 'Air Conditioning',    icon: Wind },
+  { id: 'security',  label: 'Security / Concierge',icon: Shield },
+  { id: 'sea_view',  label: 'Sea View',            icon: Eye },
+  { id: 'city_view', label: 'City View',           icon: Building2 },
+]
+
+const CONTACT_METHODS = [
+  { value: 'phone',     label: 'Phone call', icon: PhoneCall },
+  { value: 'whatsapp',  label: 'WhatsApp',   icon: MessageCircle },
+  { value: 'email',     label: 'Email',      icon: Mail },
+]
+
+const TIME_SLOTS = ['Morning', 'Afternoon', 'Evening']
+
+const BENEFITS = [
+  { text: 'Listed within 24 hours' },
+  { text: 'Verified badge on your listing' },
+  { text: 'Dedicated agent support' },
+  { text: 'Free professional consultation' },
+]
+
+const STEPS = [
+  { label: 'Basic Info' },
+  { label: 'Location' },
+  { label: 'Details' },
+  { label: 'Media & Contact' },
+]
+
+const DRAFT_KEY = 'mahalo_list_property_draft'
+
+const EMPTY_FORM = {
+  // Step 1
+  property_name: '',
+  property_category: '',
+  listing_intent: 'sale',
+  // Step 2
+  city_id: '',
+  location: '',
+  latitude: '',
+  longitude: '',
+  // Step 3
+  bedrooms: '', bathrooms: '', size: '', price: '',
+  floor_number: '', total_floors: '', year_built: '',
+  amenities: [],
+  titre_foncier: '',
+  available_immediately: false,
+  available_from: '',
+  // Step 4
+  description: '',
+  image_url: '',
+  virtual_tour: '',
+  contact_method: 'whatsapp',
+  best_time: 'Morning',
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatMAD(val) {
+  if (!val) return ''
+  return Number(val).toLocaleString('fr-MA')
+}
+
+function generateDescription(form, cities) {
+  const cityName = cities.find(c => String(c.id) === String(form.city_id))?.name || ''
+  const type = PROPERTY_TYPES.find(t => t.value === form.property_category)?.label || 'Property'
+  const intent = form.listing_intent === 'sale' ? 'for sale' : 'for rent'
+  const loc = [form.location, cityName].filter(Boolean).join(', ')
+  const amenityLabels = AMENITIES.filter(a => form.amenities.includes(a.id)).map(a => a.label)
+
+  let desc = `Discover this exceptional ${type.toLowerCase()} ${intent}`
+  if (loc) desc += ` in ${loc}`
+  desc += '.'
+
+  const specs = []
+  if (form.bedrooms)  specs.push(`${form.bedrooms} bedroom${form.bedrooms > 1 ? 's' : ''}`)
+  if (form.bathrooms) specs.push(`${form.bathrooms} bathroom${form.bathrooms > 1 ? 's' : ''}`)
+  if (form.size)      specs.push(`${form.size} m²`)
+  if (specs.length)   desc += ` This property features ${specs.join(', ')}.`
+
+  if (form.floor_number) {
+    const suffix = ['st','nd','rd'][form.floor_number - 1] || 'th'
+    desc += ` Located on the ${form.floor_number}${suffix} floor`
+    if (form.total_floors) desc += ` of a ${form.total_floors}-floor building`
+    desc += '.'
+  }
+
+  if (form.year_built) desc += ` Built in ${form.year_built}.`
+
+  if (amenityLabels.length) {
+    desc += ` Amenities include: ${amenityLabels.join(', ')}.`
+  }
+
+  if (form.price) {
+    desc += ` Priced at ${formatMAD(form.price)} MAD.`
+  }
+
+  desc += ' Contact us for more information or to schedule a viewing.'
+  return desc
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function StepIndicator({ step }) {
+  return (
+    <div className="flex items-center justify-between mb-8 relative">
+      <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-100 z-0" />
+      {STEPS.map((s, i) => {
+        const done    = i < step
+        const active  = i === step
+        return (
+          <div key={i} className="relative z-10 flex flex-col items-center gap-1.5">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
+              ${done   ? 'bg-navy text-white'
+              : active ? 'bg-navy text-white ring-4 ring-navy/20'
+              :          'bg-gray-100 text-gray-400'}`}>
+              {done ? <Check size={14} /> : i + 1}
+            </div>
+            <span className={`text-[10px] font-semibold whitespace-nowrap hidden sm:block
+              ${active || done ? 'text-navy' : 'text-gray-400'}`}>
+              {s.label}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function ProgressBar({ step }) {
+  const pct = ((step) / (STEPS.length - 1)) * 100
+  return (
+    <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mb-6">
+      <div
+        className="h-full bg-navy rounded-full transition-all duration-500"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  )
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">{children}</p>
+  )
+}
+
+function InputWrapper({ icon: Icon, children, className = '' }) {
+  return (
+    <div className={`relative ${className}`}>
+      {Icon && <Icon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />}
+      {children}
+    </div>
+  )
+}
+
+const INPUT_CLS = 'w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-navy/30 transition-all'
+const INPUT_NO_ICON = 'w-full px-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-navy/30 transition-all'
+
+// ─── Step 1: Basic Info ───────────────────────────────────────────────────────
+
+function Step1({ form, setForm }) {
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+  return (
+    <div className="space-y-6">
+      <div>
+        <SectionLabel>Property Name <span className="normal-case font-normal text-navy/30">(optional)</span></SectionLabel>
+        <InputWrapper icon={Building2}>
+          <input
+            type="text"
+            placeholder="e.g. Villa with Pool — Ain Diab (optional)"
+            value={form.property_name}
+            onChange={set('property_name')}
+            className={INPUT_CLS}
+          />
+        </InputWrapper>
+      </div>
+
+      <div>
+        <SectionLabel>Property Type <span className="text-gold">*</span></SectionLabel>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {PROPERTY_TYPES.map(({ value, label, emoji }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, property_category: value }))}
+              className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 text-center transition-all
+                ${form.property_category === value
+                  ? 'border-navy bg-navy text-white'
+                  : 'border-gray-100 text-navy/60 hover:border-navy/30 hover:bg-navy/5'}`}
+            >
+              <span className="text-xl leading-none">{emoji}</span>
+              <span className="text-[10px] font-semibold leading-tight">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <SectionLabel>Listing Intent <span className="text-gold">*</span></SectionLabel>
+        <div className="flex gap-3">
+          {[['sale', 'Sell my property'], ['rent', 'Rent out my property']].map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, listing_intent: val }))}
+              className={`flex-1 py-3 rounded-2xl text-sm font-semibold border-2 transition-all
+                ${form.listing_intent === val
+                  ? 'border-navy bg-navy/5 text-navy'
+                  : 'border-gray-100 text-navy/50 hover:border-navy/20'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Step 2: Location ─────────────────────────────────────────────────────────
+
+function Step2({ form, setForm, cities, geocoding }) {
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+  return (
+    <div className="space-y-6">
+      <div>
+        <SectionLabel>Location <span className="text-gold">*</span></SectionLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <InputWrapper icon={MapPin}>
+            <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />
+            <select
+              value={form.city_id}
+              onChange={set('city_id')}
+              required
+              className={`${INPUT_CLS} appearance-none pr-9`}
+            >
+              <option value="">City *</option>
+              {cities.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </InputWrapper>
+          <InputWrapper icon={MapPin}>
+            {geocoding && (
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-navy font-semibold">auto-filling…</span>
+            )}
+            <input
+              type="text"
+              placeholder="Neighborhood / address"
+              value={form.location}
+              onChange={set('location')}
+              className={INPUT_CLS}
+            />
+          </InputWrapper>
+        </div>
+
+        <div className="rounded-2xl border border-dashed border-navy/15 p-4 bg-surface/50">
+          <p className="text-navy/40 text-xs font-semibold mb-2 flex items-center gap-1.5">
+            <MapPin size={12} className="text-navy" />
+            Pin your property on the map <span className="font-normal">(optional)</span>
+          </p>
+          <LocationPicker
+            lat={form.latitude}
+            lng={form.longitude}
+            onChange={({ lat, lng }) => setForm(f => ({ ...f, latitude: lat, longitude: lng }))}
+            height={260}
+            restrictToMorocco
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Step 3: Property Details ─────────────────────────────────────────────────
+
+function Step3({ form, setForm }) {
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+
+  const toggleAmenity = (id) => {
+    setForm(f => ({
+      ...f,
+      amenities: f.amenities.includes(id)
+        ? f.amenities.filter(a => a !== id)
+        : [...f.amenities, id],
+    }))
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Specs */}
+      <div>
+        <SectionLabel>Property Specs</SectionLabel>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <InputWrapper icon={Bed}>
+            <input type="number" placeholder="Bedrooms" min="0" value={form.bedrooms} onChange={set('bedrooms')} className={INPUT_CLS} />
+          </InputWrapper>
+          <InputWrapper icon={Bath}>
+            <input type="number" placeholder="Bathrooms" min="0" value={form.bathrooms} onChange={set('bathrooms')} className={INPUT_CLS} />
+          </InputWrapper>
+          <InputWrapper icon={Maximize2}>
+            <input type="number" placeholder="Size (m²)" min="0" value={form.size} onChange={set('size')} className={INPUT_CLS} />
+          </InputWrapper>
+          <InputWrapper icon={DollarSign}>
+            <input type="number" placeholder="Price (MAD)" min="0" value={form.price} onChange={set('price')} className={INPUT_CLS} />
+          </InputWrapper>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <InputWrapper icon={Layers}>
+            <input type="number" placeholder="Floor no." min="0" value={form.floor_number} onChange={set('floor_number')} className={INPUT_CLS} />
+          </InputWrapper>
+          <InputWrapper icon={Building2}>
+            <input type="number" placeholder="Total floors" min="0" value={form.total_floors} onChange={set('total_floors')} className={INPUT_CLS} />
+          </InputWrapper>
+          <InputWrapper icon={CalendarDays}>
+            <input type="number" placeholder="Year built" min="1800" max={new Date().getFullYear()} value={form.year_built} onChange={set('year_built')} className={INPUT_CLS} />
+          </InputWrapper>
+        </div>
+      </div>
+
+      {/* Amenities */}
+      <div>
+        <SectionLabel>Amenities</SectionLabel>
+        <div className="flex flex-wrap gap-2">
+          {AMENITIES.map(({ id, label, icon: Icon }) => {
+            const active = form.amenities.includes(id)
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => toggleAmenity(id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all
+                  ${active
+                    ? 'border-navy bg-navy text-white'
+                    : 'border-gray-200 text-navy/60 hover:border-navy/30 hover:bg-navy/5'}`}
+              >
+                <Icon size={13} />
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Ownership & Legal */}
+      <div>
+        <SectionLabel>
+          Ownership & Legal <span className="normal-case font-normal text-navy/30">(optional)</span>
+        </SectionLabel>
+        <div className="space-y-3">
+          <InputWrapper icon={Hash}>
+            <input
+              type="text"
+              placeholder="Titre Foncier number"
+              value={form.titre_foncier}
+              onChange={set('titre_foncier')}
+              className={INPUT_CLS}
+            />
+          </InputWrapper>
+          <label className="flex items-center gap-3 px-4 py-3 bg-surface rounded-2xl cursor-pointer group hover:bg-navy/5 transition-colors border border-dashed border-navy/15">
+            <Upload size={16} className="text-navy/40 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-navy/70 font-medium">Upload ownership document</p>
+              <p className="text-xs text-navy/35">PDF or image (optional)</p>
+            </div>
+            <input type="file" accept="application/pdf,image/*" className="hidden" />
+          </label>
+          <p className="text-xs text-navy/35 px-1 flex items-start gap-1.5">
+            <span className="text-navy/50 mt-0.5">ℹ️</span>
+            Providing this helps us verify and list your property faster
+          </p>
+        </div>
+      </div>
+
+      {/* Availability */}
+      <div>
+        <SectionLabel>Availability</SectionLabel>
+        {form.listing_intent === 'sale' ? (
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div
+                onClick={() => setForm(f => ({ ...f, available_immediately: !f.available_immediately }))}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer
+                  ${form.available_immediately ? 'border-navy bg-navy' : 'border-gray-300'}`}
+              >
+                {form.available_immediately && <Check size={12} className="text-white" />}
+              </div>
+              <span className="text-sm text-navy/70">Available immediately</span>
+            </label>
+            {!form.available_immediately && (
+              <InputWrapper icon={CalendarDays}>
+                <input
+                  type="date"
+                  value={form.available_from}
+                  onChange={set('available_from')}
+                  className={INPUT_CLS}
+                />
+              </InputWrapper>
+            )}
+          </div>
+        ) : (
+          <InputWrapper icon={CalendarDays}>
+            <input
+              type="date"
+              placeholder="Available from"
+              value={form.available_from}
+              onChange={set('available_from')}
+              className={INPUT_CLS}
+            />
+          </InputWrapper>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Step 4: Media & Contact ──────────────────────────────────────────────────
+
+function Step4({ form, setForm, cities, mediaPaths, setMediaPaths }) {
+  const [generating, setGenerating] = useState(false)
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    await new Promise(r => setTimeout(r, 900))
+    const desc = generateDescription(form, cities)
+    setForm(f => ({ ...f, description: desc }))
+    setGenerating(false)
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Description */}
+      <div>
+        <SectionLabel>Additional Details</SectionLabel>
+        <div className="relative">
+          <FileText size={15} className="absolute left-3.5 top-3.5 text-navy/30" />
+          <textarea
+            placeholder="Describe your property — features, condition, nearby amenities..."
+            rows={4}
+            value={form.description}
+            onChange={set('description')}
+            className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-navy/30 resize-none transition-all"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-navy/5 hover:bg-navy/10 text-navy text-xs font-semibold transition-all disabled:opacity-50"
+        >
+          {generating
+            ? <Loader2 size={13} className="animate-spin" />
+            : <Sparkles size={13} />}
+          {generating ? 'Generating…' : 'Generate description ✨'}
+        </button>
+      </div>
+
+      {/* Photos & Videos */}
+      <div>
+        <SectionLabel>
+          Photos & Videos <span className="normal-case font-normal text-navy/30">(optional)</span>
+        </SectionLabel>
+        <ImageUploader
+          images={mediaPaths}
+          onChange={setMediaPaths}
+          folder="media"
+          allowVideo={true}
+        />
+        <p className="text-xs text-navy/35 mt-2 px-1">
+          Logo watermark will be applied to all video frames automatically.
+        </p>
+        {/* Add image URL */}
+        <div className="mt-3">
+          <InputWrapper icon={Link2}>
+            <input
+              type="url"
+              placeholder="Add image URL (optional)"
+              value={form.image_url}
+              onChange={set('image_url')}
+              className={INPUT_CLS}
+            />
+          </InputWrapper>
+        </div>
+      </div>
+
+      {/* Virtual Tour */}
+      <div>
+        <SectionLabel>
+          Virtual Tour <span className="normal-case font-normal text-navy/30">(optional)</span>
+        </SectionLabel>
+        <InputWrapper icon={Eye}>
+          <input
+            type="url"
+            placeholder="e.g. Matterport, YouTube 360, or any tour URL"
+            value={form.virtual_tour}
+            onChange={set('virtual_tour')}
+            className={INPUT_CLS}
+          />
+        </InputWrapper>
+        <p className="text-xs text-navy/35 mt-1.5 px-1">Paste a Matterport, YouTube 360, or any 360° tour link</p>
+      </div>
+
+      {/* Contact Method */}
+      <div>
+        <SectionLabel>Preferred Contact Method</SectionLabel>
+        <div className="flex gap-3 mb-4">
+          {CONTACT_METHODS.map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, contact_method: value }))}
+              className={`flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 text-xs font-semibold transition-all
+                ${form.contact_method === value
+                  ? 'border-navy bg-navy text-white'
+                  : 'border-gray-100 text-navy/60 hover:border-navy/30 hover:bg-navy/5'}`}
+            >
+              <Icon size={18} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <SectionLabel>Best Time to Reach</SectionLabel>
+        <div className="flex gap-2">
+          {TIME_SLOTS.map(slot => (
+            <button
+              key={slot}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, best_time: slot }))}
+              className={`flex-1 py-2 rounded-xl border text-xs font-semibold transition-all
+                ${form.best_time === slot
+                  ? 'border-navy bg-navy text-white'
+                  : 'border-gray-200 text-navy/60 hover:border-navy/30'}`}
+            >
+              {slot}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export default function ListProperty() {
-  const [form, setForm]           = useState(EMPTY_FORM)
-  const [cities, setCities]       = useState([])
-  const [geocoding, setGeocoding] = useState(false)
-  const [mediaPaths, setMediaPaths] = useState([])   // string[] of paths — what ImageUploader uses
+  const [form, setForm]             = useState(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      return saved ? { ...EMPTY_FORM, ...JSON.parse(saved) } : EMPTY_FORM
+    } catch { return EMPTY_FORM }
+  })
+  const [step, setStep]             = useState(0)
+  const [cities, setCities]         = useState([])
+  const [geocoding, setGeocoding]   = useState(false)
+  const [mediaPaths, setMediaPaths] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
   const pendingSubmitRef            = useRef(false)
   const doSubmitRef                 = useRef(null)
   const prevLatLngRef               = useRef('')
   const prevCityIdRef               = useRef('')
+  const draftTimerRef               = useRef(null)
+
   const { toast, show: showToast, hide: hideToast } = useToast()
   const { isAuthenticated, user, loading: authLoading } = useUserAuth()
   const { openAuthModal } = useAuthModal()
 
-  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
-
+  // Load cities
   useEffect(() => {
     api.get('/properties/filters')
       .then(data => setCities(data?.data?.cities || []))
       .catch(() => {})
   }, [])
 
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(form))
+        setDraftSaved(true)
+        setTimeout(() => setDraftSaved(false), 2200)
+      } catch {}
+    }, 800)
+    return () => clearTimeout(draftTimerRef.current)
+  }, [form])
+
+  // Pending submit after auth
   useEffect(() => {
     if (isAuthenticated && user && pendingSubmitRef.current) {
       pendingSubmitRef.current = false
@@ -61,7 +640,7 @@ export default function ListProperty() {
     }
   }, [isAuthenticated, user])
 
-  /* Map pin → city (reverse geocode) */
+  // Map pin → city (reverse geocode)
   useEffect(() => {
     const key = `${form.latitude},${form.longitude}`
     if (!form.latitude || !form.longitude || key === prevLatLngRef.current) return
@@ -69,7 +648,7 @@ export default function ListProperty() {
     setGeocoding(true)
     fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${form.latitude}&lon=${form.longitude}&format=json&accept-language=en`,
-      { headers: { 'Accept': 'application/json' } }
+      { headers: { Accept: 'application/json' } }
     )
       .then(r => r.json())
       .then(data => {
@@ -94,7 +673,7 @@ export default function ListProperty() {
       .finally(() => setGeocoding(false))
   }, [form.latitude, form.longitude, cities])
 
-  /* City dropdown → map pin (forward geocode) */
+  // City dropdown → map pan (forward geocode)
   useEffect(() => {
     if (!form.city_id || form.city_id === prevCityIdRef.current) return
     prevCityIdRef.current = form.city_id
@@ -102,7 +681,7 @@ export default function ListProperty() {
     if (!cityName) return
     fetch(
       `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cityName)}&country=Morocco&format=json&limit=1&accept-language=en`,
-      { headers: { 'Accept': 'application/json' } }
+      { headers: { Accept: 'application/json' } }
     )
       .then(r => r.json())
       .then(data => {
@@ -122,8 +701,8 @@ export default function ListProperty() {
     setSubmitting(true)
     try {
       await userListingsApi.store({
-        name:            form.property_name.trim() || `${selectedCity.name} — ${form.property_type === 'sale' ? 'For Sale' : 'For Rent'}`,
-        type:            form.property_type,
+        name:            form.property_name.trim() || `${selectedCity.name} — ${form.listing_intent === 'sale' ? 'For Sale' : 'For Rent'}`,
+        type:            form.listing_intent,
         location:        form.location || '',
         city_id:         parseInt(form.city_id),
         number_bedroom:  form.bedrooms  ? parseInt(form.bedrooms)  : null,
@@ -133,8 +712,9 @@ export default function ListProperty() {
         description:     form.description || '',
         latitude:        form.latitude  || null,
         longitude:       form.longitude || null,
-        images:          mediaPaths,   // already an array of path strings
+        images:          mediaPaths,
       })
+      localStorage.removeItem(DRAFT_KEY)
       setSubmitted(true)
     } catch {
       showToast('Failed to submit. Please try again or call us directly.', 'error')
@@ -144,6 +724,22 @@ export default function ListProperty() {
   }, [user, form, mediaPaths, cities])
 
   useEffect(() => { doSubmitRef.current = doSubmit }, [doSubmit])
+
+  const handleNext = () => {
+    if (step === 0 && !form.property_category) {
+      showToast('Please select a property type', 'error'); return
+    }
+    if (step === 1 && !form.city_id) {
+      showToast('Please select a city', 'error'); return
+    }
+    setStep(s => Math.min(s + 1, STEPS.length - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBack = () => {
+    setStep(s => Math.max(s - 1, 0))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -157,16 +753,40 @@ export default function ListProperty() {
 
   const cityName = cities.find(c => String(c.id) === String(form.city_id))?.name || ''
 
+  const resetAll = () => {
+    setSubmitted(false)
+    setForm(EMPTY_FORM)
+    setMediaPaths([])
+    setStep(0)
+    localStorage.removeItem(DRAFT_KEY)
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
+      {/* Draft saved toast */}
+      {draftSaved && (
+        <div className="fixed bottom-6 left-6 z-[9998] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white shadow-card border border-navy/10 text-xs font-semibold text-navy/60 animate-fade-in">
+          <Check size={13} className="text-emerald-500" />
+          Your progress is saved
+        </div>
+      )}
+
+      {/* Hero */}
       <section className="relative pt-28 pb-16 px-6 bg-navy overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+          }}
         />
+        {/* Watermark number */}
+        <div className="absolute right-0 top-0 bottom-0 flex items-center pr-8 pointer-events-none select-none">
+          <span className="text-[180px] font-black text-white/5 leading-none">74</span>
+        </div>
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-gold text-xs font-semibold uppercase tracking-widest mb-5">
             <Home size={12} /> List Your Property
@@ -181,17 +801,18 @@ export default function ListProperty() {
         </div>
       </section>
 
+      {/* Body */}
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:order-1 order-2">
             <div className="bg-white rounded-3xl p-6 shadow-card">
               <h3 className="text-navy font-bold text-lg mb-5">Why List with Mahalo?</h3>
               <div className="space-y-3">
-                {BENEFITS.map(({ icon: Icon, text }) => (
+                {BENEFITS.map(({ text }) => (
                   <div key={text} className="flex items-center gap-3">
-                    <Icon size={16} className="text-gold shrink-0" />
+                    <CheckCircle size={16} className="text-gold shrink-0" />
                     <span className="text-navy/70 text-sm">{text}</span>
                   </div>
                 ))}
@@ -199,227 +820,157 @@ export default function ListProperty() {
             </div>
 
             <div className="bg-navy rounded-3xl p-6 shadow-card">
-              <div className="w-10 h-10 rounded-xl bg-gold/20 flex items-center justify-center mb-4">
-                <Phone size={18} className="text-gold" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mb-4">
+                <Phone size={18} className="text-white" />
               </div>
               <h3 className="text-white font-bold mb-2">Prefer to talk?</h3>
               <p className="text-white/60 text-sm mb-4">Our team is available 7 days a week to help you list your property.</p>
-              <a href="tel:+212600000000" className="btn-gold text-sm flex items-center gap-2 justify-center">
+              <a
+                href="tel:+212600000000"
+                className="w-full flex items-center gap-2 justify-center py-2.5 px-4 rounded-2xl bg-white text-navy text-sm font-bold hover:bg-white/90 transition-colors"
+              >
                 <Phone size={14} /> Call Us Now
               </a>
             </div>
 
             <div className="bg-white rounded-3xl p-6 shadow-card">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
-                  <Building2 size={18} className="text-gold" />
+                <div className="w-10 h-10 rounded-xl bg-navy/10 flex items-center justify-center">
+                  <Building2 size={18} className="text-navy" />
                 </div>
                 <div>
                   <div className="text-navy font-bold text-sm">15,000+ Listings</div>
                   <div className="text-navy/45 text-xs">Already on our platform</div>
                 </div>
               </div>
-              <p className="text-navy/55 text-xs leading-relaxed">Join thousands of homeowners, developers, and investors who trust Mahalo to reach the right buyers.</p>
+              <p className="text-navy/55 text-xs leading-relaxed">
+                Join thousands of homeowners, developers, and investors who trust Mahalo to reach the right buyers.
+              </p>
             </div>
           </div>
 
           {/* Form */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 lg:order-2 order-1">
             {submitted ? (
               <div className="bg-white rounded-3xl shadow-card p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
+                <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle size={36} className="text-emerald-500" />
                 </div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600 text-xs font-bold uppercase tracking-wide mb-5">
                   Pending Admin Review
                 </div>
                 <h2 className="text-2xl font-bold text-navy mb-3">Listing Submitted!</h2>
-                <p className="text-navy/60 mb-2">Your property listing in <strong>{cityName}</strong> has been submitted for review.</p>
-                <p className="text-navy/40 text-sm mb-2">An admin will review it within 24 hours. Once approved, it will be visible to all visitors.</p>
+                <p className="text-navy/60 mb-2">
+                  Your property listing{cityName ? ` in ${cityName}` : ''} has been submitted for review.
+                </p>
+                <p className="text-navy/40 text-sm mb-2">
+                  An admin will review it within 24 hours. Once approved, it will be visible to all visitors.
+                </p>
                 <p className="text-navy/40 text-sm mb-8">
-                  You can track the status in your <Link to="/profile" className="text-gold font-semibold hover:underline">Profile → My Listings</Link>.
+                  Track the status in your{' '}
+                  <Link to="/profile" className="text-navy font-semibold hover:underline">Profile → My Listings</Link>.
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
-                  <Link to="/profile" className="btn-gold flex items-center gap-2">
+                  <Link to="/profile" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors">
                     View My Listings <ArrowRight size={15} />
                   </Link>
-                  <button onClick={() => { setSubmitted(false); setForm(EMPTY_FORM); setMediaPaths([]) }} className="btn-outline">
-                    Submit Another
+                  <button onClick={resetAll} className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors">
+                    <RotateCcw size={14} /> Submit Another
                   </button>
                 </div>
               </div>
             ) : (
               <div className="bg-white rounded-3xl shadow-card p-8">
                 <h2 className="text-xl font-bold text-navy mb-1">Property Details</h2>
-                <p className="text-navy/45 text-sm mb-7">Fill in as many details as you can — it helps us match you with the right agent.</p>
+                <p className="text-navy/45 text-sm mb-6">
+                  Fill in as many details as you can — it helps us match you with the right agent.
+                </p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <StepIndicator step={step} />
 
-                  {/* Auth status */}
-                  {isAuthenticated && user ? (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                        <User size={14} className="text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-emerald-700">Submitting as</p>
-                        <p className="text-sm font-medium text-navy truncate">{user.name}{user.phone ? ` · ${user.phone}` : ''}</p>
-                      </div>
-                      <CheckCircle size={16} className="text-emerald-500 shrink-0 ml-auto" />
+                {/* Auth block */}
+                {isAuthenticated && user ? (
+                  <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl mb-6">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                      <User size={14} className="text-white" />
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-4 px-4 py-3.5 bg-navy/4 border border-navy/10 rounded-2xl">
-                      <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
-                        <LogIn size={14} className="text-navy/60" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-navy/80">Sign in to submit your listing</p>
-                        <p className="text-xs text-navy/40">Your contact details will be taken from your account.</p>
-                      </div>
-                      <button type="button" onClick={() => openAuthModal()}
-                        className="shrink-0 px-4 py-1.5 text-xs font-semibold text-white bg-navy rounded-xl hover:bg-navy/80 transition-colors">
-                        Sign in
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Property Name */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Property Name</p>
-                    <div className="relative">
-                      <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                      <input
-                        type="text"
-                        placeholder="e.g. Villa with Pool — Ain Diab (optional)"
-                        value={form.property_name}
-                        onChange={set('property_name')}
-                        className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Sale / Rent */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">I want to...</p>
-                    <div className="flex gap-3">
-                      {[['sale', 'Sell my property'], ['rent', 'Rent out my property']].map(([val, label]) => (
-                        <button
-                          key={val} type="button"
-                          onClick={() => setForm(f => ({ ...f, property_type: val }))}
-                          className={`flex-1 py-3 rounded-2xl text-sm font-semibold border-2 transition-all ${
-                            form.property_type === val
-                              ? 'border-gold bg-gold/5 text-gold'
-                              : 'border-gray-100 text-navy/50 hover:border-navy/20'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Location</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <div className="relative">
-                        <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />
-                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 pointer-events-none z-10" />
-                        <select
-                          value={form.city_id} onChange={set('city_id')} required
-                          className="w-full pl-10 pr-9 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 appearance-none"
-                        >
-                          <option value="">City *</option>
-                          {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="relative">
-                        <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        {geocoding && (
-                          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-gold font-semibold">
-                            auto-filling…
-                          </span>
-                        )}
-                        <input type="text" placeholder="Neighborhood / address" value={form.location} onChange={set('location')}
-                          className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-dashed border-navy/15 p-4 bg-surface/50">
-                      <p className="text-navy/40 text-xs font-semibold mb-2 flex items-center gap-1.5">
-                        <MapPin size={12} className="text-gold" />
-                        Pin your property on the map <span className="font-normal">(optional)</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-emerald-700">Submitting as</p>
+                      <p className="text-sm font-medium text-navy truncate">
+                        {user.name}{user.phone ? ` · ${user.phone}` : ''}
                       </p>
-                      <LocationPicker
-                        lat={form.latitude} lng={form.longitude}
-                        onChange={({ lat, lng }) => setForm(f => ({ ...f, latitude: lat, longitude: lng }))}
-                        height={260}
-                        restrictToMorocco
+                    </div>
+                    <CheckCircle size={16} className="text-emerald-500 shrink-0 ml-auto" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 px-4 py-3.5 bg-navy/4 border border-navy/10 rounded-2xl mb-6">
+                    <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
+                      <LogIn size={14} className="text-navy/60" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-navy/80">Sign in to submit your listing</p>
+                      <p className="text-xs text-navy/40">Your contact details will be taken from your account.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openAuthModal()}
+                      className="shrink-0 px-4 py-1.5 text-xs font-semibold text-white bg-navy rounded-xl hover:bg-navy-light transition-colors"
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                )}
+
+                {/* Step content */}
+                <form onSubmit={handleSubmit}>
+                  <div className="min-h-[280px]">
+                    {step === 0 && <Step1 form={form} setForm={setForm} />}
+                    {step === 1 && <Step2 form={form} setForm={setForm} cities={cities} geocoding={geocoding} />}
+                    {step === 2 && <Step3 form={form} setForm={setForm} />}
+                    {step === 3 && (
+                      <Step4
+                        form={form} setForm={setForm}
+                        cities={cities}
+                        mediaPaths={mediaPaths} setMediaPaths={setMediaPaths}
                       />
-                    </div>
+                    )}
                   </div>
 
-                  {/* Specs */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Property Specs</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="relative">
-                        <Bed size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="number" placeholder="Bedrooms" min="0" value={form.bedrooms} onChange={set('bedrooms')}
-                          className="w-full pl-10 pr-3 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                      <div className="relative">
-                        <Bath size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="number" placeholder="Bathrooms" min="0" value={form.bathrooms} onChange={set('bathrooms')}
-                          className="w-full pl-10 pr-3 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                      <div className="relative">
-                        <Maximize2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="number" placeholder="Size (m²)" min="0" value={form.size} onChange={set('size')}
-                          className="w-full pl-10 pr-3 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                      <div className="relative">
-                        <DollarSign size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
-                        <input type="number" placeholder="Price (MAD)" min="0" value={form.price} onChange={set('price')}
-                          className="w-full pl-10 pr-3 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-                      </div>
-                    </div>
+                  {/* Navigation */}
+                  <div className="flex gap-3 mt-8 pt-6 border-t border-gray-100">
+                    {step > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleBack}
+                        className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-navy/20 text-navy text-sm font-bold hover:bg-navy/5 transition-colors"
+                      >
+                        <ArrowLeft size={16} /> Back
+                      </button>
+                    )}
+                    <div className="flex-1" />
+                    {step < STEPS.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors"
+                      >
+                        Next <ArrowRight size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={submitting || authLoading}
+                        className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-navy text-white text-sm font-bold hover:bg-navy-light transition-colors disabled:opacity-60"
+                      >
+                        {submitting
+                          ? <><Loader2 size={16} className="animate-spin" /> Submitting…</>
+                          : <>Submit Listing Request <ArrowRight size={16} /></>}
+                      </button>
+                    )}
                   </div>
 
-                  {/* Description */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">Additional Details</p>
-                    <div className="relative">
-                      <FileText size={15} className="absolute left-3.5 top-3.5 text-navy/30" />
-                      <textarea
-                        placeholder="Describe your property — features, condition, nearby amenities..."
-                        rows={4} value={form.description} onChange={set('description')}
-                        className="w-full pl-10 pr-4 py-3 bg-surface rounded-2xl text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Media — now using ImageUploader */}
-                  <div>
-                    <p className="text-navy/40 text-xs font-semibold uppercase tracking-wider mb-3">
-                      Photos & Videos <span className="normal-case font-normal">(optional)</span>
-                    </p>
-                    <ImageUploader
-                      images={mediaPaths}
-                      onChange={setMediaPaths}
-                      folder="media"
-                      allowVideo={true}
-                    />
-                  </div>
-
-                  <button type="submit" disabled={submitting || authLoading} className="w-full btn-gold justify-center flex gap-2 py-4 text-base">
-                    {submitting ? 'Submitting...' : 'Submit Listing Request'}
-                    {!submitting && <ArrowRight size={18} />}
-                  </button>
-
-                  {!isAuthenticated && (
-                    <p className="text-center text-navy/30 text-xs">
+                  {!isAuthenticated && step === STEPS.length - 1 && (
+                    <p className="text-center text-navy/30 text-xs mt-3">
                       You'll be asked to sign in before your listing is submitted.
                     </p>
                   )}
@@ -427,6 +978,7 @@ export default function ListProperty() {
               </div>
             )}
           </div>
+
         </div>
       </section>
 

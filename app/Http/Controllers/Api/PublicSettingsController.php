@@ -19,6 +19,8 @@ class PublicSettingsController extends Controller
         'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
         // Content pages
         'page_about', 'page_privacy', 'page_terms',
+        // Footer & SEO
+        'footer_description', 'seo_keywords',
     ];
 
     public function show(): JsonResponse

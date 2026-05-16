@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail } from 'lucide-react'
 import logoLight from '/logo-light.png'
+import axios from 'axios'
+
+const DEFAULT_DESC = 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.'
 
 const footerLinks = {
   Company:   [
@@ -27,19 +30,23 @@ const footerLinks = {
   ],
 }
 
-function getSettings() {
-  try {
-    return JSON.parse(localStorage.getItem('mahalo_settings') || '{}')
-  } catch {
-    return {}
-  }
+function getCachedSettings() {
+  try { return JSON.parse(localStorage.getItem('mahalo_settings') || '{}') } catch { return {} }
 }
 
 export default function Footer() {
-  const [settings, setSettings] = useState({})
+  const [settings, setSettings] = useState(getCachedSettings)
 
   useEffect(() => {
-    setSettings(getSettings())
+    axios.get('/api/v1/public-settings')
+      .then(r => {
+        const data = r.data?.data || r.data || {}
+        if (Object.keys(data).length) {
+          localStorage.setItem('mahalo_settings', JSON.stringify(data))
+          setSettings(data)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const socials = [
@@ -49,6 +56,7 @@ export default function Footer() {
     { Icon: Youtube,   href: settings.youtube_url,   label: 'YouTube' },
   ].filter(s => s.href)
 
+  const footerDesc = settings.footer_description || DEFAULT_DESC
   const year = new Date().getFullYear()
 
   return (
@@ -59,10 +67,10 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2.5 mb-5">
-              <img src={logoLight} alt="Mahalo" className="h-9 w-auto object-contain" />
+              <img src={settings.footer_logo_url || logoLight} alt="Mahalo" className="h-9 w-auto object-contain" />
             </div>
             <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-xs">
-              Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.
+              {footerDesc}
             </p>
             {socials.length > 0 ? (
               <div className="flex gap-2.5">
@@ -158,7 +166,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-6"
           style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <p className="text-white/25 text-sm">© {year} Agenz. All rights reserved.</p>
+          <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Agenz'}. All rights reserved.</p>
           <p className="text-white/25 text-sm">Morocco (MAD) · Premium Real Estate</p>
         </div>
       </div>

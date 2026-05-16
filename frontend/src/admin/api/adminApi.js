@@ -132,10 +132,11 @@ export const adminProfessionalApplications = {
 }
 
 export const adminSettings = {
-  get:        ()          => client.get('/admin/settings'),
-  update:     (d)         => client.put('/admin/settings', d),
-  uploadLogo: (formData)  => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  testMail:   (to)        => client.post('/admin/settings/mail-test', { to }),
+  get:          ()         => client.get('/admin/settings'),
+  update:       (d)        => client.put('/admin/settings', d),
+  uploadLogo:   (formData) => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  testMail:     (to)       => client.post('/admin/settings/mail-test', { to }),
+  sitemapPing:  ()         => client.post('/admin/settings/sitemap-ping'),
 }
 
 export const publicApi = {

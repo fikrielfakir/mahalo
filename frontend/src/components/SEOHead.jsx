@@ -22,6 +22,7 @@ function buildBreadcrumbLd(breadcrumbs) {
 export default function SEOHead({
   title,
   description = DEFAULT_DESC,
+  keywords,
   canonical,
   ogImage,
   ogType = 'website',
@@ -48,6 +49,7 @@ export default function SEOHead({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
       <meta name="robots" content={resolvedRobots} />
       {canonical && <link rel="canonical" href={canonical} />}
 

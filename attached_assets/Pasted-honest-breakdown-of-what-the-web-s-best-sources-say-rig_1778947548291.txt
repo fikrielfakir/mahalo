@@ -1,0 +1,40 @@
+honest breakdown of what the web's best sources say right now about getting organic traffic — mapped directly to where Mahalo stands today.
+
+What the research actually says (2025–2026)
+1. Technical foundation first — nothing else works without it
+Crawlability is the most fundamental technical SEO factor. If search engine bots cannot access your pages, nothing else matters. For Mahalo, this means the missing robots.txt, sitemap, and meta tags must ship before anything else — because right now Google can find your pages but Bing and Yandex largely cannot. First Page Australia
+SPAs must ensure navigation between views maintains good Core Web Vitals. Client-side routing should feel instant, and new content should render quickly without layout shifts during transitions. This is Mahalo's biggest structural risk — a React CSR app with no prerendering. ClickRank
+
+2. Core Web Vitals are the tiebreaker
+Content quality, relevance, and E-E-A-T remain primary factors. However, when multiple pages have similar content quality, Core Web Vitals can be the deciding factor. Industry data shows 10% higher pass rates for position 1 vs. position 9. ALM Corp
+Targets to hit:
+
+LCP (page load): under 2.5 seconds
+INP (responsiveness): under 200ms
+CLS (layout stability): under 0.1
+
+Large, uncompressed images are the most common cause of poor LCP scores. Compress your images, use modern formats like WebP, and implement lazy loading for images below the fold. To prevent layout shifts (CLS), always specify width and height attributes for your images and video embeds. Blue Glass Insights
+For Mahalo specifically: the property gallery images with no width/height, no WebP, and no loading="lazy" are likely causing both bad LCP and CLS scores right now.
+
+3. Structured data is now non-negotiable for real estate
+AI SEO is the new standard: if your SEO agency isn't optimizing for AI Overviews and Schema Markup, you are invisible. Hyper-Local Targeting: build pages for neighborhoods, not just cities. Google Business Profile Management: the Map Pack is where 70% of calls come from. Technical IDX SEO: handling schema markup so your property listings appear in AI Overviews. GoFlyDragon
+Well-structured data assists search engines in understanding your content and may present rich results, which may include review stars, frequently asked questions, and event listing results. Apply Schema.org and JSON-LD format favored by Google. Softtrix
+For Mahalo: RealEstateListing schema on property pages, RealEstateAgent on agent pages, WebSite + SearchAction on the homepage — all currently missing.
+
+4. Local SEO drives the most qualified leads in real estate
+You can't outspend the big aggregators. But you can out-smart them. Target hyper-local, long-tail keywords that capture specific buyer and seller intent — for example: "three-bedroom homes in Maarif with a pool". Elementor
+Mobile devices drove 62.54% of all global website traffic in Q2 2025. Mobile optimization is one of Google's local pack ranking factors. In the competitive real estate market, it's the difference between showing up in search results or getting buried. Placester Inc
+The most important local SEO move for Mahalo: city landing pages for Casablanca, Rabat, Marrakech — one dedicated page per city targeting "appartements à vendre à [city]" in French and the Arabic equivalent.
+
+5. Real estate SEO has extraordinary ROI — but takes 6–12 months
+Real estate SEO had an estimated 1,389% ROI in 2025, with agents typically breaking even after just ten months of steady SEO improvements. Luxury Presence
+You might start noticing some improvements in a few months, but significant changes can take 6 to 12 months or more. SEO is a long-term investment, and consistent efforts yield better outcomes over time. Market Leader
+A real case study worth noting: Flyhomes, a real estate platform, achieved 10,737% traffic growth in 3 months by expanding from 10,000 to 425,000 pages focused on cost-of-living guides, which generated 55.5% of all site traffic. The pattern: programmatic city/neighborhood content pages are the real estate SEO unlock. The Digital Bloom
+
+6. The new frontier: AI search visibility (don't ignore it)
+35% of Gen Z now use AI chatbots to search for information, and overall AI search traffic jumped 527% in a single year. The objective is evolving from winning clicks on a results page to becoming a cited authority within an AI-synthesized answer. TheeDigital
+However, keep perspective: AI platforms still drive only about 2–3% of the organic traffic that Google alone delivers. Many teams are spending more time chasing AI strategies than fixing simple, high-impact SEO fundamentals that continue to drive measurable results. Search Engine Land
+Bottom line for Mahalo: fix the fundamentals first (robots, sitemap, meta tags, structured data, speed). AI optimization is the next layer — not the starting point.
+
+Priority order for Mahalo, grounded in research
+PriorityWhatWhy1robots.txt + sitemap + domain verificationCrawlers literally cannot find the site systematically2SEOHead component on all pagesGoogle sees blank titles on 10 of 11 public pages3React.lazy() code splittingAll 30 pages load eagerly — destroys INP score4WebP images + loading="lazy" + dimensionsBiggest cause of bad LCP and CLS on property pages5JSON-LD structured dataRequired for rich results and AI Overview citations6City landing pages (Casablanca, Rabat, Marrakech...)Highest traffic opportunity specific to Morocco7Google Business Profile + NAP consistency70% of local calls come from the Map Pack

@@ -6,7 +6,7 @@ import {
   Save, Globe, Mail, Phone, Instagram, Facebook, Twitter, MapPin,
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
-  Wrench, Clock, FileText, Shield, Info,
+  Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag,
 } from 'lucide-react'
 
 const TABS = [
@@ -63,6 +63,9 @@ const DEFAULTS = {
   page_about: '',
   page_privacy: '',
   page_terms: '',
+  // Footer & SEO
+  footer_description: 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.',
+  seo_keywords: 'immobilier maroc, real estate morocco, appartement vendre maroc, villa maroc, casablanca immobilier',
 }
 
 const WATERMARK_POSITIONS = [
@@ -85,6 +88,8 @@ export default function SettingsPage() {
   const [testing, setTesting]         = useState(false)
   const [testResult, setTestResult]   = useState(null)
   const [copied, setCopied]           = useState(false)
+  const [pinging, setPinging]         = useState(false)
+  const [pingResult, setPingResult]   = useState(null)
 
   const copyRedirectUri = () => {
     const uri = `${window.location.origin}/api/v1/auth/google/callback`
@@ -204,6 +209,9 @@ export default function SettingsPage() {
               </FormField>
               <FormField label="Properties per page">
                 <Input type="number" min="4" max="48" value={form.properties_per_page} onChange={f('properties_per_page')} />
+              </FormField>
+              <FormField label="Footer Description" hint="Short blurb shown below the logo in the site footer">
+                <Textarea value={form.footer_description} onChange={f('footer_description')} rows={3} placeholder="Premium real estate experiences in Morocco…" />
               </FormField>
             </Section>
           </>
@@ -406,17 +414,79 @@ export default function SettingsPage() {
 
         {/* ── SEO TAB ── */}
         {tab === 'seo' && (
-          <Section title="SEO & Analytics" icon={Globe}>
-            <FormField label="Default SEO Title" hint="Used when no page-specific title is set">
-              <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
-            </FormField>
-            <FormField label="Default Meta Description">
-              <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />
-            </FormField>
-            <FormField label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X">
-              <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
-            </FormField>
-          </Section>
+          <>
+            <Section title="SEO & Analytics" icon={Globe}>
+              <FormField label="Default SEO Title" hint="Used when no page-specific title is set">
+                <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
+              </FormField>
+              <FormField label="Default Meta Description">
+                <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />
+              </FormField>
+              <FormField label="SEO Keywords" hint="Comma-separated keywords injected into the global meta keywords tag">
+                <div className="relative">
+                  <Tag size={14} className="absolute left-3.5 top-3 text-gray-400" />
+                  <Textarea
+                    value={form.seo_keywords}
+                    onChange={f('seo_keywords')}
+                    rows={2}
+                    className="pl-9"
+                    placeholder="immobilier maroc, real estate morocco, appartement vendre maroc…"
+                  />
+                </div>
+              </FormField>
+              <FormField label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X">
+                <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
+              </FormField>
+            </Section>
+
+            <Section title="Sitemap" icon={Map}>
+              <p className="text-sm text-gray-500 mb-4">
+                Notify Google and Bing about your latest sitemap so they re-crawl your listings faster.
+                The sitemap index is always available at <code className="bg-gray-100 px-1.5 py-0.5 rounded-lg text-xs font-mono">/sitemap.xml</code>.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Btn
+                  type="button"
+                  variant="ghost"
+                  disabled={pinging}
+                  onClick={async () => {
+                    setPinging(true)
+                    setPingResult(null)
+                    try {
+                      const r = await adminSettings.sitemapPing()
+                      const results = r?.data?.results || {}
+                      const lines = Object.entries(results).map(([e, s]) => `${e}: ${s}`).join(' · ')
+                      setPingResult({ ok: true, msg: `Pinged — ${lines}` })
+                    } catch (e) {
+                      setPingResult({ ok: false, msg: e?.message || 'Ping failed.' })
+                    } finally {
+                      setPinging(false)
+                    }
+                  }}
+                >
+                  <RefreshCw size={14} className={pinging ? 'animate-spin' : ''} />
+                  {pinging ? 'Pinging search engines…' : 'Ping Google & Bing'}
+                </Btn>
+
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-600 transition-all"
+                >
+                  <ExternalLink size={13} /> View sitemap.xml
+                </a>
+              </div>
+
+              {pingResult && (
+                <div className={`mt-3 flex items-start gap-2 text-sm font-medium ${pingResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {pingResult.ok ? <CheckCircle size={15} className="mt-0.5 shrink-0" /> : <AlertCircle size={15} className="mt-0.5 shrink-0" />}
+                  <span>{pingResult.msg}</span>
+                </div>
+              )}
+            </Section>
+          </>
         )}
 
         {/* ── MAIL TAB ── */}

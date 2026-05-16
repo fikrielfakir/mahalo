@@ -216,6 +216,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/settings', [AdminSettingsController::class, 'update']);
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
+        Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
 
         // App Update Manager
         Route::get('/app-update/history', [AdminAppUpdateController::class, 'history']);

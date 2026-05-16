@@ -70,6 +70,10 @@ export default function Neighborhoods() {
       <SEOHead
         title="Explore Neighborhoods in Morocco"
         description="Discover the finest neighborhoods across Morocco and beyond. Browse properties by location — Casablanca, Marrakech, Rabat, Tanger, Agadir, Fès, Essaouira and more."
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Neighborhoods', url: '/neighborhoods' },
+        ]}
       />
       <Navbar />
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">

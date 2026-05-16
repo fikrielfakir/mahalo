@@ -1,7 +1,23 @@
 import { Helmet } from 'react-helmet-async'
 
 const SITE = 'Mahalo Real Estate'
+const SITE_URL = 'https://mahalo.ma'
 const DEFAULT_DESC = "Discover premium properties across Morocco's most prestigious neighborhoods. Browse apartments, villas, and real estate projects in Casablanca, Marrakech, Rabat, Tanger, Agadir and more."
+
+function buildBreadcrumbLd(breadcrumbs) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((crumb, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: crumb.name,
+      ...(crumb.url
+        ? { item: crumb.url.startsWith('http') ? crumb.url : `${SITE_URL}${crumb.url}` }
+        : {}),
+    })),
+  }
+}
 
 export default function SEOHead({
   title,
@@ -12,9 +28,21 @@ export default function SEOHead({
   robots,
   noIndex = false,
   jsonLd = null,
+  breadcrumbs = null,
 }) {
   const fullTitle = title ? `${title} | ${SITE}` : SITE
   const resolvedRobots = noIndex ? 'noindex,nofollow' : (robots || 'index,follow')
+
+  const breadcrumbLd = breadcrumbs?.length ? buildBreadcrumbLd(breadcrumbs) : null
+
+  let combinedLd = null
+  if (jsonLd && breadcrumbLd) {
+    const { '@context': _c1, ...restMain } = jsonLd
+    const { '@context': _c2, ...restCrumb } = breadcrumbLd
+    combinedLd = { '@context': 'https://schema.org', '@graph': [restMain, restCrumb] }
+  } else {
+    combinedLd = jsonLd || breadcrumbLd
+  }
 
   return (
     <Helmet>
@@ -37,9 +65,9 @@ export default function SEOHead({
       <meta name="twitter:description" content={description} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
 
-      {jsonLd && (
+      {combinedLd && (
         <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
+          {JSON.stringify(combinedLd)}
         </script>
       )}
     </Helmet>

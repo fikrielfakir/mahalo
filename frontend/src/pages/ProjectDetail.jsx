@@ -74,7 +74,14 @@ export default function ProjectDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface">
-        <SEOHead title="Real Estate Project in Morocco" />
+        <SEOHead
+          title="Real Estate Project in Morocco"
+          breadcrumbs={[
+            { name: 'Home', url: '/' },
+            { name: 'New Projects', url: '/projects' },
+            { name: 'Project Details', url: '' },
+          ]}
+        />
         <Navbar />
         <div className="pt-24 px-6 max-w-7xl mx-auto animate-pulse">
           <div className="h-96 bg-gray-200 rounded-3xl mb-8" />
@@ -123,6 +130,11 @@ export default function ProjectDetail() {
           'url': `https://mahalo.ma/projects/${project.slug?.key ?? project.id}`,
           ...(project.price_from ? { offers: { '@type': 'Offer', price: project.price_from, priceCurrency: 'MAD' } } : {}),
         }}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'New Projects', url: '/projects' },
+          { name: project.name, url: `/projects/${project.slug?.key ?? project.id}` },
+        ]}
       />
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}

@@ -145,7 +145,14 @@ export default function AgentDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface">
-        <SEOHead title="Real Estate Agent in Morocco" />
+        <SEOHead
+          title="Real Estate Agent in Morocco"
+          breadcrumbs={[
+            { name: 'Home', url: '/' },
+            { name: 'Agents', url: '/agents' },
+            { name: 'Agent Profile', url: '' },
+          ]}
+        />
         <Navbar />
         <div className="pt-24 px-6 max-w-7xl mx-auto animate-pulse">
           <div className="flex items-center gap-6 mb-10">
@@ -197,6 +204,11 @@ export default function AgentDetail() {
           ...(agent.email ? { email: agent.email } : {}),
           ...(agent.phone ? { telephone: agent.phone } : {}),
         }}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Agents', url: '/agents' },
+          { name: displayName, url: `/agents/${agent.id}` },
+        ]}
       />
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}

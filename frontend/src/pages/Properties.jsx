@@ -224,6 +224,10 @@ export default function Properties() {
         <SEOHead
           title={pageTitle}
           description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+          breadcrumbs={[
+            { name: 'Home', url: '/' },
+            { name: pageTitle, url: '/properties' },
+          ]}
         />
         <Navbar />
         <div className="pt-20 pb-3 px-5" style={{ background: '#F5F5F5' }}>
@@ -287,6 +291,10 @@ export default function Properties() {
       <SEOHead
         title={pageTitle}
         description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: pageTitle, url: '/properties' },
+        ]}
       />
       <Navbar />
       <div className="pt-24 pb-8 px-5 max-w-7xl mx-auto">

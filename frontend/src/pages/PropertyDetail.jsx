@@ -220,7 +220,14 @@ export default function PropertyDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface">
-        <SEOHead title="Property Details in Morocco" />
+        <SEOHead
+          title="Property Details in Morocco"
+          breadcrumbs={[
+            { name: 'Home', url: '/' },
+            { name: 'Properties', url: '/properties' },
+            { name: 'Property Details', url: '' },
+          ]}
+        />
         <Navbar />
         <div className="pt-24 px-6 max-w-7xl mx-auto animate-pulse">
           <div className="h-96 bg-gray-200 rounded-3xl mb-8" />
@@ -272,6 +279,11 @@ export default function PropertyDetail() {
           'url': `https://mahalo.ma/properties/${property.slug?.key ?? property.id}`,
           ...(property.price ? { offers: { '@type': 'Offer', price: property.price, priceCurrency: 'MAD' } } : {}),
         }}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Properties', url: '/properties' },
+          { name: property.name, url: `/properties/${property.slug?.key ?? property.id}` },
+        ]}
       />
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}

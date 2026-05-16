@@ -93,6 +93,10 @@ export default function Projects() {
         <SEOHead
           title="New Real Estate Projects in Morocco"
           description="Discover off-plan and new real estate projects across Morocco. Browse residential and mixed-use developments in Casablanca, Marrakech, Rabat, Tanger and more."
+          breadcrumbs={[
+            { name: 'Home', url: '/' },
+            { name: 'New Projects', url: '/projects' },
+          ]}
         />
         <Navbar />
         <div className="pt-20 pb-3 px-6 bg-surface">
@@ -171,6 +175,10 @@ export default function Projects() {
       <SEOHead
         title="New Real Estate Projects in Morocco"
         description="Discover off-plan and new real estate projects across Morocco. Browse residential and mixed-use developments in Casablanca, Marrakech, Rabat, Tanger and more."
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'New Projects', url: '/projects' },
+        ]}
       />
       <Navbar />
       <div className="pt-24 pb-20 px-6 max-w-7xl mx-auto">

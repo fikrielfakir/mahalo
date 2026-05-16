@@ -32,6 +32,10 @@ export default function Agents() {
       <SEOHead
         title="Real Estate Agents in Morocco"
         description="Connect with Morocco's top real estate agents. Verified professionals specializing in residential and commercial properties across Casablanca, Marrakech, Rabat and beyond."
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Agents', url: '/agents' },
+        ]}
       />
       <Navbar />
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">

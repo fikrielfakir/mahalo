@@ -31,7 +31,7 @@ async function start() {
     app.use(sirv(resolve(__dirname, 'dist/client'), { extensions: [] }))
   }
 
-  app.use('*', async (req, res) => {
+  app.use(async (req, res) => {
     const url = req.originalUrl
     const ua  = req.headers['user-agent'] || ''
 

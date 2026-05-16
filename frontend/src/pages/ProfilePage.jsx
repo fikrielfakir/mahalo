@@ -10,6 +10,7 @@ import { authApi, userListingsApi, favoritesApi, professionalApi } from '../api/
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PropertyCard from '../components/PropertyCard'
+import { isVideoPath } from '../utils/media'
 
 function formatPrice(price) {
   if (!price) return null
@@ -31,12 +32,31 @@ const SPECIALTIES = [
   'Land & Plots', 'Industrial Properties',
 ]
 
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80'
+
+function getListingImageUrl(listing) {
+  const images = Array.isArray(listing?.images) ? listing.images : []
+  const firstImg = images[0] || listing?.image
+
+  if (firstImg && isVideoPath(firstImg)) {
+    const videoThumb = listing?.video_thumbnails?.[firstImg]
+    if (videoThumb) return videoThumb
+    return FALLBACK_IMG
+  }
+
+  if (listing?.thumbnail_url) return listing.thumbnail_url
+
+  const firstImage = images.find(img => !isVideoPath(img))
+  const img = firstImage || firstImg
+  if (!img || isVideoPath(img)) return FALLBACK_IMG
+  return img.startsWith('http') ? img : `/storage/${img}`
+}
+
 function ListingCard({ listing }) {
   const mod = MOD_CONFIG[listing.moderation_status] || MOD_CONFIG.pending
   const Icon = mod.icon
   const isPending = listing.moderation_status === 'pending'
-  const FALLBACK = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80'
-  const img = listing.image ? `/storage/${listing.image}` : FALLBACK
+  const img = getListingImageUrl(listing)
 
   return (
     <div className={`relative bg-white rounded-2xl overflow-hidden border transition-all ${isPending ? 'opacity-60 border-amber-100' : 'border-gray-100'}`}
@@ -45,7 +65,7 @@ function ListingCard({ listing }) {
         <Icon size={11} />{mod.label}
       </div>
       <div className="relative h-40 overflow-hidden">
-        <img src={img} alt={listing.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = FALLBACK }} />
+        <img src={img} alt={listing.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = FALLBACK_IMG }} />
         {isPending && <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px]" />}
       </div>
       <div className="p-4">

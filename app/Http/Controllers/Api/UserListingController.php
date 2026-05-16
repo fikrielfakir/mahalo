@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MediaFile;
 use App\Models\Property;
 use App\Models\Slug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserListingController extends Controller
@@ -15,7 +17,7 @@ class UserListingController extends Controller
     {
         $user = $request->user();
 
-        $query = Property::with(['city'])
+        $query = Property::with(['city', 'slug'])
             ->orderBy('created_at', 'desc');
 
         if ($user->professional_agent_id) {
@@ -100,14 +102,20 @@ class UserListingController extends Controller
         $images = $p->images ?? [];
         if (is_string($images)) $images = json_decode($images, true) ?? [];
 
+        $slug = $p->slug ? $p->slug->key : (string) $p->id;
+        $videoThumbnails = $this->getVideoThumbnails($images);
+
         return [
             'id'                => $p->id,
             'name'              => $p->name,
+            'slug'              => $slug,
             'type'              => $p->type,
             'description'       => $p->description,
             'location'          => $p->location,
             'images'            => $images,
             'image'             => $images[0] ?? null,
+            'video_thumbnails'  => $videoThumbnails,
+            'thumbnail_url'     => $this->extractThumbnail($images, $videoThumbnails),
             'number_bedroom'    => (int) $p->number_bedroom,
             'number_bathroom'   => (int) $p->number_bathroom,
             'square'            => $p->square,
@@ -119,5 +127,38 @@ class UserListingController extends Controller
             'longitude'         => $p->longitude,
             'created_at'        => $p->created_at,
         ];
+    }
+
+    private function isVideoPath(string $path): bool
+    {
+        return (bool) preg_match('/\.(mp4|mov|avi|mkv|webm|m4v)$/i', $path);
+    }
+
+    private function getVideoThumbnails(array $images): array
+    {
+        $videoPaths = array_values(array_filter($images, fn($img) => $this->isVideoPath($img)));
+        if (empty($videoPaths)) return [];
+
+        $records = MediaFile::whereIn('path', $videoPaths)
+            ->whereNotNull('thumbnail_url')
+            ->pluck('thumbnail_url', 'path');
+
+        return $records->toArray();
+    }
+
+    private function extractThumbnail(array $images, array $videoThumbnails = []): ?string
+    {
+        foreach ($images as $img) {
+            if ($this->isVideoPath($img)) {
+                if (isset($videoThumbnails[$img])) {
+                    return $videoThumbnails[$img];
+                }
+                continue;
+            }
+            return str_starts_with($img, 'http')
+                ? $img
+                : Storage::disk('public')->url($img);
+        }
+        return null;
     }
 }

@@ -37,99 +37,91 @@ function ProgressRing({ pct }) {
   )
 }
 
-async function burnWatermarkIntoVideo(file, onProgress, watermarkInfo) {
+// ─── Load the watermark logo from site settings ───────────────────────────────
+async function loadWatermarkLogo() {
+  let logoUrl = '/watermark.png'
+  try {
+    const res = await client.get('/admin/settings')
+    const url = res?.data?.watermark_logo_url || res?.watermark_logo_url
+    if (url) logoUrl = url
+  } catch (_) {}
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload  = () => resolve(img)
+    img.onerror = () => {
+      // retry without crossOrigin (same-origin logo)
+      const img2 = new Image()
+      img2.onload  = () => resolve(img2)
+      img2.onerror = () => resolve(null)
+      img2.src = logoUrl
+    }
+    img.src = logoUrl
+  })
+}
+
+// ─── Draw logo centered on canvas frame (identical to image watermark style) ──
+function drawLogoWatermark(ctx, W, H, logoImg) {
+  if (!logoImg) return
+  const logoW  = Math.round(W * 0.30)                                  // 30% of video width
+  const logoH  = Math.round((logoImg.naturalHeight / logoImg.naturalWidth) * logoW)
+  const x      = Math.round((W - logoW) / 2)
+  const y      = Math.round((H - logoH) / 2)
+  ctx.save()
+  ctx.globalAlpha = 0.50                                                // 50% opacity like image
+  ctx.drawImage(logoImg, x, y, logoW, logoH)
+  ctx.restore()
+}
+
+// ─── Burn logo watermark into every frame of the video ───────────────────────
+async function burnWatermarkIntoVideo(file, logoImg, onProgress) {
   return new Promise((resolve) => {
     if (
       typeof MediaRecorder === 'undefined' ||
-      !MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') &&
-      !MediaRecorder.isTypeSupported('video/webm')
+      (!MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') &&
+       !MediaRecorder.isTypeSupported('video/webm'))
     ) {
-      resolve(file)
+      resolve(file)   // browser unsupported — upload original
       return
     }
 
-    const video = document.createElement('video')
-    video.muted = true
+    const video       = document.createElement('video')
+    video.muted       = true
     video.playsInline = true
-    video.preload = 'auto'
-    const objectUrl = URL.createObjectURL(file)
-    video.src = objectUrl
+    video.preload     = 'auto'
+    const objectUrl   = URL.createObjectURL(file)
+    video.src         = objectUrl
 
     video.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file) }
 
     video.onloadedmetadata = () => {
-      const W = video.videoWidth || 1280
+      const W = video.videoWidth  || 1280
       const H = video.videoHeight || 720
 
-      const canvas = document.createElement('canvas')
-      canvas.width = W
+      const canvas  = document.createElement('canvas')
+      canvas.width  = W
       canvas.height = H
-      const ctx = canvas.getContext('2d')
+      const ctx     = canvas.getContext('2d')
 
-      const fps = 30
-      const stream = canvas.captureStream(fps)
-
-      const mime = ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp8', 'video/webm']
+      const stream  = canvas.captureStream(30)
+      const mime    = ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp8', 'video/webm']
         .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm'
 
-      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 })
-      const chunks = []
+      const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 5_000_000 })
+      const chunks   = []
       recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data) }
 
       recorder.onstop = () => {
         URL.revokeObjectURL(objectUrl)
         const blob = new Blob(chunks, { type: mime })
-        const out = new File([blob], file.name.replace(/\.[^.]+$/, '.webm'), { type: mime })
+        const out  = new File([blob], file.name.replace(/\.[^.]+$/, '.webm'), { type: mime })
         resolve(out)
       }
 
       const drawFrame = () => {
         ctx.drawImage(video, 0, 0, W, H)
-        drawWatermark(ctx, W, H)
-      }
-
-      const drawWatermark = (ctx, W, H) => {
-        const grad = ctx.createLinearGradient(0, H * 0.72, 0, H)
-        grad.addColorStop(0, 'rgba(0,0,0,0)')
-        grad.addColorStop(1, 'rgba(0,0,0,0.45)')
-        ctx.fillStyle = grad
-        ctx.fillRect(0, H * 0.72, W, H * 0.28)
-
-        if (watermarkInfo?.img) {
-          const { img, opacity, size } = watermarkInfo
-          const ratio = (size || 20) / 100
-          const wmW = Math.round(W * Math.max(ratio, 0.08))
-          const wmH = Math.round((img.naturalHeight || img.height) * wmW / (img.naturalWidth || img.width))
-          const wmX = Math.round((W - wmW) / 2)
-          const wmY = H - wmH - Math.round(H * 0.04)
-
-          ctx.globalAlpha = (opacity || 60) / 100
-          ctx.drawImage(img, wmX, wmY, wmW, wmH)
-          ctx.globalAlpha = 1
-        } else {
-          const fontSize = Math.round(W * 0.072)
-          ctx.font = `900 ${fontSize}px 'Arial Black', Arial, sans-serif`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'bottom'
-          ctx.letterSpacing = `${Math.round(W * 0.018)}px`
-
-          ctx.shadowColor = 'rgba(0,0,0,0.7)'
-          ctx.shadowBlur = Math.round(W * 0.012)
-          ctx.shadowOffsetX = 0
-          ctx.shadowOffsetY = Math.round(H * 0.004)
-
-          ctx.strokeStyle = 'rgba(0,0,0,0.6)'
-          ctx.lineWidth = Math.round(W * 0.004)
-          ctx.strokeText('MAHALO', W / 2, H - Math.round(H * 0.04))
-
-          ctx.fillStyle = 'rgba(255,255,255,0.92)'
-          ctx.fillText('MAHALO', W / 2, H - Math.round(H * 0.04))
-
-          ctx.shadowColor = 'transparent'
-          ctx.shadowBlur = 0
-          ctx.shadowOffsetX = 0
-          ctx.shadowOffsetY = 0
-        }
+        drawLogoWatermark(ctx, W, H, logoImg)
       }
 
       let rafId
@@ -151,90 +143,71 @@ async function burnWatermarkIntoVideo(file, onProgress, watermarkInfo) {
 
       video.oncanplaythrough = () => {
         recorder.start(200)
-        video.play().then(() => {
-          rafId = requestAnimationFrame(loop)
-        }).catch(() => { URL.revokeObjectURL(objectUrl); resolve(file) })
+        video.play()
+          .then(() => { rafId = requestAnimationFrame(loop) })
+          .catch(() => { URL.revokeObjectURL(objectUrl); resolve(file) })
       }
     }
   })
 }
 
-async function captureVideoThumbnail(file, seekTo = 1.0) {
+// ─── Capture thumbnail from first second of video ────────────────────────────
+async function captureVideoThumbnail(file) {
   return new Promise((resolve) => {
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.muted = true
+    const video       = document.createElement('video')
+    video.preload     = 'metadata'
+    video.muted       = true
     video.playsInline = true
-    const url = URL.createObjectURL(file)
-    video.src = url
+    const url         = URL.createObjectURL(file)
+    video.src         = url
 
     video.onloadeddata = () => {
-      video.currentTime = Math.min(seekTo, (video.duration || 2) * 0.1 || 0)
+      video.currentTime = Math.min(1, (video.duration || 2) * 0.1)
     }
     video.onseeked = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = 640
+      const canvas  = document.createElement('canvas')
+      canvas.width  = 640
       canvas.height = Math.round((640 / (video.videoWidth || 640)) * (video.videoHeight || 360))
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob((blob) => { URL.revokeObjectURL(url); resolve(blob) }, 'image/jpeg', 0.85)
+      canvas.toBlob(blob => { URL.revokeObjectURL(url); resolve(blob) }, 'image/jpeg', 0.85)
     }
     video.onerror = () => { URL.revokeObjectURL(url); resolve(null) }
   })
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function ImageUploader({ images = [], onChange, folder = 'properties', allowVideo = false }) {
-  const [dragging, setDragging] = useState(false)
-  const [urlInput, setUrlInput] = useState('')
-  const [showUrl, setShowUrl] = useState(false)
+  const [dragging, setDragging]   = useState(false)
+  const [urlInput, setUrlInput]   = useState('')
+  const [showUrl, setShowUrl]     = useState(false)
   const [uploading, setUploading] = useState([])
-  const [errors, setErrors] = useState([])
-  const [thumbMap, setThumbMap] = useState({})
-  const [watermarkInfo, setWatermarkInfo] = useState(null)
-  const inputRef = useRef()
+  const [errors, setErrors]       = useState([])
+  const [thumbMap, setThumbMap]   = useState({})
+  const inputRef  = useRef()
+  const logoRef   = useRef(null)   // cached logo Image element
 
-  const imagesRef = useRef(images)
+  const imagesRef   = useRef(images)
   const onChangeRef = useRef(onChange)
-  useEffect(() => { imagesRef.current = images }, [images])
+  useEffect(() => { imagesRef.current   = images  }, [images])
   useEffect(() => { onChangeRef.current = onChange }, [onChange])
 
+  // Pre-load watermark logo when video upload is enabled
   useEffect(() => {
-    if (!allowVideo) return
-    let cancelled = false
-    client.get('/admin/settings').then(res => {
-      if (cancelled) return
-      const settings = res.data?.data || {}
-      const logoUrl = settings.watermark_logo_url
-      const opacity = parseInt(settings.watermark_opacity) || 60
-      const size = parseInt(settings.watermark_size) || 20
-
-      const tryLoad = (src) => {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        img.onload = () => { if (!cancelled) setWatermarkInfo({ img, opacity, size }) }
-        img.onerror = () => { if (!cancelled && src !== '/watermark.png') tryLoad('/watermark.png') }
-        img.src = src
-      }
-
-      if (logoUrl) {
-        tryLoad(logoUrl.startsWith('http') || logoUrl.startsWith('/') ? logoUrl : `/storage/${logoUrl}`)
-      } else {
-        tryLoad('/watermark.png')
-      }
-    }).catch(() => { if (!cancelled) setWatermarkInfo({ img: null, opacity: 60, size: 20 }) })
-    return () => { cancelled = true }
+    if (!allowVideo || logoRef.current !== null) return
+    loadWatermarkLogo().then(img => { logoRef.current = img })
   }, [allowVideo])
 
+  // Fetch thumbnail URLs for any video paths already in the list
   useEffect(() => {
     const videoPaths = images.filter(isVideoPath).filter(p => !thumbMap[p])
     if (!videoPaths.length) return
     client.get('/admin/media', { params: { per_page: 200 } })
       .then(res => {
         const items = res.data?.data ?? []
-        const map = {}
+        const map   = {}
         items.forEach(item => {
-          if (item.thumbnail_url && videoPaths.includes(item.path)) {
+          if (item.thumbnail_url && videoPaths.includes(item.path))
             map[item.path] = item.thumbnail_url
-          }
         })
         if (Object.keys(map).length) setThumbMap(m => ({ ...m, ...map }))
       })
@@ -242,9 +215,9 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images.join(',')])
 
-  const removeImage = (idx) => onChange(images.filter((_, i) => i !== idx))
+  const removeImage = idx => onChange(images.filter((_, i) => i !== idx))
 
-  const setAsMain = (idx) => {
+  const setAsMain = idx => {
     if (idx === 0) return
     const next = [...images]
     const [item] = next.splice(idx, 1)
@@ -253,29 +226,36 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
   }
 
   const uploadFile = useCallback(async (file) => {
-    const id = Math.random().toString(36).slice(2)
+    const id      = Math.random().toString(36).slice(2)
     const isVideo = file.type.startsWith('video/')
 
     setUploading(prev => [...prev, {
-      id,
-      name: file.name,
-      pct: 0,
-      stage: isVideo ? 'Burning watermark…' : 'Uploading…',
+      id, name: file.name, pct: 0,
+      stage: isVideo ? 'Adding watermark…' : 'Uploading…',
     }])
 
     try {
       let uploadableFile = file
 
       if (isVideo) {
-        uploadableFile = await burnWatermarkIntoVideo(file, (wPct) => {
-          setUploading(prev => prev.map(u =>
+        // Ensure logo is loaded before processing
+        if (logoRef.current === null) {
+          logoRef.current = await loadWatermarkLogo()
+        }
+
+        // Burn logo onto every frame
+        uploadableFile = await burnWatermarkIntoVideo(
+          file,
+          logoRef.current,
+          (wPct) => setUploading(prev => prev.map(u =>
             u.id === id
-              ? { ...u, pct: Math.round(wPct * 0.6), stage: `Burning watermark… ${wPct}%` }
+              ? { ...u, pct: Math.round(wPct * 0.6), stage: `Adding watermark… ${wPct}%` }
               : u
           ))
-        }, watermarkInfo)
+        )
+
         setUploading(prev => prev.map(u =>
-          u.id === id ? { ...u, pct: 60, stage: 'Generating thumbnail…' } : u
+          u.id === id ? { ...u, pct: 62, stage: 'Generating thumbnail…' } : u
         ))
       }
 
@@ -294,15 +274,15 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
       const res = await client.post('/admin/media/upload', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => {
-          const uploadPct = Math.round((e.loaded / e.total) * 100)
-          const total = isVideo ? 65 + Math.round(uploadPct * 0.35) : uploadPct
+          const up    = Math.round((e.loaded / e.total) * 100)
+          const total = isVideo ? 65 + Math.round(up * 0.35) : up
           setUploading(prev => prev.map(u =>
             u.id === id ? { ...u, pct: total, stage: 'Uploading…' } : u
           ))
         },
       })
 
-      const path = res.data?.path
+      const path     = res.data?.path
       const thumbUrl = res.data?.data?.thumbnail_url
       if (path) {
         const latest = imagesRef.current
@@ -324,7 +304,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
     : 'image/*'
 
   const handleFiles = useCallback((files) => {
-    Array.from(files).forEach((f) => {
+    Array.from(files).forEach(f => {
       const isImg = f.type.startsWith('image/')
       const isVid = f.type.startsWith('video/')
       if (!isImg && !isVid) return
@@ -338,11 +318,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
     })
   }, [uploadFile, allowVideo])
 
-  const onDrop = (e) => {
-    e.preventDefault()
-    setDragging(false)
-    handleFiles(e.dataTransfer.files)
-  }
+  const onDrop = e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }
 
   const addUrl = () => {
     const url = urlInput.trim()
@@ -369,10 +345,9 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
                     </div>
               ) : (
                 <img
-                  src={getDisplayUrl(img)}
-                  alt=""
+                  src={getDisplayUrl(img)} alt=""
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  onError={e => { e.currentTarget.style.display = 'none' }}
                 />
               )}
 
@@ -383,32 +358,24 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
                   MAIN
                 </span>
               )}
-
               {idx !== 0 && (
-                <button
-                  type="button"
-                  title="Set as main"
-                  onClick={(e) => { e.stopPropagation(); setAsMain(idx) }}
-                  className="absolute bottom-1.5 left-1.5 w-6 h-6 bg-white/90 text-amber-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-white hover:scale-110 active:scale-95"
-                >
+                <button type="button" title="Set as main"
+                  onClick={e => { e.stopPropagation(); setAsMain(idx) }}
+                  className="absolute bottom-1.5 left-1.5 w-6 h-6 bg-white/90 text-amber-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-white hover:scale-110 active:scale-95">
                   <Star size={11} />
                 </button>
               )}
-
-              <button
-                type="button"
-                title="Remove"
-                onClick={(e) => { e.stopPropagation(); removeImage(idx) }}
-                className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-red-600 hover:scale-110 active:scale-95"
-              >
+              <button type="button" title="Remove"
+                onClick={e => { e.stopPropagation(); removeImage(idx) }}
+                className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow hover:bg-red-600 hover:scale-110 active:scale-95">
                 <X size={11} />
               </button>
             </div>
           ))}
 
-          {uploading.map((u) => (
+          {uploading.map(u => (
             <div key={u.id} className="relative rounded-xl overflow-hidden aspect-square bg-gray-100 flex flex-col items-center justify-center gap-1.5 px-2">
-              {u.stage?.startsWith('Burning') ? (
+              {u.stage?.startsWith('Adding') ? (
                 <Droplets size={20} className="text-[#BA1932] animate-pulse" />
               ) : (
                 <ProgressRing pct={u.pct} />
@@ -428,7 +395,7 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
       ))}
 
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
@@ -447,16 +414,12 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
         </p>
         {allowVideo && (
           <p className="text-[10px] text-[#BA1932]/70 mt-1 font-medium">
-            Videos will have MAHALO watermark applied automatically
+            Logo watermark will be applied to all video frames automatically
           </p>
         )}
         <input
-          ref={inputRef}
-          type="file"
-          accept={acceptedTypes}
-          multiple
-          className="hidden"
-          onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
+          ref={inputRef} type="file" accept={acceptedTypes} multiple className="hidden"
+          onChange={e => { handleFiles(e.target.files); e.target.value = '' }}
         />
       </div>
 
@@ -464,11 +427,9 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
         {showUrl ? (
           <div className="flex gap-2 flex-1">
             <input
-              autoFocus
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => {
+              autoFocus type="url" value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter') { e.preventDefault(); addUrl() }
                 if (e.key === 'Escape') { setShowUrl(false); setUrlInput('') }
               }}

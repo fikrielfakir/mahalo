@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FileText, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { publicSettingsApi } from '../api/client'
 
@@ -55,6 +56,11 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
+      <SEOHead
+        title="Terms of Use"
+        description="Read the terms and conditions governing your use of the Mahalo Real Estate platform in Morocco."
+        robots="noindex,follow"
+      />
       <Navbar />
 
       {/* Hero */}

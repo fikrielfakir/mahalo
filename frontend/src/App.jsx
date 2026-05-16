@@ -61,7 +61,7 @@ import ProfessionalApplicationsPage from './admin/pages/ProfessionalApplications
 import AppUpdatePage from './admin/pages/AppUpdatePage'
 
 function OfflineGate({ children }) {
-  const [offline, setOffline] = useState(!navigator.onLine)
+  const [offline, setOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
   useEffect(() => {
     const goOnline  = () => setOffline(false)
     const goOffline = () => setOffline(true)

@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    ssr: {
+      noExternal: ['react-helmet-async'],
+    },
     server: {
       host: '0.0.0.0',
       port: 5000,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Shield, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { publicSettingsApi } from '../api/client'
 
@@ -52,6 +53,11 @@ export default function PrivacyPage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
+      <SEOHead
+        title="Privacy Policy"
+        description="Learn how Mahalo Real Estate collects, uses, and protects your personal data on our Morocco real estate platform."
+        robots="noindex,follow"
+      />
       <Navbar />
 
       {/* Hero */}

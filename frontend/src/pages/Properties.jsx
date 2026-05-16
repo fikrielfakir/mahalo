@@ -6,6 +6,7 @@ import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import Footer from '../components/Footer'
 import MapView from '../components/MapView'
 import { propertiesApi } from '../api/client'
+import SEOHead from '../components/SEOHead'
 
 function formatPrice(price) {
   if (!price) return null
@@ -220,6 +221,10 @@ export default function Properties() {
   if (viewMode === 'map') {
     return (
       <div className="flex flex-col" style={{ height: '100vh' }}>
+        <SEOHead
+          title={pageTitle}
+          description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+        />
         <Navbar />
         <div className="pt-20 pb-3 px-5" style={{ background: '#F5F5F5' }}>
           <div className="max-w-7xl mx-auto">
@@ -279,6 +284,10 @@ export default function Properties() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
+      <SEOHead
+        title={pageTitle}
+        description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+      />
       <Navbar />
       <div className="pt-24 pb-8 px-5 max-w-7xl mx-auto">
         <div className="mb-8">

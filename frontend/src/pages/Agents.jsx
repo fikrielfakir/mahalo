@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Star, BadgeCheck, MapPin, Home } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { agentsApi } from '../api/client'
 
@@ -28,6 +29,10 @@ export default function Agents() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
+      <SEOHead
+        title="Real Estate Agents in Morocco"
+        description="Connect with Morocco's top real estate agents. Verified professionals specializing in residential and commercial properties across Casablanca, Marrakech, Rabat and beyond."
+      />
       <Navbar />
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">
 

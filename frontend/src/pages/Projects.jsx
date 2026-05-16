@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MapView from '../components/MapView'
 import { projectsApi } from '../api/client'
+import SEOHead from '../components/SEOHead'
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80',
@@ -89,6 +90,10 @@ export default function Projects() {
   if (viewMode === 'map') {
     return (
       <div className="flex flex-col" style={{ height: '100vh' }}>
+        <SEOHead
+          title="New Real Estate Projects in Morocco"
+          description="Discover off-plan and new real estate projects across Morocco. Browse residential and mixed-use developments in Casablanca, Marrakech, Rabat, Tanger and more."
+        />
         <Navbar />
         <div className="pt-20 pb-3 px-6 bg-surface">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -163,6 +168,10 @@ export default function Projects() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <SEOHead
+        title="New Real Estate Projects in Morocco"
+        description="Discover off-plan and new real estate projects across Morocco. Browse residential and mixed-use developments in Casablanca, Marrakech, Rabat, Tanger and more."
+      />
       <Navbar />
       <div className="pt-24 pb-20 px-6 max-w-7xl mx-auto">
         <div className="mb-10 flex items-center justify-between">

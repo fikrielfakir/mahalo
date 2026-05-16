@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { propertiesApi } from '../api/client'
 
@@ -66,6 +67,10 @@ export default function Neighborhoods() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
+      <SEOHead
+        title="Explore Neighborhoods in Morocco"
+        description="Discover the finest neighborhoods across Morocco and beyond. Browse properties by location — Casablanca, Marrakech, Rabat, Tanger, Agadir, Fès, Essaouira and more."
+      />
       <Navbar />
       <div className="pt-24 pb-20 px-5 max-w-7xl mx-auto">
 

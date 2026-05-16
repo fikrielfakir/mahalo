@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Award, Users, Building2, Globe, Shield, TrendingUp, Heart, Star, ArrowRight, MapPin } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { propertiesApi, agentsApi, publicSettingsApi } from '../api/client'
 
@@ -88,6 +89,18 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <SEOHead
+        title="About Mahalo Real Estate"
+        description="Mahalo Real Estate is Morocco's leading property marketplace. We connect buyers, sellers, renters and investors with verified listings and expert local agents."
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateAgent',
+          'name': 'Mahalo Real Estate',
+          'url': 'https://mahalo.ma',
+          'description': 'Morocco\'s premier real estate marketplace connecting buyers, sellers and investors.',
+          'areaServed': 'MA',
+        }}
+      />
       <Navbar />
 
       {/* Hero */}

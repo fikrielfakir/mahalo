@@ -12,6 +12,7 @@ import { propertiesApi, consultsApi } from '../api/client'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import { isVideoPath, mediaUrl } from '../utils/media'
+import SEOHead from '../components/SEOHead'
 
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
@@ -219,6 +220,7 @@ export default function PropertyDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface">
+        <SEOHead title="Property Details in Morocco" />
         <Navbar />
         <div className="pt-24 px-6 max-w-7xl mx-auto animate-pulse">
           <div className="h-96 bg-gray-200 rounded-3xl mb-8" />
@@ -257,6 +259,20 @@ export default function PropertyDetail() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <SEOHead
+        title={`${property.name}${property.city ? ` in ${property.city.name}` : ''} — ${property.type === 'sale' ? 'For Sale' : 'For Rent'}`}
+        description={`${property.type === 'sale' ? 'Buy' : 'Rent'}: ${property.name}${property.city ? ` in ${property.city.name}` : ''}, Morocco.${property.number_bedroom ? ` ${property.number_bedroom} beds.` : ''}${property.number_bathroom ? ` ${property.number_bathroom} baths.` : ''} ${property.price ? `From ${formatPrice(property.price)}.` : ''}`.trim()}
+        ogImage={property.image ? (property.image.startsWith('http') ? property.image : `/storage/${property.image}`) : undefined}
+        ogType="article"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateListing',
+          'name': property.name,
+          'description': property.description?.slice(0, 500),
+          'url': `https://mahalo.ma/properties/${property.slug?.key ?? property.id}`,
+          ...(property.price ? { offers: { '@type': 'Offer', price: property.price, priceCurrency: 'MAD' } } : {}),
+        }}
+      />
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 

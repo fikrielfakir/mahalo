@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import { Toast, useToast } from '../components/Toast'
 import { agentsApi, consultsApi, userChatsApi } from '../api/client'
+import SEOHead from '../components/SEOHead'
 import { useUserAuth } from '../context/UserAuthContext'
 
 const AVATAR_COLORS = ['#730D26', '#BA1932', '#9b1232', '#4f0919', '#d01e38', '#730D26']
@@ -144,6 +145,7 @@ export default function AgentDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface">
+        <SEOHead title="Real Estate Agent in Morocco" />
         <Navbar />
         <div className="pt-24 px-6 max-w-7xl mx-auto animate-pulse">
           <div className="flex items-center gap-6 mb-10">
@@ -182,6 +184,20 @@ export default function AgentDetail() {
 
   return (
     <div className="min-h-screen bg-surface">
+      <SEOHead
+        title={`${displayName} — Real Estate Agent in Morocco`}
+        description={`Contact ${displayName}, a verified real estate agent${agent.city ? ` in ${agent.city.name}` : ''}. Browse their property listings, projects, and get expert advice on Morocco real estate.`}
+        ogImage={avatarUrl || undefined}
+        ogType="profile"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'RealEstateAgent',
+          'name': displayName,
+          'url': `https://mahalo.ma/agents/${agent.id}`,
+          ...(agent.email ? { email: agent.email } : {}),
+          ...(agent.phone ? { telephone: agent.phone } : {}),
+        }}
+      />
       <Navbar />
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 

@@ -141,7 +141,7 @@ export default function Hero() {
               backgroundClip: 'text',
               backgroundImage: 'linear-gradient(135deg, #BA1932 0%, #f5748a 55%, #BA1932 100%)',
             }}>
-              Morocco
+              Mahalo
             </span>
           </h1>
 

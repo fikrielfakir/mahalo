@@ -66,6 +66,7 @@ const DEFAULTS = {
   // Footer & SEO
   footer_description: 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.',
   seo_keywords: 'immobilier maroc, real estate morocco, appartement vendre maroc, villa maroc, casablanca immobilier',
+  google_site_verification: '',
 }
 
 const WATERMARK_POSITIONS = [
@@ -436,6 +437,17 @@ export default function SettingsPage() {
               </FormField>
               <FormField label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X">
                 <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
+              </FormField>
+              <FormField
+                label="Google Search Console Verification"
+                hint="Paste the content value from the HTML tag method — e.g. abc123XYZ. Once saved, Google will verify your site ownership automatically."
+              >
+                <Input
+                  value={form.google_site_verification}
+                  onChange={f('google_site_verification')}
+                  placeholder="Paste verification code from Google Search Console"
+                  className="font-mono text-sm"
+                />
               </FormField>
             </Section>
 

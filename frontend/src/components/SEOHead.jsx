@@ -34,6 +34,7 @@ export default function SEOHead({
 }) {
   const siteSettings = useSiteSettings()
   const resolvedKeywords = keywords || siteSettings.seo_keywords || null
+  const verificationCode = siteSettings.google_site_verification || null
 
   const fullTitle = title ? `${title} | ${SITE}` : SITE
   const resolvedRobots = noIndex ? 'noindex,nofollow' : (robots || 'index,follow')
@@ -55,6 +56,7 @@ export default function SEOHead({
       <meta name="description" content={description} />
       {resolvedKeywords && <meta name="keywords" content={resolvedKeywords} />}
       <meta name="robots" content={resolvedRobots} />
+      {verificationCode && <meta name="google-site-verification" content={verificationCode} />}
       {canonical && <link rel="canonical" href={canonical} />}
 
       <meta property="og:title" content={fullTitle} />

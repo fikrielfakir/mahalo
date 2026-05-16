@@ -20,7 +20,7 @@ class PublicSettingsController extends Controller
         // Content pages
         'page_about', 'page_privacy', 'page_terms',
         // Footer & SEO
-        'footer_description', 'seo_keywords',
+        'footer_description', 'seo_keywords', 'google_site_verification',
     ];
 
     public function show(): JsonResponse

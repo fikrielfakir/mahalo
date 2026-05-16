@@ -281,3 +281,69 @@ export function AdminLayoutSkeleton() {
     </div>
   )
 }
+
+/* ────────── site gate skeleton (SiteModeGate — checks site settings on boot) ── */
+export function SiteGateSkeleton() {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: '#0d0d0d' }}>
+      {/* navbar */}
+      <div className="h-16 flex items-center px-6 gap-8 border-b border-white/5">
+        <S className="h-7 w-24" style={{ background: 'rgba(255,255,255,0.10)' }} />
+        <div className="flex gap-5 flex-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <S key={i} className="h-3 w-14" style={{ background: 'rgba(255,255,255,0.07)' }} />
+          ))}
+        </div>
+        <div className="flex gap-3">
+          <S className="h-8 w-20 rounded-xl" style={{ background: 'rgba(255,255,255,0.08)' }} />
+          <S className="h-8 w-28 rounded-xl" style={{ background: 'rgba(115,13,38,0.40)' }} />
+        </div>
+      </div>
+
+      {/* hero */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pb-24">
+        <S className="h-6 w-48 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+        <S className="h-14 w-[520px] max-w-full" style={{ background: 'rgba(255,255,255,0.09)' }} />
+        <S className="h-14 w-80 max-w-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+        <S className="h-4 w-64 max-w-full mt-2" style={{ background: 'rgba(255,255,255,0.05)' }} />
+
+        {/* search bar */}
+        <div className="mt-4 w-full max-w-2xl h-16 rounded-2xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }} />
+      </div>
+    </div>
+  )
+}
+
+/* ────────── auth callback skeleton (Google sign-in redirect) ────────── */
+export function AuthCallbackSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F5' }}>
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 w-full max-w-sm flex flex-col items-center gap-5">
+        <S className="w-14 h-14 rounded-2xl" />
+        <S className="h-5 w-44" />
+        <S className="h-3.5 w-56" />
+        <div className="w-full space-y-3 pt-2">
+          <S className="h-11 w-full rounded-xl" />
+          <S className="h-11 w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ────────── admin auth callback skeleton (Google admin redirect) ────────── */
+export function AdminAuthCallbackSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#1a0509' }}>
+      <div className="rounded-3xl p-10 w-full max-w-sm flex flex-col items-center gap-5"
+        style={{ background: 'rgba(115,13,38,0.12)', border: '1px solid rgba(115,13,38,0.20)' }}>
+        <S className="w-14 h-14 rounded-2xl" style={{ background: 'rgba(115,13,38,0.25)' }} />
+        <S className="h-5 w-44" style={{ background: 'rgba(255,255,255,0.10)' }} />
+        <S className="h-3.5 w-56" style={{ background: 'rgba(255,255,255,0.07)' }} />
+        <div className="w-full space-y-3 pt-2">
+          <S className="h-11 w-full rounded-xl" style={{ background: 'rgba(115,13,38,0.20)' }} />
+        </div>
+      </div>
+    </div>
+  )
+}

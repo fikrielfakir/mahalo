@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserAuth } from '../../context/UserAuthContext'
 import { authApi, setAuthToken } from '../../api/client'
-import LogoLoader from '../../components/LogoLoader'
+import { AuthCallbackSkeleton } from '../../components/Skeletons'
 
 export default function GoogleCallbackPage() {
   const [params]   = useSearchParams()
@@ -29,5 +29,5 @@ export default function GoogleCallbackPage() {
       })
   }, [])
 
-  return <LogoLoader label="Signing you in with Google…" />
+  return <AuthCallbackSkeleton />
 }

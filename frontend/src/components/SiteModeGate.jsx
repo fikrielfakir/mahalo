@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import ComingSoonPage from '../pages/ComingSoonPage'
 import MaintenancePage from '../pages/MaintenancePage'
-import LogoLoader from './LogoLoader'
+import { SiteGateSkeleton } from './Skeletons'
 
 const BYPASS_KEY  = 'mahalo_admin_bypass'
 const SETTINGS_URL = '/api/v1/public-settings'
@@ -46,7 +46,7 @@ export default function SiteModeGate({ children }) {
       .catch(() => setStatus('ok')) // fail open — never block the site on a fetch error
   }, [])
 
-  if (status === 'loading') return <LogoLoader dark />
+  if (status === 'loading') return <SiteGateSkeleton />
 
   if (status === 'maintenance') return <MaintenancePage settings={settings} />
   if (status === 'coming_soon') return <ComingSoonPage  settings={settings} />

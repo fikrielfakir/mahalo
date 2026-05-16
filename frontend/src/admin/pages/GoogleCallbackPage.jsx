@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { adminAuth } from '../api/adminApi'
-import LogoLoader from '../../components/LogoLoader'
+import { AdminAuthCallbackSkeleton } from '../../components/Skeletons'
 
 export default function AdminGoogleCallbackPage() {
   const [params] = useSearchParams()
@@ -39,5 +39,5 @@ export default function AdminGoogleCallbackPage() {
       })
   }, [])
 
-  return <LogoLoader dark label="Verifying admin access…" />
+  return <AdminAuthCallbackSkeleton />
 }

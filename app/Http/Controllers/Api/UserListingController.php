@@ -63,10 +63,14 @@ class UserListingController extends Controller
             'city_id'         => 'nullable|integer',
             'latitude'        => 'nullable|string',
             'longitude'       => 'nullable|string',
-            // category & features
-            'category_id'     => 'nullable|integer|exists:re_categories,id',
-            'feature_ids'     => 'nullable|array',
-            'feature_ids.*'   => 'nullable|integer|exists:re_features,id',
+            // category, features & facilities
+            'category_id'          => 'nullable|integer|exists:re_categories,id',
+            'feature_ids'          => 'nullable|array',
+            'feature_ids.*'        => 'nullable|integer|exists:re_features,id',
+            'facility_distances'   => 'nullable|array',
+            'facility_distances.*' => 'nullable|array',
+            'facility_distances.*.facility_id' => 'required_with:facility_distances.*|integer|exists:re_facilities,id',
+            'facility_distances.*.distance'    => 'nullable|string|max:50',
             // extra fields stored in content
             'total_floors'    => 'nullable|integer|min:0',
             'year_built'      => 'nullable|integer|min:1800',
@@ -126,6 +130,18 @@ class UserListingController extends Controller
         // Attach features (many-to-many)
         if (!empty($data['feature_ids'])) {
             $property->features()->sync($data['feature_ids']);
+        }
+
+        // Attach facilities with distance (pivot)
+        if (!empty($data['facility_distances'])) {
+            $pivotData = [];
+            foreach ($data['facility_distances'] as $entry) {
+                $pivotData[(int) $entry['facility_id']] = [
+                    'distance'       => $entry['distance'] ?? null,
+                    'reference_type' => 'Botble\\RealEstate\\Models\\Property',
+                ];
+            }
+            $property->facilities()->sync($pivotData);
         }
 
         Slug::create([

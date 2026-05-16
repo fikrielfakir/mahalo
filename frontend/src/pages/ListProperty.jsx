@@ -11,7 +11,7 @@ import {
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
-import { citiesApi, categoriesApi, featuresApi, userListingsApi } from '../api/client'
+import { citiesApi, categoriesApi, featuresApi, facilitiesApi, userListingsApi } from '../api/client'
 import LocationPicker from '../components/LocationPicker'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -54,7 +54,8 @@ const EMPTY_FORM = {
   floor_number:   '',
   total_floors:   '',
   year_built:     '',
-  feature_ids:    [],
+  feature_ids:        [],
+  facility_distances: [],
   titre_foncier:  '',
   available_immediately: false,
   available_from: '',
@@ -293,9 +294,10 @@ function Step2({ form, setForm, cities, loadingCities, geocoding }) {
 
 // ─── Step 3: Property Details ─────────────────────────────────────────────────
 
-function Step3({ form, setForm, features, loadingFeatures }) {
+function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFacilities }) {
   const set = f => e => setForm(prev => ({ ...prev, [f]: e.target.value }))
 
+  // ── Features toggle ───────────────────────────────────────────────────────
   const toggleFeature = id => {
     const sid = String(id)
     setForm(prev => ({
@@ -303,6 +305,33 @@ function Step3({ form, setForm, features, loadingFeatures }) {
       feature_ids: prev.feature_ids.includes(sid)
         ? prev.feature_ids.filter(x => x !== sid)
         : [...prev.feature_ids, sid],
+    }))
+  }
+
+  // ── Facilities: toggle + set distance ────────────────────────────────────
+  const getFacilityEntry = id =>
+    form.facility_distances.find(fd => String(fd.facility_id) === String(id))
+
+  const toggleFacility = id => {
+    const sid = String(id)
+    setForm(prev => {
+      const exists = prev.facility_distances.find(fd => String(fd.facility_id) === sid)
+      return {
+        ...prev,
+        facility_distances: exists
+          ? prev.facility_distances.filter(fd => String(fd.facility_id) !== sid)
+          : [...prev.facility_distances, { facility_id: sid, distance: '' }],
+      }
+    })
+  }
+
+  const setFacilityDistance = (id, distance) => {
+    const sid = String(id)
+    setForm(prev => ({
+      ...prev,
+      facility_distances: prev.facility_distances.map(fd =>
+        String(fd.facility_id) === sid ? { ...fd, distance } : fd
+      ),
     }))
   }
 
@@ -338,13 +367,22 @@ function Step3({ form, setForm, features, loadingFeatures }) {
         </div>
       </div>
 
-      {/* Amenities — from DB features */}
+      {/* ── Features (from DB re_features) ─────────────────────────────────── */}
       <div>
-        <SectionLabel>Amenities</SectionLabel>
+        <div className="flex items-center justify-between mb-3">
+          <SectionLabel>Features & Amenities</SectionLabel>
+          {form.feature_ids.length > 0 && (
+            <span className="text-[10px] font-bold text-navy bg-navy/10 px-2 py-0.5 rounded-full">
+              {form.feature_ids.length} selected
+            </span>
+          )}
+        </div>
         {loadingFeatures ? (
           <div className="flex items-center gap-2 text-navy/40 text-sm">
-            <Loader2 size={14} className="animate-spin" /> Loading amenities…
+            <Loader2 size={14} className="animate-spin" /> Loading features…
           </div>
+        ) : features.length === 0 ? (
+          <p className="text-navy/30 text-sm">No features available.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {features.map(f => {
@@ -359,9 +397,81 @@ function Step3({ form, setForm, features, loadingFeatures }) {
                       ? 'border-navy bg-navy text-white'
                       : 'border-gray-200 text-navy/60 hover:border-navy/30 hover:bg-navy/5'}`}
                 >
-                  {active ? <Check size={12} /> : null}
+                  {f.icon && <i className={f.icon} style={{ fontSize: 13 }} />}
+                  {active && !f.icon && <Check size={12} />}
                   {f.name}
                 </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Facilities (from DB re_facilities) — with distance ─────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <SectionLabel>Nearby Facilities</SectionLabel>
+          {form.facility_distances.length > 0 && (
+            <span className="text-[10px] font-bold text-navy bg-navy/10 px-2 py-0.5 rounded-full">
+              {form.facility_distances.length} selected
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-navy/40 mb-3 -mt-1">
+          Select what's nearby and optionally enter the distance
+        </p>
+        {loadingFacilities ? (
+          <div className="flex items-center gap-2 text-navy/40 text-sm">
+            <Loader2 size={14} className="animate-spin" /> Loading facilities…
+          </div>
+        ) : facilities.length === 0 ? (
+          <p className="text-navy/30 text-sm">No facilities available.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {facilities.map(fac => {
+              const entry  = getFacilityEntry(fac.id)
+              const active = !!entry
+              return (
+                <div
+                  key={fac.id}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all
+                    ${active
+                      ? 'border-navy bg-navy/4'
+                      : 'border-gray-100 bg-white hover:border-navy/20'}`}
+                >
+                  {/* Checkbox + icon + name */}
+                  <button
+                    type="button"
+                    onClick={() => toggleFacility(fac.id)}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                  >
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
+                      ${active ? 'border-navy bg-navy' : 'border-gray-300'}`}>
+                      {active && <Check size={11} className="text-white" />}
+                    </div>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0
+                      ${active ? 'bg-navy/10 text-navy' : 'bg-gray-100 text-gray-400'}`}>
+                      {fac.icon
+                        ? <i className={fac.icon} style={{ fontSize: 15 }} />
+                        : <MapPin size={13} />}
+                    </div>
+                    <span className={`text-sm font-medium truncate ${active ? 'text-navy' : 'text-navy/60'}`}>
+                      {fac.name}
+                    </span>
+                  </button>
+
+                  {/* Distance input — only visible when selected */}
+                  {active && (
+                    <input
+                      type="text"
+                      placeholder="e.g. 500m"
+                      value={entry.distance || ''}
+                      onChange={e => setFacilityDistance(fac.id, e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      className="w-20 shrink-0 px-2 py-1 rounded-lg border border-navy/20 bg-white text-xs text-navy outline-none focus:ring-2 focus:ring-navy/20 text-center"
+                    />
+                  )}
+                </div>
               )
             })}
           </div>
@@ -555,12 +665,14 @@ export default function ListProperty() {
   const [draftSaved, setDraftSaved] = useState(false)
 
   // DB data states
-  const [cities,    setCities]    = useState([])
-  const [categories, setCategories] = useState([])
-  const [features,  setFeatures]  = useState([])
-  const [loadingCities,    setLoadingCities]    = useState(true)
-  const [loadingCategories, setLoadingCategories] = useState(true)
-  const [loadingFeatures,  setLoadingFeatures]  = useState(true)
+  const [cities,      setCities]      = useState([])
+  const [categories,  setCategories]  = useState([])
+  const [features,    setFeatures]    = useState([])
+  const [facilities,  setFacilities]  = useState([])
+  const [loadingCities,      setLoadingCities]      = useState(true)
+  const [loadingCategories,  setLoadingCategories]  = useState(true)
+  const [loadingFeatures,    setLoadingFeatures]    = useState(true)
+  const [loadingFacilities,  setLoadingFacilities]  = useState(true)
   const [geocoding, setGeocoding] = useState(false)
 
   const pendingSubmitRef = useRef(false)
@@ -589,6 +701,11 @@ export default function ListProperty() {
       .then(res => setFeatures(res.data || []))
       .catch(() => {})
       .finally(() => setLoadingFeatures(false))
+
+    facilitiesApi.all()
+      .then(res => setFacilities(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingFacilities(false))
   }, [])
 
   // ── Auto-save draft ────────────────────────────────────────────────────────
@@ -679,7 +796,10 @@ export default function ListProperty() {
         location:        form.location || '',
         city_id:         parseInt(form.city_id),
         category_id:     form.category_id ? parseInt(form.category_id) : null,
-        feature_ids:     form.feature_ids.map(id => parseInt(id)).filter(Boolean),
+        feature_ids:          form.feature_ids.map(id => parseInt(id)).filter(Boolean),
+        facility_distances:   form.facility_distances
+          .filter(fd => fd.facility_id)
+          .map(fd => ({ facility_id: parseInt(fd.facility_id), distance: fd.distance || null })),
         number_bedroom:  form.bedrooms     ? parseInt(form.bedrooms)    : null,
         number_bathroom: form.bathrooms    ? parseInt(form.bathrooms)   : null,
         number_floor:    form.floor_number ? parseInt(form.floor_number): null,
@@ -920,6 +1040,7 @@ export default function ListProperty() {
                       <Step3
                         form={form} setForm={setForm}
                         features={features} loadingFeatures={loadingFeatures}
+                        facilities={facilities} loadingFacilities={loadingFacilities}
                       />
                     )}
                     {step === 3 && (

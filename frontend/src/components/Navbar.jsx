@@ -26,7 +26,8 @@ export default function Navbar({ transparent = false }) {
   const navigate                          = useNavigate()
   const { user, isAuthenticated, isEmailVerified, logout } = useUserAuth()
 
-  const currentLang = LANG_LABELS[i18n.language] || LANG_LABELS.en
+  const activeLng   = i18n.resolvedLanguage?.split('-')[0] || 'en'
+  const currentLang = LANG_LABELS[activeLng] || LANG_LABELS.en
 
   const navLinks = [
     { label: t('nav.buy'),           to: '/properties?type=sale' },
@@ -65,7 +66,6 @@ export default function Navbar({ transparent = false }) {
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng)
-    localStorage.setItem('mahalo_lang', lng)
     setLangDropdown(false)
     setMenuOpen(false)
   }
@@ -138,7 +138,7 @@ export default function Navbar({ transparent = false }) {
               <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
                 {SUPPORTED_LOCALES.map((lng) => {
                   const meta = LANG_LABELS[lng]
-                  const active = i18n.language === lng
+                  const active = activeLng === lng
                   return (
                     <button
                       key={lng}
@@ -295,7 +295,7 @@ export default function Navbar({ transparent = false }) {
             <div className="grid grid-cols-2 gap-1">
               {SUPPORTED_LOCALES.map((lng) => {
                 const meta = LANG_LABELS[lng]
-                const active = i18n.language === lng
+                const active = activeLng === lng
                 return (
                   <button
                     key={lng}

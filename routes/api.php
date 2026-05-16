@@ -35,6 +35,30 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
+    // ── Dev-only: FFmpeg diagnostics ──────────────────────────────────────────
+    if (app()->environment('local')) {
+        Route::get('/debug-ffmpeg', function () {
+            $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
+            if (!$bin) {
+                $nixMatches = glob('/nix/store/*/bin/ffmpeg') ?: [];
+                foreach ($nixMatches as $p) { if (is_executable($p)) { $bin = $p; break; } }
+            }
+            $version = $bin ? @shell_exec(escapeshellarg($bin) . ' -version 2>&1') : null;
+            return response()->json([
+                'ffmpeg_path'       => $bin ?: 'NOT FOUND',
+                'ffmpeg_version'    => $version ? substr($version, 0, 200) : null,
+                'exec_disabled'     => in_array('exec', array_map('trim', explode(',', ini_get('disable_functions')))),
+                'shell_exec_works'  => function_exists('shell_exec'),
+                'upload_max'        => ini_get('upload_max_filesize'),
+                'post_max'          => ini_get('post_max_size'),
+                'storage_path'      => storage_path('app/public'),
+                'storage_writable'  => is_writable(storage_path('app/public')),
+                'disable_functions' => ini_get('disable_functions') ?: 'none',
+                'php_version'       => PHP_VERSION,
+            ]);
+        });
+    }
+
     // ── Video streaming (Range-request aware) ─────────────────────────────────
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
 

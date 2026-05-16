@@ -139,26 +139,38 @@ class MediaController extends Controller
 
     private function getFfmpegBin(): string
     {
-        // Try shell_exec first
+        // Try shell_exec first (web server PATH may differ from CLI PATH)
         $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
         if ($bin && file_exists($bin)) return $bin;
 
-        // Try exec as fallback (web server PATH may differ from CLI)
-        @exec('which ffmpeg 2>/dev/null', $out, $ret);
+        // Try exec as fallback
+        @exec('which ffmpeg 2>/dev/null', $out);
         $bin = trim($out[0] ?? '');
         if ($bin && file_exists($bin)) return $bin;
 
-        // Check common NixOS / Replit runtime locations
+        // Scan NixOS /nix/store for any ffmpeg binary (handles hash changes after updates)
+        $nixMatches = glob('/nix/store/*/bin/ffmpeg');
+        if ($nixMatches) {
+            foreach ($nixMatches as $path) {
+                if (is_executable($path)) return $path;
+            }
+        }
+
+        // Check common fixed locations
         $candidates = [
             '/nix/store/y7m7h744qpw8hidkkxnhx7wzgv59w287-replit-runtime-path/bin/ffmpeg',
             '/usr/bin/ffmpeg',
             '/usr/local/bin/ffmpeg',
             '/opt/homebrew/bin/ffmpeg',
+            '/snap/bin/ffmpeg',
         ];
         foreach ($candidates as $path) {
-            if (file_exists($path)) return $path;
+            if (file_exists($path) && is_executable($path)) return $path;
         }
 
+        \Illuminate\Support\Facades\Log::warning('ffmpeg binary not found', [
+            'PATH' => getenv('PATH'),
+        ]);
         return 'ffmpeg';
     }
 
@@ -210,6 +222,10 @@ class MediaController extends Controller
             $base . ' -ss 0.1' . $in_arg . $out_arg,
             // 5. Force mjpeg decoder, no seek
             $base . ' -c:v mjpeg' . $in_arg . $out_arg,
+            // 6. thumbnail filter — lets ffmpeg pick the best representative frame
+            $base . $in_arg . ' -vf "thumbnail,scale=640:-2" -frames:v 1 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath),
+            // 7. Skip non-reference frames — helps with HEVC/H.265 and problematic codecs
+            $base . ' -skip_frame noref' . $in_arg . ' -frames:v 1 -vf scale=640:-2 -q:v 5 -update 1 ' . escapeshellarg($thumbDiskPath),
         ];
 
         $errFile = sys_get_temp_dir() . '/ffmpeg_thumb_' . getmypid() . '.log';
@@ -253,10 +269,14 @@ class MediaController extends Controller
                 return response()->json(['error' => true, 'message' => 'Video file not found on disk and no remote URL available.'], 404);
             }
             @mkdir(dirname($videoFullPath), 0755, true);
-            $ctx = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
+            $ctx  = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
             $data = @file_get_contents($remoteUrl, false, $ctx);
-            if (!$data) {
+            if (!$data || strlen($data) < 512) {
                 return response()->json(['error' => true, 'message' => 'Video file not on disk and could not be downloaded from: ' . $remoteUrl], 404);
+            }
+            // Reject HTML error pages returned instead of video data
+            if (!$this->looksLikeVideo($data)) {
+                return response()->json(['error' => true, 'message' => 'Remote URL did not return a valid video file (got HTML or unsupported content).'], 422);
             }
             file_put_contents($videoFullPath, $data);
             $tempDownloaded = true;
@@ -456,7 +476,10 @@ class MediaController extends Controller
                 @mkdir(dirname($videoFullPath), 0755, true);
                 $ctx  = stream_context_create(['http' => ['timeout' => 60, 'follow_location' => true]]);
                 $data = @file_get_contents($remoteUrl, false, $ctx);
-                if (!$data) { $failed[] = $record->id; continue; }
+                if (!$data || strlen($data) < 512 || !$this->looksLikeVideo($data)) {
+                    $failed[] = $record->id;
+                    continue;
+                }
                 file_put_contents($videoFullPath, $data);
                 $tempDownloaded = true;
             }
@@ -489,6 +512,44 @@ class MediaController extends Controller
             'failed'  => $failed,
             'total'   => $records->count(),
         ]);
+    }
+
+    /**
+     * Check if binary data looks like a real video file by inspecting magic bytes.
+     * Prevents treating HTML 404 pages or redirects as video content.
+     */
+    private function looksLikeVideo(string $data): bool
+    {
+        // HTML responses are not videos
+        $start = ltrim(substr($data, 0, 100));
+        if (stripos($start, '<!DOCTYPE') === 0 || stripos($start, '<html') === 0) {
+            return false;
+        }
+
+        $magic = substr($data, 0, 12);
+
+        // MP4 / MOV / M4V: ftyp box at offset 4
+        if (substr($data, 4, 4) === 'ftyp') return true;
+
+        // MOV: wide/mdat/free atom signatures
+        if (in_array(substr($data, 4, 4), ['mdat', 'wide', 'free', 'moov', 'pnot'])) return true;
+
+        // AVI: RIFF....AVI
+        if (substr($magic, 0, 4) === 'RIFF' && substr($data, 8, 4) === 'AVI ') return true;
+
+        // WebM / MKV: EBML magic
+        if (substr($magic, 0, 4) === "\x1A\x45\xDF\xA3") return true;
+
+        // MPEG-TS: sync byte 0x47
+        if ($magic[0] === "\x47") return true;
+
+        // FLV
+        if (substr($magic, 0, 3) === 'FLV') return true;
+
+        // Ogg (OGG video)
+        if (substr($magic, 0, 4) === 'OggS') return true;
+
+        return false;
     }
 
     public function destroy(int $id)

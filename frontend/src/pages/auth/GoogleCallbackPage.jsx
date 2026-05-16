@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserAuth } from '../../context/UserAuthContext'
 import { authApi, setAuthToken } from '../../api/client'
+import LogoLoader from '../../components/LogoLoader'
 
 export default function GoogleCallbackPage() {
   const [params]   = useSearchParams()
@@ -28,12 +29,5 @@ export default function GoogleCallbackPage() {
       })
   }, [])
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
-      <div className="text-center">
-        <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-navy/60 text-sm">Signing you in with Google…</p>
-      </div>
-    </div>
-  )
+  return <LogoLoader label="Signing you in with Google…" />
 }

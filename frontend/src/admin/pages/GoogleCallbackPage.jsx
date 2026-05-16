@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { adminAuth } from '../api/adminApi'
+import LogoLoader from '../../components/LogoLoader'
 
 export default function AdminGoogleCallbackPage() {
   const [params] = useSearchParams()
@@ -38,12 +39,5 @@ export default function AdminGoogleCallbackPage() {
       })
   }, [])
 
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #730D26 0%, #4a0a18 50%, #730D26 100%)' }}>
-      <div className="text-center">
-        <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-white/60 text-sm">Verifying admin access…</p>
-      </div>
-    </div>
-  )
+  return <LogoLoader dark label="Verifying admin access…" />
 }

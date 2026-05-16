@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import LogoLoader from '../components/LogoLoader'
 import {
   User, Mail, Phone, Building2, FileText, Check, AlertCircle,
   ChevronRight, Clock, CheckCircle, XCircle, Home, MapPin, Bed, Bath, Maximize2, Heart,
@@ -406,13 +407,7 @@ export default function ProfilePage() {
     { key: 'favorites', label: 'Favorites' },
   ]
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  if (loading) return <LogoLoader />
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
@@ -530,9 +525,7 @@ export default function ProfilePage() {
           {activeTab === 'professional' && (
             <div className="space-y-6">
               {profLoading ? (
-                <div className="flex justify-center py-16">
-                  <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                </div>
+                <LogoLoader fullScreen={false} />
               ) : profStatus?.status && !showAppForm ? (
                 <ProfessionalStatus
                   status={profStatus.status}
@@ -574,9 +567,7 @@ export default function ProfilePage() {
           {activeTab === 'favorites' && (
             <div>
               {favoritesLoading ? (
-                <div className="flex justify-center py-16">
-                  <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                </div>
+                <LogoLoader fullScreen={false} />
               ) : favorites.length === 0 ? (
                 <div className="bg-white rounded-3xl shadow-card p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
@@ -603,9 +594,7 @@ export default function ProfilePage() {
           {activeTab === 'listings' && (
             <div>
               {listingsLoading ? (
-                <div className="flex justify-center py-16">
-                  <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                </div>
+                <LogoLoader fullScreen={false} />
               ) : listings.length === 0 ? (
                 <div className="bg-white rounded-3xl shadow-card p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">

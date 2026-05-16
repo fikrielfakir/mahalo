@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import LogoLoader from '../components/LogoLoader'
 import {
   Home, Building, MessageCircle, Eye, TrendingUp, User, Phone, Mail,
   MapPin, Edit2, Check, X, ArrowLeft, Camera, Loader2, BadgeCheck,
@@ -334,7 +335,7 @@ function PropertiesTab({ agentId }) {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
+        <LogoLoader fullScreen={false} />
       ) : rows.length === 0 ? (
         <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
           <Home size={32} className="mx-auto mb-3 opacity-30" />
@@ -428,7 +429,7 @@ function ProjectsTab() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-[#730D26]" /></div>
+        <LogoLoader fullScreen={false} />
       ) : rows.length === 0 ? (
         <div className="text-center py-16 text-navy/40 bg-white rounded-2xl border border-gray-100">
           <Building size={32} className="mx-auto mb-3 opacity-30" />
@@ -536,7 +537,7 @@ function ChatThread({ consult, onReplied }) {
 
   if (loadingThread) return (
     <div className="flex-1 flex items-center justify-center">
-      <Loader2 size={24} className="animate-spin text-[#730D26]" />
+      <LogoLoader fullScreen={false} />
     </div>
   )
 
@@ -713,7 +714,7 @@ function MessagesTab() {
           {/* List body */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-[#730D26]" /></div>
+              <LogoLoader fullScreen={false} />
             ) : error ? (
               <div className="p-4 text-center">
                 <p className="text-xs text-red-500">{error}</p>
@@ -997,13 +998,7 @@ export default function AgentDashboardPage() {
     setOverview(prev => prev ? { ...prev, agent: { ...prev.agent, ...updated } } : prev)
   }
 
-  if (authLoading || overviewLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
-        <div className="w-8 h-8 border-2 border-[#730D26] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  if (authLoading || overviewLoading) return <LogoLoader />
 
   const agent = overview?.agent
   const stats = overview?.stats || { properties: 0, projects: 0, total_views: 0, messages: 0 }

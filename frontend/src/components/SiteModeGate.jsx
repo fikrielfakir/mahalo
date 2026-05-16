@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ComingSoonPage from '../pages/ComingSoonPage'
 import MaintenancePage from '../pages/MaintenancePage'
+import LogoLoader from './LogoLoader'
 
 const BYPASS_KEY  = 'mahalo_admin_bypass'
 const SETTINGS_URL = '/api/v1/public-settings'
@@ -45,14 +46,7 @@ export default function SiteModeGate({ children }) {
       .catch(() => setStatus('ok')) // fail open — never block the site on a fetch error
   }, [])
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #730D26 0%, #3a0614 60%, #1a0009 100%)' }}>
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-      </div>
-    )
-  }
+  if (status === 'loading') return <LogoLoader dark />
 
   if (status === 'maintenance') return <MaintenancePage settings={settings} />
   if (status === 'coming_soon') return <ComingSoonPage  settings={settings} />

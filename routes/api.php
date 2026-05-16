@@ -41,20 +41,25 @@ Route::prefix('v1')->group(function () {
             $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
             if (!$bin) {
                 $nixMatches = glob('/nix/store/*/bin/ffmpeg') ?: [];
-                foreach ($nixMatches as $p) { if (is_executable($p)) { $bin = $p; break; } }
+                foreach ($nixMatches as $p) {
+                    if (is_executable($p)) {
+                        $bin = $p;
+                        break;
+                    }
+                }
             }
             $version = $bin ? @shell_exec(escapeshellarg($bin) . ' -version 2>&1') : null;
             return response()->json([
-                'ffmpeg_path'       => $bin ?: 'NOT FOUND',
-                'ffmpeg_version'    => $version ? substr($version, 0, 200) : null,
-                'exec_disabled'     => in_array('exec', array_map('trim', explode(',', ini_get('disable_functions')))),
-                'shell_exec_works'  => function_exists('shell_exec'),
-                'upload_max'        => ini_get('upload_max_filesize'),
-                'post_max'          => ini_get('post_max_size'),
-                'storage_path'      => storage_path('app/public'),
-                'storage_writable'  => is_writable(storage_path('app/public')),
+                'ffmpeg_path' => $bin ?: 'NOT FOUND',
+                'ffmpeg_version' => $version ? substr($version, 0, 200) : null,
+                'exec_disabled' => in_array('exec', array_map('trim', explode(',', ini_get('disable_functions')))),
+                'shell_exec_works' => function_exists('shell_exec'),
+                'upload_max' => ini_get('upload_max_filesize'),
+                'post_max' => ini_get('post_max_size'),
+                'storage_path' => storage_path('app/public'),
+                'storage_writable' => is_writable(storage_path('app/public')),
                 'disable_functions' => ini_get('disable_functions') ?: 'none',
-                'php_version'       => PHP_VERSION,
+                'php_version' => PHP_VERSION,
             ]);
         });
     }
@@ -63,99 +68,99 @@ Route::prefix('v1')->group(function () {
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
 
     // ── Public: Cities (all, no property restriction) ─────────────────────────
-    Route::get('/cities',                          [AdminCityController::class, 'publicList']);
+    Route::get('/cities', [AdminCityController::class, 'publicList']);
 
     // ── Public: Properties ────────────────────────────────────────────────────
-    Route::get('/properties/filters',              [PropertyController::class, 'filters']);
-    Route::get('/properties/search',               [PropertyController::class, 'search']);
-    Route::get('/properties/id/{id}',              [PropertyController::class, 'showById']);
-    Route::get('/properties/{property_id}/reviews',[ReviewController::class,  'forProperty']);
-    Route::get('/properties/{slug}',               [PropertyController::class, 'show']);
-    Route::get('/properties',                      [PropertyController::class, 'index']);
+    Route::get('/properties/filters', [PropertyController::class, 'filters']);
+    Route::get('/properties/search', [PropertyController::class, 'search']);
+    Route::get('/properties/id/{id}', [PropertyController::class, 'showById']);
+    Route::get('/properties/{property_id}/reviews', [ReviewController::class, 'forProperty']);
+    Route::get('/properties/{slug}', [PropertyController::class, 'show']);
+    Route::get('/properties', [PropertyController::class, 'index']);
 
     // ── Public: Projects ──────────────────────────────────────────────────────
-    Route::get('/projects/filters',                [ProjectController::class, 'filters']);
-    Route::get('/projects/search',                 [ProjectController::class, 'search']);
-    Route::get('/projects/id/{id}/properties',     [ProjectController::class, 'properties']);
-    Route::get('/projects/id/{id}',                [ProjectController::class, 'showById']);
-    Route::get('/projects/{slug}',                 [ProjectController::class, 'show']);
-    Route::get('/projects',                        [ProjectController::class, 'index']);
+    Route::get('/projects/filters', [ProjectController::class, 'filters']);
+    Route::get('/projects/search', [ProjectController::class, 'search']);
+    Route::get('/projects/id/{id}/properties', [ProjectController::class, 'properties']);
+    Route::get('/projects/id/{id}', [ProjectController::class, 'showById']);
+    Route::get('/projects/{slug}', [ProjectController::class, 'show']);
+    Route::get('/projects', [ProjectController::class, 'index']);
 
     // ── Public: Agents ────────────────────────────────────────────────────────
-    Route::get('/agents/{id}/properties',          [AgentController::class, 'properties']);
-    Route::get('/agents/{id}/projects',            [AgentController::class, 'projects']);
-    Route::get('/agents/{id}',                     [AgentController::class, 'show']);
-    Route::get('/agents',                          [AgentController::class, 'index']);
+    Route::get('/agents/{id}/properties', [AgentController::class, 'properties']);
+    Route::get('/agents/{id}/projects', [AgentController::class, 'projects']);
+    Route::get('/agents/{id}', [AgentController::class, 'show']);
+    Route::get('/agents', [AgentController::class, 'index']);
 
     // ── Public: Categories ────────────────────────────────────────────────────
-    Route::get('/categories/filters',              [CategoryController::class, 'filters']);
-    Route::get('/categories/id/{id}/properties',   [CategoryController::class, 'properties']);
-    Route::get('/categories/id/{id}',              [CategoryController::class, 'showById']);
-    Route::get('/categories/{slug}',               [CategoryController::class, 'show']);
-    Route::get('/categories',                      [CategoryController::class, 'index']);
+    Route::get('/categories/filters', [CategoryController::class, 'filters']);
+    Route::get('/categories/id/{id}/properties', [CategoryController::class, 'properties']);
+    Route::get('/categories/id/{id}', [CategoryController::class, 'showById']);
+    Route::get('/categories/{slug}', [CategoryController::class, 'show']);
+    Route::get('/categories', [CategoryController::class, 'index']);
 
     // ── Public: Features ──────────────────────────────────────────────────────
-    Route::get('/features/all',                    [FeatureController::class, 'all']);
-    Route::get('/features/{id}',                   [FeatureController::class, 'show']);
-    Route::get('/features',                        [FeatureController::class, 'index']);
+    Route::get('/features/all', [FeatureController::class, 'all']);
+    Route::get('/features/{id}', [FeatureController::class, 'show']);
+    Route::get('/features', [FeatureController::class, 'index']);
 
     // ── Public: Facilities ────────────────────────────────────────────────────
-    Route::get('/facilities/all',                  [FacilityController::class, 'all']);
-    Route::get('/facilities/{id}',                 [FacilityController::class, 'show']);
-    Route::get('/facilities',                      [FacilityController::class, 'index']);
+    Route::get('/facilities/all', [FacilityController::class, 'all']);
+    Route::get('/facilities/{id}', [FacilityController::class, 'show']);
+    Route::get('/facilities', [FacilityController::class, 'index']);
 
     // ── Public: Consults & Auth ───────────────────────────────────────────────
-    Route::post('/consults',                       [ConsultController::class, 'store']);
-    Route::get('/consults/custom-fields',          [ConsultController::class, 'customFields']);
-    Route::post('/auth/register',                  [AuthController::class, 'register']);
-    Route::post('/auth/login',                     [AuthController::class, 'login']);
-    Route::post('/auth/forgot-password',           [AuthController::class, 'forgotPassword']);
-    Route::post('/auth/reset-password',            [AuthController::class, 'resetPassword']);
-    Route::post('/auth/verify-email/{id}/{hash}',  [AuthController::class, 'verifyEmail']);
-    Route::get('/auth/google',                     [GoogleAuthController::class, 'redirect']);
-    Route::get('/auth/google/callback',            [GoogleAuthController::class, 'callback']);
-    Route::get('/admin/auth/google',               [AdminGoogleAuthController::class, 'redirect']);
-    Route::get('/admin/auth/google/callback',      [AdminGoogleAuthController::class, 'callback']);
+    Route::post('/consults', [ConsultController::class, 'store']);
+    Route::get('/consults/custom-fields', [ConsultController::class, 'customFields']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail']);
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+    Route::get('/admin/auth/google', [AdminGoogleAuthController::class, 'redirect']);
+    Route::get('/admin/auth/google/callback', [AdminGoogleAuthController::class, 'callback']);
 
     // ── Protected: Account ────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/account/profile',                        [AuthController::class, 'profile']);
-        Route::put('/account/profile',                        [AuthController::class, 'updateProfile']);
-        Route::post('/auth/logout',                           [AuthController::class, 'logout']);
-        Route::post('/auth/resend-verification',              [AuthController::class, 'resendVerification']);
-        Route::post('/properties/{property_id}/reviews',      [ReviewController::class, 'store']);
-        Route::put('/reviews/{id}',                           [ReviewController::class, 'update']);
-        Route::delete('/reviews/{id}',                        [ReviewController::class, 'destroy']);
+        Route::get('/account/profile', [AuthController::class, 'profile']);
+        Route::put('/account/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
+        Route::post('/properties/{property_id}/reviews', [ReviewController::class, 'store']);
+        Route::put('/reviews/{id}', [ReviewController::class, 'update']);
+        Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
 
         // User property listings
-        Route::get('/account/my-listings',  [UserListingController::class, 'index']);
-        Route::post('/account/listings',    [UserListingController::class, 'store']);
+        Route::get('/account/my-listings', [UserListingController::class, 'index']);
+        Route::post('/account/listings', [UserListingController::class, 'store']);
 
         // Professional applications
-        Route::get('/account/professional-status',  [ProfessionalApplicationController::class, 'status']);
-        Route::post('/account/professional-apply',  [ProfessionalApplicationController::class, 'apply']);
+        Route::get('/account/professional-status', [ProfessionalApplicationController::class, 'status']);
+        Route::post('/account/professional-apply', [ProfessionalApplicationController::class, 'apply']);
 
         // Agent dashboard (approved professionals only)
-        Route::get('/account/agent/overview',              [AgentDashboardController::class, 'overview']);
-        Route::get('/account/agent/properties',            [AgentDashboardController::class, 'properties']);
-        Route::put('/account/agent/properties/{id}',       [AgentDashboardController::class, 'updateProperty']);
-        Route::get('/account/agent/projects',              [AgentDashboardController::class, 'projects']);
-        Route::put('/account/agent/projects/{id}',         [AgentDashboardController::class, 'updateProject']);
-        Route::get('/account/agent/messages',              [AgentDashboardController::class, 'messages']);
-        Route::get('/account/agent/messages/{id}',         [AgentDashboardController::class, 'getThread']);
+        Route::get('/account/agent/overview', [AgentDashboardController::class, 'overview']);
+        Route::get('/account/agent/properties', [AgentDashboardController::class, 'properties']);
+        Route::put('/account/agent/properties/{id}', [AgentDashboardController::class, 'updateProperty']);
+        Route::get('/account/agent/projects', [AgentDashboardController::class, 'projects']);
+        Route::put('/account/agent/projects/{id}', [AgentDashboardController::class, 'updateProject']);
+        Route::get('/account/agent/messages', [AgentDashboardController::class, 'messages']);
+        Route::get('/account/agent/messages/{id}', [AgentDashboardController::class, 'getThread']);
         Route::post('/account/agent/messages/{id}/reply', [AgentDashboardController::class, 'replyToMessage']);
-        Route::put('/account/agent/profile',               [AgentDashboardController::class, 'updateProfile']);
-        Route::post('/account/agent/avatar',               [AgentDashboardController::class, 'uploadAvatar']);
-        Route::post('/account/agent/avatar/preset',        [AgentDashboardController::class, 'setPresetAvatar']);
+        Route::put('/account/agent/profile', [AgentDashboardController::class, 'updateProfile']);
+        Route::post('/account/agent/avatar', [AgentDashboardController::class, 'uploadAvatar']);
+        Route::post('/account/agent/avatar/preset', [AgentDashboardController::class, 'setPresetAvatar']);
 
         // Favorites
-        Route::get('/account/chats',              [UserChatController::class, 'index']);
-        Route::post('/account/chats/start',       [UserChatController::class, 'startChat']);
-        Route::get('/account/chats/{id}',         [UserChatController::class, 'getThread']);
-        Route::post('/account/chats/{id}/message',[UserChatController::class, 'sendMessage']);
+        Route::get('/account/chats', [UserChatController::class, 'index']);
+        Route::post('/account/chats/start', [UserChatController::class, 'startChat']);
+        Route::get('/account/chats/{id}', [UserChatController::class, 'getThread']);
+        Route::post('/account/chats/{id}/message', [UserChatController::class, 'sendMessage']);
 
-        Route::get('/account/favorites/ids',       [FavoriteController::class, 'ids']);
-        Route::get('/account/favorites',            [FavoriteController::class, 'index']);
+        Route::get('/account/favorites/ids', [FavoriteController::class, 'ids']);
+        Route::get('/account/favorites', [FavoriteController::class, 'index']);
         Route::post('/account/favorites/{property_id}', [FavoriteController::class, 'toggle']);
     });
 
@@ -167,43 +172,44 @@ Route::prefix('v1')->group(function () {
 
     // ── Admin (Sanctum protected) ─────────────────────────────────────────────
     Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
-        Route::get('/stats',                  [AdminStatsController::class,   'index']);
+        Route::get('/stats', [AdminStatsController::class, 'index']);
 
-        Route::apiResource('properties',      AdminPropertyController::class);
+        Route::apiResource('properties', AdminPropertyController::class);
         Route::put('/properties/{id}/moderation', [AdminPropertyController::class, 'moderation']);
-        Route::apiResource('projects',        AdminProjectController::class);
-        Route::apiResource('agents',          AdminAgentController::class);
-        Route::post('/agents/{id}/ban',       [AdminAgentController::class, 'ban']);
-        Route::post('/agents/{id}/unban',     [AdminAgentController::class, 'unban']);
-        Route::get('/professional-applications',              [AdminProfessionalApplicationController::class, 'index']);
+        Route::apiResource('projects', AdminProjectController::class);
+        Route::apiResource('agents', AdminAgentController::class);
+        Route::post('/agents/{id}/ban', [AdminAgentController::class, 'ban']);
+        Route::post('/agents/{id}/unban', [AdminAgentController::class, 'unban']);
+        Route::get('/professional-applications', [AdminProfessionalApplicationController::class, 'index']);
         Route::post('/professional-applications/{id}/approve', [AdminProfessionalApplicationController::class, 'approve']);
-        Route::post('/professional-applications/{id}/reject',  [AdminProfessionalApplicationController::class, 'reject']);
-        Route::apiResource('categories',      AdminCategoryController::class);
-        Route::apiResource('features',        AdminFeatureController::class);
-        Route::apiResource('facilities',      AdminFacilityController::class);
-        Route::apiResource('investors',       AdminInvestorController::class);
-        Route::apiResource('cities',          AdminCityController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::apiResource('users',           AdminUserController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::post('/users/{id}/ban',        [AdminUserController::class, 'ban']);
-        Route::post('/users/{id}/unban',      [AdminUserController::class, 'unban']);
+        Route::post('/professional-applications/{id}/reject', [AdminProfessionalApplicationController::class, 'reject']);
+        Route::apiResource('categories', AdminCategoryController::class);
+        Route::apiResource('features', AdminFeatureController::class);
+        Route::apiResource('facilities', AdminFacilityController::class);
+        Route::apiResource('investors', AdminInvestorController::class);
+        Route::apiResource('cities', AdminCityController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('users', AdminUserController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/users/{id}/ban', [AdminUserController::class, 'ban']);
+        Route::post('/users/{id}/unban', [AdminUserController::class, 'unban']);
 
         // Media library
-        Route::get('/media',                      [MediaController::class, 'index']);
-        Route::post('/media/{id}/thumbnail',      [MediaController::class, 'rethumbnail']);
-        Route::post('/media/thumbnail/batch',     [MediaController::class, 'batchRethumbnail']);
-        Route::delete('/media/{id}',              [MediaController::class, 'destroy']);
+        Route::get('/media', [MediaController::class, 'index']);
+
+        Route::post('/media/{id}/thumbnail', [MediaController::class, 'rethumbnail']);
+        Route::post('/media/thumbnail/batch', [MediaController::class, 'batchRethumbnail']);
+        Route::delete('/media/{id}', [MediaController::class, 'destroy']);
 
         // Consults
-        Route::get('/consults',           [AdminConsultController::class, 'index']);
-        Route::put('/consults/{id}',      [AdminConsultController::class, 'update']);
-        Route::delete('/consults/{id}',   [AdminConsultController::class, 'destroy']);
-        Route::post('/consults/bulk',          [AdminConsultController::class, 'bulkUpdate']);
-        Route::post('/consults/bulk-delete',   [AdminConsultController::class, 'bulkDelete']);
+        Route::get('/consults', [AdminConsultController::class, 'index']);
+        Route::put('/consults/{id}', [AdminConsultController::class, 'update']);
+        Route::delete('/consults/{id}', [AdminConsultController::class, 'destroy']);
+        Route::post('/consults/bulk', [AdminConsultController::class, 'bulkUpdate']);
+        Route::post('/consults/bulk-delete', [AdminConsultController::class, 'bulkDelete']);
 
         // Settings
-        Route::get('/settings',             [AdminSettingsController::class, 'show']);
-        Route::put('/settings',             [AdminSettingsController::class, 'update']);
-        Route::post('/settings/logo',       [AdminSettingsController::class, 'uploadLogo']);
-        Route::post('/settings/mail-test',  [AdminSettingsController::class, 'testMail']);
+        Route::get('/settings', [AdminSettingsController::class, 'show']);
+        Route::put('/settings', [AdminSettingsController::class, 'update']);
+        Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
+        Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
     });
 });

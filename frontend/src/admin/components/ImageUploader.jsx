@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { Upload, X, Link, AlertCircle, Star, Video } from 'lucide-react'
 import axios from 'axios'
 import { isVideoPath, mediaUrl } from '../../utils/media'
+import { captureVideoThumbnail } from '../../utils/videoThumbnail'
 
 const client = axios.create({ baseURL: '/api/v1' })
 client.interceptors.request.use((cfg) => {
@@ -86,6 +87,13 @@ export default function ImageUploader({ images = [], onChange, folder = 'propert
     const fd = new FormData()
     fd.append('file', file)
     fd.append('folder', folder)
+
+    if (file.type.startsWith('video/')) {
+      const thumbBlob = await captureVideoThumbnail(file)
+      if (thumbBlob) {
+        fd.append('thumbnail', thumbBlob, 'thumb.jpg')
+      }
+    }
 
     try {
       const res = await client.post('/admin/media/upload', fd, {

@@ -3,6 +3,7 @@ import { adminMedia } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video, Wand2, Loader2 } from 'lucide-react'
 import { isVideoPath } from '../../utils/media'
+import { captureVideoThumbnail } from '../../utils/videoThumbnail'
 
 function bytesToSize(bytes) {
   if (!bytes) return '—'
@@ -79,18 +80,49 @@ export default function MediaPage() {
     setThumbLoading(item.id)
     setThumbError(null)
     try {
-      const res = await adminMedia.rethumbnail(item.id)
+      const blob = await captureVideoThumbnailFromUrl(item.url || item.original_url)
+      if (!blob) throw new Error('Could not capture frame from video')
+      const fd = new FormData()
+      fd.append('thumbnail', blob, 'thumb.jpg')
+      const res = await adminMedia.rethumbnail(item.id, fd)
       const newThumb = res.data?.thumbnail_url || res.thumbnail_url
       setFiles(prev => prev.map(f => f.id === item.id ? { ...f, thumbnail_url: newThumb } : f))
       if (selected?.id === item.id) {
         setSelected(prev => ({ ...prev, thumbnail_url: newThumb }))
       }
     } catch (err) {
-      const msg = err?.message || 'FFmpeg failed'
-      setThumbError(msg)
+      setThumbError(err?.message || 'Thumbnail generation failed')
     } finally {
       setThumbLoading(null)
     }
+  }
+
+  function captureVideoThumbnailFromUrl(url) {
+    return new Promise((resolve) => {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.muted = true
+      video.playsInline = true
+      video.crossOrigin = 'anonymous'
+      video.src = url
+
+      video.onloadeddata = () => {
+        video.currentTime = Math.min(1, video.duration * 0.1 || 0)
+      }
+
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 640
+        canvas.height = Math.round((640 / video.videoWidth) * video.videoHeight) || 360
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => {
+          video.remove()
+          resolve(blob)
+        }, 'image/jpeg', 0.85)
+      }
+
+      video.onerror = () => { video.remove(); resolve(null) }
+    })
   }
 
   const generateAllThumbnails = async () => {

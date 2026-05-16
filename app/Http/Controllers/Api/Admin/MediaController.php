@@ -14,7 +14,7 @@ class MediaController extends Controller
     public function index(Request $request)
     {
         $perPage = (int) $request->input('per_page', 60);
-        $query   = MediaFile::orderBy('created_at', 'desc');
+        $query = MediaFile::orderBy('created_at', 'desc');
 
         if ($collection = $request->input('collection')) {
             $query->where('collection', $collection);
@@ -23,14 +23,14 @@ class MediaController extends Controller
         $files = $query->paginate($perPage);
 
         return response()->json([
-            'data'  => $files->items(),
-            'meta'  => [
-                'total'        => $files->total(),
-                'per_page'     => $files->perPage(),
+            'data' => $files->items(),
+            'meta' => [
+                'total' => $files->total(),
+                'per_page' => $files->perPage(),
                 'current_page' => $files->currentPage(),
-                'last_page'    => $files->lastPage(),
+                'last_page' => $files->lastPage(),
             ],
-            'error'   => false,
+            'error' => false,
             'message' => null,
         ]);
     }
@@ -38,77 +38,49 @@ class MediaController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'file'       => 'required|file|max:102400|mimes:jpg,jpeg,png,webp,gif,svg,mp4,mov,avi,mkv,webm,m4v',
-            'folder'     => 'nullable|string|in:properties,projects,agents,avatars,media,videos',
+            'file' => 'required|file|max:102400|mimes:jpg,jpeg,png,webp,gif,svg,mp4,mov,avi,mkv,webm,m4v',
+            'folder' => 'nullable|string|in:properties,projects,agents,avatars,media,videos',
             'collection' => 'nullable|string|in:properties,projects,agents,avatars,media,videos',
+            'thumbnail' => 'nullable|file|mimes:jpg,jpeg|max:5120', // client-generated thumb
         ]);
 
-        $file   = $request->file('file');
-        $mime   = $file->getMimeType();
+        $file = $request->file('file');
+        $mime = $file->getMimeType();
         $isVideo = str_starts_with($mime, 'video/');
 
         $folder = $request->input('folder') ?? $request->input('collection', $isVideo ? 'videos' : 'media');
-        $ext    = $file->getClientOriginalExtension();
-        $name   = Str::uuid() . '.' . $ext;
+        $ext = $file->getClientOriginalExtension();
+        $name = Str::uuid() . '.' . $ext;
 
         $tmpPath = $file->storeAs($folder, $name, 'public');
 
         $thumbnailPath = null;
 
         if ($isVideo) {
-            // ── Step 1: Extract thumbnail frame ───────────────────────────────
-            $thumbName      = Str::uuid() . '.jpg';
-            $thumbStorePath = $folder . '/thumbs/' . $thumbName;
-            $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
-            @mkdir(dirname($thumbDiskPath), 0755, true);
-            $videoFullPath  = Storage::disk('public')->path($tmpPath);
-
-            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
-
-            // ── Step 2: Apply watermark to thumbnail frame ────────────────────
-            if ($thumbnailPath) {
-                $this->applyWatermark($thumbStorePath, 'jpg');
-            }
-
-            // ── Step 3: Burn watermark into full video ────────────────────────
-            $wmSettings = DB::table('site_settings')
-                ->whereIn('key', ['watermark_enabled', 'watermark_logo_url', 'watermark_position', 'watermark_opacity', 'watermark_size'])
-                ->pluck('value', 'key');
-
-            if (($wmSettings['watermark_enabled'] ?? '1') !== '0') {
-                $logoPath = $this->resolveWatermarkPath($wmSettings['watermark_logo_url'] ?? '');
-                if ($logoPath) {
-                    $wmVideoName = Str::uuid() . '.' . $ext;
-                    $wmStorePath = $folder . '/' . $wmVideoName;
-                    $wmDiskPath  = Storage::disk('public')->path($wmStorePath);
-                    $opacity     = round((int)($wmSettings['watermark_opacity'] ?? 60) / 100, 2);
-                    $sizeRatio   = (int)($wmSettings['watermark_size'] ?? 20);
-                    $position    = $wmSettings['watermark_position'] ?? 'bottom-right';
-                    $margin      = 10;
-                    $overlayExpr = match($position) {
-                        'top-left'    => "overlay={$margin}:{$margin}",
-                        'top-right'   => "overlay=W-w-{$margin}:{$margin}",
-                        'bottom-left' => "overlay={$margin}:H-h-{$margin}",
-                        'center'      => "overlay=(W-w)/2:(H-h)/2",
-                        default       => "overlay=W-w-{$margin}:H-h-{$margin}",
-                    };
-                    $filter = "[1:v]scale=iw*{$sizeRatio}/100:-1,format=rgba,colorchannelmixer=aa={$opacity}[wm];[0:v][wm]{$overlayExpr}[out]";
-                    $ffmpegBin = $this->getFfmpegBin();
-                    exec(
-                        escapeshellarg($ffmpegBin) .
-                        " -i " . escapeshellarg($videoFullPath) .
-                        " -i " . escapeshellarg($logoPath) .
-                        " -filter_complex " . escapeshellarg($filter) .
-                        " -map [out] -map 0:a? -c:v libx264 -preset fast -crf 23 -c:a copy " .
-                        escapeshellarg($wmDiskPath) . " -y 2>/dev/null",
-                        $out2, $code2
-                    );
-                    if ($code2 === 0 && file_exists($wmDiskPath) && filesize($wmDiskPath) > 0) {
-                        Storage::disk('public')->delete($tmpPath);
-                        $tmpPath = $wmStorePath;
-                    }
+            // Use client-generated thumbnail if provided (Hostinger has no FFmpeg)
+            if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
+                $thumbName = Str::uuid() . '.jpg';
+                $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+                $thumbnailPath = $request->file('thumbnail')->storeAs($folder . '/thumbs', $thumbName, 'public');
+                if ($thumbnailPath) {
+                    $this->applyWatermark($thumbnailPath, 'jpg');
+                }
+            } else {
+                // Try FFmpeg as fallback (works on VPS/dedicated, silently skipped on shared hosting)
+                $videoFullPath = Storage::disk('public')->path($tmpPath);
+                $thumbName = Str::uuid() . '.jpg';
+                $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+                $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
+                @mkdir(dirname($thumbDiskPath), 0755, true);
+                $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+                if ($thumbnailPath) {
+                    $this->applyWatermark($thumbStorePath, 'jpg');
                 }
             }
+
+            // Watermark the video itself (FFmpeg-based, skip silently if unavailable)
+            $this->applyVideoWatermark($tmpPath, $ext);
+
         } else {
             $this->applyWatermark($tmpPath, $ext);
         }
@@ -116,23 +88,23 @@ class MediaController extends Controller
         $url = Storage::disk('public')->url($tmpPath);
 
         $record = MediaFile::create([
-            'file_name'      => $name,
-            'original_name'  => $file->getClientOriginalName(),
-            'path'           => $tmpPath,
-            'url'            => $url,
-            'mime_type'      => $mime,
-            'size'           => Storage::disk('public')->size($tmpPath),
-            'collection'     => $folder,
+            'file_name' => $name,
+            'original_name' => $file->getClientOriginalName(),
+            'path' => $tmpPath,
+            'url' => $url,
+            'mime_type' => $mime,
+            'size' => Storage::disk('public')->size($tmpPath),
+            'collection' => $folder,
             'thumbnail_path' => $thumbnailPath,
-            'thumbnail_url'  => $thumbnailPath ? Storage::disk('public')->url($thumbnailPath) : null,
+            'thumbnail_url' => $thumbnailPath ? Storage::disk('public')->url($thumbnailPath) : null,
         ]);
 
         return response()->json([
-            'data'    => $record,
-            'path'    => $tmpPath,
-            'url'     => $url,
-            'is_video'=> $isVideo,
-            'error'   => false,
+            'data' => $record,
+            'path' => $tmpPath,
+            'url' => $url,
+            'is_video' => $isVideo,
+            'error' => false,
             'message' => 'File uploaded.',
         ]);
     }
@@ -141,18 +113,21 @@ class MediaController extends Controller
     {
         // Try shell_exec first (web server PATH may differ from CLI PATH)
         $bin = trim((string) @shell_exec('which ffmpeg 2>/dev/null'));
-        if ($bin && file_exists($bin)) return $bin;
+        if ($bin && file_exists($bin))
+            return $bin;
 
         // Try exec as fallback
         @exec('which ffmpeg 2>/dev/null', $out);
         $bin = trim($out[0] ?? '');
-        if ($bin && file_exists($bin)) return $bin;
+        if ($bin && file_exists($bin))
+            return $bin;
 
         // Scan NixOS /nix/store for any ffmpeg binary (handles hash changes after updates)
         $nixMatches = glob('/nix/store/*/bin/ffmpeg');
         if ($nixMatches) {
             foreach ($nixMatches as $path) {
-                if (is_executable($path)) return $path;
+                if (is_executable($path))
+                    return $path;
             }
         }
 
@@ -165,7 +140,8 @@ class MediaController extends Controller
             '/snap/bin/ffmpeg',
         ];
         foreach ($candidates as $path) {
-            if (file_exists($path) && is_executable($path)) return $path;
+            if (file_exists($path) && is_executable($path))
+                return $path;
         }
 
         \Illuminate\Support\Facades\Log::warning('ffmpeg binary not found', [
@@ -178,12 +154,14 @@ class MediaController extends Controller
     {
         if ($logoUrl) {
             if (str_starts_with($logoUrl, '/storage/')) {
-                $rel  = Str::after($logoUrl, '/storage/');
+                $rel = Str::after($logoUrl, '/storage/');
                 $path = Storage::disk('public')->path($rel);
-                if (file_exists($path)) return $path;
+                if (file_exists($path))
+                    return $path;
             } elseif (str_starts_with($logoUrl, '/') && !str_starts_with($logoUrl, '//')) {
                 $path = public_path(ltrim($logoUrl, '/'));
-                if (file_exists($path)) return $path;
+                if (file_exists($path))
+                    return $path;
             }
         }
         $default = public_path('watermark.png');
@@ -192,11 +170,14 @@ class MediaController extends Controller
 
     private function generateVideoThumbnail(string $videoFullPath, string $thumbDiskPath, string $thumbStorePath): ?string
     {
-        if (!function_exists('exec')) return null;
+        if (!function_exists('exec'))
+            return null;
         $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
-        if (in_array('exec', $disabled)) return null;
+        if (in_array('exec', $disabled))
+            return null;
 
-        if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0) return null;
+        if (!file_exists($videoFullPath) || filesize($videoFullPath) === 0)
+            return null;
 
         $ffmpegBin = $this->getFfmpegBin();
 
@@ -208,7 +189,7 @@ class MediaController extends Controller
 
         $base = escapeshellarg($ffmpegBin) . ' -y';
         $out_arg = ' -frames:v 1 -vf scale=640:-2 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath);
-        $in_arg  = ' -i ' . escapeshellarg($videoFullPath);
+        $in_arg = ' -i ' . escapeshellarg($videoFullPath);
 
         // Ordered strategies: most compatible first
         $strategies = [
@@ -242,9 +223,9 @@ class MediaController extends Controller
             $stderr = file_exists($errFile) ? trim(file_get_contents($errFile)) : '';
             \Illuminate\Support\Facades\Log::warning('ffmpeg thumbnail strategy failed', [
                 'strategy' => $strategyIndex + 1,
-                'cmd'      => $cmd,
-                'ret'      => $ret,
-                'stderr'   => mb_substr($stderr, -800),
+                'cmd' => $cmd,
+                'ret' => $ret,
+                'stderr' => mb_substr($stderr, -800),
             ]);
         }
 
@@ -252,7 +233,7 @@ class MediaController extends Controller
         return null;
     }
 
-    public function rethumbnail(int $id)
+    public function rethumbnail(Request $request, int $id)
     {
         $record = MediaFile::findOrFail($id);
 
@@ -260,76 +241,63 @@ class MediaController extends Controller
             return response()->json(['error' => true, 'message' => 'Not a video file.'], 422);
         }
 
-        $videoFullPath = Storage::disk('public')->path($record->path);
-
-        $folder         = dirname($record->path);
-        $thumbName      = Str::uuid() . '.jpg';
-        $thumbStorePath = $folder . '/thumbs/' . $thumbName;
-        $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
-        @mkdir(dirname($thumbDiskPath), 0755, true);
-
         $thumbnailPath = null;
 
-        if (file_exists($videoFullPath) && filesize($videoFullPath) > 0) {
-            // File is local — extract thumbnail directly
-            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
+        // Accept a client-generated thumbnail (canvas capture from browser)
+        if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
+            $folder = dirname($record->path);
+            $thumbName = Str::uuid() . '.jpg';
+            $thumbnailPath = $request->file('thumbnail')->storeAs($folder . '/thumbs', $thumbName, 'public');
+            if ($thumbnailPath) {
+                $this->applyWatermark($thumbnailPath, 'jpg');
+            }
         } else {
-            $remoteUrl = $record->url;
-            if (!$remoteUrl) {
-                return response()->json(['error' => true, 'message' => 'Video file not found on disk and no remote URL is stored.'], 404);
-            }
-
-            // Strategy A: Pass URL directly to ffmpeg — no PHP memory download required.
-            // ffmpeg streams the video over HTTP and extracts the frame efficiently.
-            $thumbnailPath = $this->generateVideoThumbnailFromUrl($remoteUrl, $thumbDiskPath, $thumbStorePath);
-
-            // Strategy B: Fall back to PHP download only if ffmpeg URL input failed
-            if (!$thumbnailPath) {
-                @mkdir(dirname($videoFullPath), 0755, true);
-                $ctx  = stream_context_create(['http' => ['timeout' => 90, 'follow_location' => true]]);
-                $data = @file_get_contents($remoteUrl, false, $ctx);
-                if ($data && strlen($data) >= 512 && $this->looksLikeVideo($data)) {
-                    file_put_contents($videoFullPath, $data);
-                    $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
-                    @unlink($videoFullPath);
-                }
-            }
+            // FFmpeg fallback (VPS only — silently fails on Hostinger)
+            $videoFullPath = Storage::disk('public')->path($record->path);
+            $folder = dirname($record->path);
+            $thumbName = Str::uuid() . '.jpg';
+            $thumbStorePath = $folder . '/thumbs/' . $thumbName;
+            $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
+            @mkdir(dirname($thumbDiskPath), 0755, true);
+            $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
         }
 
         if (!$thumbnailPath) {
-            return response()->json(['error' => true, 'message' => 'FFmpeg could not extract a frame from this video.'], 500);
+            return response()->json(['error' => true, 'message' => 'Could not generate thumbnail. On shared hosting, a thumbnail file must be uploaded directly.'], 500);
         }
 
         $record->update([
             'thumbnail_path' => $thumbnailPath,
-            'thumbnail_url'  => Storage::disk('public')->url($thumbnailPath),
+            'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
         ]);
 
         return response()->json([
-            'error'         => false,
-            'message'       => 'Thumbnail generated.',
+            'error' => false,
+            'message' => 'Thumbnail generated.',
             'thumbnail_url' => $record->fresh()->thumbnail_url,
-            'data'          => $record->fresh(),
+            'data' => $record->fresh(),
         ]);
     }
-
     private function applyWatermark(string $storedPath, string $ext): void
     {
         try {
             $supportedExt = ['jpg', 'jpeg', 'png', 'webp'];
-            if (!in_array(strtolower($ext), $supportedExt)) return;
+            if (!in_array(strtolower($ext), $supportedExt))
+                return;
 
-            if (!extension_loaded('gd')) return;
+            if (!extension_loaded('gd'))
+                return;
 
             // Load settings from DB, fall back to sensible defaults
             $settings = DB::table('site_settings')
                 ->whereIn('key', ['watermark_enabled', 'watermark_logo_url', 'watermark_position', 'watermark_opacity', 'watermark_size'])
                 ->pluck('value', 'key');
 
-            if (($settings['watermark_enabled'] ?? '1') === '0') return;
+            if (($settings['watermark_enabled'] ?? '1') === '0')
+                return;
 
-            $position  = $settings['watermark_position'] ?? 'center';
-            $opacity   = (int) ($settings['watermark_opacity'] ?? 60);
+            $position = $settings['watermark_position'] ?? 'center';
+            $opacity = (int) ($settings['watermark_opacity'] ?? 60);
             $sizeRatio = (int) ($settings['watermark_size'] ?? 20);
 
             // Resolve watermark image: custom logo from settings, or bundled default
@@ -337,8 +305,9 @@ class MediaController extends Controller
             $watermarkFile = public_path('watermark.png');
 
             $diskPath = Storage::disk('public')->path($storedPath);
-            $main     = $this->imageFromFile($diskPath);
-            if (!$main) return;
+            $main = $this->imageFromFile($diskPath);
+            if (!$main)
+                return;
 
             $mainW = imagesx($main);
             $mainH = imagesy($main);
@@ -351,12 +320,15 @@ class MediaController extends Controller
             if (!$watermark && file_exists($watermarkFile)) {
                 $watermark = @imagecreatefrompng($watermarkFile) ?: null;
             }
-            if (!$watermark) { imagedestroy($main); return; }
+            if (!$watermark) {
+                imagedestroy($main);
+                return;
+            }
 
-            $wmW    = (int) ($mainW * $sizeRatio / 100);
-            $origW  = imagesx($watermark);
-            $origH  = imagesy($watermark);
-            $wmH    = (int) ($origH * $wmW / max($origW, 1));
+            $wmW = (int) ($mainW * $sizeRatio / 100);
+            $origW = imagesx($watermark);
+            $origH = imagesy($watermark);
+            $wmH = (int) ($origH * $wmW / max($origW, 1));
 
             $resized = imagecreatetruecolor($wmW, $wmH);
             imagealphablending($resized, false);
@@ -368,23 +340,27 @@ class MediaController extends Controller
 
             $margin = 10;
             [$dstX, $dstY] = match ($position) {
-                'top-left'    => [$margin, $margin],
-                'top-right'   => [$mainW - $wmW - $margin, $margin],
+                'top-left' => [$margin, $margin],
+                'top-right' => [$mainW - $wmW - $margin, $margin],
                 'bottom-left' => [$margin, $mainH - $wmH - $margin],
-                'center'      => [(int)(($mainW - $wmW) / 2), (int)(($mainH - $wmH) / 2)],
-                default       => [$mainW - $wmW - $margin, $mainH - $wmH - $margin],
+                'center' => [(int) (($mainW - $wmW) / 2), (int) (($mainH - $wmH) / 2)],
+                default => [$mainW - $wmW - $margin, $mainH - $wmH - $margin],
             };
 
             $this->imageCopyMergeAlpha($main, $resized, $dstX, $dstY, 0, 0, $wmW, $wmH, $opacity);
             imagedestroy($resized);
 
             $lext = strtolower($ext);
-            if ($lext === 'png')       imagepng($main, $diskPath);
-            elseif ($lext === 'webp')  imagewebp($main, $diskPath);
-            else                       imagejpeg($main, $diskPath, 92);
+            if ($lext === 'png')
+                imagepng($main, $diskPath);
+            elseif ($lext === 'webp')
+                imagewebp($main, $diskPath);
+            else
+                imagejpeg($main, $diskPath, 92);
 
             imagedestroy($main);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
     }
 
     private function imageFromFile(string $path): \GdImage|false
@@ -392,9 +368,9 @@ class MediaController extends Controller
         $type = @exif_imagetype($path);
         return match ($type) {
             IMAGETYPE_JPEG => imagecreatefromjpeg($path),
-            IMAGETYPE_PNG  => imagecreatefrompng($path),
+            IMAGETYPE_PNG => imagecreatefrompng($path),
             IMAGETYPE_WEBP => imagecreatefromwebp($path),
-            default        => false,
+            default => false,
         };
     }
 
@@ -402,19 +378,22 @@ class MediaController extends Controller
     {
         try {
             if (str_starts_with($url, '/storage/')) {
-                $rel  = Str::after($url, '/storage/');
+                $rel = Str::after($url, '/storage/');
                 $path = Storage::disk('public')->path($rel);
-                if (file_exists($path)) return $this->imageFromFile($path);
+                if (file_exists($path))
+                    return $this->imageFromFile($path);
             }
             // Handle root-relative paths like /watermark.png
             if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
                 $path = public_path(ltrim($url, '/'));
-                if (file_exists($path)) return $this->imageFromFile($path);
+                if (file_exists($path))
+                    return $this->imageFromFile($path);
                 return false;
             }
-            $ctx  = stream_context_create(['http' => ['timeout' => 5]]);
+            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
             $data = @file_get_contents($url, false, $ctx);
-            if (!$data) return false;
+            if (!$data)
+                return false;
             $img = @imagecreatefromstring($data);
             return $img ?: false;
         } catch (\Throwable) {
@@ -423,9 +402,15 @@ class MediaController extends Controller
     }
 
     private function imageCopyMergeAlpha(
-        \GdImage $dst, \GdImage $src,
-        int $dstX, int $dstY, int $srcX, int $srcY,
-        int $srcW, int $srcH, int $pct
+        \GdImage $dst,
+        \GdImage $src,
+        int $dstX,
+        int $dstY,
+        int $srcX,
+        int $srcY,
+        int $srcW,
+        int $srcH,
+        int $pct
     ): void {
         // Enable alpha blending on destination so semi-transparent pixels composite correctly
         imagealphablending($dst, true);
@@ -436,15 +421,16 @@ class MediaController extends Controller
                 $srcAlpha = ($pixel >> 24) & 0x7F; // 0 = fully opaque, 127 = fully transparent
 
                 // Skip fully transparent pixels — leave background untouched
-                if ($srcAlpha === 127) continue;
+                if ($srcAlpha === 127)
+                    continue;
 
                 $r = ($pixel >> 16) & 0xFF;
-                $g = ($pixel >> 8)  & 0xFF;
-                $b = $pixel         & 0xFF;
+                $g = ($pixel >> 8) & 0xFF;
+                $b = $pixel & 0xFF;
 
                 // Combine watermark pixel's own transparency with the global opacity setting.
                 // $pct=100 → fully opaque (no extra alpha), $pct=0 → fully transparent.
-                $opacityAlpha  = (int) round(127 * (1 - $pct / 100));
+                $opacityAlpha = (int) round(127 * (1 - $pct / 100));
                 $combinedAlpha = min(127, $srcAlpha + $opacityAlpha);
 
                 $color = imagecolorallocatealpha($dst, $r, $g, $b, $combinedAlpha);
@@ -458,24 +444,24 @@ class MediaController extends Controller
         $records = MediaFile::whereNull('thumbnail_url')
             ->where(function ($q) {
                 $q->where('mime_type', 'like', 'video/%')
-                  ->orWhere('file_name', 'like', '%.mp4')
-                  ->orWhere('file_name', 'like', '%.mov')
-                  ->orWhere('file_name', 'like', '%.webm')
-                  ->orWhere('file_name', 'like', '%.avi');
+                    ->orWhere('file_name', 'like', '%.mp4')
+                    ->orWhere('file_name', 'like', '%.mov')
+                    ->orWhere('file_name', 'like', '%.webm')
+                    ->orWhere('file_name', 'like', '%.avi');
             })
             ->get();
 
-        $done   = 0;
+        $done = 0;
         $failed = [];
 
         foreach ($records as $record) {
             $videoFullPath = Storage::disk('public')->path($record->path);
             $thumbnailPath = null;
 
-            $folder         = dirname($record->path);
-            $thumbName      = Str::uuid() . '.jpg';
+            $folder = dirname($record->path);
+            $thumbName = Str::uuid() . '.jpg';
             $thumbStorePath = $folder . '/thumbs/' . $thumbName;
-            $thumbDiskPath  = Storage::disk('public')->path($thumbStorePath);
+            $thumbDiskPath = Storage::disk('public')->path($thumbStorePath);
             @mkdir(dirname($thumbDiskPath), 0755, true);
 
             if (file_exists($videoFullPath) && filesize($videoFullPath) > 0) {
@@ -483,7 +469,10 @@ class MediaController extends Controller
                 $thumbnailPath = $this->generateVideoThumbnail($videoFullPath, $thumbDiskPath, $thumbStorePath);
             } else {
                 $remoteUrl = $record->url;
-                if (!$remoteUrl) { $failed[] = $record->id; continue; }
+                if (!$remoteUrl) {
+                    $failed[] = $record->id;
+                    continue;
+                }
 
                 // Strategy A: ffmpeg reads directly from URL (no PHP download)
                 $thumbnailPath = $this->generateVideoThumbnailFromUrl($remoteUrl, $thumbDiskPath, $thumbStorePath);
@@ -491,7 +480,7 @@ class MediaController extends Controller
                 // Strategy B: PHP download fallback
                 if (!$thumbnailPath) {
                     @mkdir(dirname($videoFullPath), 0755, true);
-                    $ctx  = stream_context_create(['http' => ['timeout' => 90, 'follow_location' => true]]);
+                    $ctx = stream_context_create(['http' => ['timeout' => 90, 'follow_location' => true]]);
                     $data = @file_get_contents($remoteUrl, false, $ctx);
                     if ($data && strlen($data) >= 512 && $this->looksLikeVideo($data)) {
                         file_put_contents($videoFullPath, $data);
@@ -504,7 +493,7 @@ class MediaController extends Controller
             if ($thumbnailPath) {
                 $record->update([
                     'thumbnail_path' => $thumbnailPath,
-                    'thumbnail_url'  => Storage::disk('public')->url($thumbnailPath),
+                    'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
                 ]);
                 $done++;
             } else {
@@ -513,11 +502,11 @@ class MediaController extends Controller
         }
 
         return response()->json([
-            'error'   => false,
+            'error' => false,
             'message' => "Generated {$done} thumbnail(s)." . (count($failed) ? ' Failed IDs: ' . implode(', ', $failed) : ''),
-            'done'    => $done,
-            'failed'  => $failed,
-            'total'   => $records->count(),
+            'done' => $done,
+            'failed' => $failed,
+            'total' => $records->count(),
         ]);
     }
 
@@ -527,9 +516,11 @@ class MediaController extends Controller
      */
     private function generateVideoThumbnailFromUrl(string $videoUrl, string $thumbDiskPath, string $thumbStorePath): ?string
     {
-        if (!function_exists('exec')) return null;
+        if (!function_exists('exec'))
+            return null;
         $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
-        if (in_array('exec', $disabled)) return null;
+        if (in_array('exec', $disabled))
+            return null;
 
         $ffmpegBin = $this->getFfmpegBin();
 
@@ -538,8 +529,8 @@ class MediaController extends Controller
             mkdir($thumbDir, 0755, true);
         }
 
-        $base    = escapeshellarg($ffmpegBin) . ' -y';
-        $in_arg  = ' -i ' . escapeshellarg($videoUrl);
+        $base = escapeshellarg($ffmpegBin) . ' -y';
+        $in_arg = ' -i ' . escapeshellarg($videoUrl);
         $out_arg = ' -frames:v 1 -vf scale=640:-2 -q:v 3 -update 1 ' . escapeshellarg($thumbDiskPath);
 
         $strategies = [
@@ -563,9 +554,9 @@ class MediaController extends Controller
             $stderr = file_exists($errFile) ? trim(file_get_contents($errFile)) : '';
             \Illuminate\Support\Facades\Log::warning('ffmpeg URL strategy failed', [
                 'strategy' => $idx + 1,
-                'url'      => $videoUrl,
-                'ret'      => $ret,
-                'stderr'   => mb_substr($stderr, -400),
+                'url' => $videoUrl,
+                'ret' => $ret,
+                'stderr' => mb_substr($stderr, -400),
             ]);
         }
 
@@ -588,25 +579,32 @@ class MediaController extends Controller
         $magic = substr($data, 0, 12);
 
         // MP4 / MOV / M4V: ftyp box at offset 4
-        if (substr($data, 4, 4) === 'ftyp') return true;
+        if (substr($data, 4, 4) === 'ftyp')
+            return true;
 
         // MOV: wide/mdat/free atom signatures
-        if (in_array(substr($data, 4, 4), ['mdat', 'wide', 'free', 'moov', 'pnot'])) return true;
+        if (in_array(substr($data, 4, 4), ['mdat', 'wide', 'free', 'moov', 'pnot']))
+            return true;
 
         // AVI: RIFF....AVI
-        if (substr($magic, 0, 4) === 'RIFF' && substr($data, 8, 4) === 'AVI ') return true;
+        if (substr($magic, 0, 4) === 'RIFF' && substr($data, 8, 4) === 'AVI ')
+            return true;
 
         // WebM / MKV: EBML magic
-        if (substr($magic, 0, 4) === "\x1A\x45\xDF\xA3") return true;
+        if (substr($magic, 0, 4) === "\x1A\x45\xDF\xA3")
+            return true;
 
         // MPEG-TS: sync byte 0x47
-        if ($magic[0] === "\x47") return true;
+        if ($magic[0] === "\x47")
+            return true;
 
         // FLV
-        if (substr($magic, 0, 3) === 'FLV') return true;
+        if (substr($magic, 0, 3) === 'FLV')
+            return true;
 
         // Ogg (OGG video)
-        if (substr($magic, 0, 4) === 'OggS') return true;
+        if (substr($magic, 0, 4) === 'OggS')
+            return true;
 
         return false;
     }

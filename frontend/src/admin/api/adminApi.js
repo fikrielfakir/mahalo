@@ -108,7 +108,10 @@ export const adminConsults = {
 export const adminMedia = {
   list:              (p = {})   => client.get('/admin/media', { params: p }),
   upload:            (formData) => client.post('/admin/media/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  rethumbnail:       (id)       => client.post(`/admin/media/${id}/thumbnail`),
+  rethumbnail:       (id, formData = null) =>
+    client.post(`/admin/media/${id}/thumbnail`, formData ?? {}, {
+      headers: formData ? { 'Content-Type': 'multipart/form-data' } : {}
+    }),
   batchRethumbnail:  ()         => client.post('/admin/media/thumbnail/batch'),
   delete:            (id)       => client.delete(`/admin/media/${id}`),
 }

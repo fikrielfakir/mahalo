@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Admin\AdminInvestorController;
 use App\Http\Controllers\Api\Admin\AdminProjectController;
 use App\Http\Controllers\Api\Admin\AdminPropertyController;
 use App\Http\Controllers\Api\Admin\AdminSettingsController;
+use App\Http\Controllers\Api\Admin\AdminSettingsTranslationController;
 use App\Http\Controllers\Api\PublicSettingsController;
 use App\Http\Controllers\Api\Admin\AdminStatsController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
@@ -228,6 +229,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
         Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
+
+        // Translatable settings (per-locale overrides)
+        Route::get('/settings/translations/{locale}', [AdminSettingsTranslationController::class, 'show']);
+        Route::put('/settings/translations/{locale}', [AdminSettingsTranslationController::class, 'update']);
+        Route::delete('/settings/translations/{locale}/{key}', [AdminSettingsTranslationController::class, 'destroy'])->where('key', '.+');
 
         // App Update Manager
         Route::get('/app-update/history', [AdminAppUpdateController::class, 'history']);

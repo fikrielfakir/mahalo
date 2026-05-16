@@ -137,6 +137,9 @@ export const adminSettings = {
   uploadLogo:   (formData) => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   testMail:     (to)       => client.post('/admin/settings/mail-test', { to }),
   sitemapPing:  ()         => client.post('/admin/settings/sitemap-ping'),
+  getTranslations:    (locale)     => client.get(`/admin/settings/translations/${locale}`),
+  updateTranslations: (locale, d)  => client.put(`/admin/settings/translations/${locale}`, d),
+  deleteTranslation:  (locale, key) => client.delete(`/admin/settings/translations/${locale}/${key}`),
 }
 
 export const publicApi = {

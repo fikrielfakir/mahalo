@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PublicSettingsController extends Controller
@@ -26,13 +27,41 @@ class PublicSettingsController extends Controller
         'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
     ];
 
-    public function show(): JsonResponse
+    private const TRANSLATABLE_KEYS = [
+        'footer_description', 'tagline',
+        'seo_title', 'seo_description', 'seo_keywords',
+        'maintenance_message', 'coming_soon_message',
+        'cookie_consent_title', 'cookie_consent_message',
+        'cookie_accept_text', 'cookie_decline_text',
+        'page_about', 'page_privacy', 'page_terms',
+    ];
+
+    private const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar'];
+
+    public function show(Request $request): JsonResponse
     {
         $rows     = DB::table('site_settings')->whereIn('key', self::PUBLIC_KEYS)->get();
         $settings = [];
         foreach ($rows as $row) {
             $settings[$row->key] = $row->value;
         }
+
+        // Apply locale-specific overrides when a valid locale is requested
+        $locale = $request->query('locale');
+        if ($locale && in_array($locale, self::SUPPORTED_LOCALES)) {
+            $overrides = DB::table('site_settings_translations')
+                ->where('locale', $locale)
+                ->whereIn('key', self::TRANSLATABLE_KEYS)
+                ->pluck('value', 'key')
+                ->toArray();
+
+            foreach ($overrides as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    $settings[$key] = $value;
+                }
+            }
+        }
+
         return response()->json(['data' => $settings, 'error' => false, 'message' => null]);
     }
 }

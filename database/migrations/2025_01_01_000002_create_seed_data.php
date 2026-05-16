@@ -84,16 +84,14 @@ return new class extends Migration
 
         // Sample Agent
         DB::table('re_accounts')->insert([
-            'first_name'  => 'Youssef',
-            'last_name'   => 'El Amrani',
-            'email'       => 'agent@homzen.ma',
-            'password'    => bcrypt('password'),
-            'phone'       => '+212 6 12 34 56 78',
-            'is_featured' => true,
-            'is_verified' => true,
-            'city_id'     => 1,
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            ['first_name' => 'Youssef',  'last_name' => 'El Amrani',  'email' => 'agent@homzen.ma',      'password' => bcrypt('password'), 'phone' => '+212 6 12 34 56 78', 'avatar_id' => 'avatars/1.jpg',  'is_featured' => true,  'is_verified' => true,  'city_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Sofia',    'last_name' => 'Benali',     'email' => 'sofia@homzen.ma',      'password' => bcrypt('password'), 'phone' => '+212 6 23 45 67 89', 'avatar_id' => 'avatars/2.jpg',  'is_featured' => true,  'is_verified' => true,  'city_id' => 2, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Karim',    'last_name' => 'Mansouri',   'email' => 'karim@homzen.ma',      'password' => bcrypt('password'), 'phone' => '+212 6 34 56 78 90', 'avatar_id' => 'avatars/3.jpg',  'is_featured' => true,  'is_verified' => true,  'city_id' => 3, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Nadia',    'last_name' => 'El Fassi',   'email' => 'nadia@homzen.ma',      'password' => bcrypt('password'), 'phone' => '+212 6 45 67 89 01', 'avatar_id' => 'avatars/4.jpg',  'is_featured' => true,  'is_verified' => false, 'city_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Omar',     'last_name' => 'Tahiri',     'email' => 'omar@homzen.ma',       'password' => bcrypt('password'), 'phone' => '+212 6 56 78 90 12', 'avatar_id' => 'avatars/5.jpg',  'is_featured' => false, 'is_verified' => true,  'city_id' => 4, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Leila',    'last_name' => 'Chraibi',    'email' => 'leila@homzen.ma',      'password' => bcrypt('password'), 'phone' => '+212 6 67 89 01 23', 'avatar_id' => 'avatars/6.jpg',  'is_featured' => false, 'is_verified' => true,  'city_id' => 2, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Hassan',   'last_name' => 'Alaoui',     'email' => 'hassan@homzen.ma',     'password' => bcrypt('password'), 'phone' => '+212 6 78 90 12 34', 'avatar_id' => 'avatars/7.jpg',  'is_featured' => false, 'is_verified' => false, 'city_id' => 5, 'created_at' => now(), 'updated_at' => now()],
+            ['first_name' => 'Fatima',   'last_name' => 'Zouiten',    'email' => 'fatima@homzen.ma',     'password' => bcrypt('password'), 'phone' => '+212 6 89 01 23 45', 'avatar_id' => 'avatars/8.jpg',  'is_featured' => false, 'is_verified' => true,  'city_id' => 3, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // Sample Properties

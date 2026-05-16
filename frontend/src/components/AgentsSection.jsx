@@ -14,7 +14,7 @@ function AgentCard({ agent, index }) {
   const displayName = agent.display_name || agent.name || 'Agent'
   const rawAvatar   = agent.avatar_url || agent.avatar
   const avatarUrl   = rawAvatar
-    ? (rawAvatar.startsWith('http') ? rawAvatar : `/storage/${rawAvatar}`)
+    ? (rawAvatar.startsWith('http') || rawAvatar.startsWith('/') ? rawAvatar : `/storage/${rawAvatar}`)
     : null
 
   return (

@@ -14,7 +14,7 @@ class AgentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Agent::with(['city']);
+        $query = Agent::with(['city'])->withCount('properties');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -51,7 +51,7 @@ class AgentController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $agent = Agent::with(['city'])->find($id);
+        $agent = Agent::with(['city'])->withCount('properties')->find($id);
 
         if (! $agent) {
             return response()->json(['data' => null, 'error' => true, 'message' => 'Agent not found'], 404);
@@ -131,6 +131,11 @@ class AgentController extends Controller
 
     private function formatAgent(Agent $agent): array
     {
+        $raw = $agent->avatar_id;
+        $avatarUrl = $raw
+            ? (str_starts_with($raw, 'http') || str_starts_with($raw, '/') ? $raw : "/storage/$raw")
+            : null;
+
         return [
             'id'          => $agent->id,
             'name'        => $agent->name,
@@ -140,9 +145,11 @@ class AgentController extends Controller
             'phone'       => $agent->phone,
             'whatsapp'    => $agent->whatsapp,
             'description' => $agent->description,
-            'avatar'      => $agent->avatar_id ? null : null,
+            'avatar_url'  => $avatarUrl,
+            'avatar'      => $avatarUrl,
             'is_featured' => $agent->is_featured,
             'is_verified' => $agent->is_verified,
+            'properties_count' => $agent->properties_count ?? 0,
             'city'        => $agent->city ? ['id' => $agent->city->id, 'name' => $agent->city->name] : null,
             'created_at'  => $agent->created_at,
         ];

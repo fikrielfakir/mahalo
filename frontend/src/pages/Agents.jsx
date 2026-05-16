@@ -56,7 +56,7 @@ export default function Agents() {
               : agents.map((agent, i) => {
                   const rawAvatar  = agent.avatar_url || agent.avatar
                   const avatarUrl  = rawAvatar
-                    ? (rawAvatar.startsWith('http') ? rawAvatar : `/storage/${rawAvatar}`)
+                    ? (rawAvatar.startsWith('http') || rawAvatar.startsWith('/') ? rawAvatar : `/storage/${rawAvatar}`)
                     : null
                   const displayName = agent.display_name || agent.name || 'Agent'
 

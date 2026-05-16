@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { adminSettings } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import { FormField, Input, Textarea } from '../components/Modal'
@@ -7,6 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
+  Languages,
 } from 'lucide-react'
 
 const TABS = [
@@ -21,6 +22,27 @@ const TABS = [
   { id: 'site_mode',  label: 'Site Mode',   icon: Wrench },
   { id: 'pages',      label: 'Pages',       icon: FileText },
   { id: 'cookies',    label: 'Cookies',     icon: Cookie },
+]
+
+// Tabs that contain translatable fields
+const TRANSLATABLE_TABS = ['general', 'seo', 'site_mode', 'pages', 'cookies']
+
+const LOCALES = [
+  { code: 'default', label: 'Default', flag: '🌐' },
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'fr', label: 'FR', flag: '🇫🇷' },
+  { code: 'es', label: 'ES', flag: '🇪🇸' },
+  { code: 'ar', label: 'AR', flag: '🇸🇦' },
+]
+
+// Keys that are translatable (have per-locale overrides)
+const TRANSLATABLE_KEYS = [
+  'footer_description', 'tagline',
+  'seo_title', 'seo_description', 'seo_keywords',
+  'maintenance_message', 'coming_soon_message',
+  'cookie_consent_title', 'cookie_consent_message',
+  'cookie_accept_text', 'cookie_decline_text',
+  'page_about', 'page_privacy', 'page_terms',
 ]
 
 const DEFAULTS = {
@@ -39,36 +61,29 @@ const DEFAULTS = {
   google_analytics_id: '',
   currency: 'MAD',
   properties_per_page: '12',
-  // Theme
   primary_color: '#BA1932',
   secondary_color: '#730D26',
   accent_color: '#F5F5F5',
   logo_url: '/logo.png',
   footer_logo_url: '/logo-light.png',
-  // Watermark
   watermark_enabled: '1',
   watermark_logo_url: '/watermark.png',
   watermark_position: 'center',
   watermark_opacity: '60',
   watermark_size: '20',
-  // Google OAuth
   google_client_id: '',
   google_client_secret: '',
-  // Site mode
   maintenance_mode: '0',
   maintenance_message: 'Notre site est temporairement hors ligne pour maintenance. Nous serons de retour très bientôt.',
   coming_soon_mode: '0',
   coming_soon_date: '',
   coming_soon_message: "Nous préparons quelque chose d'exceptionnel. Restez à l'écoute.",
-  // Pages
   page_about: '',
   page_privacy: '',
   page_terms: '',
-  // Footer & SEO
   footer_description: 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.',
   seo_keywords: 'immobilier maroc, real estate morocco, appartement vendre maroc, villa maroc, casablanca immobilier',
   google_site_verification: '',
-  // Cookies
   cookie_consent_enabled: '1',
   cookie_consent_title: 'We use cookies',
   cookie_consent_message: 'We use cookies to enhance your experience, analyse traffic, and personalise content. You can manage your preferences below.',
@@ -86,19 +101,29 @@ const WATERMARK_POSITIONS = [
 ]
 
 export default function SettingsPage() {
-  const [form, setForm]           = useState(DEFAULTS)
-  const [tab, setTab]             = useState('general')
-  const [saving, setSaving]       = useState(false)
-  const [saved, setSaved]         = useState(false)
-  const [loading, setLoading]     = useState(true)
-  const [uploading, setUploading] = useState({})
-  const [showPwd, setShowPwd]         = useState(false)
-  const [showSecret, setShowSecret]   = useState(false)
-  const [testing, setTesting]         = useState(false)
-  const [testResult, setTestResult]   = useState(null)
-  const [copied, setCopied]           = useState(false)
-  const [pinging, setPinging]         = useState(false)
-  const [pingResult, setPingResult]   = useState(null)
+  const [form, setForm]                   = useState(DEFAULTS)
+  const [tab, setTab]                     = useState('general')
+  const [saving, setSaving]               = useState(false)
+  const [saved, setSaved]                 = useState(false)
+  const [loading, setLoading]             = useState(true)
+  const [uploading, setUploading]         = useState({})
+  const [showPwd, setShowPwd]             = useState(false)
+  const [showSecret, setShowSecret]       = useState(false)
+  const [testing, setTesting]             = useState(false)
+  const [testResult, setTestResult]       = useState(null)
+  const [copied, setCopied]               = useState(false)
+  const [pinging, setPinging]             = useState(false)
+  const [pingResult, setPingResult]       = useState(null)
+
+  // Locale state
+  const [locale, setLocale]               = useState('default')
+  const [transForm, setTransForm]         = useState({})
+  const [transDefaults, setTransDefaults] = useState({})
+  const [transLoading, setTransLoading]   = useState(false)
+  const [transSaved, setTransSaved]       = useState(false)
+
+  const isLocaleMode = locale !== 'default'
+  const tabHasTranslations = TRANSLATABLE_TABS.includes(tab)
 
   const copyRedirectUri = () => {
     const uri = `${window.location.origin}/api/v1/auth/google/callback`
@@ -117,8 +142,54 @@ export default function SettingsPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Load locale-specific translations when locale changes
+  useEffect(() => {
+    if (locale === 'default') {
+      setTransForm({})
+      setTransDefaults({})
+      return
+    }
+    setTransLoading(true)
+    adminSettings.getTranslations(locale)
+      .then(r => {
+        if (r?.data) {
+          const vals = {}
+          const defs = {}
+          Object.entries(r.data).forEach(([key, meta]) => {
+            vals[key] = meta.value ?? ''
+            defs[key] = meta.default ?? ''
+          })
+          setTransForm(vals)
+          setTransDefaults(defs)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setTransLoading(false))
+  }, [locale])
+
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
   const fBool = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.checked ? '1' : '0' }))
+
+  // For translatable fields: change in transForm when locale active, else form
+  const tf = (k) => (e) => {
+    if (isLocaleMode) {
+      setTransForm(p => ({ ...p, [k]: e.target.value }))
+    } else {
+      setForm(p => ({ ...p, [k]: e.target.value }))
+    }
+  }
+
+  // Get value for a translatable field
+  const tv = (k) => {
+    if (isLocaleMode) return transForm[k] ?? ''
+    return form[k] ?? ''
+  }
+
+  // Get placeholder for translatable field (shows default when in locale mode)
+  const tp = (k, fallback = '') => {
+    if (isLocaleMode) return transDefaults[k] || form[k] || fallback
+    return fallback
+  }
 
   const uploadLogo = async (field, file) => {
     if (!file) return
@@ -140,13 +211,21 @@ export default function SettingsPage() {
     e.preventDefault()
     setSaving(true)
     try {
-      await adminSettings.update(form)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      if (isLocaleMode) {
+        await adminSettings.updateTranslations(locale, transForm)
+        setTransSaved(true)
+        setTimeout(() => setTransSaved(false), 3000)
+      } else {
+        await adminSettings.update(form)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      }
     } catch {
-      localStorage.setItem('mahalo_settings', JSON.stringify(form))
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      if (!isLocaleMode) {
+        localStorage.setItem('mahalo_settings', JSON.stringify(form))
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      }
     } finally {
       setSaving(false)
     }
@@ -169,7 +248,7 @@ export default function SettingsPage() {
     <div>
       <PageHeader title="Site Settings" subtitle="Global configuration">
         <div className="flex items-center gap-2">
-          {saved && (
+          {(saved || transSaved) && (
             <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
               <CheckCircle size={15} /> Saved!
             </div>
@@ -181,7 +260,7 @@ export default function SettingsPage() {
       </PageHeader>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white border border-gray-100 rounded-2xl p-1.5 shadow-sm w-fit">
+      <div className="flex flex-wrap gap-1 mb-4 bg-white border border-gray-100 rounded-2xl p-1.5 shadow-sm w-fit">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -199,29 +278,81 @@ export default function SettingsPage() {
         ))}
       </div>
 
+      {/* Locale Switcher — shown only on tabs with translatable content */}
+      {tabHasTranslations && (
+        <div className="flex items-center gap-3 mb-6 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+            <Languages size={14} className="text-[#BA1932]" />
+            Language
+          </div>
+          <div className="flex gap-1">
+            {LOCALES.map(({ code, label, flag }) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLocale(code)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  locale === code
+                    ? 'bg-[#BA1932] text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-50 border border-gray-100'
+                }`}
+              >
+                <span>{flag}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+          {isLocaleMode && (
+            <p className="text-xs text-gray-400 ml-auto">
+              Editing <strong>{LOCALES.find(l => l.code === locale)?.label}</strong> translations — leave a field blank to use the Default value
+            </p>
+          )}
+          {transLoading && (
+            <div className="ml-2 w-4 h-4 border-2 border-[#BA1932] border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+      )}
+
       <form id="settings-form" onSubmit={submit} className="space-y-6">
 
         {/* ── GENERAL TAB ── */}
         {tab === 'general' && (
           <>
             <Section title="General" icon={Globe}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="App / Site Name" required>
-                  <Input value={form.site_name} onChange={f('site_name')} placeholder="Mahalo" />
-                </FormField>
-                <FormField label="Currency">
-                  <Input value={form.currency} onChange={f('currency')} placeholder="MAD" />
-                </FormField>
-              </div>
-              <FormField label="Tagline">
-                <Input value={form.tagline} onChange={f('tagline')} placeholder="Morocco's Most Trusted Real Estate Platform" />
-              </FormField>
-              <FormField label="Properties per page">
-                <Input type="number" min="4" max="48" value={form.properties_per_page} onChange={f('properties_per_page')} />
-              </FormField>
-              <FormField label="Footer Description" hint="Short blurb shown below the logo in the site footer">
-                <Textarea value={form.footer_description} onChange={f('footer_description')} rows={3} placeholder="Premium real estate experiences in Morocco…" />
-              </FormField>
+              {isLocaleMode ? (
+                <>
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-center gap-2">
+                    <Info size={13} className="shrink-0" />
+                    Only text fields below can be translated. Settings like site name, currency, and display options are shared across all languages.
+                  </div>
+                  <FormField label="Tagline" hint={`Default: "${transDefaults.tagline || form.tagline}"`}>
+                    <Input value={tv('tagline')} onChange={tf('tagline')} placeholder={tp('tagline', "Morocco's Most Trusted Real Estate Platform")} />
+                  </FormField>
+                  <FormField label="Footer Description" hint={`Default: "${(transDefaults.footer_description || form.footer_description)?.substring(0, 60)}…"`}>
+                    <Textarea value={tv('footer_description')} onChange={tf('footer_description')} rows={3} placeholder={tp('footer_description', 'Premium real estate experiences in Morocco…')} />
+                  </FormField>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="App / Site Name" required>
+                      <Input value={form.site_name} onChange={f('site_name')} placeholder="Mahalo" />
+                    </FormField>
+                    <FormField label="Currency">
+                      <Input value={form.currency} onChange={f('currency')} placeholder="MAD" />
+                    </FormField>
+                  </div>
+                  <FormField label="Tagline">
+                    <Input value={form.tagline} onChange={f('tagline')} placeholder="Morocco's Most Trusted Real Estate Platform" />
+                  </FormField>
+                  <FormField label="Properties per page">
+                    <Input type="number" min="4" max="48" value={form.properties_per_page} onChange={f('properties_per_page')} />
+                  </FormField>
+                  <FormField label="Footer Description" hint="Short blurb shown below the logo in the site footer">
+                    <Textarea value={form.footer_description} onChange={f('footer_description')} rows={3} placeholder="Premium real estate experiences in Morocco…" />
+                  </FormField>
+                </>
+              )}
             </Section>
           </>
         )}
@@ -255,8 +386,8 @@ export default function SettingsPage() {
             <Section title="Logos" icon={Image}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <LogoField
-                  label="Header Logo"
-                  hint="Shown in the top navigation bar"
+                  label="Main Logo"
+                  hint="Shown in header and light backgrounds"
                   value={form.logo_url}
                   field="logo_url"
                   uploading={uploading.logo_url}
@@ -264,7 +395,7 @@ export default function SettingsPage() {
                 />
                 <LogoField
                   label="Footer Logo"
-                  hint="Shown in the site footer"
+                  hint="Shown in the dark footer — use a light/white version"
                   value={form.footer_logo_url}
                   field="footer_logo_url"
                   uploading={uploading.footer_logo_url}
@@ -272,21 +403,26 @@ export default function SettingsPage() {
                 />
               </div>
             </Section>
-
           </>
         )}
 
         {/* ── WATERMARK TAB ── */}
         {tab === 'watermark' && (
           <>
-            <Section title="Watermark Settings" icon={Droplets}>
-              {/* Enable / Disable toggle */}
+            <Section title="Property Image Watermark" icon={Droplets}>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 flex items-start gap-3 mb-2">
+                <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+                <p className="text-xs text-blue-700">
+                  When enabled, every property image will automatically be stamped with your logo during upload.
+                  The watermark is applied server-side and does not affect original files.
+                </p>
+              </div>
+
+              {/* Enable toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">Auto-watermark on upload</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    When enabled, the Mahalo logo is stamped on every image as it is uploaded
-                  </p>
+                  <p className="text-sm font-semibold text-gray-800">Enable Watermark</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Stamp uploaded property images with your logo</p>
                 </div>
                 <div
                   onClick={() => setForm(p => ({ ...p, watermark_enabled: p.watermark_enabled === '1' ? '0' : '1' }))}
@@ -300,58 +436,48 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Logo upload */}
-              <LogoField
-                label="Watermark Logo"
-                hint="PNG with transparent background works best. Leave empty to use the default Mahalo logo."
-                value={form.watermark_logo_url}
-                field="watermark_logo_url"
-                uploading={uploading.watermark_logo_url}
-                onChange={uploadLogo}
-              />
-
-              {/* Position / Opacity / Size — always visible */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                <FormField label="Position">
-                  <select
-                    value={form.watermark_position}
-                    onChange={f('watermark_position')}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                  >
-                    {WATERMARK_POSITIONS.map(p => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                </FormField>
-
-                <FormField label="Opacity" hint={`${form.watermark_opacity}%`}>
-                  <input
-                    type="range" min="10" max="100" step="5"
-                    value={form.watermark_opacity}
-                    onChange={f('watermark_opacity')}
-                    className="w-full accent-[#BA1932] mt-2"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                    <span>10%</span><span>100%</span>
-                  </div>
-                </FormField>
-
-                <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
-                  <input
-                    type="range" min="5" max="50" step="5"
-                    value={form.watermark_size}
-                    onChange={f('watermark_size')}
-                    className="w-full accent-[#BA1932] mt-2"
-                  />
-                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
-                    <span>5%</span><span>50%</span>
-                  </div>
-                </FormField>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <LogoField
+                  label="Watermark Logo"
+                  hint="Use a transparent PNG for best results"
+                  value={form.watermark_logo_url}
+                  field="watermark_logo_url"
+                  uploading={uploading.watermark_logo_url}
+                  onChange={uploadLogo}
+                />
+                <div className="space-y-4">
+                  <FormField label="Position">
+                    <select
+                      value={form.watermark_position}
+                      onChange={f('watermark_position')}
+                      className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                    >
+                      {WATERMARK_POSITIONS.map(p => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </select>
+                  </FormField>
+                  <FormField label="Opacity" hint={`${form.watermark_opacity}%`}>
+                    <input
+                      type="range" min="10" max="100" step="5"
+                      value={form.watermark_opacity}
+                      onChange={f('watermark_opacity')}
+                      className="w-full accent-[#BA1932]"
+                    />
+                  </FormField>
+                  <FormField label="Size" hint={`${form.watermark_size}% of image width`}>
+                    <input
+                      type="range" min="5" max="50" step="5"
+                      value={form.watermark_size}
+                      onChange={f('watermark_size')}
+                      className="w-full accent-[#BA1932]"
+                    />
+                  </FormField>
+                </div>
               </div>
 
-              {/* Live preview — always visible */}
               <WatermarkPreview
-                logo={form.watermark_logo_url || '/watermark.png'}
+                logo={form.watermark_logo_url}
                 position={form.watermark_position}
                 opacity={form.watermark_opacity}
                 size={form.watermark_size}
@@ -363,39 +489,39 @@ export default function SettingsPage() {
 
         {/* ── CONTACT TAB ── */}
         {tab === 'contact' && (
-          <Section title="Contact Information" icon={Mail}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Contact Email">
-                <div className="relative">
-                  <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.contact_email} onChange={f('contact_email')} className="pl-9" placeholder="contact@mahalo.ma" />
-                </div>
-              </FormField>
-              <FormField label="Contact Phone">
-                <div className="relative">
-                  <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input value={form.contact_phone} onChange={f('contact_phone')} className="pl-9" placeholder="+212 600 000 000" />
-                </div>
-              </FormField>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="WhatsApp Number" hint="International format e.g. 212612345001">
-                <Input value={form.whatsapp_number} onChange={f('whatsapp_number')} placeholder="212612345001" />
-              </FormField>
-              <FormField label="Office Address">
+          <>
+            <Section title="Contact Information" icon={Mail}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Contact Email">
+                  <div className="relative">
+                    <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input value={form.contact_email} onChange={f('contact_email')} className="pl-9" placeholder="contact@mahalo.ma" />
+                  </div>
+                </FormField>
+                <FormField label="Contact Phone">
+                  <div className="relative">
+                    <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input value={form.contact_phone} onChange={f('contact_phone')} className="pl-9" placeholder="+212 600 000 000" />
+                  </div>
+                </FormField>
+              </div>
+              <FormField label="Address">
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <Input value={form.address} onChange={f('address')} className="pl-9" placeholder="Casablanca, Morocco" />
                 </div>
               </FormField>
-            </div>
-          </Section>
+              <FormField label="WhatsApp Number" hint="Include country code, e.g. +212600000000">
+                <Input value={form.whatsapp_number} onChange={f('whatsapp_number')} placeholder="+212600000000" />
+              </FormField>
+            </Section>
+          </>
         )}
 
         {/* ── SOCIAL TAB ── */}
         {tab === 'social' && (
-          <Section title="Social Media" icon={Instagram}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <>
+            <Section title="Social Media Links" icon={Instagram}>
               <FormField label="Facebook URL">
                 <div className="relative">
                   <Facebook size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -417,95 +543,123 @@ export default function SettingsPage() {
               <FormField label="YouTube URL">
                 <Input value={form.youtube_url} onChange={f('youtube_url')} placeholder="https://youtube.com/@mahalo" />
               </FormField>
-            </div>
-          </Section>
+            </Section>
+          </>
         )}
 
         {/* ── SEO TAB ── */}
         {tab === 'seo' && (
           <>
             <Section title="SEO & Analytics" icon={Globe}>
-              <FormField label="Default SEO Title" hint="Used when no page-specific title is set">
-                <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
-              </FormField>
-              <FormField label="Default Meta Description">
-                <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />
-              </FormField>
-              <FormField label="SEO Keywords" hint="Comma-separated keywords injected into the global meta keywords tag">
-                <div className="relative">
-                  <Tag size={14} className="absolute left-3.5 top-3 text-gray-400" />
-                  <Textarea
-                    value={form.seo_keywords}
-                    onChange={f('seo_keywords')}
-                    rows={2}
-                    className="pl-9"
-                    placeholder="immobilier maroc, real estate morocco, appartement vendre maroc…"
-                  />
-                </div>
-              </FormField>
-              <FormField label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X">
-                <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
-              </FormField>
-              <FormField
-                label="Google Search Console Verification"
-                hint="Paste the content value from the HTML tag method — e.g. abc123XYZ. Once saved, Google will verify your site ownership automatically."
-              >
-                <Input
-                  value={form.google_site_verification}
-                  onChange={f('google_site_verification')}
-                  placeholder="Paste verification code from Google Search Console"
-                  className="font-mono text-sm"
-                />
-              </FormField>
-            </Section>
-
-            <Section title="Sitemap" icon={Map}>
-              <p className="text-sm text-gray-500 mb-4">
-                Notify Google and Bing about your latest sitemap so they re-crawl your listings faster.
-                The sitemap index is always available at <code className="bg-gray-100 px-1.5 py-0.5 rounded-lg text-xs font-mono">/sitemap.xml</code>.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <Btn
-                  type="button"
-                  variant="ghost"
-                  disabled={pinging}
-                  onClick={async () => {
-                    setPinging(true)
-                    setPingResult(null)
-                    try {
-                      const r = await adminSettings.sitemapPing()
-                      const results = r?.data?.results || {}
-                      const lines = Object.entries(results).map(([e, s]) => `${e}: ${s}`).join(' · ')
-                      setPingResult({ ok: true, msg: `Pinged — ${lines}` })
-                    } catch (e) {
-                      setPingResult({ ok: false, msg: e?.message || 'Ping failed.' })
-                    } finally {
-                      setPinging(false)
-                    }
-                  }}
-                >
-                  <RefreshCw size={14} className={pinging ? 'animate-spin' : ''} />
-                  {pinging ? 'Pinging search engines…' : 'Ping Google & Bing'}
-                </Btn>
-
-                <a
-                  href="/sitemap.xml"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-600 transition-all"
-                >
-                  <ExternalLink size={13} /> View sitemap.xml
-                </a>
-              </div>
-
-              {pingResult && (
-                <div className={`mt-3 flex items-start gap-2 text-sm font-medium ${pingResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
-                  {pingResult.ok ? <CheckCircle size={15} className="mt-0.5 shrink-0" /> : <AlertCircle size={15} className="mt-0.5 shrink-0" />}
-                  <span>{pingResult.msg}</span>
-                </div>
+              {isLocaleMode ? (
+                <>
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-center gap-2 mb-1">
+                    <Info size={13} className="shrink-0" />
+                    Leave a field empty to use the Default value. Only content fields are translatable — Google Analytics ID and verification code are shared.
+                  </div>
+                  <FormField label="Default SEO Title" hint={`Default: "${transDefaults.seo_title || form.seo_title}"`}>
+                    <Input value={tv('seo_title')} onChange={tf('seo_title')} placeholder={tp('seo_title', 'Mahalo — Premium Real Estate in Morocco')} />
+                  </FormField>
+                  <FormField label="Default Meta Description" hint={`Default: "${(transDefaults.seo_description || form.seo_description)?.substring(0, 60)}…"`}>
+                    <Textarea value={tv('seo_description')} onChange={tf('seo_description')} rows={3} placeholder={tp('seo_description', 'Find your dream property in Morocco...')} />
+                  </FormField>
+                  <FormField label="SEO Keywords" hint="Comma-separated keywords — leave blank to use Default">
+                    <div className="relative">
+                      <Tag size={14} className="absolute left-3.5 top-3 text-gray-400" />
+                      <Textarea
+                        value={tv('seo_keywords')}
+                        onChange={tf('seo_keywords')}
+                        rows={2}
+                        className="pl-9"
+                        placeholder={tp('seo_keywords', 'immobilier maroc, real estate morocco…')}
+                      />
+                    </div>
+                  </FormField>
+                </>
+              ) : (
+                <>
+                  <FormField label="Default SEO Title" hint="Used when no page-specific title is set">
+                    <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
+                  </FormField>
+                  <FormField label="Default Meta Description">
+                    <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />
+                  </FormField>
+                  <FormField label="SEO Keywords" hint="Comma-separated keywords injected into the global meta keywords tag">
+                    <div className="relative">
+                      <Tag size={14} className="absolute left-3.5 top-3 text-gray-400" />
+                      <Textarea
+                        value={form.seo_keywords}
+                        onChange={f('seo_keywords')}
+                        rows={2}
+                        className="pl-9"
+                        placeholder="immobilier maroc, real estate morocco, appartement vendre maroc…"
+                      />
+                    </div>
+                  </FormField>
+                  <FormField label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X">
+                    <Input value={form.google_analytics_id} onChange={f('google_analytics_id')} placeholder="G-XXXXXXXXXX" />
+                  </FormField>
+                  <FormField
+                    label="Google Search Console Verification"
+                    hint="Paste the content value from the HTML tag method — e.g. abc123XYZ. Once saved, Google will verify your site ownership automatically."
+                  >
+                    <Input
+                      value={form.google_site_verification}
+                      onChange={f('google_site_verification')}
+                      placeholder="Paste verification code from Google Search Console"
+                      className="font-mono text-sm"
+                    />
+                  </FormField>
+                </>
               )}
             </Section>
+
+            {!isLocaleMode && (
+              <Section title="Sitemap" icon={Map}>
+                <p className="text-sm text-gray-500 mb-4">
+                  Notify Google and Bing about your latest sitemap so they re-crawl your listings faster.
+                  The sitemap index is always available at <code className="bg-gray-100 px-1.5 py-0.5 rounded-lg text-xs font-mono">/sitemap.xml</code>.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Btn
+                    type="button"
+                    variant="ghost"
+                    disabled={pinging}
+                    onClick={async () => {
+                      setPinging(true)
+                      setPingResult(null)
+                      try {
+                        const r = await adminSettings.sitemapPing()
+                        const results = r?.data?.results || {}
+                        const lines = Object.entries(results).map(([e, s]) => `${e}: ${s}`).join(' · ')
+                        setPingResult({ ok: true, msg: `Pinged — ${lines}` })
+                      } catch (e) {
+                        setPingResult({ ok: false, msg: e?.message || 'Ping failed.' })
+                      } finally {
+                        setPinging(false)
+                      }
+                    }}
+                  >
+                    <RefreshCw size={14} className={pinging ? 'animate-spin' : ''} />
+                    {pinging ? 'Pinging search engines…' : 'Ping Google & Bing'}
+                  </Btn>
+                  <a
+                    href="/sitemap.xml"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-600 transition-all"
+                  >
+                    <ExternalLink size={13} /> View sitemap.xml
+                  </a>
+                </div>
+                {pingResult && (
+                  <div className={`mt-3 flex items-start gap-2 text-sm font-medium ${pingResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {pingResult.ok ? <CheckCircle size={15} className="mt-0.5 shrink-0" /> : <AlertCircle size={15} className="mt-0.5 shrink-0" />}
+                    <span>{pingResult.msg}</span>
+                  </div>
+                )}
+              </Section>
+            )}
           </>
         )}
 
@@ -523,17 +677,16 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                 {[
-                  { label: 'Mailer',     value: 'MAIL_MAILER' },
-                  { label: 'Host',       value: 'MAIL_HOST' },
-                  { label: 'Port',       value: 'MAIL_PORT' },
-                  { label: 'Encryption', value: 'MAIL_ENCRYPTION' },
-                  { label: 'Username',   value: 'MAIL_USERNAME' },
-                  { label: 'Password',   value: 'MAIL_PASSWORD' },
+                  { label: 'Mailer',       value: 'MAIL_MAILER' },
+                  { label: 'Host',         value: 'MAIL_HOST' },
+                  { label: 'Port',         value: 'MAIL_PORT' },
+                  { label: 'Encryption',   value: 'MAIL_ENCRYPTION' },
+                  { label: 'Username',     value: 'MAIL_USERNAME' },
+                  { label: 'Password',     value: 'MAIL_PASSWORD' },
                   { label: 'From Address', value: 'MAIL_FROM_ADDRESS' },
-                  { label: 'From Name',  value: 'MAIL_FROM_NAME' },
+                  { label: 'From Name',    value: 'MAIL_FROM_NAME' },
                 ].map(({ label, value }) => (
                   <div key={value} className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl">
                     <span className="text-xs font-semibold text-gray-500">{label}</span>
@@ -588,7 +741,6 @@ export default function SettingsPage() {
                 {' '}→ Create OAuth 2.0 Client ID (Web application).
               </div>
 
-              {/* Redirect URI copy box */}
               <div className="mb-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Authorized Redirect URI</p>
                 <div className="flex items-center gap-2">
@@ -615,7 +767,6 @@ export default function SettingsPage() {
                     placeholder="123456789-xxxxxxxxxxxx.apps.googleusercontent.com"
                   />
                 </FormField>
-
                 <FormField label="Client Secret">
                   <div className="relative">
                     <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -637,22 +788,15 @@ export default function SettingsPage() {
                 </FormField>
               </div>
 
-              {/* Status indicator */}
               <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium mt-2 ${
                 form.google_client_id && form.google_client_secret
                   ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
                   : 'bg-amber-50 border-amber-100 text-amber-700'
               }`}>
                 {form.google_client_id && form.google_client_secret ? (
-                  <>
-                    <CheckCircle size={15} />
-                    Google OAuth is configured — users and managers can sign in with Google.
-                  </>
+                  <><CheckCircle size={15} /> Google OAuth is configured — users and managers can sign in with Google.</>
                 ) : (
-                  <>
-                    <AlertCircle size={15} />
-                    Google OAuth is not configured. Enter your Client ID and Secret above and save.
-                  </>
+                  <><AlertCircle size={15} /> Google OAuth is not configured. Enter your Client ID and Secret above and save.</>
                 )}
               </div>
             </Section>
@@ -662,7 +806,6 @@ export default function SettingsPage() {
         {/* ── SITE MODE TAB ── */}
         {tab === 'site_mode' && (
           <>
-            {/* Maintenance Mode */}
             <Section title="Mode Maintenance" icon={Wrench}>
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 flex items-start gap-3 mb-2">
                 <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
@@ -674,91 +817,99 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Activer le mode maintenance</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Affiche la page de maintenance à tous les visiteurs</p>
-                </div>
-                <div
-                  onClick={() => setForm(p => ({ ...p, maintenance_mode: p.maintenance_mode === '1' ? '0' : '1' }))}
-                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-                    form.maintenance_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    form.maintenance_mode === '1' ? 'translate-x-6' : 'translate-x-0'
-                  }`} />
-                </div>
-              </div>
-
-              {form.maintenance_mode === '1' && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 font-medium">
-                  <Wrench size={14} /> Le site est actuellement en mode maintenance
-                </div>
+              {!isLocaleMode && (
+                <>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">Activer le mode maintenance</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Affiche la page de maintenance à tous les visiteurs</p>
+                    </div>
+                    <div
+                      onClick={() => setForm(p => ({ ...p, maintenance_mode: p.maintenance_mode === '1' ? '0' : '1' }))}
+                      className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                        form.maintenance_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                      }`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        form.maintenance_mode === '1' ? 'translate-x-6' : 'translate-x-0'
+                      }`} />
+                    </div>
+                  </div>
+                  {form.maintenance_mode === '1' && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 font-medium">
+                      <Wrench size={14} /> Le site est actuellement en mode maintenance
+                    </div>
+                  )}
+                </>
               )}
 
-              <FormField label="Message de maintenance" hint="Affiché sur la page de maintenance">
+              <FormField
+                label="Message de maintenance"
+                hint={isLocaleMode ? `Default: "${(transDefaults.maintenance_message || form.maintenance_message)?.substring(0, 60)}…"` : 'Affiché sur la page de maintenance'}
+              >
                 <Textarea
-                  value={form.maintenance_message}
-                  onChange={f('maintenance_message')}
+                  value={isLocaleMode ? tv('maintenance_message') : form.maintenance_message}
+                  onChange={isLocaleMode ? tf('maintenance_message') : f('maintenance_message')}
                   rows={3}
-                  placeholder="Notre site est temporairement hors ligne pour maintenance…"
+                  placeholder={isLocaleMode ? tp('maintenance_message', 'Notre site est temporairement hors ligne…') : 'Notre site est temporairement hors ligne pour maintenance…'}
                 />
               </FormField>
             </Section>
 
-            {/* Coming Soon */}
             <Section title="Mode Bientôt disponible" icon={Clock}>
               <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 flex items-start gap-3 mb-2">
                 <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
                 <p className="text-xs text-blue-700">
-                  Le mode "Bientôt disponible" est prioritaire sur la maintenance. Si les deux sont actifs, c'est la maintenance qui s'affiche.
+                  Le mode "Bientôt disponible" est prioritaire sur la maintenance.
                   Accès admin via <code className="bg-blue-100 px-1 rounded">?bypass=1</code>.
                 </p>
               </div>
 
-              {/* Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Activer "Bientôt disponible"</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Affiche une page coming soon avec un compte à rebours</p>
-                </div>
-                <div
-                  onClick={() => setForm(p => ({ ...p, coming_soon_mode: p.coming_soon_mode === '1' ? '0' : '1' }))}
-                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
-                    form.coming_soon_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    form.coming_soon_mode === '1' ? 'translate-x-6' : 'translate-x-0'
-                  }`} />
-                </div>
-              </div>
-
-              {form.coming_soon_mode === '1' && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
-                  <Clock size={14} /> Le mode "Bientôt disponible" est actif
-                </div>
+              {!isLocaleMode && (
+                <>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">Activer "Bientôt disponible"</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Affiche une page coming soon avec un compte à rebours</p>
+                    </div>
+                    <div
+                      onClick={() => setForm(p => ({ ...p, coming_soon_mode: p.coming_soon_mode === '1' ? '0' : '1' }))}
+                      className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                        form.coming_soon_mode === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                      }`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        form.coming_soon_mode === '1' ? 'translate-x-6' : 'translate-x-0'
+                      }`} />
+                    </div>
+                  </div>
+                  {form.coming_soon_mode === '1' && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                      <Clock size={14} /> Le mode "Bientôt disponible" est actif
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Date de lancement" hint="Affichée dans le compte à rebours">
+                      <input
+                        type="datetime-local"
+                        value={form.coming_soon_date}
+                        onChange={f('coming_soon_date')}
+                        className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
+                      />
+                    </FormField>
+                  </div>
+                </>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Date de lancement" hint="Affichée dans le compte à rebours">
-                  <input
-                    type="datetime-local"
-                    value={form.coming_soon_date}
-                    onChange={f('coming_soon_date')}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]"
-                  />
-                </FormField>
-              </div>
-
-              <FormField label="Message" hint="Affiché sur la page bientôt disponible">
+              <FormField
+                label="Message"
+                hint={isLocaleMode ? `Default: "${(transDefaults.coming_soon_message || form.coming_soon_message)?.substring(0, 60)}…"` : 'Affiché sur la page bientôt disponible'}
+              >
                 <Textarea
-                  value={form.coming_soon_message}
-                  onChange={f('coming_soon_message')}
+                  value={isLocaleMode ? tv('coming_soon_message') : form.coming_soon_message}
+                  onChange={isLocaleMode ? tf('coming_soon_message') : f('coming_soon_message')}
                   rows={3}
-                  placeholder="Nous préparons quelque chose d'exceptionnel…"
+                  placeholder={isLocaleMode ? tp('coming_soon_message', "Nous préparons quelque chose d'exceptionnel…") : "Nous préparons quelque chose d'exceptionnel…"}
                 />
               </FormField>
             </Section>
@@ -771,21 +922,22 @@ export default function SettingsPage() {
             <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-start gap-3 mb-2">
               <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
               <p className="text-xs leading-relaxed">
-                Le contenu ci-dessous est rendu sur les pages publiques correspondantes. Vous pouvez utiliser des titres avec <code className="bg-blue-100 px-1 rounded">## Titre</code>,
-                des listes avec <code className="bg-blue-100 px-1 rounded">- item</code>, et des paragraphes séparés par une ligne vide.
+                {isLocaleMode
+                  ? 'Editing translated content for this language. Leave empty to show the Default text.'
+                  : 'Le contenu ci-dessous est rendu sur les pages publiques correspondantes. Vous pouvez utiliser des titres avec ## Titre, des listes avec - item, et des paragraphes séparés par une ligne vide.'}
               </p>
             </div>
 
             <Section title="Page À propos" icon={Info}>
               <FormField
                 label="Contenu de la section Notre Mission"
-                hint="Affiché dans la section mission de la page /about. Séparez les paragraphes par une ligne vide."
+                hint={isLocaleMode ? `Leave empty to use Default content` : 'Affiché dans la section mission de la page /about. Séparez les paragraphes par une ligne vide.'}
               >
                 <textarea
-                  value={form.page_about}
-                  onChange={f('page_about')}
+                  value={isLocaleMode ? tv('page_about') : form.page_about}
+                  onChange={isLocaleMode ? tf('page_about') : f('page_about')}
                   rows={10}
-                  placeholder={"Fondée à Casablanca, Mahalo a été créée sur une conviction simple…\n\nNous avons démarré parce que…\n\nAujourd'hui, nous avons construit une plateforme…"}
+                  placeholder={isLocaleMode ? (transDefaults.page_about || form.page_about || 'Leave empty to use Default…') : "Fondée à Casablanca, Mahalo a été créée sur une conviction simple…\n\nNous avons démarré parce que…"}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
                 />
               </FormField>
@@ -798,15 +950,12 @@ export default function SettingsPage() {
             </Section>
 
             <Section title="Politique de confidentialité" icon={Shield}>
-              <FormField
-                label="Contenu"
-                hint="Affiché sur la page /privacy. Utilisez ## pour les titres de section."
-              >
+              <FormField label="Contenu" hint={isLocaleMode ? 'Leave empty to use Default content' : 'Affiché sur la page /privacy.'}>
                 <textarea
-                  value={form.page_privacy}
-                  onChange={f('page_privacy')}
+                  value={isLocaleMode ? tv('page_privacy') : form.page_privacy}
+                  onChange={isLocaleMode ? tf('page_privacy') : f('page_privacy')}
                   rows={14}
-                  placeholder={"## 1. Collecte des données\nNous collectons les informations…\n\n## 2. Utilisation des données\n…"}
+                  placeholder={isLocaleMode ? (transDefaults.page_privacy || form.page_privacy || 'Leave empty to use Default…') : "## 1. Collecte des données\nNous collectons les informations…\n\n## 2. Utilisation des données\n…"}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
                 />
               </FormField>
@@ -819,15 +968,12 @@ export default function SettingsPage() {
             </Section>
 
             <Section title="Conditions d'utilisation" icon={FileText}>
-              <FormField
-                label="Contenu"
-                hint="Affiché sur la page /terms. Utilisez ## pour les titres de section."
-              >
+              <FormField label="Contenu" hint={isLocaleMode ? 'Leave empty to use Default content' : "Affiché sur la page /terms."}>
                 <textarea
-                  value={form.page_terms}
-                  onChange={f('page_terms')}
+                  value={isLocaleMode ? tv('page_terms') : form.page_terms}
+                  onChange={isLocaleMode ? tf('page_terms') : f('page_terms')}
                   rows={14}
-                  placeholder={"## 1. Acceptation des conditions\nEn accédant à notre plateforme…\n\n## 2. Description du service\n…"}
+                  placeholder={isLocaleMode ? (transDefaults.page_terms || form.page_terms || 'Leave empty to use Default…') : "## 1. Acceptation des conditions\nEn accédant à notre plateforme…\n\n## 2. Description du service\n…"}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y"
                 />
               </FormField>
@@ -845,68 +991,93 @@ export default function SettingsPage() {
         {tab === 'cookies' && (
           <>
             <Section title="Cookie Consent Banner" icon={Cookie}>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Enable Cookie Banner</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Show a cookie consent popup to all new visitors</p>
+              {!isLocaleMode && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Enable Cookie Banner</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Show a cookie consent popup to all new visitors</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={form.cookie_consent_enabled === '1'}
+                      onChange={fBool('cookie_consent_enabled')}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#730D26]" />
+                  </label>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={form.cookie_consent_enabled === '1'}
-                    onChange={fBool('cookie_consent_enabled')}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#730D26]" />
-                </label>
-              </div>
+              )}
+
+              {isLocaleMode && (
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-center gap-2">
+                  <Info size={13} className="shrink-0" />
+                  Translate the cookie banner text for this language. Leave empty to use the Default text.
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Banner Title">
-                  <Input value={form.cookie_consent_title} onChange={f('cookie_consent_title')} placeholder="We use cookies" />
+                <FormField label="Banner Title" hint={isLocaleMode ? `Default: "${transDefaults.cookie_consent_title || form.cookie_consent_title}"` : undefined}>
+                  <Input
+                    value={isLocaleMode ? tv('cookie_consent_title') : form.cookie_consent_title}
+                    onChange={isLocaleMode ? tf('cookie_consent_title') : f('cookie_consent_title')}
+                    placeholder={isLocaleMode ? tp('cookie_consent_title', 'We use cookies') : 'We use cookies'}
+                  />
                 </FormField>
-                <FormField label="Cookie Policy URL" hint="Link shown in the banner footer">
-                  <Input value={form.cookie_policy_url} onChange={f('cookie_policy_url')} placeholder="/privacy" />
-                </FormField>
+                {!isLocaleMode && (
+                  <FormField label="Cookie Policy URL" hint="Link shown in the banner footer">
+                    <Input value={form.cookie_policy_url} onChange={f('cookie_policy_url')} placeholder="/privacy" />
+                  </FormField>
+                )}
               </div>
 
-              <FormField label="Banner Message" hint="Explain what cookies you use and why">
+              <FormField label="Banner Message" hint={isLocaleMode ? `Default: "${(transDefaults.cookie_consent_message || form.cookie_consent_message)?.substring(0, 60)}…"` : 'Explain what cookies you use and why'}>
                 <Textarea
-                  value={form.cookie_consent_message}
-                  onChange={f('cookie_consent_message')}
+                  value={isLocaleMode ? tv('cookie_consent_message') : form.cookie_consent_message}
+                  onChange={isLocaleMode ? tf('cookie_consent_message') : f('cookie_consent_message')}
                   rows={3}
-                  placeholder="We use cookies to enhance your experience…"
+                  placeholder={isLocaleMode ? tp('cookie_consent_message', 'We use cookies to enhance your experience…') : 'We use cookies to enhance your experience…'}
                 />
               </FormField>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Accept Button Text">
-                  <Input value={form.cookie_accept_text} onChange={f('cookie_accept_text')} placeholder="Accept All" />
+                <FormField label="Accept Button Text" hint={isLocaleMode ? `Default: "${transDefaults.cookie_accept_text || form.cookie_accept_text}"` : undefined}>
+                  <Input
+                    value={isLocaleMode ? tv('cookie_accept_text') : form.cookie_accept_text}
+                    onChange={isLocaleMode ? tf('cookie_accept_text') : f('cookie_accept_text')}
+                    placeholder={isLocaleMode ? tp('cookie_accept_text', 'Accept All') : 'Accept All'}
+                  />
                 </FormField>
-                <FormField label="Decline Button Text">
-                  <Input value={form.cookie_decline_text} onChange={f('cookie_decline_text')} placeholder="Decline" />
+                <FormField label="Decline Button Text" hint={isLocaleMode ? `Default: "${transDefaults.cookie_decline_text || form.cookie_decline_text}"` : undefined}>
+                  <Input
+                    value={isLocaleMode ? tv('cookie_decline_text') : form.cookie_decline_text}
+                    onChange={isLocaleMode ? tf('cookie_decline_text') : f('cookie_decline_text')}
+                    placeholder={isLocaleMode ? tp('cookie_decline_text', 'Decline') : 'Decline'}
+                  />
                 </FormField>
               </div>
             </Section>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-              <div className="flex items-start gap-3">
-                <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Preview</p>
-                  <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                    The banner appears in the bottom-right corner for all new visitors. Returning visitors who have already made a choice will not see it again until they clear their browser storage.
-                    The banner respects analytics preferences — if a visitor declines, analytics cookies will not be set.
-                  </p>
+            {!isLocaleMode && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Preview</p>
+                    <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                      The banner appears in the bottom-right corner for all new visitors. Returning visitors who have already made a choice will not see it again until they clear their browser storage.
+                      The banner respects analytics preferences — if a visitor declines, analytics cookies will not be set.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </>
         )}
 
         <div className="flex justify-end">
           <Btn type="submit" variant="gold" disabled={saving}>
-            <Save size={14} /> {saving ? 'Saving…' : 'Save All Settings'}
+            <Save size={14} /> {saving ? 'Saving…' : isLocaleMode ? `Save ${LOCALES.find(l => l.code === locale)?.label} Translations` : 'Save All Settings'}
           </Btn>
         </div>
       </form>
@@ -1027,7 +1198,6 @@ function WatermarkPreview({ logo, position, opacity, size, enabled }) {
         className="relative rounded-xl overflow-hidden border border-gray-100"
         style={{ height: 200, background: 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #64748b 100%)' }}
       >
-        {/* Fake property image grid lines */}
         <div className="absolute inset-0 opacity-10">
           <div className="h-full w-full" style={{
             backgroundImage: 'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)'

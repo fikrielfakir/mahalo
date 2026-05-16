@@ -51,18 +51,30 @@ class UserListingController extends Controller
         $data = $request->validate([
             'name'            => 'required|string|max:300',
             'type'            => 'required|in:sale,rent',
-            'description'     => 'nullable|string|max:400',
+            'description'     => 'nullable|string|max:5000',
             'location'        => 'nullable|string|max:255',
             'images'          => 'nullable|array',
             'images.*'        => 'nullable|string',
             'number_bedroom'  => 'nullable|numeric|min:0',
             'number_bathroom' => 'nullable|numeric|min:0',
+            'number_floor'    => 'nullable|numeric|min:0',
             'square'          => 'nullable|numeric|min:0',
             'price'           => 'nullable|numeric|min:0',
             'city_id'         => 'nullable|integer',
             'latitude'        => 'nullable|string',
             'longitude'       => 'nullable|string',
-            'content'         => 'nullable|string',
+            // category & features
+            'category_id'     => 'nullable|integer|exists:re_categories,id',
+            'feature_ids'     => 'nullable|array',
+            'feature_ids.*'   => 'nullable|integer|exists:re_features,id',
+            // extra fields stored in content
+            'total_floors'    => 'nullable|integer|min:0',
+            'year_built'      => 'nullable|integer|min:1800',
+            'titre_foncier'   => 'nullable|string|max:100',
+            'available_from'  => 'nullable|date',
+            'virtual_tour'    => 'nullable|url|max:500',
+            'contact_method'  => 'nullable|in:phone,whatsapp,email',
+            'best_time'       => 'nullable|in:Morning,Afternoon,Evening',
         ]);
 
         if ($user->professional_agent_id) {
@@ -73,15 +85,48 @@ class UserListingController extends Controller
             $authorType = 'App\\Models\\User';
         }
 
+        // Build the content JSON with extra fields
+        $contentData = array_filter([
+            'total_floors'   => $data['total_floors']   ?? null,
+            'year_built'     => $data['year_built']     ?? null,
+            'titre_foncier'  => $data['titre_foncier']  ?? null,
+            'available_from' => $data['available_from'] ?? null,
+            'virtual_tour'   => $data['virtual_tour']   ?? null,
+            'contact_method' => $data['contact_method'] ?? null,
+            'best_time'      => $data['best_time']      ?? null,
+        ], fn($v) => $v !== null);
+
         $property = Property::create([
-            ...$data,
-            'images'            => json_encode($data['images'] ?? []),
-            'status'            => 'pending',
+            'name'            => $data['name'],
+            'type'            => $data['type'],
+            'description'     => $data['description']     ?? null,
+            'location'        => $data['location']        ?? null,
+            'images'          => $data['images']          ?? [],
+            'number_bedroom'  => $data['number_bedroom']  ?? null,
+            'number_bathroom' => $data['number_bathroom'] ?? null,
+            'number_floor'    => $data['number_floor']    ?? null,
+            'square'          => $data['square']          ?? null,
+            'price'           => $data['price']           ?? null,
+            'city_id'         => $data['city_id']         ?? null,
+            'latitude'        => $data['latitude']        ?? null,
+            'longitude'       => $data['longitude']       ?? null,
+            'content'         => !empty($contentData) ? json_encode($contentData) : null,
+            'status'          => 'pending',
             'moderation_status' => 'pending',
-            'author_id'         => $authorId,
-            'author_type'       => $authorType,
-            'unique_id'         => 'USER-' . strtoupper(Str::random(6)),
+            'author_id'       => $authorId,
+            'author_type'     => $authorType,
+            'unique_id'       => 'USER-' . strtoupper(Str::random(6)),
         ]);
+
+        // Attach category (many-to-many)
+        if (!empty($data['category_id'])) {
+            $property->categories()->sync([$data['category_id']]);
+        }
+
+        // Attach features (many-to-many)
+        if (!empty($data['feature_ids'])) {
+            $property->features()->sync($data['feature_ids']);
+        }
 
         Slug::create([
             'key'            => Str::slug($property->name) . '-' . $property->id,
@@ -91,7 +136,7 @@ class UserListingController extends Controller
         ]);
 
         return response()->json([
-            'data'    => $this->format($property->fresh(['city'])),
+            'data'    => $this->format($property->fresh(['city', 'categories', 'features'])),
             'error'   => false,
             'message' => 'Listing submitted for review.',
         ], 201);
@@ -118,13 +163,17 @@ class UserListingController extends Controller
             'thumbnail_url'     => $this->extractThumbnail($images, $videoThumbnails),
             'number_bedroom'    => (int) $p->number_bedroom,
             'number_bathroom'   => (int) $p->number_bathroom,
+            'number_floor'      => $p->number_floor,
             'square'            => $p->square,
             'price'             => $p->price,
             'status'            => $p->status,
             'moderation_status' => $p->moderation_status,
             'city'              => $p->city ? ['id' => $p->city->id, 'name' => $p->city->name] : null,
+            'categories'        => $p->relationLoaded('categories') ? $p->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray() : [],
+            'features'          => $p->relationLoaded('features')   ? $p->features->map(fn($f) => ['id' => $f->id, 'name' => $f->name])->toArray() : [],
             'latitude'          => $p->latitude,
             'longitude'         => $p->longitude,
+            'content'           => $p->content ? json_decode($p->content, true) : null,
             'created_at'        => $p->created_at,
         ];
     }

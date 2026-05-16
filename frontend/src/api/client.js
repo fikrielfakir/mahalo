@@ -43,6 +43,10 @@ export const agentsApi = {
   getProjects: (id) => api.get(`/agents/${id}/projects`),
 }
 
+export const citiesApi = {
+  list: () => api.get('/cities'),
+}
+
 export const categoriesApi = {
   list: (params = {}) => api.get('/categories', { params }),
   bySlug: (slug) => api.get(`/categories/${slug}`),

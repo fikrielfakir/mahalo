@@ -26,12 +26,19 @@ async function fetchSettings() {
     return { settings: {}, serverDown: true }
   }
 
-  // Gateway / server-down HTTP codes
-  if (res.status === 502 || res.status === 503 || res.status === 504) {
+  // Any non-2xx response (500 included) — the body may be HTML, not JSON
+  if (!res.ok) {
     return { settings: {}, serverDown: true }
   }
 
-  const json = await res.json()
+  let json
+  try {
+    json = await res.json()
+  } catch {
+    // Body isn't valid JSON (e.g. PHP error page) — treat as server down
+    return { settings: {}, serverDown: true }
+  }
+
   cache     = json.data || {}
   cacheTime = now
   return { settings: cache, serverDown: false }
@@ -52,18 +59,24 @@ export default function SiteModeGate({ children }) {
   const check = useCallback(() => {
     const bypass = sessionStorage.getItem(BYPASS_KEY) === '1'
 
-    fetchSettings().then(({ settings: s, serverDown }) => {
-      if (serverDown) {
-        cache = null // always re-fetch on next check
+    fetchSettings()
+      .then(({ settings: s, serverDown }) => {
+        if (serverDown) {
+          cache = null // always re-fetch on next check
+          setStatus('server_down')
+          return
+        }
+        setSettings(s)
+        if (bypass)                      { setStatus('ok');          return }
+        if (s.maintenance_mode === '1')  { setStatus('maintenance'); return }
+        if (s.coming_soon_mode  === '1') { setStatus('coming_soon'); return }
+        setStatus('ok')
+      })
+      .catch(() => {
+        // Last-resort safety net — never leave the gate stuck on null
+        cache = null
         setStatus('server_down')
-        return
-      }
-      setSettings(s)
-      if (bypass)                      { setStatus('ok');          return }
-      if (s.maintenance_mode === '1')  { setStatus('maintenance'); return }
-      if (s.coming_soon_mode  === '1') { setStatus('coming_soon'); return }
-      setStatus('ok')
-    })
+      })
   }, [])
 
   useEffect(() => { check() }, [check])

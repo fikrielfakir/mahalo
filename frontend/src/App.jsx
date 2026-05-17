@@ -12,9 +12,10 @@ import { VerifyEmailProvider } from './context/VerifyEmailContext'
 import { SiteSettingsProvider, useSiteSettings } from './context/SiteSettingsContext'
 import VerifyEmailBanner from './components/VerifyEmailBanner'
 import VerifyEmailPopup from './components/VerifyEmailPopup'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AuthProvider } from './admin/context/AuthContext'
 import CookieBanner from './components/CookieBanner'
+import OfflineBanner from './components/OfflineBanner'
 
 // ── Lazy: Public pages ──────────────────────────────────────────
 const Home               = lazy(() => import('./pages/Home'))
@@ -86,9 +87,18 @@ function CookieBannerWrapper() {
 }
 
 function OfflineGate({ children }) {
-  const [offline, setOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
+  const isOnline   = typeof navigator !== 'undefined' ? navigator.onLine : true
+  const [offline, setOffline] = useState(!isOnline)
+  // Track whether the user has ever had a connection in this session.
+  // If they load the page already offline, wasOnline stays false → full page.
+  // If they drop mid-session, wasOnline is true → banner only.
+  const wasOnline = useRef(isOnline)
+
   useEffect(() => {
-    const goOnline  = () => setOffline(false)
+    const goOnline = () => {
+      wasOnline.current = true
+      setOffline(false)
+    }
     const goOffline = () => setOffline(true)
     window.addEventListener('online',  goOnline)
     window.addEventListener('offline', goOffline)
@@ -97,8 +107,17 @@ function OfflineGate({ children }) {
       window.removeEventListener('offline', goOffline)
     }
   }, [])
-  if (offline) return <OfflinePage />
-  return children
+
+  // Offline from the very first load — show the full standalone page
+  if (offline && !wasOnline.current) return <OfflinePage />
+
+  // Mid-session drop — keep the page alive, show the banner on top
+  return (
+    <>
+      <OfflineBanner offline={offline} />
+      {children}
+    </>
+  )
 }
 
 export default function App() {

@@ -9,7 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class AdminTranslationController extends Controller
 {
-    private const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar'];
+    private function getSupportedLocales(): array
+    {
+        return DB::table('languages')->pluck('code')->toArray();
+    }
 
     private function loadBundled(string $locale): array
     {
@@ -36,7 +39,8 @@ class AdminTranslationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $locale = $request->query('locale', 'fr');
-        if (!in_array($locale, self::SUPPORTED_LOCALES)) {
+        $supported = $this->getSupportedLocales();
+        if (!in_array($locale, $supported)) {
             return response()->json(['error' => true, 'message' => 'Unsupported locale'], 422);
         }
 
@@ -63,7 +67,8 @@ class AdminTranslationController extends Controller
 
     public function upsert(Request $request, string $locale, string $key): JsonResponse
     {
-        if (!in_array($locale, self::SUPPORTED_LOCALES)) {
+        $supported = $this->getSupportedLocales();
+        if (!in_array($locale, $supported)) {
             return response()->json(['error' => true, 'message' => 'Unsupported locale'], 422);
         }
 
@@ -86,7 +91,8 @@ class AdminTranslationController extends Controller
 
     public function destroy(string $locale, string $key): JsonResponse
     {
-        if (!in_array($locale, self::SUPPORTED_LOCALES)) {
+        $supported = $this->getSupportedLocales();
+        if (!in_array($locale, $supported)) {
             return response()->json(['error' => true, 'message' => 'Unsupported locale'], 422);
         }
 

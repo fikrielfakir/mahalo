@@ -142,6 +142,17 @@ export const adminSettings = {
   deleteTranslation:  (locale, key) => client.delete(`/admin/settings/translations/${locale}/${key}`),
 }
 
+export const adminLanguages = {
+  list:   ()       => client.get('/admin/languages'),
+  create: (d)      => client.post('/admin/languages', d),
+  update: (id, d)  => client.put(`/admin/languages/${id}`, d),
+  delete: (id)     => client.delete(`/admin/languages/${id}`),
+}
+
+export const publicLanguages = {
+  list: () => client.get('/languages'),
+}
+
 export const adminContentTranslations = {
   get:  (type, id)       => client.get(`/admin/content-translations/${type}/${id}`),
   save: (type, id, data) => client.put(`/admin/content-translations/${type}/${id}`, data),

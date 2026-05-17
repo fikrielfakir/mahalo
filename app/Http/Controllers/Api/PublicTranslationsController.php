@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class PublicTranslationsController extends Controller
 {
-    private const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar'];
+    private function getSupportedLocales(): array
+    {
+        return DB::table('languages')->where('is_active', true)->pluck('code')->toArray();
+    }
 
     private function flatten(array $data, string $prefix = ''): array
     {
@@ -44,7 +47,8 @@ class PublicTranslationsController extends Controller
 
     public function show(string $locale): JsonResponse
     {
-        if (!in_array($locale, self::SUPPORTED_LOCALES)) {
+        $supported = $this->getSupportedLocales();
+        if (!in_array($locale, $supported)) {
             return response()->json(['error' => true, 'message' => 'Unsupported locale'], 422);
         }
 

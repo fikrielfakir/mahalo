@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react'
 import Modal, { FormField, Input, Textarea } from './Modal'
-import { adminContentTranslations } from '../api/adminApi'
+import { adminContentTranslations, adminLanguages } from '../api/adminApi'
 import { Languages, Save, Check, Wand2, Loader2 } from 'lucide-react'
-
-const LOCALES = [
-  { code: 'fr', label: 'French',     flag: '🇫🇷', mymemory: 'fr' },
-  { code: 'en', label: 'English',    flag: '🇬🇧', mymemory: 'en' },
-  { code: 'ar', label: 'Arabic',     flag: '🇸🇦', rtl: true, mymemory: 'ar' },
-  { code: 'es', label: 'Spanish',    flag: '🇪🇸', mymemory: 'es' },
-  { code: 'tr', label: 'Turkish',    flag: '🇹🇷', mymemory: 'tr' },
-  { code: 'id', label: 'Indonesian', flag: '🇮🇩', mymemory: 'id' },
-  { code: 'vi', label: 'Vietnamese', flag: '🇻🇳', mymemory: 'vi' },
-]
 
 const TYPE_FIELDS = {
   property:  [
@@ -37,12 +27,6 @@ const TYPE_FIELDS = {
   city:      [{ key: 'name', label: 'Name', type: 'input' }],
 }
 
-function emptyTranslations() {
-  const obj = {}
-  LOCALES.forEach(l => { obj[l.code] = {} })
-  return obj
-}
-
 async function translateText(text, targetLang) {
   if (!text || !text.trim()) return ''
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
@@ -52,8 +36,10 @@ async function translateText(text, targetLang) {
 }
 
 export default function ContentTranslationsModal({ open, onClose, type, item }) {
-  const [activeLocale, setActiveLocale]   = useState('fr')
-  const [translations, setTranslations]   = useState(emptyTranslations)
+  const [locales, setLocales]             = useState([])
+  const [localesLoading, setLocalesLoading] = useState(true)
+  const [activeLocale, setActiveLocale]   = useState(null)
+  const [translations, setTranslations]   = useState({})
   const [loading, setLoading]             = useState(false)
   const [saving, setSaving]               = useState(false)
   const [saved, setSaved]                 = useState(false)
@@ -64,16 +50,31 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   const fields = TYPE_FIELDS[type] || []
 
   useEffect(() => {
-    if (!open || !item?.id) return
+    adminLanguages.list()
+      .then(r => {
+        const list = (r.data || []).filter(l => l.is_active)
+        setLocales(list)
+        if (list.length > 0 && !activeLocale) {
+          setActiveLocale(list[0].code)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLocalesLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!open || !item?.id || locales.length === 0) return
     setLoading(true)
     setError(null)
     setTranslateError(null)
-    setTranslations(emptyTranslations())
+    const empty = {}
+    locales.forEach(l => { empty[l.code] = {} })
+    setTranslations(empty)
     adminContentTranslations.get(type, item.id)
-      .then(r => setTranslations(r.data || emptyTranslations()))
+      .then(r => setTranslations(r.data || empty))
       .catch(() => setError('Failed to load translations'))
       .finally(() => setLoading(false))
-  }, [open, type, item?.id])
+  }, [open, type, item?.id, locales])
 
   const setValue = (locale, field, value) => {
     setTranslations(prev => ({
@@ -83,8 +84,8 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   }
 
   const autoTranslate = async () => {
-    if (!item) return
-    const locMeta = LOCALES.find(l => l.code === activeLocale)
+    if (!item || !activeLocale) return
+    const locMeta = locales.find(l => l.code === activeLocale)
     if (!locMeta) return
     if (activeLocale === 'en') {
       const result = {}
@@ -98,7 +99,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
       const result = {}
       for (const field of fields) {
         const source = item[field.key] || ''
-        result[field.key] = source ? await translateText(source, locMeta.mymemory) : ''
+        result[field.key] = source ? await translateText(source, locMeta.mymemory_code || locMeta.code) : ''
       }
       setTranslations(prev => ({ ...prev, [activeLocale]: result }))
     } catch {
@@ -109,7 +110,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   }
 
   const save = async () => {
-    if (!item?.id) return
+    if (!item?.id || !activeLocale) return
     setSaving(true)
     setError(null)
     try {
@@ -127,9 +128,8 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   }
 
   const currentData   = translations[activeLocale] || {}
-  const activeLocMeta = LOCALES.find(l => l.code === activeLocale)
+  const activeLocMeta = locales.find(l => l.code === activeLocale)
   const itemLabel     = item?.name || (item?.first_name ? `${item.first_name} ${item.last_name}` : `#${item?.id}`)
-
   const hasSourceData = fields.some(f => item?.[f.key])
 
   return (
@@ -142,7 +142,11 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
       <div className="flex gap-4 h-full" style={{ minHeight: 360 }}>
         {/* Locale sidebar */}
         <div className="w-36 shrink-0 flex flex-col gap-1">
-          {LOCALES.map(loc => (
+          {localesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-5 h-5 border-2 border-[#BA1932] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : locales.map(loc => (
             <button
               key={loc.code}
               onClick={() => { setActiveLocale(loc.code); setTranslateError(null) }}
@@ -203,14 +207,14 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
                       onChange={e => setValue(activeLocale, field.key, e.target.value)}
                       rows={field.rows || 3}
                       placeholder={`${field.label} in ${activeLocMeta?.label}…`}
-                      dir={activeLocMeta?.rtl ? 'rtl' : 'ltr'}
+                      dir={activeLocMeta?.is_rtl ? 'rtl' : 'ltr'}
                     />
                   ) : (
                     <Input
                       value={currentData[field.key] || ''}
                       onChange={e => setValue(activeLocale, field.key, e.target.value)}
                       placeholder={`${field.label} in ${activeLocMeta?.label}…`}
-                      dir={activeLocMeta?.rtl ? 'rtl' : 'ltr'}
+                      dir={activeLocMeta?.is_rtl ? 'rtl' : 'ltr'}
                     />
                   )}
                 </FormField>
@@ -223,7 +227,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
               <div className="flex justify-end pt-2 border-t border-gray-100">
                 <button
                   onClick={save}
-                  disabled={saving}
+                  disabled={saving || !activeLocale}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     saved
                       ? 'bg-emerald-500 text-white'

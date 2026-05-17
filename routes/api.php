@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\VideoStreamController;
 use App\Http\Controllers\Api\PublicTranslationsController;
 use App\Http\Controllers\Api\Admin\AdminTranslationController;
 use App\Http\Controllers\Api\Admin\AdminContentTranslationController;
+use App\Http\Controllers\Api\Admin\AdminLanguageController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -79,6 +80,9 @@ Route::prefix('v1')->group(function () {
 
     // ── Public: Translation overrides (no auth — served to frontend at runtime) ──
     Route::get('/translations/{locale}', [PublicTranslationsController::class, 'show']);
+
+    // ── Public: Languages (active only, no auth) ──────────────────────────────
+    Route::get('/languages', [AdminLanguageController::class, 'publicList']);
 
     // ── Public: Cities (all, no property restriction) ─────────────────────────
     Route::get('/cities', [AdminCityController::class, 'publicList']);
@@ -218,6 +222,9 @@ Route::prefix('v1')->group(function () {
         Route::delete('/consults/{id}', [AdminConsultController::class, 'destroy']);
         Route::post('/consults/bulk', [AdminConsultController::class, 'bulkUpdate']);
         Route::post('/consults/bulk-delete', [AdminConsultController::class, 'bulkDelete']);
+
+        // Languages CRUD
+        Route::apiResource('languages', AdminLanguageController::class)->only(['index', 'store', 'update', 'destroy']);
 
         // Content translations (per-item, per-locale)
         Route::get('/content-translations/{type}/{id}',    [AdminContentTranslationController::class, 'index']);

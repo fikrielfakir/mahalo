@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, RotateCcw, Save, CheckCircle, AlertCircle, Languages } from 'lucide-react'
+import { adminLanguages } from '../api/adminApi'
 
 function getToken() {
   return localStorage.getItem('admin_token') ?? ''
 }
-
-const LOCALES = [
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'en', label: 'English',  flag: '🇬🇧' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'es', label: 'Español',  flag: '🇪🇸' },
-]
 
 const API_BASE = '/api/v1/admin/translations'
 
@@ -166,13 +160,27 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
 }
 
 export default function TranslationsPage() {
-  const [locale, setLocale] = useState('fr')
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [search, setSearch] = useState('')
-  const [toast, setToast] = useState(null)
+  const [locales, setLocales]   = useState([])
+  const [locale, setLocale]     = useState(null)
+  const [rows, setRows]         = useState([])
+  const [loading, setLoading]   = useState(false)
+  const [localesLoading, setLocalesLoading] = useState(true)
+  const [search, setSearch]     = useState('')
+  const [toast, setToast]       = useState(null)
+
+  useEffect(() => {
+    adminLanguages.list()
+      .then(r => {
+        const list = (r.data || []).filter(l => l.is_active)
+        setLocales(list)
+        if (list.length > 0) setLocale(list[0].code)
+      })
+      .catch(() => setToast({ message: 'Failed to load languages', type: 'error' }))
+      .finally(() => setLocalesLoading(false))
+  }, [])
 
   const fetchTranslations = useCallback(async (loc) => {
+    if (!loc) return
     setLoading(true)
     setSearch('')
     try {
@@ -189,7 +197,7 @@ export default function TranslationsPage() {
   }, [])
 
   useEffect(() => {
-    fetchTranslations(locale)
+    if (locale) fetchTranslations(locale)
   }, [locale, fetchTranslations])
 
   const handleSaved = useCallback((key, value, error) => {
@@ -209,7 +217,7 @@ export default function TranslationsPage() {
   const filtered = search.trim()
     ? rows.filter(r =>
         r.key.toLowerCase().includes(search.toLowerCase()) ||
-        r.value.toLowerCase().includes(search.toLowerCase())
+        (r.value || '').toLowerCase().includes(search.toLowerCase())
       )
     : rows
 
@@ -221,7 +229,6 @@ export default function TranslationsPage() {
         <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)} />
       )}
 
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center">
           <Languages size={20} className="text-[#730D26]" />
@@ -232,25 +239,29 @@ export default function TranslationsPage() {
         </div>
       </div>
 
-      {/* Locale tabs */}
-      <div className="flex gap-2 mb-5">
-        {LOCALES.map(l => (
-          <button
-            key={l.code}
-            onClick={() => setLocale(l.code)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              locale === l.code
-                ? 'bg-[#730D26] text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <span>{l.flag}</span>
-            {l.label}
-          </button>
-        ))}
-      </div>
+      {localesLoading ? (
+        <div className="flex gap-2 mb-5">
+          {[1,2,3,4].map(i => <div key={i} className="h-9 w-24 bg-gray-100 rounded-xl animate-pulse" />)}
+        </div>
+      ) : (
+        <div className="flex gap-2 mb-5 flex-wrap">
+          {locales.map(l => (
+            <button
+              key={l.code}
+              onClick={() => setLocale(l.code)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                locale === l.code
+                  ? 'bg-[#730D26] text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              <span>{l.flag}</span>
+              {l.native_label || l.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Toolbar */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-1">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
           <Search size={16} className="text-gray-400 shrink-0" />
@@ -272,7 +283,6 @@ export default function TranslationsPage() {
           </div>
         </div>
 
-        {/* Table */}
         {loading ? (
           <div className="py-20 flex items-center justify-center">
             <div className="w-7 h-7 border-4 border-[#730D26] border-t-transparent rounded-full animate-spin" />
@@ -291,7 +301,7 @@ export default function TranslationsPage() {
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="py-16 text-center text-gray-400 text-sm">
-                      No translations found
+                      {rows.length === 0 ? 'No translation file found for this language' : 'No results match your search'}
                     </td>
                   </tr>
                 ) : (

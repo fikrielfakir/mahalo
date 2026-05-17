@@ -46,6 +46,7 @@ const groups = [
     links: [
       { to: '/admin/users',                     label: 'Users',         icon: UserCog },
       { to: '/admin/professional-applications', label: 'Applications',  icon: Briefcase },
+      { to: '/admin/languages',                 label: 'Languages',     icon: Globe },
       { to: '/admin/translations',              label: 'Translations',  icon: Languages },
       { to: '/admin/settings',                  label: 'Settings',      icon: Settings },
       { to: '/admin/app-update',                label: 'App Update',    icon: PackageOpen },

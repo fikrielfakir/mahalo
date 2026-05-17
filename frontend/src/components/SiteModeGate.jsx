@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import ComingSoonPage from '../pages/ComingSoonPage'
 import MaintenancePage from '../pages/MaintenancePage'
 import ServerOfflinePage from '../pages/ServerOfflinePage'
-import { SiteGateSkeleton } from './Skeletons'
 
 const BYPASS_KEY   = 'mahalo_admin_bypass'
 const SETTINGS_URL = '/api/v1/public-settings'
@@ -76,7 +75,7 @@ export default function SiteModeGate({ children }) {
     check()
   }, [check])
 
-  if (status === 'loading')     return <SiteGateSkeleton />
+  if (status === 'loading')     return null
   if (status === 'server_down') return <ServerOfflinePage onRecover={handleRecover} />
   if (status === 'maintenance') return <MaintenancePage settings={settings} />
   if (status === 'coming_soon') return <ComingSoonPage  settings={settings} />

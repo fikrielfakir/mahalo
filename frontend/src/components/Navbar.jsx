@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Heart, Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle, LayoutDashboard, Check } from 'lucide-react'
+import { Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle, LayoutDashboard, Check } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -55,7 +55,6 @@ export default function Navbar({ transparent = false }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  /* Lock body scroll while mobile menu is open */
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -77,18 +76,16 @@ export default function Navbar({ transparent = false }) {
     window.location.reload()
   }
 
-  /* How far down the drawer should sit (below navbar + optional banner) */
-  const drawerTop = showBanner ? 'calc(42px + 64px)' : '64px'
-
   return (
     <>
+      {/* ─── Navbar bar ─────────────────────────────────────────── */}
       <header
         className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
           showBanner ? 'top-[42px]' : 'top-0'
         } ${
           isTransparent
             ? 'bg-transparent'
-            : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-white/60'
+            : 'bg-white shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-gray-100'
         }`}
       >
         <nav className="max-w-7xl mx-auto px-4 xs:px-5 h-16 flex items-center justify-between gap-4">
@@ -127,9 +124,8 @@ export default function Navbar({ transparent = false }) {
             })}
           </div>
 
-          {/* Right actions — desktop */}
+          {/* Right actions — desktop only */}
           <div className="hidden lg:flex items-center gap-2 shrink-0">
-
             {/* Language switcher */}
             <div className="relative" ref={langRef}>
               <button
@@ -171,7 +167,7 @@ export default function Navbar({ transparent = false }) {
               )}
             </div>
 
-            {/* Auth section */}
+            {/* Auth */}
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -182,14 +178,8 @@ export default function Navbar({ transparent = false }) {
                       : 'hover:bg-navy/6 text-navy'
                   }`}
                 >
-                  <img
-                    src={user?.avatar_url || '/avatars/man1.png'}
-                    alt="avatar"
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
-                  <span className="text-sm font-medium max-w-[90px] truncate">
-                    {user?.name?.split(' ')[0]}
-                  </span>
+                  <img src={user?.avatar_url || '/avatars/man1.png'} alt="avatar" className="w-7 h-7 rounded-full object-cover" />
+                  <span className="text-sm font-medium max-w-[90px] truncate">{user?.name?.split(' ')[0]}</span>
                   <ChevronDown size={12} className={`transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -199,34 +189,18 @@ export default function Navbar({ transparent = false }) {
                       <p className="text-xs font-semibold text-navy truncate">{user?.name}</p>
                       <p className="text-xs text-navy/40 truncate">{user?.email}</p>
                     </div>
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
-                      style={{ width: 'calc(100% - 8px)' }}
-                    >
+                    <Link to="/profile" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1" style={{ width: 'calc(100% - 8px)' }}>
                       <UserCircle size={14} /> {t('nav.myProfile')}
                     </Link>
-                    <Link
-                      to="/messages"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
-                      style={{ width: 'calc(100% - 8px)' }}
-                    >
+                    <Link to="/messages" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1" style={{ width: 'calc(100% - 8px)' }}>
                       <MessageCircle size={14} /> {t('nav.myMessages')}
                     </Link>
                     {!!(user?.professional_agent_id || user?.role === 'agent') && (
-                      <Link
-                        to="/agent-dashboard"
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#730D26] hover:bg-[#730D26]/8 transition-colors rounded-xl mx-1 font-semibold"
-                        style={{ width: 'calc(100% - 8px)' }}
-                      >
+                      <Link to="/agent-dashboard" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#730D26] hover:bg-[#730D26]/8 transition-colors rounded-xl mx-1 font-semibold" style={{ width: 'calc(100% - 8px)' }}>
                         <LayoutDashboard size={14} /> {t('nav.agentDashboard')}
                       </Link>
                     )}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
-                      style={{ width: 'calc(100% - 8px)' }}
-                    >
+                    <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1" style={{ width: 'calc(100% - 8px)' }}>
                       <LogOut size={14} /> {t('nav.signOut')}
                     </button>
                   </div>
@@ -237,12 +211,7 @@ export default function Navbar({ transparent = false }) {
                 <Link
                   to="/login"
                   className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 bg-white touch-manip"
-                  style={{
-                    border: '1.5px solid transparent',
-                    backgroundClip: 'padding-box',
-                    boxShadow: '0 0 0 1.5px #730D26',
-                    color: '#730D26',
-                  }}
+                  style={{ boxShadow: '0 0 0 1.5px #730D26', color: '#730D26' }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #BA1932'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #730D26'}
                 >
@@ -254,10 +223,7 @@ export default function Navbar({ transparent = false }) {
             <Link
               to="/list-property"
               className="ml-1 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all duration-200 touch-manip"
-              style={{
-                background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
-                boxShadow: '0 2px 12px rgba(186,25,50,0.30)',
-              }}
+              style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', boxShadow: '0 2px 12px rgba(186,25,50,0.30)' }}
               onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 18px rgba(186,25,50,0.50)'}
               onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(186,25,50,0.30)'}
             >
@@ -267,57 +233,68 @@ export default function Navbar({ transparent = false }) {
 
           {/* Mobile hamburger */}
           <button
-            className={`lg:hidden w-11 h-11 rounded-full flex items-center justify-center transition-all touch-manip ${
+            className={`lg:hidden w-11 h-11 rounded-full flex items-center justify-center transition-all touch-manip relative ${
               isTransparent ? 'text-white hover:bg-white/12' : 'text-navy hover:bg-navy/6'
             }`}
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => setMenuOpen(v => !v)}
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
           >
-            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90'}`}>
-              <X size={20} />
-            </span>
-            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-0 -rotate-90' : 'opacity-100 rotate-0'}`}>
-              <Menu size={20} />
-            </span>
+            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}><X size={20} /></span>
+            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}`}><Menu size={20} /></span>
           </button>
         </nav>
       </header>
 
-      {/* Mobile drawer — always in DOM, animated via opacity + translate */}
+      {/* ─── Mobile side-drawer backdrop ────────────────────────── */}
       <div
-        aria-hidden={!menuOpen}
-        className={`lg:hidden fixed inset-x-0 z-40 bg-white/97 backdrop-blur-2xl shadow-float overflow-y-auto transition-all duration-300 ease-out pb-safe`}
-        style={{
-          top: drawerTop,
-          maxHeight: `calc(100vh - ${drawerTop})`,
-          opacity: menuOpen ? 1 : 0,
-          transform: menuOpen ? 'translateY(0)' : 'translateY(-10px)',
-          pointerEvents: menuOpen ? 'auto' : 'none',
-        }}
-      >
-        <div className="px-4 xs:px-5 py-4 space-y-0.5">
-          {navLinks.map((link) => {
-            const isActive = location.pathname + location.search === link.to || location.pathname === link.to
-            return (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`flex items-center px-4 py-3.5 rounded-2xl font-medium text-sm transition-all duration-200 min-h-[44px] touch-manip ${
-                  isActive
-                    ? 'bg-navy/8 text-navy font-semibold'
-                    : 'text-navy/70 hover:text-navy hover:bg-navy/5'
-                }`}
-              >
-                {link.label}
-              </Link>
-            )
-          })}
+        onClick={() => setMenuOpen(false)}
+        className={`lg:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      />
 
-          {/* Mobile language switcher */}
-          <div className="pt-3 pb-1 border-t border-gray-100 mt-2">
-            <p className="px-4 text-xs font-semibold text-navy/40 uppercase tracking-wider mb-2">Language</p>
-            <div className="grid grid-cols-2 gap-1">
+      {/* ─── Mobile side-drawer panel ───────────────────────────── */}
+      <div
+        className={`lg:hidden fixed top-0 right-0 z-50 h-full w-[85vw] max-w-[340px] bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
+          menuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+          <img src={logo} alt="Mahalo" className="h-8 w-auto object-contain" />
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors touch-manip"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Nav links */}
+          <div className="px-3 py-3 space-y-1">
+            {navLinks.map((link) => {
+              const isActive = location.pathname + location.search === link.to || location.pathname === link.to
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`flex items-center px-4 py-3.5 rounded-2xl font-medium text-base transition-all duration-200 min-h-[48px] touch-manip ${
+                    isActive
+                      ? 'bg-navy/8 text-navy font-semibold'
+                      : 'text-gray-700 hover:text-navy hover:bg-gray-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Language switcher */}
+          <div className="px-5 pt-2 pb-4 border-t border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-2">Language</p>
+            <div className="grid grid-cols-2 gap-2">
               {SUPPORTED_LOCALES.map((lng) => {
                 const meta = LANG_LABELS[lng]
                 const active = activeLng === lng
@@ -325,87 +302,59 @@ export default function Navbar({ transparent = false }) {
                   <button
                     key={lng}
                     onClick={() => changeLanguage(lng)}
-                    className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manip ${
+                    className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manip border ${
                       active
-                        ? 'bg-[#730D26]/10 text-[#730D26] font-semibold'
-                        : 'text-navy/60 hover:bg-navy/5 hover:text-navy'
+                        ? 'bg-[#730D26]/8 text-[#730D26] font-semibold border-[#730D26]/20'
+                        : 'text-gray-600 border-gray-100 hover:bg-gray-50'
                     }`}
                   >
                     <span>{meta.flag}</span>
                     <span>{meta.label}</span>
-                    {active && <Check size={12} className="text-[#730D26] ml-auto" />}
+                    {active && <Check size={13} className="text-[#730D26] ml-auto" />}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="pt-3 mt-1 border-t border-gray-100 space-y-2 pb-6">
+          {/* Auth section */}
+          <div className="px-5 pb-6 border-t border-gray-100 space-y-2 pt-4">
             {isAuthenticated ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2">
-                  <img
-                    src={user?.avatar_url || '/avatars/man1.png'}
-                    alt="avatar"
-                    className="w-9 h-9 rounded-full object-cover shrink-0"
-                  />
+                <div className="flex items-center gap-3 py-2">
+                  <img src={user?.avatar_url || '/avatars/man1.png'} alt="avatar" className="w-10 h-10 rounded-full object-cover shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-navy truncate">{user?.name}</p>
-                    <p className="text-xs text-navy/40 truncate">{user?.email}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                   </div>
                 </div>
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 w-full px-4 py-3.5 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
-                >
-                  <UserCircle size={15} /> {t('nav.myProfile')}
+                <Link to="/profile" className="flex items-center gap-3 w-full px-4 py-3.5 text-gray-700 hover:text-navy hover:bg-gray-50 rounded-2xl font-medium text-sm transition-all min-h-[48px] touch-manip">
+                  <UserCircle size={16} /> {t('nav.myProfile')}
                 </Link>
-                <Link
-                  to="/messages"
-                  className="flex items-center gap-2 w-full px-4 py-3.5 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
-                >
-                  <MessageCircle size={15} /> {t('nav.myMessages')}
+                <Link to="/messages" className="flex items-center gap-3 w-full px-4 py-3.5 text-gray-700 hover:text-navy hover:bg-gray-50 rounded-2xl font-medium text-sm transition-all min-h-[48px] touch-manip">
+                  <MessageCircle size={16} /> {t('nav.myMessages')}
                 </Link>
                 {!!(user?.professional_agent_id || user?.role === 'agent') && (
-                  <Link
-                    to="/agent-dashboard"
-                    className="flex items-center gap-2 w-full px-4 py-3.5 text-[#730D26] hover:bg-[#730D26]/8 rounded-2xl font-semibold text-sm transition-all min-h-[44px] touch-manip"
-                  >
-                    <LayoutDashboard size={15} /> {t('nav.agentDashboard')}
+                  <Link to="/agent-dashboard" className="flex items-center gap-3 w-full px-4 py-3.5 text-[#730D26] hover:bg-[#730D26]/8 rounded-2xl font-semibold text-sm transition-all min-h-[48px] touch-manip">
+                    <LayoutDashboard size={16} /> {t('nav.agentDashboard')}
                   </Link>
                 )}
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-4 py-3.5 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
-                >
-                  <LogOut size={15} /> {t('nav.signOut')}
+                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3.5 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all min-h-[48px] touch-manip">
+                  <LogOut size={16} /> {t('nav.signOut')}
                 </button>
               </>
             ) : (
-              <div className="flex gap-2">
-                <Link to="/login"
-                  className="flex-1 text-center px-4 py-3.5 bg-gold text-white rounded-2xl font-semibold text-sm hover:bg-gold-dark min-h-[44px] touch-manip">
-                  {t('nav.signIn')}
-                </Link>
-              </div>
+              <Link to="/login" className="flex items-center justify-center w-full px-4 py-3.5 rounded-2xl font-semibold text-sm text-white min-h-[48px] touch-manip"
+                style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)' }}>
+                {t('nav.signIn')}
+              </Link>
             )}
-            <Link
-              to="/list-property"
-              className="flex items-center justify-center px-4 py-3.5 bg-navy text-white rounded-2xl font-semibold text-sm w-full min-h-[44px] touch-manip"
-            >
+            <Link to="/list-property" className="flex items-center justify-center px-4 py-3.5 rounded-2xl font-semibold text-sm w-full min-h-[48px] touch-manip text-navy border-2 border-navy hover:bg-navy hover:text-white transition-all">
               {t('nav.listProperty')}
             </Link>
           </div>
         </div>
       </div>
-
-      {/* Backdrop for mobile drawer */}
-      <div
-        aria-hidden="true"
-        className={`lg:hidden fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ top: drawerTop }}
-        onClick={() => setMenuOpen(false)}
-      />
     </>
   )
 }

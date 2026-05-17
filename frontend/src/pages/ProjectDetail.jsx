@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { MapPin, Heart, Share2, ArrowLeft, Building, Phone, Mail, Calendar, Loader2, Video, Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import NotFoundState from '../components/NotFoundState'
 import { Toast, useToast } from '../components/Toast'
 import { projectsApi, consultsApi } from '../api/client'
 import { isVideoPath, mediaUrl as imgUrl } from '../utils/media'
@@ -100,10 +101,7 @@ export default function ProjectDetail() {
     return (
       <div className="min-h-screen bg-surface flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 pt-24">
-          <p className="text-navy/50 text-lg">Project not found</p>
-          <Link to="/projects" className="btn-gold">Browse Projects</Link>
-        </div>
+        <NotFoundState type="project" />
         <Footer />
       </div>
     )

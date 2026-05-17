@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import NotFoundState from '../components/NotFoundState'
 import { Toast, useToast } from '../components/Toast'
 import MortgageCalculator from '../components/MortgageCalculator'
 import SimilarProperties from '../components/SimilarProperties'
@@ -201,10 +202,7 @@ export default function PropertyDetail() {
     return (
       <div className="min-h-screen bg-surface flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 pt-24">
-          <p className="text-navy/50 text-lg">Property not found</p>
-          <Link to="/properties" className="btn-gold">Browse Properties</Link>
-        </div>
+        <NotFoundState type="property" />
         <Footer />
       </div>
     )

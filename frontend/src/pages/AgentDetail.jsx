@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Star, BadgeCheck, MapPin, Home, Phone, Mail, ArrowLeft, MessageCircle, Loader2, Building, Calendar, Send } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import NotFoundState from '../components/NotFoundState'
 import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
 import { Toast, useToast } from '../components/Toast'
 import { agentsApi, consultsApi, userChatsApi } from '../api/client'
@@ -171,10 +172,7 @@ export default function AgentDetail() {
     return (
       <div className="min-h-screen bg-surface flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 pt-24">
-          <p className="text-navy/50 text-lg">Agent not found</p>
-          <Link to="/agents" className="btn-gold">Browse Agents</Link>
-        </div>
+        <NotFoundState type="agent" />
         <Footer />
       </div>
     )

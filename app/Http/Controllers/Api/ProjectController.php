@@ -7,13 +7,18 @@ use App\Models\City;
 use App\Models\Project;
 use App\Models\Property;
 use App\Models\Slug;
+use App\Traits\AppliesContentTranslations;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    use AppliesContentTranslations;
+
     public function index(Request $request): JsonResponse
     {
+        $locale = $this->resolveLocale($request);
+
         $query = Project::with(['city', 'investor', 'slug'])
             ->where('status', 'selling');
 
@@ -42,7 +47,7 @@ class ProjectController extends Controller
         $result  = $query->paginate($perPage);
 
         return response()->json([
-            'data'  => $result->map(fn($p) => $this->formatProject($p)),
+            'data'  => $result->map(fn($p) => $this->formatProject($p, $locale)),
             'links' => [
                 'first' => $result->url(1),
                 'last'  => $result->url($result->lastPage()),
@@ -63,26 +68,28 @@ class ProjectController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        $q    = $request->input('q', '');
-        $data = Project::with(['city', 'slug'])
+        $locale = $this->resolveLocale($request);
+        $q      = $request->input('q', '');
+        $data   = Project::with(['city', 'slug'])
             ->where('status', 'selling')
             ->where('name', 'like', "%$q%")
             ->limit(20)
             ->get()
-            ->map(fn($p) => $this->formatProject($p));
+            ->map(fn($p) => $this->formatProject($p, $locale));
 
         return response()->json(['data' => $data, 'error' => false, 'message' => null]);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
+        $locale = $this->resolveLocale($request);
+
         $slugModel = Slug::where('key', $slug)
             ->where('reference_type', 'Botble\\RealEstate\\Models\\Project')
             ->first();
 
         if ($slugModel) {
-            $project = Project::with(['city', 'investor', 'features', 'categories', 'slug'])
-                ->find($slugModel->reference_id);
+            $project = Project::with(['city', 'investor', 'features', 'categories', 'slug'])->find($slugModel->reference_id);
         } else {
             $project = Project::with(['city', 'investor', 'features', 'categories', 'slug'])
                 ->where('status', 'selling')
@@ -94,18 +101,19 @@ class ProjectController extends Controller
             return response()->json(['data' => null, 'error' => true, 'message' => 'Project not found'], 404);
         }
 
-        return response()->json(['data' => $this->formatProject($project), 'error' => false, 'message' => null]);
+        return response()->json(['data' => $this->formatProject($project, $locale), 'error' => false, 'message' => null]);
     }
 
-    public function showById(int $id): JsonResponse
+    public function showById(Request $request, int $id): JsonResponse
     {
+        $locale  = $this->resolveLocale($request);
         $project = Project::with(['city', 'investor', 'features', 'categories', 'slug'])->find($id);
 
         if (! $project) {
             return response()->json(['data' => null, 'error' => true, 'message' => 'Project not found'], 404);
         }
 
-        return response()->json(['data' => $this->formatProject($project), 'error' => false, 'message' => null]);
+        return response()->json(['data' => $this->formatProject($project, $locale), 'error' => false, 'message' => null]);
     }
 
     public function properties(int $id): JsonResponse
@@ -146,7 +154,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function formatProject(Project $project): array
+    private function formatProject(Project $project, string $locale = 'fr'): array
     {
         $images = $project->images ?? [];
         if (is_string($images)) {
@@ -155,7 +163,7 @@ class ProjectController extends Controller
 
         $slug = $project->slug ? $project->slug->key : (string) $project->id;
 
-        return [
+        $data = [
             'id'          => $project->id,
             'name'        => $project->name,
             'slug'        => $slug,
@@ -175,5 +183,7 @@ class ProjectController extends Controller
             'views'       => $project->views,
             'created_at'  => $project->created_at,
         ];
+
+        return $this->overlayTranslations($data, 'project', $project->id, $locale, ['name', 'description', 'content']);
     }
 }

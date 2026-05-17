@@ -9,14 +9,19 @@ use App\Models\Feature;
 use App\Models\MediaFile;
 use App\Models\Property;
 use App\Models\Slug;
+use App\Traits\AppliesContentTranslations;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
 {
+    use AppliesContentTranslations;
+
     public function index(Request $request): JsonResponse
     {
+        $locale = $this->resolveLocale($request);
+
         $query = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
             ->whereIn('status', ['selling', 'renting']);
 
@@ -91,10 +96,6 @@ class PropertyController extends Controller
             }
         }
 
-        if ($request->filled('facilities')) {
-            // facilities linked via re_facilities_distances
-        }
-
         $orderBy = in_array($request->order_by, ['created_at', 'name', 'price']) ? $request->order_by : 'created_at';
         $order   = $request->order === 'asc' ? 'asc' : 'desc';
 
@@ -108,7 +109,7 @@ class PropertyController extends Controller
         $result  = $query->paginate($perPage);
 
         return response()->json([
-            'data'  => $result->map(fn($p) => $this->formatProperty($p)),
+            'data'  => $result->map(fn($p) => $this->formatProperty($p, $locale)),
             'links' => [
                 'first' => $result->url(1),
                 'last'  => $result->url($result->lastPage()),
@@ -129,8 +130,9 @@ class PropertyController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        $q    = $request->input('q', '');
-        $data = Property::with(['city', 'slug'])
+        $locale = $this->resolveLocale($request);
+        $q      = $request->input('q', '');
+        $data   = Property::with(['city', 'slug'])
             ->whereIn('status', ['selling', 'renting'])
             ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%$q%")
@@ -138,13 +140,15 @@ class PropertyController extends Controller
             })
             ->limit(20)
             ->get()
-            ->map(fn($p) => $this->formatProperty($p));
+            ->map(fn($p) => $this->formatProperty($p, $locale));
 
         return response()->json(['data' => $data, 'error' => false, 'message' => null]);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
+        $locale = $this->resolveLocale($request);
+
         $slugModel = Slug::where('key', $slug)
             ->where('reference_type', 'Botble\\RealEstate\\Models\\Property')
             ->first();
@@ -163,18 +167,19 @@ class PropertyController extends Controller
             return response()->json(['data' => null, 'error' => true, 'message' => 'Property not found'], 404);
         }
 
-        return response()->json(['data' => $this->formatProperty($property), 'error' => false, 'message' => null]);
+        return response()->json(['data' => $this->formatProperty($property, $locale), 'error' => false, 'message' => null]);
     }
 
-    public function showById(int $id): JsonResponse
+    public function showById(Request $request, int $id): JsonResponse
     {
+        $locale   = $this->resolveLocale($request);
         $property = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])->find($id);
 
         if (! $property) {
             return response()->json(['data' => null, 'error' => true, 'message' => 'Property not found'], 404);
         }
 
-        return response()->json(['data' => $this->formatProperty($property), 'error' => false, 'message' => null]);
+        return response()->json(['data' => $this->formatProperty($property, $locale), 'error' => false, 'message' => null]);
     }
 
     public function filters(): JsonResponse
@@ -195,9 +200,9 @@ class PropertyController extends Controller
 
         return response()->json([
             'data' => [
-                'cities'     => $cities,
-                'categories' => $categories,
-                'features'   => $features,
+                'cities'      => $cities,
+                'categories'  => $categories,
+                'features'    => $features,
                 'price_range' => $priceRange,
             ],
             'error'   => false,
@@ -243,17 +248,17 @@ class PropertyController extends Controller
         return $records->map(fn($url) => $this->toStorageUrl($url))->toArray();
     }
 
-    private function formatProperty(Property $property): array
+    private function formatProperty(Property $property, string $locale = 'fr'): array
     {
         $images = $property->images ?? [];
         if (is_string($images)) {
             $images = json_decode($images, true) ?? [];
         }
 
-        $slug = $property->slug ? $property->slug->key : (string) $property->id;
+        $slug            = $property->slug ? $property->slug->key : (string) $property->id;
         $videoThumbnails = $this->getVideoThumbnails($images);
 
-        return [
+        $data = [
             'id'               => $property->id,
             'name'             => $property->name,
             'slug'             => $slug,
@@ -286,5 +291,7 @@ class PropertyController extends Controller
             'views'            => $property->views,
             'created_at'       => $property->created_at,
         ];
+
+        return $this->overlayTranslations($data, 'property', $property->id, $locale, ['name', 'description', 'content']);
     }
 }

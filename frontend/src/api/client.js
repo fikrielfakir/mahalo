@@ -8,6 +8,12 @@ const api = axios.create({
   },
 })
 
+api.interceptors.request.use((config) => {
+  const locale = localStorage.getItem('mahalo_lang') || 'fr'
+  config.headers['Accept-Language'] = locale
+  return config
+})
+
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {

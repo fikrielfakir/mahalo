@@ -73,7 +73,7 @@ export default function PropertyCard({ property, className = '' }) {
   return (
     <Link
       to={`/properties/${slug}`}
-      className={`group block rounded-3xl overflow-hidden bg-white transition-all duration-400 hover:-translate-y-2 ${className}`}
+      className={`group block rounded-3xl overflow-hidden bg-white transition-all duration-400 hover:-translate-y-2 active:scale-[0.98] touch-manip ${className}`}
       style={{ boxShadow: '0 4px 24px rgba(115,13,38,0.08), 0 1px 4px rgba(0,0,0,0.04)' }}
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 16px 48px rgba(115,13,38,0.16), 0 4px 12px rgba(0,0,0,0.06)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 24px rgba(115,13,38,0.08), 0 1px 4px rgba(0,0,0,0.04)'}
@@ -112,26 +112,26 @@ export default function PropertyCard({ property, className = '' }) {
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="absolute top-3.5 right-3.5 flex flex-col gap-2">
+        {/* Action buttons — min 44×44 tap target */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
             onClick={handleLike}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
-              liked
-                ? 'scale-110'
-                : 'hover:scale-110'
+            aria-label={liked ? t('property.unlike') : t('property.like')}
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm touch-manip ${
+              liked ? 'scale-110' : 'hover:scale-110'
             }`}
             style={liked
               ? { background: 'linear-gradient(135deg, #730D26, #BA1932)', boxShadow: '0 4px 16px rgba(186,25,50,0.40)' }
               : { background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.60)' }
             }
           >
-            <Heart size={14} className={liked ? 'fill-white text-white' : 'text-navy/70'} />
+            <Heart size={15} className={liked ? 'fill-white text-white' : 'text-navy/70'} />
           </button>
           <button
             onClick={handleCompare}
             title={inCmp ? t('compare.remove') : isFull ? t('compare.max') : t('compare.add')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
+            aria-label={inCmp ? t('compare.remove') : t('compare.add')}
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm touch-manip ${
               inCmp ? 'scale-110' : isFull ? 'cursor-not-allowed' : 'hover:scale-110'
             }`}
             style={inCmp
@@ -159,7 +159,7 @@ export default function PropertyCard({ property, className = '' }) {
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-4 xs:p-5">
         <h3 className="font-bold text-sm leading-snug mb-1.5 line-clamp-1 transition-colors duration-300 group-hover:text-gold"
           style={{ color: '#730D26', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
           {property.name}
@@ -201,7 +201,7 @@ export function PropertyCardSkeleton() {
   return (
     <div className="rounded-3xl overflow-hidden bg-white" style={{ boxShadow: '0 4px 24px rgba(115,13,38,0.06)' }}>
       <div className="aspect-[4/3] skeleton" />
-      <div className="p-5 space-y-3">
+      <div className="p-4 xs:p-5 space-y-3">
         <div className="h-4 skeleton rounded-xl w-3/4" />
         <div className="h-3 skeleton rounded-xl w-1/2" />
         <div className="h-px mt-3" style={{ background: 'rgba(115,13,38,0.06)' }} />

@@ -231,6 +231,23 @@
   .duration-600 {
     transition-duration: 600ms;
   }
+
+  /* Safe-area helpers for notched devices */
+  .pt-safe  { padding-top:    env(safe-area-inset-top); }
+  .pb-safe  { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe  { padding-left:   env(safe-area-inset-left); }
+  .pr-safe  { padding-right:  env(safe-area-inset-right); }
+
+  /* Horizontal scroll container — hides scrollbar cross-browser */
+  .scroll-x-hide {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-x-hide::-webkit-scrollbar { display: none; }
+
+  /* Improve tap responsiveness on touch */
+  .touch-manip { touch-action: manipulation; }
 }
 
 /* ── Swiper ── */

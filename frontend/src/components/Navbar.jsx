@@ -40,7 +40,7 @@ export default function Navbar({ transparent = false }) {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
-    window.addEventListener('scroll', onScroll)
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
@@ -54,6 +54,12 @@ export default function Navbar({ transparent = false }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  /* Lock body scroll while mobile menu is open */
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
   const isTransparent = transparent && !scrolled && !menuOpen
   const showBanner    = isAuthenticated && !isEmailVerified
@@ -71,218 +77,246 @@ export default function Navbar({ transparent = false }) {
     window.location.reload()
   }
 
+  /* How far down the drawer should sit (below navbar + optional banner) */
+  const drawerTop = showBanner ? 'calc(42px + 64px)' : '64px'
+
   return (
-    <header
-      className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
-        showBanner ? 'top-[42px]' : 'top-0'
-      } ${
-        isTransparent
-          ? 'bg-transparent'
-          : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-white/60'
-      }`}
-    >
-      <nav className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
+    <>
+      <header
+        className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
+          showBanner ? 'top-[42px]' : 'top-0'
+        } ${
+          isTransparent
+            ? 'bg-transparent'
+            : 'bg-white/80 backdrop-blur-xl shadow-[0_1px_20px_rgba(115,13,38,0.08)] border-b border-white/60'
+        }`}
+      >
+        <nav className="max-w-7xl mx-auto px-4 xs:px-5 h-16 flex items-center justify-between gap-4">
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center shrink-0">
-          <img
-            src={isTransparent ? logoLight : logo}
-            alt="Mahalo"
-            className="h-9 w-auto object-contain transition-all duration-300"
-          />
-        </Link>
+          {/* Logo */}
+          <Link to="/" className="flex items-center shrink-0">
+            <img
+              src={isTransparent ? logoLight : logo}
+              alt="Mahalo"
+              className="h-8 xs:h-9 w-auto object-contain transition-all duration-300"
+            />
+          </Link>
 
-        {/* Desktop nav links */}
-        <div className="hidden lg:flex items-center gap-0.5">
+          {/* Desktop nav links */}
+          <div className="hidden lg:flex items-center gap-0.5">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to || location.pathname + location.search === link.to
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`nav-pill relative transition-all duration-200 ${
+                    isTransparent
+                      ? 'text-white/85 hover:text-white hover:bg-white/12'
+                      : isActive
+                        ? 'text-navy font-semibold'
+                        : 'text-navy/65 hover:text-navy hover:bg-navy/6'
+                  }`}
+                >
+                  {link.label}
+                  {!isTransparent && isActive && (
+                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-gold" />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Right actions — desktop */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+
+            {/* Language switcher */}
+            <div className="relative" ref={langRef}>
+              <button
+                onClick={() => setLangDropdown(!langDropdown)}
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-full touch-manip ${
+                  isTransparent
+                    ? 'text-white/80 hover:bg-white/10 hover:text-white'
+                    : 'text-navy/60 hover:text-navy hover:bg-navy/5'
+                }`}
+              >
+                <Globe size={14} />
+                <span>{currentLang.short}</span>
+                <ChevronDown size={12} className={`transition-transform ${langDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {langDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
+                  {SUPPORTED_LOCALES.map((lng) => {
+                    const meta = LANG_LABELS[lng]
+                    const active = activeLng === lng
+                    return (
+                      <button
+                        key={lng}
+                        onClick={() => changeLanguage(lng)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors rounded-xl mx-auto touch-manip ${
+                          active
+                            ? 'text-[#730D26] font-semibold bg-[#730D26]/6'
+                            : 'text-navy/70 hover:text-navy hover:bg-navy/5'
+                        }`}
+                        style={{ width: 'calc(100% - 8px)', marginLeft: '4px' }}
+                      >
+                        <span className="text-base">{meta.flag}</span>
+                        <span className="flex-1 text-start">{meta.label}</span>
+                        {active && <Check size={13} className="text-[#730D26] shrink-0" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Auth section */}
+            {isAuthenticated ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setUserDropdown(!userDropdown)}
+                  className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200 touch-manip ${
+                    isTransparent
+                      ? 'hover:bg-white/12 text-white'
+                      : 'hover:bg-navy/6 text-navy'
+                  }`}
+                >
+                  <img
+                    src={user?.avatar_url || '/avatars/man1.png'}
+                    alt="avatar"
+                    className="w-7 h-7 rounded-full object-cover"
+                  />
+                  <span className="text-sm font-medium max-w-[90px] truncate">
+                    {user?.name?.split(' ')[0]}
+                  </span>
+                  <ChevronDown size={12} className={`transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {userDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <p className="text-xs font-semibold text-navy truncate">{user?.name}</p>
+                      <p className="text-xs text-navy/40 truncate">{user?.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
+                      style={{ width: 'calc(100% - 8px)' }}
+                    >
+                      <UserCircle size={14} /> {t('nav.myProfile')}
+                    </Link>
+                    <Link
+                      to="/messages"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
+                      style={{ width: 'calc(100% - 8px)' }}
+                    >
+                      <MessageCircle size={14} /> {t('nav.myMessages')}
+                    </Link>
+                    {!!(user?.professional_agent_id || user?.role === 'agent') && (
+                      <Link
+                        to="/agent-dashboard"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#730D26] hover:bg-[#730D26]/8 transition-colors rounded-xl mx-1 font-semibold"
+                        style={{ width: 'calc(100% - 8px)' }}
+                      >
+                        <LayoutDashboard size={14} /> {t('nav.agentDashboard')}
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
+                      style={{ width: 'calc(100% - 8px)' }}
+                    >
+                      <LogOut size={14} /> {t('nav.signOut')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 ml-1">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 bg-white touch-manip"
+                  style={{
+                    border: '1.5px solid transparent',
+                    backgroundClip: 'padding-box',
+                    boxShadow: '0 0 0 1.5px #730D26',
+                    color: '#730D26',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #BA1932'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #730D26'}
+                >
+                  {t('nav.signIn')}
+                </Link>
+              </div>
+            )}
+
+            <Link
+              to="/list-property"
+              className="ml-1 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all duration-200 touch-manip"
+              style={{
+                background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
+                boxShadow: '0 2px 12px rgba(186,25,50,0.30)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 18px rgba(186,25,50,0.50)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(186,25,50,0.30)'}
+            >
+              {t('nav.listProperty')}
+            </Link>
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className={`lg:hidden w-11 h-11 rounded-full flex items-center justify-center transition-all touch-manip ${
+              isTransparent ? 'text-white hover:bg-white/12' : 'text-navy hover:bg-navy/6'
+            }`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90'}`}>
+              <X size={20} />
+            </span>
+            <span className={`absolute transition-all duration-200 ${menuOpen ? 'opacity-0 -rotate-90' : 'opacity-100 rotate-0'}`}>
+              <Menu size={20} />
+            </span>
+          </button>
+        </nav>
+      </header>
+
+      {/* Mobile drawer — always in DOM, animated via opacity + translate */}
+      <div
+        aria-hidden={!menuOpen}
+        className={`lg:hidden fixed inset-x-0 z-40 bg-white/97 backdrop-blur-2xl shadow-float overflow-y-auto transition-all duration-300 ease-out pb-safe`}
+        style={{
+          top: drawerTop,
+          maxHeight: `calc(100vh - ${drawerTop})`,
+          opacity: menuOpen ? 1 : 0,
+          transform: menuOpen ? 'translateY(0)' : 'translateY(-10px)',
+          pointerEvents: menuOpen ? 'auto' : 'none',
+        }}
+      >
+        <div className="px-4 xs:px-5 py-4 space-y-0.5">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.to || location.pathname + location.search === link.to
+            const isActive = location.pathname + location.search === link.to || location.pathname === link.to
             return (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`nav-pill relative transition-all duration-200 ${
-                  isTransparent
-                    ? 'text-white/85 hover:text-white hover:bg-white/12'
-                    : isActive
-                      ? 'text-navy font-semibold'
-                      : 'text-navy/65 hover:text-navy hover:bg-navy/6'
+                className={`flex items-center px-4 py-3.5 rounded-2xl font-medium text-sm transition-all duration-200 min-h-[44px] touch-manip ${
+                  isActive
+                    ? 'bg-navy/8 text-navy font-semibold'
+                    : 'text-navy/70 hover:text-navy hover:bg-navy/5'
                 }`}
               >
                 {link.label}
-                {!isTransparent && isActive && (
-                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-gold" />
-                )}
               </Link>
             )
           })}
-        </div>
-
-        {/* Right actions */}
-        <div className="hidden lg:flex items-center gap-2 shrink-0">
-
-          {/* Language switcher */}
-          <div className="relative" ref={langRef}>
-            <button
-              onClick={() => setLangDropdown(!langDropdown)}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-full ${
-                isTransparent
-                  ? 'text-white/80 hover:bg-white/10 hover:text-white'
-                  : 'text-navy/60 hover:text-navy hover:bg-navy/5'
-              }`}
-            >
-              <Globe size={14} />
-              <span>{currentLang.short}</span>
-              <ChevronDown size={12} className={`transition-transform ${langDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {langDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
-                {SUPPORTED_LOCALES.map((lng) => {
-                  const meta = LANG_LABELS[lng]
-                  const active = activeLng === lng
-                  return (
-                    <button
-                      key={lng}
-                      onClick={() => changeLanguage(lng)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors rounded-xl mx-auto ${
-                        active
-                          ? 'text-[#730D26] font-semibold bg-[#730D26]/6'
-                          : 'text-navy/70 hover:text-navy hover:bg-navy/5'
-                      }`}
-                      style={{ width: 'calc(100% - 8px)', marginLeft: '4px' }}
-                    >
-                      <span className="text-base">{meta.flag}</span>
-                      <span className="flex-1 text-start">{meta.label}</span>
-                      {active && <Check size={13} className="text-[#730D26] shrink-0" />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Auth section */}
-          {isAuthenticated ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setUserDropdown(!userDropdown)}
-                className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200 ${
-                  isTransparent
-                    ? 'hover:bg-white/12 text-white'
-                    : 'hover:bg-navy/6 text-navy'
-                }`}
-              >
-                <img
-                  src={user?.avatar_url || '/avatars/man1.png'}
-                  alt="avatar"
-                  className="w-7 h-7 rounded-full object-cover"
-                />
-                <span className="text-sm font-medium max-w-[90px] truncate">
-                  {user?.name?.split(' ')[0]}
-                </span>
-                <ChevronDown size={12} className={`transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
-              </button>
-
-              {userDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-float border border-gray-100 py-1.5 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100 mb-1">
-                    <p className="text-xs font-semibold text-navy truncate">{user?.name}</p>
-                    <p className="text-xs text-navy/40 truncate">{user?.email}</p>
-                  </div>
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
-                    style={{ width: 'calc(100% - 8px)' }}
-                  >
-                    <UserCircle size={14} /> {t('nav.myProfile')}
-                  </Link>
-                  <Link
-                    to="/messages"
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy/70 hover:text-navy hover:bg-navy/5 transition-colors rounded-xl mx-1"
-                    style={{ width: 'calc(100% - 8px)' }}
-                  >
-                    <MessageCircle size={14} /> {t('nav.myMessages')}
-                  </Link>
-                  {!!(user?.professional_agent_id || user?.role === 'agent') && (
-                    <Link
-                      to="/agent-dashboard"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#730D26] hover:bg-[#730D26]/8 transition-colors rounded-xl mx-1 font-semibold"
-                      style={{ width: 'calc(100% - 8px)' }}
-                    >
-                      <LayoutDashboard size={14} /> {t('nav.agentDashboard')}
-                    </Link>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"
-                    style={{ width: 'calc(100% - 8px)' }}
-                  >
-                    <LogOut size={14} /> {t('nav.signOut')}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 ml-1">
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 bg-white"
-                style={{
-                  border: '1.5px solid transparent',
-                  backgroundClip: 'padding-box',
-                  boxShadow: '0 0 0 1.5px #730D26',
-                  color: '#730D26',
-                }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #BA1932'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 0 1.5px #730D26'}
-              >
-                {t('nav.signIn')}
-              </Link>
-            </div>
-          )}
-
-          <Link
-            to="/list-property"
-            className="ml-1 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all duration-200"
-            style={{
-              background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
-              boxShadow: '0 2px 12px rgba(186,25,50,0.30)',
-            }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 18px rgba(186,25,50,0.50)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(186,25,50,0.30)'}
-          >
-            {t('nav.listProperty')}
-          </Link>
-        </div>
-
-        {/* Mobile toggle */}
-        <button
-          className={`lg:hidden w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-            isTransparent ? 'text-white hover:bg-white/12' : 'text-navy hover:bg-navy/6'
-          }`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </nav>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="lg:hidden bg-white/95 backdrop-blur-2xl border-t border-gray-100/80 px-5 py-4 space-y-0.5 shadow-float">
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="flex items-center px-4 py-3 rounded-2xl text-navy/70 hover:text-navy hover:bg-navy/5 font-medium text-sm transition-all duration-200"
-            >
-              {link.label}
-            </Link>
-          ))}
 
           {/* Mobile language switcher */}
-          <div className="pt-2 pb-1 border-t border-gray-100 mt-1">
-            <p className="px-4 text-xs font-semibold text-navy/40 uppercase tracking-wider mb-1">Language</p>
+          <div className="pt-3 pb-1 border-t border-gray-100 mt-2">
+            <p className="px-4 text-xs font-semibold text-navy/40 uppercase tracking-wider mb-2">Language</p>
             <div className="grid grid-cols-2 gap-1">
               {SUPPORTED_LOCALES.map((lng) => {
                 const meta = LANG_LABELS[lng]
@@ -291,7 +325,7 @@ export default function Navbar({ transparent = false }) {
                   <button
                     key={lng}
                     onClick={() => changeLanguage(lng)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manip ${
                       active
                         ? 'bg-[#730D26]/10 text-[#730D26] font-semibold'
                         : 'text-navy/60 hover:bg-navy/5 hover:text-navy'
@@ -306,14 +340,14 @@ export default function Navbar({ transparent = false }) {
             </div>
           </div>
 
-          <div className="pt-3 mt-1 border-t border-gray-100 space-y-2">
+          <div className="pt-3 mt-1 border-t border-gray-100 space-y-2 pb-6">
             {isAuthenticated ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-2">
                   <img
                     src={user?.avatar_url || '/avatars/man1.png'}
                     alt="avatar"
-                    className="w-8 h-8 rounded-full object-cover shrink-0"
+                    className="w-9 h-9 rounded-full object-cover shrink-0"
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-navy truncate">{user?.name}</p>
@@ -322,27 +356,27 @@ export default function Navbar({ transparent = false }) {
                 </div>
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2 w-full px-4 py-3 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all"
+                  className="flex items-center gap-2 w-full px-4 py-3.5 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
                 >
                   <UserCircle size={15} /> {t('nav.myProfile')}
                 </Link>
                 <Link
                   to="/messages"
-                  className="flex items-center gap-2 w-full px-4 py-3 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all"
+                  className="flex items-center gap-2 w-full px-4 py-3.5 text-navy/70 hover:text-navy hover:bg-navy/5 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
                 >
                   <MessageCircle size={15} /> {t('nav.myMessages')}
                 </Link>
                 {!!(user?.professional_agent_id || user?.role === 'agent') && (
                   <Link
                     to="/agent-dashboard"
-                    className="flex items-center gap-2 w-full px-4 py-3 text-[#730D26] hover:bg-[#730D26]/8 rounded-2xl font-semibold text-sm transition-all"
+                    className="flex items-center gap-2 w-full px-4 py-3.5 text-[#730D26] hover:bg-[#730D26]/8 rounded-2xl font-semibold text-sm transition-all min-h-[44px] touch-manip"
                   >
                     <LayoutDashboard size={15} /> {t('nav.agentDashboard')}
                   </Link>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all"
+                  className="flex items-center gap-2 w-full px-4 py-3.5 text-red-500 hover:bg-red-50 rounded-2xl font-medium text-sm transition-all min-h-[44px] touch-manip"
                 >
                   <LogOut size={15} /> {t('nav.signOut')}
                 </button>
@@ -350,20 +384,28 @@ export default function Navbar({ transparent = false }) {
             ) : (
               <div className="flex gap-2">
                 <Link to="/login"
-                  className="flex-1 text-center px-4 py-3 bg-gold text-white rounded-2xl font-semibold text-sm hover:bg-gold-dark">
+                  className="flex-1 text-center px-4 py-3.5 bg-gold text-white rounded-2xl font-semibold text-sm hover:bg-gold-dark min-h-[44px] touch-manip">
                   {t('nav.signIn')}
                 </Link>
               </div>
             )}
             <Link
               to="/list-property"
-              className="flex items-center justify-center px-4 py-3 bg-navy text-white rounded-2xl font-semibold text-sm w-full"
+              className="flex items-center justify-center px-4 py-3.5 bg-navy text-white rounded-2xl font-semibold text-sm w-full min-h-[44px] touch-manip"
             >
               {t('nav.listProperty')}
             </Link>
           </div>
         </div>
-      )}
-    </header>
+      </div>
+
+      {/* Backdrop for mobile drawer */}
+      <div
+        aria-hidden="true"
+        className={`lg:hidden fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        style={{ top: drawerTop }}
+        onClick={() => setMenuOpen(false)}
+      />
+    </>
   )
 }

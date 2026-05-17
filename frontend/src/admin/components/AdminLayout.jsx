@@ -19,10 +19,10 @@ export default function AdminLayout() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-4 gap-3 shrink-0">
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-3 sm:px-4 gap-3 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-600"
+            className="md:hidden p-2.5 rounded-xl hover:bg-gray-100 text-gray-600 touch-manip"
           >
             <Menu size={18} />
           </button>
@@ -32,8 +32,8 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Page content — adaptive padding */}
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

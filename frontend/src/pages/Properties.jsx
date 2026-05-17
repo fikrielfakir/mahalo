@@ -137,85 +137,181 @@ export default function Properties() {
   }
 
   const filterBar = (
-    <div
-      className="flex flex-wrap gap-2.5 items-center p-3 rounded-3xl shadow-card mb-4"
-      style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(200,200,200,0.5)' }}
-    >
-      <div className="flex-1 min-w-48 flex items-center gap-2.5 bg-surface rounded-2xl px-4 py-2.5">
-        <Search size={15} className="text-gold shrink-0" />
-        <input
-          type="text" placeholder={t('filters.searchPlaceholder')} value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          className="flex-1 bg-transparent text-sm font-medium text-navy outline-none placeholder-navy/30"
-        />
-      </div>
+    /* Outer shell: rounded card on md+; on mobile a plain scroll strip */
+    <div className="mb-4">
+      {/* Mobile: horizontal scroll strip */}
+      <div
+        className="scroll-x-hide md:hidden flex gap-2 items-center pb-1"
+      >
+        {/* Search input — fixed min-width so it doesn't collapse */}
+        <div className="flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 shrink-0 min-w-[180px] shadow-card"
+          style={{ border: '1px solid rgba(200,200,200,0.4)' }}>
+          <Search size={14} className="text-gold shrink-0" />
+          <input
+            type="text" placeholder={t('filters.searchPlaceholder')} value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1 bg-transparent text-sm font-medium text-navy outline-none placeholder-navy/30 w-full"
+          />
+        </div>
 
-      <div className="flex gap-1.5 p-1 rounded-2xl bg-surface">
-        {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
-          <button key={val} onClick={() => { setType(val); setPage(1) }}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${type === val ? 'bg-navy text-white shadow-sm' : 'text-navy/55 hover:text-navy hover:bg-white'}`}>
-            {label}
+        {/* Type toggles */}
+        <div className="flex gap-1 p-1 rounded-2xl bg-white shadow-card shrink-0"
+          style={{ border: '1px solid rgba(200,200,200,0.4)' }}>
+          {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
+            <button key={val} onClick={() => { setType(val); setPage(1) }}
+              className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 min-h-[36px] touch-manip ${type === val ? 'bg-navy text-white shadow-sm' : 'text-navy/55'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Bedrooms */}
+        <div className="relative shrink-0">
+          <select value={bedrooms} onChange={(e) => { setBedrooms(e.target.value); setPage(1) }}
+            className={`appearance-none pl-3 pr-7 py-2.5 rounded-2xl text-sm font-semibold outline-none cursor-pointer shadow-card ${bedrooms ? 'bg-gold/10 text-gold' : 'bg-white text-navy/55'}`}
+            style={{ border: '1px solid rgba(200,200,200,0.4)' }}>
+            <option value="">{t('filters.bedrooms')}</option>
+            {['1', '2', '3', '4', '5+'].map(b => <option key={b} value={b}>{b}{b === '5+' ? '+' : ''} {b !== '1' ? t('filters.beds') : t('filters.bed')}</option>)}
+          </select>
+          <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-navy/40 pointer-events-none" />
+        </div>
+
+        {/* Price */}
+        <div className="relative shrink-0">
+          <button onClick={() => setShowPriceMenu(p => !p)}
+            className={`flex items-center gap-1.5 pl-3 pr-2 py-2.5 rounded-2xl text-sm font-semibold shadow-card touch-manip ${(minPrice || maxPrice) ? 'bg-gold/10 text-gold' : 'bg-white text-navy/55'}`}
+            style={{ border: '1px solid rgba(200,200,200,0.4)' }}>
+            {minPrice || maxPrice ? `${minPrice || '0'}K–${maxPrice || '∞'}K` : t('filters.price')}
+            <ChevronDown size={13} className="text-navy/40" />
           </button>
-        ))}
-      </div>
-
-      <div className="relative">
-        <select value={bedrooms} onChange={(e) => { setBedrooms(e.target.value); setPage(1) }}
-          className={`appearance-none pl-3 pr-7 py-2.5 rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${bedrooms ? 'bg-gold/10 text-gold' : 'bg-surface text-navy/55 hover:text-navy hover:bg-white'}`}>
-          <option value="">{t('filters.bedrooms')}</option>
-          {['1', '2', '3', '4', '5+'].map(b => <option key={b} value={b}>{b}{b === '5+' ? '+' : ''} {b !== '1' ? t('filters.beds') : t('filters.bed')}</option>)}
-        </select>
-        <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-navy/40 pointer-events-none" />
-      </div>
-
-      <div className="relative">
-        <button onClick={() => setShowPriceMenu(p => !p)}
-          className={`flex items-center gap-1.5 pl-3 pr-2 py-2.5 rounded-2xl text-sm font-semibold transition-all ${(minPrice || maxPrice) ? 'bg-gold/10 text-gold' : 'bg-surface text-navy/55 hover:text-navy hover:bg-white'}`}>
-          {minPrice || maxPrice ? `${minPrice || '0'}K – ${maxPrice || '∞'}K MAD` : t('filters.price')}
-          <ChevronDown size={13} className="text-navy/40" />
-        </button>
-        {showPriceMenu && (
-          <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-card-hover p-4 min-w-[220px] border border-gray-100">
-            <p className="text-navy/50 text-xs font-semibold mb-3 uppercase tracking-wide">{t('filters.priceRangeLabel')}</p>
-            <div className="flex gap-2 mb-3">
-              <input type="number" placeholder={t('filters.min')} value={minPrice} onChange={e => setMinPrice(e.target.value)}
-                className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
-              <input type="number" placeholder={t('filters.max')} value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
-                className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+          {showPriceMenu && (
+            <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-card-hover p-4 min-w-[200px] border border-gray-100">
+              <p className="text-navy/50 text-xs font-semibold mb-3 uppercase tracking-wide">{t('filters.priceRangeLabel')}</p>
+              <div className="flex gap-2 mb-3">
+                <input type="number" placeholder={t('filters.min')} value={minPrice} onChange={e => setMinPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                <input type="number" placeholder={t('filters.max')} value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { clearPrice(); setShowPriceMenu(false) }}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-navy/50 touch-manip">{t('filters.clear')}</button>
+                <button onClick={() => { setPage(1); setShowPriceMenu(false); fetchProperties() }}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold bg-navy text-white touch-manip">{t('filters.apply')}</button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => { clearPrice(); setShowPriceMenu(false) }}
-                className="flex-1 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-navy/50 hover:border-navy/30 transition-colors">{t('filters.clear')}</button>
-              <button onClick={() => { setPage(1); setShowPriceMenu(false); fetchProperties() }}
-                className="flex-1 py-2 rounded-xl text-xs font-semibold bg-navy text-white hover:opacity-90 transition-opacity">{t('filters.apply')}</button>
-            </div>
-          </div>
+          )}
+        </div>
+
+        {cityId && (
+          <button onClick={clearCity} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm shrink-0 touch-manip">
+            {t('filters.cityFilter')} <X size={12} />
+          </button>
         )}
+        {categoryId && (
+          <button onClick={clearCategory} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm shrink-0 touch-manip">
+            {t('filters.categoryFilter')} <X size={12} />
+          </button>
+        )}
+
+        <button onClick={handleSearch} className="btn-gold py-2.5 px-4 text-sm shrink-0 touch-manip">{t('common.search')}</button>
+
+        {/* View toggles */}
+        <div className="flex gap-1 p-1 rounded-2xl bg-white shadow-card shrink-0 ml-1"
+          style={{ border: '1px solid rgba(200,200,200,0.4)' }}>
+          <button onClick={() => setViewMode('grid')} title="Grid"
+            className={`p-2.5 rounded-xl transition-all touch-manip ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-navy/40'}`}>
+            <LayoutGrid size={15} />
+          </button>
+          <button onClick={() => setViewMode('map')} title="Map"
+            className={`p-2.5 rounded-xl transition-all touch-manip ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-navy/40'}`}>
+            <Map size={15} />
+          </button>
+        </div>
       </div>
 
-      {cityId && (
-        <button onClick={clearCity} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm hover:bg-gold/20 transition-colors">
-          {t('filters.cityFilter')} <X size={12} />
-        </button>
-      )}
-      {categoryId && (
-        <button onClick={clearCategory} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm hover:bg-gold/20 transition-colors">
-          {t('filters.categoryFilter')} <X size={12} />
-        </button>
-      )}
+      {/* Desktop md+: original wrapped layout */}
+      <div
+        className="hidden md:flex flex-wrap gap-2.5 items-center p-3 rounded-3xl shadow-card"
+        style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(200,200,200,0.5)' }}
+      >
+        <div className="flex-1 min-w-48 flex items-center gap-2.5 bg-surface rounded-2xl px-4 py-2.5">
+          <Search size={15} className="text-gold shrink-0" />
+          <input
+            type="text" placeholder={t('filters.searchPlaceholder')} value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1 bg-transparent text-sm font-medium text-navy outline-none placeholder-navy/30"
+          />
+        </div>
 
-      <button onClick={handleSearch} className="btn-gold py-2.5 px-5 text-sm">{t('common.search')}</button>
+        <div className="flex gap-1.5 p-1 rounded-2xl bg-surface">
+          {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
+            <button key={val} onClick={() => { setType(val); setPage(1) }}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${type === val ? 'bg-navy text-white shadow-sm' : 'text-navy/55 hover:text-navy hover:bg-white'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
 
-      <div className="flex gap-1 p-1 rounded-2xl bg-surface ml-auto">
-        <button onClick={() => setViewMode('grid')} title="Grid view"
-          className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-navy/40 hover:text-navy'}`}>
-          <LayoutGrid size={16} />
-        </button>
-        <button onClick={() => setViewMode('map')} title="Map view"
-          className={`p-2 rounded-xl transition-all ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-navy/40 hover:text-navy'}`}>
-          <Map size={16} />
-        </button>
+        <div className="relative">
+          <select value={bedrooms} onChange={(e) => { setBedrooms(e.target.value); setPage(1) }}
+            className={`appearance-none pl-3 pr-7 py-2.5 rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${bedrooms ? 'bg-gold/10 text-gold' : 'bg-surface text-navy/55 hover:text-navy hover:bg-white'}`}>
+            <option value="">{t('filters.bedrooms')}</option>
+            {['1', '2', '3', '4', '5+'].map(b => <option key={b} value={b}>{b}{b === '5+' ? '+' : ''} {b !== '1' ? t('filters.beds') : t('filters.bed')}</option>)}
+          </select>
+          <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-navy/40 pointer-events-none" />
+        </div>
+
+        <div className="relative">
+          <button onClick={() => setShowPriceMenu(p => !p)}
+            className={`flex items-center gap-1.5 pl-3 pr-2 py-2.5 rounded-2xl text-sm font-semibold transition-all ${(minPrice || maxPrice) ? 'bg-gold/10 text-gold' : 'bg-surface text-navy/55 hover:text-navy hover:bg-white'}`}>
+            {minPrice || maxPrice ? `${minPrice || '0'}K – ${maxPrice || '∞'}K MAD` : t('filters.price')}
+            <ChevronDown size={13} className="text-navy/40" />
+          </button>
+          {showPriceMenu && (
+            <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-card-hover p-4 min-w-[220px] border border-gray-100">
+              <p className="text-navy/50 text-xs font-semibold mb-3 uppercase tracking-wide">{t('filters.priceRangeLabel')}</p>
+              <div className="flex gap-2 mb-3">
+                <input type="number" placeholder={t('filters.min')} value={minPrice} onChange={e => setMinPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+                <input type="number" placeholder={t('filters.max')} value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-3 py-2 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { clearPrice(); setShowPriceMenu(false) }}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-navy/50 hover:border-navy/30 transition-colors">{t('filters.clear')}</button>
+                <button onClick={() => { setPage(1); setShowPriceMenu(false); fetchProperties() }}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold bg-navy text-white hover:opacity-90 transition-opacity">{t('filters.apply')}</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {cityId && (
+          <button onClick={clearCity} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm hover:bg-gold/20 transition-colors">
+            {t('filters.cityFilter')} <X size={12} />
+          </button>
+        )}
+        {categoryId && (
+          <button onClick={clearCategory} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-semibold text-sm hover:bg-gold/20 transition-colors">
+            {t('filters.categoryFilter')} <X size={12} />
+          </button>
+        )}
+
+        <button onClick={handleSearch} className="btn-gold py-2.5 px-5 text-sm">{t('common.search')}</button>
+
+        <div className="flex gap-1 p-1 rounded-2xl bg-surface ml-auto">
+          <button onClick={() => setViewMode('grid')} title="Grid view"
+            className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-navy/40 hover:text-navy'}`}>
+            <LayoutGrid size={16} />
+          </button>
+          <button onClick={() => setViewMode('map')} title="Map view"
+            className={`p-2 rounded-xl transition-all ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-navy/40 hover:text-navy'}`}>
+            <Map size={16} />
+          </button>
+        </div>
       </div>
     </div>
   )

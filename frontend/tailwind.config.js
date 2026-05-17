@@ -5,6 +5,16 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    screens: {
+      xs:  '375px',
+      sm:  '640px',
+      md:  '768px',
+      lg:  '1024px',
+      xl:  '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px',
+      '4xl': '2560px',
+    },
     extend: {
       colors: {
         navy: {
@@ -28,6 +38,12 @@ export default {
         graphite: '#2A2A2A',
         surface: '#F8F6F4',
         rose: '#FF5A5F',
+      },
+      spacing: {
+        'safe-top':    'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left':   'env(safe-area-inset-left)',
+        'safe-right':  'env(safe-area-inset-right)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

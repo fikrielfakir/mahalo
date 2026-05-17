@@ -254,9 +254,13 @@ export default function Navbar({ transparent = false }) {
 
       {/* ─── Mobile side-drawer panel ───────────────────────────── */}
       <div
-        className={`lg:hidden fixed top-0 right-0 z-50 h-full w-[85vw] max-w-[340px] bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
-          menuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className="lg:hidden fixed top-0 right-0 z-50 h-full w-[85vw] max-w-[340px] bg-white shadow-2xl transition-all duration-300 ease-out flex flex-col"
+        style={{
+          transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
+          opacity: menuOpen ? 1 : 0,
+          pointerEvents: menuOpen ? 'auto' : 'none',
+          visibility: menuOpen ? 'visible' : 'hidden',
+        }}
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">

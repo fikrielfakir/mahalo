@@ -141,7 +141,7 @@ export default function Properties() {
       {/* ── Mobile layout (< md): two rows, all buttons visible ── */}
       <div className="md:hidden space-y-2">
 
-        {/* Row 1: Search + Search btn + View toggle */}
+        {/* Row 1: Search + Search button only */}
         <div className="flex gap-2 items-center">
           <div className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-3 py-2.5 shadow-card"
             style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
@@ -167,24 +167,12 @@ export default function Properties() {
           >
             {t('common.search')}
           </button>
-          {/* View toggle */}
-          <div className="flex gap-0.5 p-1 rounded-2xl bg-white shadow-card shrink-0"
-            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
-            <button onClick={() => setViewMode('grid')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
-              <LayoutGrid size={15} />
-            </button>
-            <button onClick={() => setViewMode('map')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
-              <Map size={15} />
-            </button>
-          </div>
         </div>
 
-        {/* Row 2: Type + Bedrooms + Price — all visible, equally spaced */}
+        {/* Row 2: Type pills + Bedrooms + Price + View toggle */}
         <div className="flex gap-2 items-center">
           {/* Type pills */}
-          <div className="flex gap-1 p-1 rounded-2xl bg-white shadow-card"
+          <div className="flex gap-1 p-1 rounded-2xl bg-white shadow-card shrink-0"
             style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
             {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
               <button key={val} onClick={() => { setType(val); setPage(1) }}
@@ -195,7 +183,7 @@ export default function Properties() {
           </div>
 
           {/* Bedrooms */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <select
               value={bedrooms}
               onChange={(e) => { setBedrooms(e.target.value); setPage(1) }}
@@ -211,10 +199,10 @@ export default function Properties() {
           </div>
 
           {/* Price */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <button
               onClick={() => setShowPriceMenu(p => !p)}
-              className={`w-full flex items-center justify-between gap-1 px-3 py-2.5 rounded-2xl text-sm font-semibold shadow-card touch-manip whitespace-nowrap ${(minPrice || maxPrice) ? 'bg-gold/10 text-gold' : 'bg-white text-gray-600'}`}
+              className={`w-full flex items-center justify-between gap-1 px-3 py-2.5 rounded-2xl text-sm font-semibold shadow-card touch-manip ${(minPrice || maxPrice) ? 'bg-gold/10 text-gold' : 'bg-white text-gray-600'}`}
               style={{ border: '1px solid rgba(200,200,200,0.5)' }}
             >
               <span className="truncate">{minPrice || maxPrice ? `${minPrice || '0'}K–${maxPrice || '∞'}K` : t('filters.price')}</span>
@@ -237,6 +225,19 @@ export default function Properties() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* View toggle — end of row 2 */}
+          <div className="flex gap-0.5 p-1 rounded-2xl bg-white shadow-card shrink-0"
+            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+            <button onClick={() => setViewMode('grid')}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
+              <LayoutGrid size={15} />
+            </button>
+            <button onClick={() => setViewMode('map')}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
+              <Map size={15} />
+            </button>
           </div>
         </div>
 

@@ -75,10 +75,35 @@ export default function SiteModeGate({ children }) {
     check()
   }, [check])
 
-  if (status === 'loading')     return null
-  if (status === 'server_down') return <ServerOfflinePage onRecover={handleRecover} />
-  if (status === 'maintenance') return <MaintenancePage settings={settings} />
-  if (status === 'coming_soon') return <ComingSoonPage  settings={settings} />
+  if (status === 'loading') return null
 
-  return children
+  if (status === 'server_down') {
+    return (
+      <div key="server_down" className="site-reveal">
+        <ServerOfflinePage onRecover={handleRecover} />
+      </div>
+    )
+  }
+
+  if (status === 'maintenance') {
+    return (
+      <div key="maintenance" className="site-reveal">
+        <MaintenancePage settings={settings} />
+      </div>
+    )
+  }
+
+  if (status === 'coming_soon') {
+    return (
+      <div key="coming_soon" className="site-reveal">
+        <ComingSoonPage settings={settings} />
+      </div>
+    )
+  }
+
+  return (
+    <div key="ok" className="site-reveal">
+      {children}
+    </div>
+  )
 }

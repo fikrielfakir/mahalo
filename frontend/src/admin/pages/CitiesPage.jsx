@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { adminCities } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
-import { Plus, Pencil, Trash2, Globe, Building2, Download, Upload, CheckCircle, AlertCircle, X } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, Globe, Building2, Download, Upload, CheckCircle, AlertCircle, X, Languages } from 'lucide-react'
 
 const EMPTY = { name: '', country: 'Morocco', state: '', image_url: '', description: '' }
 
@@ -47,6 +48,7 @@ export default function CitiesPage() {
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState(null)
 
+  const [transModal, setTransModal] = useState(null)
   const [exporting, setExporting]     = useState(false)
   const [importModal, setImportModal] = useState(false)
   const [importFile, setImportFile]   = useState(null)
@@ -234,6 +236,7 @@ export default function CitiesPage() {
       key: 'actions', label: '',
       render: (r) => (
         <div className="flex gap-1 justify-end">
+          <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
           <Btn size="sm" variant="ghost" onClick={() => open(r)}><Pencil size={13} /></Btn>
           <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
         </div>
@@ -272,6 +275,13 @@ export default function CitiesPage() {
         page={page}
         lastPage={meta.last_page || 1}
         onPage={setPage}
+      />
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="city"
+        item={transModal}
       />
 
       {/* Edit / Create modal */}

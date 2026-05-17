@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { adminFacilities } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import Modal, { FormField, Input } from '../components/Modal'
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, MapPin, Languages } from 'lucide-react'
 
 export default function FacilitiesPage() {
   const [rows, setRows] = useState([])
@@ -11,6 +12,7 @@ export default function FacilitiesPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', icon: '' })
   const [saving, setSaving] = useState(false)
+  const [transModal, setTransModal] = useState(null)
 
   const load = () => { setLoading(true); adminFacilities.list().then((r) => setRows(r.data || [])).finally(() => setLoading(false)) }
   useEffect(load, [])
@@ -44,6 +46,7 @@ export default function FacilitiesPage() {
                   <p className="text-xs text-gray-400 font-mono truncate">{r.icon || '—'}</p>
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={12} className="text-blue-500" /></Btn>
                   <Btn size="sm" variant="ghost" onClick={() => open(r)}><Pencil size={12} /></Btn>
                   <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={12} /></Btn>
                 </div>
@@ -52,6 +55,13 @@ export default function FacilitiesPage() {
           </div>
         )}
       </div>
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="facility"
+        item={transModal}
+      />
+
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Facility' : 'Add Facility'} size="sm">
         <form onSubmit={submit} className="space-y-4">
           <FormField label="Name" required><Input value={form.name} onChange={f('name')} required placeholder="Hospital" /></FormField>

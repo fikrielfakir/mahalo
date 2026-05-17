@@ -142,6 +142,12 @@ export const adminSettings = {
   deleteTranslation:  (locale, key) => client.delete(`/admin/settings/translations/${locale}/${key}`),
 }
 
+export const adminContentTranslations = {
+  get:  (type, id)       => client.get(`/admin/content-translations/${type}/${id}`),
+  save: (type, id, data) => client.put(`/admin/content-translations/${type}/${id}`, data),
+  del:  (type, id)       => client.delete(`/admin/content-translations/${type}/${id}`),
+}
+
 export const publicApi = {
   cities:     () => client.get('/properties/filters'),
   features:   () => client.get('/features/all'),

@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { adminAgents, publicApi } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
-import { Plus, Pencil, Trash2, BadgeCheck, Ban, ShieldCheck } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, BadgeCheck, Ban, ShieldCheck, Languages } from 'lucide-react'
 
 const EMPTY = { first_name: '', last_name: '', email: '', phone: '', whatsapp: '', description: '', city_id: '', is_featured: false, is_verified: false }
 
@@ -21,6 +22,7 @@ export default function AgentsPage() {
   const [banTarget, setBanTarget] = useState(null)
   const [banReason, setBanReason] = useState('')
   const [banning, setBanning]     = useState(false)
+  const [transModal, setTransModal] = useState(null)
 
   const loadAgents = useCallback(() => {
     setLoading(true)
@@ -102,6 +104,7 @@ export default function AgentsPage() {
     },
     { key: 'actions', label: '', render: r => (
       <div className="flex gap-1 justify-end">
+        <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         {r.is_banned
           ? <Btn size="sm" variant="ghost" onClick={() => unban(r.id)} title="Unban agent"><ShieldCheck size={13} className="text-green-600" /></Btn>
@@ -121,6 +124,13 @@ export default function AgentsPage() {
       <DataTable columns={agentCols} data={rows} loading={loading}
         search={search} onSearch={v => { setSearch(v); setPage(1) }}
         page={page} lastPage={meta.last_page || 1} onPage={setPage} />
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="agent"
+        item={transModal}
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Agent' : 'Add Agent'}>
         <form onSubmit={submit} className="space-y-4">

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { adminCategories } from '../api/adminApi'
 import { PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
-import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, Tag, Languages } from 'lucide-react'
 
 export default function CategoriesPage() {
   const [rows, setRows]   = useState([])
@@ -11,6 +12,7 @@ export default function CategoriesPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm]   = useState({ name: '', description: '', order: 0 })
   const [saving, setSaving] = useState(false)
+  const [transModal, setTransModal] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -62,6 +64,7 @@ export default function CategoriesPage() {
                 </div>
                 <Badge color="gray">Order {r.order}</Badge>
                 <div className="flex gap-1">
+                  <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
                   <Btn size="sm" variant="ghost" onClick={() => open(r)}><Pencil size={13} /></Btn>
                   <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
                 </div>
@@ -70,6 +73,13 @@ export default function CategoriesPage() {
           </div>
         )}
       </div>
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="category"
+        item={transModal}
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Category' : 'Add Category'} size="sm">
         <form onSubmit={submit} className="space-y-4">

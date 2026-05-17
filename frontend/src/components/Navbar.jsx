@@ -64,10 +64,11 @@ export default function Navbar({ transparent = false }) {
     navigate('/')
   }
 
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng)
+  const changeLanguage = async (lng) => {
+    await i18n.changeLanguage(lng)
     setLangDropdown(false)
     setMenuOpen(false)
+    window.location.reload()
   }
 
   return (

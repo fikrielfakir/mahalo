@@ -4,7 +4,8 @@ import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
-import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock, Link as LinkIcon } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock, Link as LinkIcon, Languages } from 'lucide-react'
 
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
@@ -105,6 +106,7 @@ export default function PropertiesPage() {
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
   const [slugManual, setSlugManual] = useState(false)
+  const [transModal, setTransModal] = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -302,6 +304,7 @@ export default function PropertiesPage() {
             <XCircle size={13} />
           </Btn>
         )}
+        <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         <Btn size="sm" variant="danger" disabled={deleting === r.id} onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
       </div>
@@ -335,6 +338,13 @@ export default function PropertiesPage() {
           </button>
         ))}
       </div>
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="property"
+        item={transModal}
+      />
 
       <DataTable
         columns={cols} data={rows} loading={loading}

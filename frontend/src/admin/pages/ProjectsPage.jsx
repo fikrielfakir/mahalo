@@ -4,7 +4,8 @@ import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
-import { Plus, Pencil, Trash2, FolderKanban } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, FolderKanban, Languages } from 'lucide-react'
 
 const EMPTY = {
   name: '', description: '', content: '', location: '', images: [],
@@ -25,6 +26,7 @@ export default function ProjectsPage() {
   const [saving, setSaving]   = useState(false)
   const [cities, setCities]   = useState([])
   const [investors, setInvestors] = useState([])
+  const [transModal, setTransModal] = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -102,6 +104,7 @@ export default function ProjectsPage() {
     },
     { key: 'actions', label: '', render: (r) => (
       <div className="flex gap-1 justify-end">
+        <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
         <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil size={13} /></Btn>
         <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
       </div>
@@ -114,6 +117,13 @@ export default function ProjectsPage() {
         <Btn variant="gold" onClick={openCreate}><Plus size={15} /> Add Project</Btn>
       </PageHeader>
       <DataTable columns={cols} data={rows} loading={loading} search={search} onSearch={(v) => { setSearch(v); setPage(1) }} page={page} lastPage={meta.last_page || 1} onPage={setPage} />
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="project"
+        item={transModal}
+      />
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Project' : 'Add Project'} size="lg">
         <form onSubmit={submit} className="space-y-4">

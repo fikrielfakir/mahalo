@@ -3,9 +3,10 @@ import { adminFeatures } from '../api/adminApi'
 import { AdminTableSkeleton } from '../../components/Skeletons'
 import { PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input } from '../components/Modal'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
 import {
   Plus, Pencil, Trash2, Search, Sparkles,
-  Eye, EyeOff, LayoutGrid, List, CheckCircle2,
+  Eye, EyeOff, LayoutGrid, List, CheckCircle2, Languages,
 } from 'lucide-react'
 
 // ─── Tabler icon preview (rendered via CSS class) ─────────────────────────────
@@ -53,6 +54,7 @@ export default function FeaturesPage() {
   const [search, setSearch]   = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [viewMode, setViewMode] = useState('grid')
+  const [transModal, setTransModal] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -252,6 +254,9 @@ export default function FeaturesPage() {
                         : isPublished ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
 
+                    <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations">
+                      <Languages size={12} className="text-blue-500" />
+                    </Btn>
                     <Btn size="sm" variant="ghost" onClick={() => open(r)}>
                       <Pencil size={12} />
                     </Btn>
@@ -317,6 +322,9 @@ export default function FeaturesPage() {
                     </button>
 
                     <div className="flex gap-1">
+                      <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations">
+                        <Languages size={13} className="text-blue-500" />
+                      </Btn>
                       <Btn size="sm" variant="ghost" onClick={() => open(r)}>
                         <Pencil size={13} />
                       </Btn>
@@ -346,6 +354,13 @@ export default function FeaturesPage() {
           {draftCount > 0 && <span className="text-gray-400"> · {draftCount} hidden</span>}
         </p>
       )}
+
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="feature"
+        item={transModal}
+      />
 
       {/* ── Add / Edit Modal ─────────────────────────────────────────────────── */}
       <Modal

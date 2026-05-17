@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Api\VideoStreamController;
 use App\Http\Controllers\Api\PublicTranslationsController;
 use App\Http\Controllers\Api\Admin\AdminTranslationController;
+use App\Http\Controllers\Api\Admin\AdminContentTranslationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -217,6 +218,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/consults/{id}', [AdminConsultController::class, 'destroy']);
         Route::post('/consults/bulk', [AdminConsultController::class, 'bulkUpdate']);
         Route::post('/consults/bulk-delete', [AdminConsultController::class, 'bulkDelete']);
+
+        // Content translations (per-item, per-locale)
+        Route::get('/content-translations/{type}/{id}',    [AdminContentTranslationController::class, 'index']);
+        Route::put('/content-translations/{type}/{id}',    [AdminContentTranslationController::class, 'upsert']);
+        Route::delete('/content-translations/{type}/{id}', [AdminContentTranslationController::class, 'destroy']);
 
         // Translations
         Route::get('/translations', [AdminTranslationController::class, 'index']);

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { adminInvestors } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
-import { Plus, Pencil, Trash2, TrendingUp } from 'lucide-react'
+import ContentTranslationsModal from '../components/ContentTranslationsModal'
+import { Plus, Pencil, Trash2, TrendingUp, Languages } from 'lucide-react'
 
 export default function InvestorsPage() {
   const [rows, setRows] = useState([])
@@ -11,6 +12,7 @@ export default function InvestorsPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
+  const [transModal, setTransModal] = useState(null)
 
   const load = () => { setLoading(true); adminInvestors.list().then((r) => setRows(r.data || [])).finally(() => setLoading(false)) }
   useEffect(load, [])
@@ -44,6 +46,7 @@ export default function InvestorsPage() {
                   <p className="text-xs text-gray-400 line-clamp-1">{r.description || '—'}</p>
                 </div>
                 <div className="flex gap-1">
+                  <Btn size="sm" variant="ghost" onClick={() => setTransModal(r)} title="Translations"><Languages size={13} className="text-blue-500" /></Btn>
                   <Btn size="sm" variant="ghost" onClick={() => open(r)}><Pencil size={13} /></Btn>
                   <Btn size="sm" variant="danger" onClick={() => remove(r.id)}><Trash2 size={13} /></Btn>
                 </div>
@@ -52,6 +55,13 @@ export default function InvestorsPage() {
           </div>
         )}
       </div>
+      <ContentTranslationsModal
+        open={!!transModal}
+        onClose={() => setTransModal(null)}
+        type="investor"
+        item={transModal}
+      />
+
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Investor' : 'Add Investor'} size="sm">
         <form onSubmit={submit} className="space-y-4">
           <FormField label="Name" required><Input value={form.name} onChange={f('name')} required placeholder="Horizon Group" /></FormField>

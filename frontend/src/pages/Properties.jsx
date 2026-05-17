@@ -169,19 +169,35 @@ export default function Properties() {
           </button>
         </div>
 
-        {/* Row 2: Type pills + Bedrooms + Price + View toggle */}
+        {/* Row 2: Type pills + View toggle */}
         <div className="flex gap-2 items-center">
           {/* Type pills */}
-          <div className="flex gap-1 p-1 rounded-2xl bg-white shadow-card shrink-0"
+          <div className="flex flex-1 gap-1 p-1 rounded-2xl bg-white shadow-card"
             style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
             {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
               <button key={val} onClick={() => { setType(val); setPage(1) }}
-                className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all touch-manip whitespace-nowrap ${type === val ? 'bg-navy text-white shadow-sm' : 'text-gray-600'}`}>
+                className={`flex-1 px-2 py-2 rounded-xl text-sm font-semibold transition-all touch-manip whitespace-nowrap ${type === val ? 'bg-navy text-white shadow-sm' : 'text-gray-600'}`}>
                 {label}
               </button>
             ))}
           </div>
 
+          {/* View toggle */}
+          <div className="flex gap-0.5 p-1 rounded-2xl bg-white shadow-card shrink-0"
+            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+            <button onClick={() => setViewMode('grid')}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
+              <LayoutGrid size={15} />
+            </button>
+            <button onClick={() => setViewMode('map')}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
+              <Map size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Row 3: Bedrooms + Price */}
+        <div className="flex gap-2 items-center">
           {/* Bedrooms */}
           <div className="relative flex-1 min-w-0">
             <select
@@ -225,19 +241,6 @@ export default function Properties() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* View toggle — end of row 2 */}
-          <div className="flex gap-0.5 p-1 rounded-2xl bg-white shadow-card shrink-0"
-            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
-            <button onClick={() => setViewMode('grid')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'grid' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
-              <LayoutGrid size={15} />
-            </button>
-            <button onClick={() => setViewMode('map')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all touch-manip ${viewMode === 'map' ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
-              <Map size={15} />
-            </button>
           </div>
         </div>
 

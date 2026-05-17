@@ -1,0 +1,580 @@
+ Full Responsive Coverage (Phone → Tablet → PC → Large Screen)
+
+Context: React 18 + Vite + Tailwind CSS v3 + React Router v6 + i18next (EN/FR/ES/AR with RTL)
+Stack: lucide-react, swiper, maplibre-gl, luxury design system (navy #730D26 / gold #BA1932 / beige #F8F6F4)
+
+
+🎯 MISSION
+Make this luxury real estate web app 100% responsive across all breakpoints:
+BreakpointWidthTarget Devicesxs< 375pxSmall phones (iPhone SE, older Androids)sm375–639pxStandard phones (iPhone 14, Pixel)md640–767pxLarge phones / mini tabletslg768–1023pxiPad portrait, small laptopsxl1024–1279pxiPad landscape, standard laptops2xl1280–1535pxFull desktop3xl≥ 1536px4K / ultra-wide / large screens
+Tailwind custom screen additions needed in tailwind.config.js:
+jsscreens: {
+  'xs': '375px',
+  '3xl': '1536px',
+  '4xl': '1920px',
+}
+
+📐 GLOBAL LAYOUT RULES
+Container / Max-width System
+- Mobile (< 640px):    px-4  (16px sides)
+- Tablet (640–1023px): px-6  (24px sides)
+- Desktop (1024+):     px-8  (32px sides)
+- Large (1280+):       max-w-7xl mx-auto
+- XL screen (1536+):   max-w-[1400px] mx-auto
+- 4K (1920+):          max-w-[1600px] mx-auto
+Typography Fluid Scale
+css/* Replace fixed text sizes with fluid clamp() */
+h1: clamp(1.75rem, 5vw, 3.5rem)
+h2: clamp(1.375rem, 3vw, 2.25rem)
+h3: clamp(1.125rem, 2vw, 1.5rem)
+body: clamp(0.875rem, 1.5vw, 1rem)
+Spacing Rhythm
+- Section padding: py-12 md:py-16 lg:py-20 xl:py-24
+- Card gap: gap-4 md:gap-5 lg:gap-6
+- Inner padding: p-4 md:p-5 lg:p-6
+
+🧭 COMPONENT-BY-COMPONENT BREAKDOWN
+
+1. Navbar.jsx — Currently: desktop-only nav hidden on mobile
+Problems found:
+
+Mobile menu (menuOpen) uses no animation/transition
+h-16 fixed height — too tall for small phones
+Language dropdown overflows viewport on mobile
+max-w-7xl — no 3xl container expansion
+
+Required changes:
+jsx// HEIGHT: Adaptive
+<nav className="h-14 sm:h-16 max-w-7xl xl:max-w-[1400px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+
+// MOBILE MENU: Full-screen drawer with animation
+<div className={`
+  fixed inset-0 z-40 bg-white flex flex-col lg:hidden
+  transition-all duration-300 ease-in-out
+  ${menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
+`}>
+  {/* Stack nav links vertically, large tap targets (min h-12), language switcher at bottom */}
+  {navLinks.map(link => (
+    <Link key={link.to} to={link.to}
+      className="flex items-center gap-3 px-6 py-4 text-lg font-medium text-navy border-b border-beige-dark">
+      {link.label}
+    </Link>
+  ))}
+</div>
+
+// LARGE SCREENS (3xl+): expand nav, larger logo, bigger spacing
+<img className="h-9 sm:h-10 3xl:h-12 w-auto" />
+Language dropdown mobile fix:
+jsx// On mobile: full-width bottom sheet instead of floating dropdown
+<div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 shadow-luxury z-50">
+  {/* Language list */}
+</div>
+
+2. Hero.jsx — Currently: Desktop-optimized, collapses poorly on phones
+Problems found:
+
+Search bar is a single horizontal row — breaks on mobile
+Stats bar (Properties / Clients / Agents) wraps awkwardly
+Background image has no object-position for portrait viewports
+Tab row overflows on RTL + Arabic text
+
+Required changes:
+jsx// HERO HEIGHT: Viewport-adaptive
+<section className="min-h-[100svh] sm:min-h-[90vh] lg:min-h-[85vh] xl:min-h-[80vh]
+  flex flex-col items-center justify-center relative overflow-hidden">
+
+// TITLE: Fluid scaling
+<h1 className="text-[clamp(1.75rem,5vw,4rem)] font-bold leading-[1.1] text-center
+  max-w-[20ch] sm:max-w-[26ch]">
+
+// SEARCH BAR: Stack on mobile, row on tablet+
+<div className="w-full max-w-4xl xl:max-w-5xl
+  flex flex-col sm:flex-row gap-3 sm:gap-0 sm:rounded-2xl
+  bg-white sm:shadow-luxury p-4 sm:p-2">
+
+  {/* Location input — full width mobile */}
+  <input className="flex-1 px-4 py-3 sm:py-4 rounded-xl sm:rounded-none border sm:border-0" />
+  
+  {/* Type select — full width mobile */}
+  <select className="px-4 py-3 sm:py-4 rounded-xl sm:rounded-none border sm:border-0 sm:border-l" />
+  
+  {/* Bedrooms — hide on xs, show md+ */}
+  <select className="hidden md:block px-4 py-4 border-l" />
+  
+  {/* CTA button — full width mobile, auto on desktop */}
+  <button className="w-full sm:w-auto px-8 py-3 sm:py-4 rounded-xl bg-navy text-white">
+    {t('hero.search')}
+  </button>
+</div>
+
+// STATS: 2-column on mobile, 3-column on sm+, 4-column on xl+
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
+  {stats.map(stat => (
+    <div className="bg-white/10 backdrop-blur rounded-2xl p-4 text-center">
+      <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
+      <p className="text-xs sm:text-sm opacity-70 mt-1">{stat.label}</p>
+    </div>
+  ))}
+</div>
+
+3. PropertyCard.jsx — Currently: Fixed layout, limited responsiveness
+Problems found:
+
+Image height is fixed — causes layout shift
+Card text overflows on narrow columns
+No touch-friendly interaction on mobile (hover-translate doesn't work on touch)
+Compare/favorite buttons too small for fat fingers (< 44px tap target)
+
+Required changes:
+jsx// IMAGE: Aspect ratio locked, no layout shift
+<div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
+  <img className="absolute inset-0 w-full h-full object-cover
+    group-hover:scale-105 transition-transform duration-700" />
+</div>
+
+// ACTION BUTTONS: Minimum 44×44px tap targets
+<button className="w-11 h-11 rounded-full flex items-center justify-center
+  bg-white/90 backdrop-blur shadow-md active:scale-95 transition-transform">
+  <Heart size={18} />
+</button>
+
+// PRICE: Responsive size
+<p className="text-lg sm:text-xl font-bold text-navy">
+
+// CARD WRAPPER: Remove hover translate (doesn't work on touch)
+// Replace with active:scale-[0.98] for mobile press feedback
+<Link className="group block rounded-2xl sm:rounded-3xl overflow-hidden
+  transition-all duration-300
+  hover:-translate-y-1 sm:hover:-translate-y-2
+  active:scale-[0.98] touch-manipulation">
+
+4. Properties.jsx — Currently: Grid/Map view, filter bar has overflow issues
+Problems found:
+
+Filter row overflows on mobile (horizontal scroll needed or rethink)
+Map/Grid toggle not visible on small screens
+Grid is 3-column on all desktop sizes — should expand to 4 on 2xl
+Map view splits 50/50 — bad on mobile (use tab toggle instead)
+
+Required changes:
+jsx// FILTERS: Horizontal scroll on mobile, wrapped on desktop
+<div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap
+  scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+  {/* Each filter pill: min-w-max to prevent shrink */}
+  <button className="min-w-max px-4 py-2 rounded-full ...">
+</div>
+
+// PROPERTY GRID: Responsive columns
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+
+// MAP VIEW on mobile: Full screen toggle, not split
+<div className={`
+  ${viewMode === 'map'
+    ? 'fixed inset-0 z-30 md:static md:flex md:gap-4'
+    : 'hidden'}
+`}>
+  {/* Floating close button on mobile map */}
+  <button className="md:hidden absolute top-4 right-4 z-10 bg-white rounded-full p-3 shadow-lg">
+    <X size={20} />
+  </button>
+</div>
+
+// VIEW TOGGLE: Always visible, sticky on mobile
+<div className="sticky top-14 sm:top-16 z-20 bg-beige/95 backdrop-blur py-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:static sm:bg-transparent">
+  <div className="flex items-center justify-between">
+    <p className="text-sm text-navy/60">{meta?.total} {t('filters.results')}</p>
+    <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm">
+      <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode==='grid' ? 'bg-navy text-white' : 'text-navy/50'}`}>
+        <LayoutGrid size={16} />
+      </button>
+      <button onClick={() => setViewMode('map')} className={`p-2 rounded-lg ${viewMode==='map' ? 'bg-navy text-white' : 'text-navy/50'}`}>
+        <Map size={16} />
+      </button>
+    </div>
+  </div>
+</div>
+
+5. Footer.jsx — Currently: Multi-column, collapses to single column on mobile
+Problems found:
+
+Link columns stack awkwardly on 320–480px
+Social icons too small
+No accordion behavior on mobile for link groups
+Large screens: max-width needs increasing
+
+Required changes:
+jsx// FOOTER GRID: 1 col mobile, 2 col sm, 4 col lg
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+
+// MOBILE: Accordion for link groups
+const [openSection, setOpenSection] = useState(null)
+// Each section header gets onClick toggle, chevron icon
+// Links are collapsible with max-h animation
+
+// SOCIAL ICONS: Proper tap targets
+<a className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20
+  flex items-center justify-center transition-colors
+  active:scale-95 touch-manipulation">
+  <Icon size={18} />
+</a>
+
+// LARGE SCREEN
+<footer className="max-w-7xl xl:max-w-[1400px] 3xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+
+6. Admin Panel: AdminLayout.jsx + Sidebar.jsx
+Problems found:
+
+Admin has NO tablet treatment (768–1023px): sidebar either fully hidden or fully shown
+main padding p-6 — too much on mobile (p-3 needed)
+No breadcrumb / back navigation on mobile pages
+Admin pages use large data tables — not mobile-friendly at all
+
+Required changes:
+jsx// ADMIN LAYOUT: Three modes (mobile drawer / tablet icon-only / desktop full)
+<div className="flex h-screen bg-gray-50 overflow-hidden">
+
+  {/* SIDEBAR: Three states */}
+  <aside className={`
+    /* Mobile: fixed drawer */
+    fixed top-0 left-0 z-30 h-full bg-[#730D26] flex flex-col
+    transition-transform duration-300 ease-in-out
+    
+    /* Mobile closed */
+    ${!open && 'lg:hidden' ? '-translate-x-full' : ''}
+    
+    /* Tablet: icon-only collapsed (w-16) */
+    md:static md:translate-x-0
+    ${tabletCollapsed ? 'md:w-16' : 'md:w-64'}
+    
+    /* Desktop: always full width */
+    lg:w-64 lg:translate-x-0
+  `}>
+    {/* On tablet: show only icons, hide labels */}
+    <NavLink className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
+      <Icon size={16} className="shrink-0" />
+      <span className={`${tabletCollapsed ? 'md:hidden' : ''} lg:block`}>{label}</span>
+    </NavLink>
+  </aside>
+
+// MAIN CONTENT: Adaptive padding
+<main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 xl:p-8">
+
+// ADMIN DATA TABLES: Horizontal scroll on mobile
+<div className="overflow-x-auto -mx-3 sm:-mx-4 lg:mx-0">
+  <table className="min-w-[600px] w-full">  {/* Force minimum width */}
+</div>
+
+7. AgentDashboardPage.jsx — Currently: tabs + complex layout
+Problems found:
+
+Tab row overflows on mobile (5 tabs)
+Side-by-side chat layout collapses on small screens
+Stats grid is 4-col on all sizes
+
+Required changes:
+jsx// TABS: Horizontal scroll on mobile
+<div className="flex gap-1 overflow-x-auto scrollbar-none border-b border-gray-100
+  -mx-4 px-4 sm:mx-0 sm:px-0">
+  {tabs.map(tab => (
+    <button className="min-w-max pb-3 px-4 text-sm font-medium whitespace-nowrap
+      border-b-2 transition-colors
+      ${active===tab ? 'border-navy text-navy' : 'border-transparent text-gray-400'}">
+    </button>
+  ))}
+</div>
+
+// STATS GRID: 2→4 column progression
+<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+
+// CHAT LAYOUT: Stack on mobile, side-by-side on md+
+<div className="flex flex-col md:flex-row gap-0 md:gap-4">
+  {/* Thread list: full screen mobile, left panel desktop */}
+  <div className={`
+    ${selectedThread ? 'hidden md:flex' : 'flex'}
+    md:w-80 flex-col border-r border-gray-100
+  `}>
+  
+  {/* Message area: full screen mobile when thread open */}
+  <div className={`
+    ${selectedThread ? 'flex' : 'hidden md:flex'}
+    flex-1 flex-col
+  `}>
+    {/* Mobile back button */}
+    <button className="md:hidden flex items-center gap-2 p-4 text-navy font-medium"
+      onClick={() => setSelectedThread(null)}>
+      <ArrowLeft size={18} /> {t('Back')}
+    </button>
+  </div>
+</div>
+
+8. PropertyDetail.jsx — Currently: Two-column layout (image + info)
+Problems found:
+
+Image gallery is not swipeable on mobile
+Sticky sidebar (position: sticky) doesn't work on mobile (overlaps content)
+Map section needs to be collapsed/hidden by default on mobile
+
+Required changes:
+jsx// GALLERY: Swiper for mobile, grid for desktop
+import { Swiper, SwiperSlide } from 'swiper/react'
+
+<div className="block md:hidden">  {/* Mobile: swiper */}
+  <Swiper spaceBetween={8} slidesPerView={1} pagination={{ clickable: true }}>
+    {images.map(img => <SwiperSlide><img className="w-full aspect-[4/3] object-cover rounded-2xl" /></SwiperSlide>)}
+  </Swiper>
+</div>
+
+<div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-3">  {/* Desktop: grid */}
+  {images.slice(0, 5).map(img => <img className="aspect-[4/3] object-cover rounded-2xl" />)}
+</div>
+
+// LAYOUT: Stack on mobile, two-col on lg
+<div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-8">
+
+// SIDEBAR CTA: Fixed bottom bar on mobile
+<div className="lg:hidden fixed bottom-0 left-0 right-0 z-20
+  bg-white border-t border-gray-100 px-4 py-3 safe-area-bottom">
+  <div className="flex gap-3">
+    <button className="flex-1 py-3 rounded-xl bg-navy text-white font-semibold">
+      {t('Contact Agent')}
+    </button>
+    <button className="flex-1 py-3 rounded-xl border-2 border-navy text-navy font-semibold">
+      {t('WhatsApp')}
+    </button>
+  </div>
+</div>
+
+// MAP: Collapsed by default on mobile with expand button
+const [mapOpen, setMapOpen] = useState(false)
+<div>
+  <button className="md:hidden w-full flex items-center justify-between py-4 font-medium"
+    onClick={() => setMapOpen(!mapOpen)}>
+    {t('View on Map')} <ChevronDown className={mapOpen ? 'rotate-180' : ''} />
+  </button>
+  <div className={`${mapOpen ? 'block' : 'hidden'} md:block h-64 md:h-80 rounded-2xl overflow-hidden`}>
+    <MapView />
+  </div>
+</div>
+
+9. ListProperty.jsx — Currently: 47KB multi-step form
+Problems found:
+
+Form inputs need proper mobile sizing (min font-size: 16px to prevent iOS zoom)
+Multi-step progress bar has no labels on mobile
+Image upload grid is too small on phones
+
+Required changes:
+jsx// ALL INPUTS: Prevent iOS zoom (min 16px font)
+<input className="w-full px-4 py-3 rounded-xl border border-gray-200
+  text-base    {/* ← critical: 16px minimum prevents iOS auto-zoom */}
+  focus:outline-none focus:ring-2 focus:ring-navy/20 focus:border-navy" />
+
+// PROGRESS STEPS: Dots on mobile, labeled on desktop
+<div className="flex items-center justify-center gap-2 md:gap-4">
+  {steps.map((step, i) => (
+    <div key={i} className="flex items-center gap-2">
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+        ${i <= currentStep ? 'bg-navy text-white' : 'bg-gray-100 text-gray-400'}`}>
+        {i + 1}
+      </div>
+      <span className="hidden md:block text-sm font-medium">{step.label}</span>
+      {i < steps.length - 1 && <div className="w-8 md:w-16 h-px bg-gray-200" />}
+    </div>
+  ))}
+</div>
+
+// IMAGE UPLOAD: Larger drop zone on mobile
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+  {/* Upload trigger */}
+  <label className="aspect-square rounded-2xl border-2 border-dashed border-gray-200
+    flex flex-col items-center justify-center gap-2 cursor-pointer
+    hover:border-navy hover:bg-navy/5 transition-colors">
+    <Upload size={24} className="text-gray-400" />
+    <span className="text-xs text-gray-400">Add Photo</span>
+  </label>
+</div>
+
+10. CompareBar.jsx — Currently: Fixed bottom bar
+Problems found:
+
+Shows 3+ cards at same size on all screens — overflows on phones
+No way to clear/collapse on mobile
+
+Required changes:
+jsx// COMPARE BAR: Collapsed on mobile, expandable
+const [barOpen, setBarOpen] = useState(false)
+
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-luxury">
+  {/* Mobile: collapsed summary with expand toggle */}
+  <div className="md:hidden flex items-center justify-between px-4 py-3"
+    onClick={() => setBarOpen(!barOpen)}>
+    <span className="font-semibold text-navy">{items.length} Properties Selected</span>
+    <ChevronDown className={`transition-transform ${barOpen ? 'rotate-180' : ''}`} />
+  </div>
+  
+  {/* Items: scrollable on mobile */}
+  <div className={`${barOpen ? 'flex' : 'hidden'} md:flex
+    items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-none`}>
+    {items.map(item => (
+      <div className="min-w-[140px] sm:min-w-[180px] flex-shrink-0 ...">
+    ))}
+    <button className="min-w-max px-6 py-3 bg-navy text-white rounded-xl font-semibold">
+      {t('Compare Now')}
+    </button>
+  </div>
+</div>
+
+🌍 RTL / ARABIC FULL RESPONSIVENESS
+The app supports html.rtl for Arabic. Ensure all responsive layouts respect direction:
+jsx// Use logical properties instead of left/right
+margin-inline-start  (replaces margin-left)
+margin-inline-end    (replaces margin-right)
+padding-inline-start (replaces padding-left)
+border-inline-start  (replaces border-left)
+inset-inline-start   (replaces left:)
+
+// Tailwind RTL variants
+<div className="ml-4 rtl:ml-0 rtl:mr-4">
+// OR use ms-4 (margin-inline-start) and me-4 (margin-inline-end)
+
+// Icons that should flip in RTL
+<ChevronRight className="rtl:rotate-180 transition-transform" />
+<ArrowRight className="rtl:rotate-180" />
+
+// Mobile menu: open from right in RTL
+<aside className={`
+  fixed top-0 right-0 rtl:right-auto rtl:left-0 z-30 h-full w-80
+  transition-transform
+  ${open ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'}
+`}>
+
+📱 MOBILE-SPECIFIC UX PATTERNS
+Safe Areas (iPhone notch/home bar)
+css/* Add to index.css */
+.safe-area-top    { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-area-left   { padding-left: env(safe-area-inset-left); }
+.safe-area-right  { padding-right: env(safe-area-inset-right); }
+jsx// Fixed bottom bars always use safe area
+<div className="fixed bottom-0 left-0 right-0 pb-[env(safe-area-inset-bottom)]">
+
+// Navbar: safe area top
+<header className="fixed top-0 left-0 right-0 pt-[env(safe-area-inset-top)]">
+Touch Targets (WCAG 2.5.5)
+jsx// All interactive elements: min 44×44px
+className="min-h-[44px] min-w-[44px] touch-manipulation"
+
+// Prevent 300ms click delay
+className="touch-manipulation"
+Scroll Behavior
+jsx// Horizontal scroll containers: hide scrollbar, smooth scroll
+className="overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory"
+
+// Child elements: snap to view
+className="snap-start snap-always"
+Input Zoom Prevention (iOS)
+html<!-- index.html: viewport must have maximum-scale -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<!-- OR just ensure all inputs use text-base (16px) -->
+
+🖥️ LARGE SCREEN (1536px+) ENHANCEMENTS
+jsx// Expanded containers
+<div className="max-w-7xl xl:max-w-[1360px] 3xl:max-w-[1600px] 4xl:max-w-[1920px] mx-auto">
+
+// More columns on large screens
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
+
+// Larger font on 4K
+<h1 className="text-4xl xl:text-5xl 3xl:text-6xl">
+
+// Hero: taller on large screens
+<section className="min-h-[85vh] xl:min-h-[80vh] 3xl:min-h-[70vh]">
+
+// Admin sidebar: wider on large screens
+<aside className="w-64 3xl:w-72">
+
+✅ IMPLEMENTATION CHECKLIST
+Phase 1 — Critical Mobile Fixes
+
+ All inputs: text-base (16px) to prevent iOS zoom
+ All tap targets: min-h-[44px] min-w-[44px]
+ Navbar mobile menu: full-screen animated drawer
+ PropertyDetail: swipeable gallery on mobile
+ PropertyDetail: sticky sidebar → fixed bottom CTA bar on mobile
+ Properties page: map toggle (no split layout on mobile)
+ Admin: p-3 sm:p-4 lg:p-6 adaptive padding
+ Footer: accordion on mobile
+ Safe area insets on all fixed elements
+ touch-manipulation on all buttons/links
+
+Phase 2 — Tablet Optimization (768–1023px)
+
+ Navbar: md: breakpoint treatment (show some links, hide others?)
+ Admin sidebar: icon-only collapsed mode at md
+ Hero search: two rows on md, one row on lg
+ Properties grid: 2-column on md
+ Chat UI: side-by-side at md
+
+Phase 3 — Desktop Polish
+
+ Max-width containers expanded
+ 4-column grid at 2xl
+ Navigation bar: more links visible, larger logo
+
+Phase 4 — Large Screen (1536px+)
+
+ Add 3xl and 4xl Tailwind breakpoints
+ Expand max-width containers
+ 5-column property grids
+ Larger typography scale
+
+Phase 5 — RTL / Arabic
+
+ Replace ml/mr → ms/me (logical margin)
+ Replace pl/pr → ps/pe (logical padding)
+ Replace left/right → start/end in flex/grid
+ Flip directional icons: arrows, chevrons
+ Mobile drawer: flip open direction
+
+
+🔧 TAILWIND CONFIG ADDITIONS
+js// tailwind.config.js
+theme: {
+  screens: {
+    'xs':  '375px',
+    'sm':  '640px',
+    'md':  '768px',
+    'lg':  '1024px',
+    'xl':  '1280px',
+    '2xl': '1536px',
+    '3xl': '1920px',
+    '4xl': '2560px',
+  },
+  extend: {
+    // ... existing config ...
+    spacing: {
+      'safe-top':    'env(safe-area-inset-top)',
+      'safe-bottom': 'env(safe-area-inset-bottom)',
+      'safe-left':   'env(safe-area-inset-left)',
+      'safe-right':  'env(safe-area-inset-right)',
+    },
+  }
+}
+css/* index.css additions */
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Safe area utilities */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+}
+
+Generated by analyzing: src/components/Navbar.jsx, Hero.jsx, PropertyCard.jsx, Footer.jsx, CompareBar.jsx, pages/Properties.jsx, PropertyDetail.jsx, ListProperty.jsx, AgentDashboardPage.jsx, admin/components/Sidebar.jsx, AdminLayout.jsx, index.css, tailwind.config.js, package.json

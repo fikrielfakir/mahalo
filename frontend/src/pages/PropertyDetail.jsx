@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -54,6 +55,7 @@ const EMPTY_FORM = { name: '', email: '', phone: '', message: '' }
 const EMPTY_REVIEW = { reviewer_name: '', rating: 0, comment: '' }
 
 export default function PropertyDetail() {
+  const { t } = useTranslation()
   const { slug } = useParams()
   const [property, setProperty] = useState(null)
   const [loading, setLoading]   = useState(true)
@@ -244,7 +246,7 @@ export default function PropertyDetail() {
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Link to="/properties" className="flex items-center gap-2 text-navy/50 hover:text-navy text-sm font-medium transition-colors">
-            <ArrowLeft size={16} /> Back to Properties
+            <ArrowLeft size={16} /> {t('property.backToProperties')}
           </Link>
         </div>
 
@@ -280,7 +282,7 @@ export default function PropertyDetail() {
                     <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/25 group-hover:border-white/80 transition-all duration-200 shadow-lg">
                       <Play size={34} className="text-white fill-white ml-1" />
                     </div>
-                    <span className="text-white/80 text-sm font-semibold tracking-wide drop-shadow">Tap to play video</span>
+                    <span className="text-white/80 text-sm font-semibold tracking-wide drop-shadow">{t('property.tapToPlayVideo')}</span>
                   </div>
                 </div>
               )
@@ -306,7 +308,7 @@ export default function PropertyDetail() {
             </div>
             {property.is_featured && (
               <div className="absolute top-4 left-4 z-10">
-                <span className="px-3 py-1 bg-gold text-navy text-xs font-bold rounded-xl uppercase">Featured</span>
+                <span className="px-3 py-1 bg-gold text-navy text-xs font-bold rounded-xl uppercase">{t('property.featured')}</span>
               </div>
             )}
           </div>
@@ -371,14 +373,14 @@ export default function PropertyDetail() {
                     <div className="flex flex-col items-center gap-2 py-2">
                       <Bed size={20} className="text-gold" />
                       <span className="text-navy font-bold">{property.number_bedroom}</span>
-                      <span className="text-navy/40 text-xs">Bedrooms</span>
+                      <span className="text-navy/40 text-xs">{t('property.bedrooms')}</span>
                     </div>
                   )}
                   {property.number_bathroom > 0 && (
                     <div className="flex flex-col items-center gap-2 py-2">
                       <Bath size={20} className="text-gold" />
                       <span className="text-navy font-bold">{property.number_bathroom}</span>
-                      <span className="text-navy/40 text-xs">Bathrooms</span>
+                      <span className="text-navy/40 text-xs">{t('property.bathrooms')}</span>
                     </div>
                   )}
                   {property.square && (
@@ -393,7 +395,7 @@ export default function PropertyDetail() {
 
               {property.description && (
                 <div>
-                  <h2 className="text-navy font-bold text-xl mb-3">Description</h2>
+                  <h2 className="text-navy font-bold text-xl mb-3">{t('property.description')}</h2>
                   <div className="text-navy/60 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: property.description }} />
                 </div>
               )}
@@ -402,7 +404,7 @@ export default function PropertyDetail() {
               {(property.categories?.length > 0 || property.condition || property.age_range ||
                 property.number_floor || property.orientation || property.flooring) && (
                 <div>
-                  <h2 className="text-navy font-bold text-xl mb-5">General Characteristics</h2>
+                  <h2 className="text-navy font-bold text-xl mb-5">{t('property.generalCharacteristics')}</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
                     {property.categories?.[0] && (
                       <div className="flex items-start gap-3">
@@ -410,7 +412,7 @@ export default function PropertyDetail() {
                           <Home size={16} className="text-blue-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Type of property</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.typeOfProperty')}</p>
                           <p className="text-navy font-bold text-sm">{property.categories[0].name}</p>
                         </div>
                       </div>
@@ -421,7 +423,7 @@ export default function PropertyDetail() {
                           <Wrench size={16} className="text-emerald-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Condition</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.condition')}</p>
                           <p className="text-navy font-bold text-sm">{property.condition}</p>
                         </div>
                       </div>
@@ -432,7 +434,7 @@ export default function PropertyDetail() {
                           <CalendarDays size={16} className="text-amber-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Age</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.age')}</p>
                           <p className="text-navy font-bold text-sm">{property.age_range}</p>
                         </div>
                       </div>
@@ -443,7 +445,7 @@ export default function PropertyDetail() {
                           <Layers size={16} className="text-purple-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Floor number</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.floorNumber')}</p>
                           <p className="text-navy font-bold text-sm">
                             {property.number_floor}{property.number_floor === 1 ? 'st' : property.number_floor === 2 ? 'nd' : property.number_floor === 3 ? 'rd' : 'th'}
                           </p>
@@ -456,7 +458,7 @@ export default function PropertyDetail() {
                           <Compass size={16} className="text-cyan-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Orientation</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.orientation')}</p>
                           <p className="text-navy font-bold text-sm">{property.orientation}</p>
                         </div>
                       </div>
@@ -467,7 +469,7 @@ export default function PropertyDetail() {
                           <Grid2X2 size={16} className="text-orange-500" />
                         </div>
                         <div>
-                          <p className="text-navy/40 text-xs mb-0.5">Flooring</p>
+                          <p className="text-navy/40 text-xs mb-0.5">{t('property.flooring')}</p>
                           <p className="text-navy font-bold text-sm">{property.flooring}</p>
                         </div>
                       </div>
@@ -478,7 +480,7 @@ export default function PropertyDetail() {
 
               {property.features?.length > 0 && (
                 <div>
-                  <h2 className="text-navy font-bold text-xl mb-4">Features & Amenities</h2>
+                  <h2 className="text-navy font-bold text-xl mb-4">{t('property.featuresAmenities')}</h2>
                   <div className="grid grid-cols-2 gap-2">
                     {property.features.map((f) => (
                       <div key={f.id} className="flex items-center gap-2 text-navy/70 text-sm">
@@ -496,7 +498,7 @@ export default function PropertyDetail() {
               <div>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-navy font-bold text-xl">
-                    Reviews
+                    {t('property.reviews')}
                     {reviews.length > 0 && <span className="text-navy/40 font-normal text-base ml-2">({reviews.length})</span>}
                   </h2>
                   {avgRating && (
@@ -530,27 +532,27 @@ export default function PropertyDetail() {
                 ) : (
                   <div className="bg-white rounded-2xl p-6 text-center mb-6 shadow-card">
                     <Star size={28} className="text-gray-200 mx-auto mb-2" />
-                    <p className="text-navy/40 text-sm">No reviews yet. Be the first to review this property.</p>
+                    <p className="text-navy/40 text-sm">{t('property.noReviews')}</p>
                   </div>
                 )}
 
                 {/* Add review form */}
                 {reviewSubmitted ? (
                   <div className="bg-emerald-50 rounded-2xl p-5 text-center">
-                    <p className="text-emerald-700 font-semibold text-sm">Thank you for your review!</p>
+                    <p className="text-emerald-700 font-semibold text-sm">{t('property.thankYouReview')}</p>
                   </div>
                 ) : (
                   <div className="bg-white rounded-2xl p-5 shadow-card">
-                    <h3 className="text-navy font-semibold text-sm mb-4">Leave a Review</h3>
+                    <h3 className="text-navy font-semibold text-sm mb-4">{t('property.leaveReview')}</h3>
                     <form onSubmit={handleReviewSubmit} className="space-y-3">
                       <input
-                        type="text" placeholder="Your name *"
+                        type="text" placeholder={t('property.yourName')}
                         value={reviewForm.reviewer_name}
                         onChange={e => setReviewForm(f => ({ ...f, reviewer_name: e.target.value }))}
                         className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
                       />
                       <div>
-                        <p className="text-navy/40 text-xs mb-2">Rating *</p>
+                        <p className="text-navy/40 text-xs mb-2">{t('property.rating')}</p>
                         <StarRow
                           rating={reviewForm.rating}
                           setRating={r => setReviewForm(f => ({ ...f, rating: r }))}
@@ -558,14 +560,14 @@ export default function PropertyDetail() {
                         />
                       </div>
                       <textarea
-                        placeholder="Share your experience..."
+                        placeholder={t('property.shareExperience')}
                         rows={3}
                         value={reviewForm.comment}
                         onChange={e => setReviewForm(f => ({ ...f, comment: e.target.value }))}
                         className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
                       />
                       <button type="submit" disabled={reviewSubmitting} className="btn-navy flex items-center gap-2 disabled:opacity-60">
-                        {reviewSubmitting ? <><Loader2 size={14} className="animate-spin" /> Submitting...</> : 'Submit Review'}
+                        {reviewSubmitting ? <><Loader2 size={14} className="animate-spin" /> {t('property.submitting')}</> : t('property.submitReview')}
                       </button>
                     </form>
                   </div>
@@ -574,9 +576,9 @@ export default function PropertyDetail() {
             </div>
 
             {/* Contact Sidebar */}
-            <div className="space-y-4">
-              <div className="bg-white rounded-3xl p-6 shadow-card sticky top-24">
-                <h3 className="text-navy font-bold text-lg mb-5">Contact Agent</h3>
+            <div className="space-y-4 sticky top-24 self-start">
+              <div className="bg-white rounded-3xl p-6 shadow-card">
+                <h3 className="text-navy font-bold text-lg mb-5">{t('property.contactAgent')}</h3>
                 {property.agent && (
                   <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
                     <div className="w-12 h-12 rounded-2xl bg-navy flex items-center justify-center text-white font-bold">
@@ -584,37 +586,37 @@ export default function PropertyDetail() {
                     </div>
                     <div>
                       <div className="font-semibold text-navy text-sm">{property.agent.name}</div>
-                      <div className="text-navy/40 text-xs">Verified Agent</div>
+                      <div className="text-navy/40 text-xs">{t('property.verifiedAgent')}</div>
                     </div>
                   </div>
                 )}
                 <form className="space-y-3" onSubmit={handleSubmit}>
                   <input
-                    type="text" placeholder="Your name *"
+                    type="text" placeholder={t('property.yourName')}
                     value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
                     required
                   />
                   <input
-                    type="email" placeholder="Your email"
+                    type="email" placeholder={t('property.yourEmail')}
                     value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
                   />
                   <input
-                    type="tel" placeholder="Your phone *"
+                    type="tel" placeholder={t('property.yourPhone')}
                     value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                     className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30"
                     required
                   />
                   <textarea
-                    placeholder="Your message..."
+                    placeholder={t('property.yourMessage')}
                     rows={3}
                     value={form.message}
                     onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                     className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-navy outline-none focus:ring-2 focus:ring-gold/30 resize-none"
                   />
                   <button type="submit" disabled={submitting} className="w-full btn-gold justify-center flex gap-2 disabled:opacity-60">
-                    {submitting ? <><Loader2 size={15} className="animate-spin" /> Sending...</> : 'Send Message'}
+                    {submitting ? <><Loader2 size={15} className="animate-spin" /> {t('property.sending')}</> : t('property.sendMessage')}
                   </button>
                 </form>
 

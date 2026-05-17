@@ -27,8 +27,9 @@ function fmtPrice(price) {
 }
 
 function buildPopupHTML(m) {
+  const href = m.href || '#'
   const img = m.image
-    ? `<img src="${m.image}" style="width:100%;height:110px;object-fit:cover;display:block;" />`
+    ? `<a href="${href}" style="display:block;text-decoration:none;"><img src="${m.image}" style="width:100%;height:110px;object-fit:cover;display:block;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" /></a>`
     : ''
   const price = m.rawPrice
     ? `<div style="color:#BA1932;font-weight:700;font-size:12px;margin-bottom:2px;">${fmtPrice(m.rawPrice)} MAD</div>`
@@ -36,10 +37,11 @@ function buildPopupHTML(m) {
   const sub = m.subtitle
     ? `<div style="color:#888;font-size:11px;">${m.subtitle}</div>`
     : ''
+  const title = `<a href="${href}" style="display:block;font-weight:700;font-size:13px;color:#1a2035;margin-bottom:4px;line-height:1.3;text-decoration:none;" onmouseover="this.style.color='#BA1932'" onmouseout="this.style.color='#1a2035'">${m.title}</a>`
   const link = m.href
-    ? `<a href="${m.href}" style="display:inline-block;margin-top:8px;padding:5px 14px;background:#BA1932;color:#fff;text-decoration:none;border-radius:6px;font-size:11px;font-weight:600;">View →</a>`
+    ? `<a href="${href}" style="display:inline-block;margin-top:8px;padding:5px 14px;background:#BA1932;color:#fff;text-decoration:none;border-radius:6px;font-size:11px;font-weight:600;">View details →</a>`
     : ''
-  return `<div style="font-family:system-ui,sans-serif;min-width:200px;">${img}<div style="padding:10px 12px 12px;"><div style="font-weight:700;font-size:13px;color:#1a2035;margin-bottom:4px;line-height:1.3;">${m.title}</div>${price}${sub}${link}</div></div>`
+  return `<div style="font-family:system-ui,sans-serif;min-width:200px;cursor:pointer;">${img}<div style="padding:10px 12px 12px;">${title}${price}${sub}${link}</div></div>`
 }
 
 function makeMarkerEl(m, onClickFn) {

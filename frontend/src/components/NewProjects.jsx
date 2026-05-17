@@ -93,7 +93,7 @@ export default function NewProjects() {
               return (
                 <Link
                   key={project.id}
-                  to={`/projects/${project.slug}`}
+                  to={`/projects/${project.slug || project.id}`}
                   onClick={() => setActive(i)}
                   className="relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1"
                   style={{

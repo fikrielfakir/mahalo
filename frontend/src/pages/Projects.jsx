@@ -40,7 +40,7 @@ function CompactProjectCard({ project, imgUrl, isActive, onClick, cardRef }) {
         {!hasCoords && <span className="text-[10px] text-gray-300 block">No map location</span>}
       </div>
       <Link
-        to={`/projects/${project.slug}`}
+        to={`/projects/${project.slug || project.id}`}
         onClick={e => e.stopPropagation()}
         className="shrink-0 self-center text-xs text-navy/40 hover:text-[#BA1932] transition-colors"
       >→</Link>
@@ -224,7 +224,7 @@ export default function Projects() {
                     ? (project.image.startsWith('http') ? project.image : `/storage/${project.image}`)
                     : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
                   return (
-                    <Link key={project.id} to={`/projects/${project.slug}`}
+                    <Link key={project.id} to={`/projects/${project.slug || project.id}`}
                       className="group bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
                       <div className="aspect-video overflow-hidden relative">
                         <img src={imgUrl} alt={project.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />

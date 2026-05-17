@@ -28,7 +28,7 @@ function ProjectMiniCard({ project }) {
 
   return (
     <Link
-      to={`/projects/${project.slug}`}
+      to={`/projects/${project.slug || project.id}`}
       className="group block bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
     >
       <div className="aspect-video overflow-hidden relative">

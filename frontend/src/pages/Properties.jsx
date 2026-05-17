@@ -44,7 +44,7 @@ function CompactPropertyCard({ property, isActive, onClick, cardRef }) {
         {!hasCoords && <span className="text-[10px] text-gray-300 mt-0.5 block">No map location</span>}
       </div>
       <Link
-        to={`/properties/${property.slug}`}
+        to={`/properties/${property.slug || property.id}`}
         onClick={e => e.stopPropagation()}
         className="shrink-0 self-center text-xs text-navy/40 hover:text-[#BA1932] transition-colors"
       >
@@ -127,7 +127,7 @@ export default function Properties() {
       subtitle: p.city?.name || p.location || '',
       rawPrice: p.price,
       image: p.image ? (p.image.startsWith('http') ? p.image : `/storage/${p.image}`) : null,
-      href: `/properties/${p.slug}`,
+      href: `/properties/${p.slug || p.id}`,
     }))
 
   const handleMarkerClick = (id) => {

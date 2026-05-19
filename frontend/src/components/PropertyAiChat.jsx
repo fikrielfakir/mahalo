@@ -99,7 +99,7 @@ export default function PropertyAiChat({ property }) {
                   </div>
                   <p className="text-navy/50 text-sm">Hi! Ask me anything about this property — price, neighborhood, buying process, or anything else.</p>
                   <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                    {['What's the neighborhood like?', 'Is this a good investment?', 'How does the buying process work in Morocco?'].map(q => (
+                    {["What's the neighborhood like?", 'Is this a good investment?', 'How does the buying process work in Morocco?'].map(q => (
                       <button key={q} onClick={() => { setInput(q); inputRef.current?.focus() }}
                         className="text-xs px-3 py-1.5 rounded-xl bg-surface text-navy/60 hover:text-navy hover:bg-gray-100 transition-colors text-left">
                         {q}

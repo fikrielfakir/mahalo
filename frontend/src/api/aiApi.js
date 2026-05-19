@@ -10,6 +10,7 @@ export const aiApi = {
   generateDescription: (data) => api.post('/ai/generate-description', data).then(r => r.data),
   propertyChat:        (data) => api.post('/ai/property-chat', data).then(r => r.data),
   generalChat:         (data) => api.post('/ai/chat', data).then(r => r.data),
+  matchProperties:     (data) => api.post('/ai/match', data).then(r => r.data),
 }
 
 export default aiApi

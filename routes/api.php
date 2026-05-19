@@ -81,6 +81,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/ai/generate-description', [AiController::class, 'generateDescription']);
     Route::post('/ai/property-chat',        [AiController::class, 'propertyChat']);
     Route::post('/ai/chat',                 [AiController::class, 'generalChat']);
+    Route::post('/ai/match',               [AiController::class, 'matchProperties']);
 
     // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
     Route::get('/public-settings', [PublicSettingsController::class, 'show']);

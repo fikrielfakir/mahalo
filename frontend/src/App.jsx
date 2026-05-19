@@ -31,6 +31,7 @@ const About              = lazy(() => import('./pages/About'))
 const ListProperty       = lazy(() => import('./pages/ListProperty'))
 const PrivacyPage        = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage          = lazy(() => import('./pages/TermsPage'))
+const PropertyMatchPage  = lazy(() => import('./pages/PropertyMatchPage'))
 
 // ── Lazy: Error / utility pages ─────────────────────────────────
 const NotFoundPage       = lazy(() => import('./pages/NotFoundPage'))
@@ -148,6 +149,7 @@ export default function App() {
                       <Route path="/agents/:id"             element={<AgentDetail />} />
                       <Route path="/about"                  element={<About />} />
                       <Route path="/list-property"          element={<ListProperty />} />
+                      <Route path="/find-my-property"       element={<PropertyMatchPage />} />
 
                       {/* User profile */}
                       <Route path="/profile"                element={<ProfilePage />} />

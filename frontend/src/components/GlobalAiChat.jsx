@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, X, Send, Loader2, MessageCircle } from 'lucide-react'
+import { Bot, X, Send, Loader2, MessageCircle, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { aiApi } from '../api/aiApi'
 
 function Message({ role, content }) {
@@ -107,6 +108,14 @@ export default function GlobalAiChat() {
             {history.length === 0 && (
               <div className="text-center py-4">
                 <p className="text-navy/50 text-sm mb-4">Bonjour ! Je suis Mahalo AI. Comment puis-je vous aider dans votre projet immobilier au Maroc ?</p>
+                <Link
+                  to="/find-my-property"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#730D26]/10 to-[#BA1932]/10 border border-[#730D26]/20 text-[#730D26] text-xs font-semibold hover:from-[#730D26]/20 hover:to-[#BA1932]/20 transition-colors mb-3"
+                >
+                  <Sparkles size={13} />
+                  Trouver mon bien idéal avec l'IA
+                </Link>
                 <div className="space-y-2">
                   {SUGGESTIONS.map(q => (
                     <button key={q} onClick={() => { setInput(q); inputRef.current?.focus() }}

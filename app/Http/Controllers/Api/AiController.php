@@ -231,6 +231,166 @@ EOT;
         }
     }
 
+    public function matchProperties(Request $request): JsonResponse
+    {
+        $request->validate([
+            'history' => 'required|array|min:1',
+        ]);
+
+        // Step 1: extract structured preferences from conversation
+        $convo = collect($request->history)
+            ->map(fn($m) => "{$m['role']}: {$m['content']}")
+            ->join("\n");
+
+        $extractPrompt = <<<EOT
+From the following conversation between a user and a real estate assistant, extract the user's property preferences as a JSON object.
+
+Conversation:
+{$convo}
+
+Return ONLY a valid JSON object (no explanation, no markdown) with these optional fields:
+{
+  "type": "sale" or "rent" or null,
+  "city": city name string or null,
+  "min_price": number in MAD or null,
+  "max_price": number in MAD or null,
+  "min_bedrooms": number or null,
+  "min_bathrooms": number or null,
+  "min_area": number in m² or null,
+  "max_area": number in m² or null,
+  "features": array of feature keywords (e.g. ["parking","pool","balcony"]) or [],
+  "condition": "New development" or "Resale" or "Off-plan" or null,
+  "ready": true if enough info to search (at least city or type or price range), false otherwise,
+  "missing": short human-friendly question to ask if not ready yet (in the same language the user is using)
+}
+EOT;
+
+        try {
+            $raw = $this->chat([
+                ['role' => 'system', 'content' => 'Extract structured property preferences from conversations. Return only valid JSON.'],
+                ['role' => 'user',   'content' => $extractPrompt],
+            ], 300);
+
+            // Strip markdown fences if present
+            $json = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
+            $json = preg_replace('/\s*```$/', '', $json);
+            $prefs = json_decode($json, true);
+
+            if (!$prefs) {
+                return response()->json(['ready' => false, 'missing' => 'Could you tell me more about what you\'re looking for?']);
+            }
+
+            if (empty($prefs['ready'])) {
+                return response()->json(['ready' => false, 'missing' => $prefs['missing'] ?? 'What type of property are you looking for?']);
+            }
+
+            // Step 2: query the database
+            $query = \App\Models\Property::with(['city', 'features', 'categories', 'agent', 'slug'])
+                ->whereIn('status', ['selling', 'renting'])
+                ->where('moderation_status', 'approved');
+
+            if (!empty($prefs['type'])) {
+                $query->where('type', $prefs['type']);
+            }
+
+            if (!empty($prefs['city'])) {
+                $query->whereHas('city', fn($q) => $q->where('name', 'like', '%' . $prefs['city'] . '%'));
+            }
+
+            if (!empty($prefs['min_price'])) {
+                $query->where('price', '>=', $prefs['min_price']);
+            }
+
+            if (!empty($prefs['max_price'])) {
+                $query->where('price', '<=', $prefs['max_price']);
+            }
+
+            if (!empty($prefs['min_bedrooms'])) {
+                $query->where('number_bedroom', '>=', $prefs['min_bedrooms']);
+            }
+
+            if (!empty($prefs['min_bathrooms'])) {
+                $query->where('number_bathroom', '>=', $prefs['min_bathrooms']);
+            }
+
+            if (!empty($prefs['min_area'])) {
+                $query->where('square', '>=', $prefs['min_area']);
+            }
+
+            if (!empty($prefs['max_area'])) {
+                $query->where('square', '<=', $prefs['max_area']);
+            }
+
+            if (!empty($prefs['condition'])) {
+                $query->where('condition', $prefs['condition']);
+            }
+
+            if (!empty($prefs['features']) && is_array($prefs['features'])) {
+                foreach ($prefs['features'] as $feat) {
+                    $query->whereHas('features', fn($q) => $q->where('name', 'like', '%' . $feat . '%'));
+                }
+            }
+
+            $properties = $query->orderByDesc('is_featured')->orderByDesc('created_at')->limit(6)->get();
+
+            // Fallback: broaden search if nothing found
+            if ($properties->isEmpty() && !empty($prefs['city'])) {
+                $properties = \App\Models\Property::with(['city', 'features', 'categories', 'agent', 'slug'])
+                    ->whereIn('status', ['selling', 'renting'])
+                    ->where('moderation_status', 'approved')
+                    ->whereHas('city', fn($q) => $q->where('name', 'like', '%' . $prefs['city'] . '%'))
+                    ->orderByDesc('is_featured')
+                    ->limit(6)
+                    ->get();
+            }
+
+            // Step 3: AI commentary
+            $propSummary = $properties->map(fn($p) =>
+                "- {$p->name} | {$p->type} | " . ($p->price ? number_format($p->price, 0) . ' MAD' : 'Price on request') .
+                " | {$p->number_bedroom} beds | {$p->square} m² | " . ($p->city?->name ?? 'N/A')
+            )->join("\n");
+
+            $prefSummary = json_encode(array_filter($prefs, fn($v) => $v !== null && $v !== [] && $v !== false), JSON_PRETTY_PRINT);
+
+            $lang = $request->language ?? 'the same language the user was using in the conversation';
+
+            $commentary = '';
+            if ($properties->isNotEmpty()) {
+                $commentary = $this->chat([
+                    ['role' => 'system', 'content' => "You are Mahalo AI, a friendly Moroccan real estate assistant. Respond in {$lang}."],
+                    ['role' => 'user',   'content' => "The user was looking for:\n{$prefSummary}\n\nWe found these matching properties:\n{$propSummary}\n\nWrite 2–3 warm, helpful sentences introducing these results. Mention what matched and note any trade-offs if the search was broadened. Keep it concise."],
+                ], 200);
+            }
+
+            return response()->json([
+                'ready'      => true,
+                'properties' => $properties->map(fn($p) => [
+                    'id'               => $p->id,
+                    'name'             => $p->name,
+                    'type'             => $p->type,
+                    'price'            => $p->price,
+                    'square'           => $p->square,
+                    'number_bedroom'   => $p->number_bedroom,
+                    'number_bathroom'  => $p->number_bathroom,
+                    'location'         => $p->location,
+                    'city'             => $p->city ? ['id' => $p->city->id, 'name' => $p->city->name] : null,
+                    'image'            => $p->image,
+                    'images'           => $p->images,
+                    'is_featured'      => $p->is_featured,
+                    'slug'             => $p->slug ? ['key' => $p->slug->key] : null,
+                    'features'         => $p->features->map(fn($f) => ['id' => $f->id, 'name' => $f->name]),
+                    'categories'       => $p->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name]),
+                    'agent'            => $p->agent ? ['name' => $p->agent->name] : null,
+                ]),
+                'preferences' => $prefs,
+                'commentary'  => $commentary,
+                'count'       => $properties->count(),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function generalChat(Request $request): JsonResponse
     {
         $request->validate([

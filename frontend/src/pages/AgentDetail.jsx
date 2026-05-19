@@ -26,9 +26,12 @@ function ProjectMiniCard({ project }) {
     ? (project.image.startsWith('http') ? project.image : `/storage/${project.image}`)
     : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80'
 
+  const rawSlug = project.slug
+  const projSlug = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.slug) || project.id
+
   return (
     <Link
-      to={`/projects/${project.slug || project.id}`}
+      to={`/projects/${projSlug}`}
       className="group block bg-white rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
     >
       <div className="aspect-video overflow-hidden relative">

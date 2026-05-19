@@ -133,11 +133,35 @@ export default function PropertyDetail() {
         if (err.name === 'AbortError') return
       }
     }
+
+    // Try modern clipboard API first, fall back to execCommand for iframes/HTTP
+    const copyFallback = (text) => {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.focus()
+      ta.select()
+      try {
+        document.execCommand('copy')
+        return true
+      } catch {
+        return false
+      } finally {
+        document.body.removeChild(ta)
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(url)
       showToast(t('property.linkCopied') || 'Lien copié !')
     } catch {
-      showToast('Could not copy link', 'error')
+      if (copyFallback(url)) {
+        showToast(t('property.linkCopied') || 'Lien copié !')
+      } else {
+        showToast('Could not copy link', 'error')
+      }
     }
   }
 

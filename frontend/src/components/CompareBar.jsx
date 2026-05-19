@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, BarChart2, ArrowRight, Bed, Bath, Maximize2, MapPin, Star, BadgeCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
@@ -51,7 +52,7 @@ export default function CompareBar() {
 
   if (list.length === 0) return null
 
-  return (
+  return createPortal(
     <>
       {/* Floating bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-navy border-t border-white/10 shadow-2xl">
@@ -174,6 +175,7 @@ export default function CompareBar() {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   )
 }

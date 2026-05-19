@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, BarChart2, ArrowRight, Bed, Bath, Maximize2, MapPin, Star, BadgeCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
@@ -38,6 +38,16 @@ export default function CompareBar() {
     { label: t('compare.rowFeatured'), render: p => p.is_featured ? t('compare.yes') : t('compare.no') },
     { label: t('compare.rowFeatures'), render: p => p.features?.map(f => f.name).join(', ') || '—' },
   ]
+
+  useEffect(() => {
+    const BAR_HEIGHT = '64px'
+    if (list.length > 0) {
+      document.body.style.paddingBottom = BAR_HEIGHT
+    } else {
+      document.body.style.paddingBottom = ''
+    }
+    return () => { document.body.style.paddingBottom = '' }
+  }, [list.length])
 
   if (list.length === 0) return null
 

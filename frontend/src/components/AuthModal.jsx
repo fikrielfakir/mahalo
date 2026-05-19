@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
@@ -75,7 +76,7 @@ export default function AuthModal() {
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[999] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
@@ -270,6 +271,7 @@ export default function AuthModal() {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

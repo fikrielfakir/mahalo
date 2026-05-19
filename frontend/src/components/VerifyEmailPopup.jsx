@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MailCheck, X, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useVerifyEmail } from '../context/VerifyEmailContext'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -25,7 +26,7 @@ export default function VerifyEmailPopup() {
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closePopup} />
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-7 flex flex-col items-center text-center">
@@ -66,6 +67,7 @@ export default function VerifyEmailPopup() {
           Dismiss
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

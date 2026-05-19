@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Cookie, X, ChevronDown, ChevronUp, Shield, BarChart2, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -54,7 +55,7 @@ export default function CookieBanner({ settings }) {
     setVisible(false)
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop blur on mobile */}
       <div className="fixed inset-0 z-[998] bg-black/10 backdrop-blur-[1px] md:hidden pointer-events-none" />
@@ -183,6 +184,7 @@ export default function CookieBanner({ settings }) {
         }
         .animate-slide-up { animation: slide-up 0.4s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
-    </>
+    </>,
+    document.body
   )
 }

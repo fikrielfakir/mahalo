@@ -62,6 +62,6 @@ class PublicSettingsController extends Controller
             }
         }
 
-        return response()->json(['data' => $settings, 'error' => false, 'message' => null]);
+        return response()->json(['data' => (object) $settings, 'error' => false, 'message' => null]);
     }
 }

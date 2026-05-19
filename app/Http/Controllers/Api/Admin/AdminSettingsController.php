@@ -50,7 +50,7 @@ class AdminSettingsController extends Controller
             $settings[$row->key] = $row->value;
         }
 
-        return response()->json(['data' => $settings, 'error' => false, 'message' => null]);
+        return response()->json(['data' => (object) $settings, 'error' => false, 'message' => null]);
     }
 
     public function update(Request $request): JsonResponse

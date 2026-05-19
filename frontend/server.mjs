@@ -5,10 +5,11 @@ import { createServer as createViteServer } from 'vite'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { createRequire } from 'module'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 3000
 const API_BACKEND = process.env.API_BACKEND_URL || 'http://localhost:8000'
 
 const BOT_PATTERN = /googlebot|bingbot|slurp|yandex|baidu|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot|embedly|ia_archiver|semrushbot|ahrefsbot|msnbot|teoma|rogerbot/i
@@ -18,6 +19,21 @@ const IGNORE_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot
 async function start() {
   const app = express()
   app.use(compression())
+
+  // Proxy /api/ and /storage/ to the Laravel backend
+  // Mount at root so Express does NOT strip the prefix — the full path reaches Laravel
+  const laravelProxy = createProxyMiddleware({
+    target: API_BACKEND,
+    changeOrigin: true,
+    pathFilter: (path) => path.startsWith('/api/') || path.startsWith('/storage/'),
+    on: {
+      error: (err, req, res) => {
+        console.error('[proxy] Error:', err.message)
+        res.status(502).end('Bad Gateway')
+      },
+    },
+  })
+  app.use(laravelProxy)
 
   let vite
   if (!isProd) {
@@ -35,7 +51,7 @@ async function start() {
     const url = req.originalUrl
     const ua  = req.headers['user-agent'] || ''
 
-    if (IGNORE_EXTENSIONS.test(url) || url.startsWith('/api/') || url.startsWith('/storage/')) {
+    if (IGNORE_EXTENSIONS.test(url)) {
       return res.status(404).end()
     }
 

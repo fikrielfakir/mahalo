@@ -105,6 +105,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/properties/filters', [PropertyController::class, 'filters']);
     Route::get('/properties/search', [PropertyController::class, 'search']);
     Route::get('/properties/id/{id}', [PropertyController::class, 'showById']);
+    Route::get('/properties/id/{id}/similar', [PropertyController::class, 'similar']);
     Route::get('/properties/{property_id}/reviews', [ReviewController::class, 'forProperty']);
     Route::get('/properties/{slug}', [PropertyController::class, 'show']);
     Route::get('/properties', [PropertyController::class, 'index']);

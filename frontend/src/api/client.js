@@ -23,12 +23,13 @@ api.interceptors.response.use(
 )
 
 export const propertiesApi = {
-  list: (params = {}) => api.get('/properties', { params }),
-  featured: (perPage = 8) => api.get('/properties', { params: { is_featured: 1, per_page: perPage } }),
-  search: (params = {}) => api.get('/properties/search', { params }),
-  bySlug: (slug) => api.get(`/properties/${slug}`),
-  byId: (id) => api.get(`/properties/id/${id}`),
-  filters: () => api.get('/properties/filters'),
+  list:    (params = {}) => api.get('/properties', { params }),
+  featured:(perPage = 8) => api.get('/properties', { params: { is_featured: 1, per_page: perPage } }),
+  search:  (params = {}) => api.get('/properties/search', { params }),
+  bySlug:  (slug) => api.get(`/properties/${slug}`),
+  byId:    (id)   => api.get(`/properties/id/${id}`),
+  similar: (id)   => api.get(`/properties/id/${id}/similar`),
+  filters: ()     => api.get('/properties/filters'),
   reviews: (propertyId) => api.get(`/properties/${propertyId}/reviews`),
 }
 

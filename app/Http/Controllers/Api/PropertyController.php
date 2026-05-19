@@ -182,6 +182,114 @@ class PropertyController extends Controller
         return response()->json(['data' => $this->formatProperty($property, $locale), 'error' => false, 'message' => null]);
     }
 
+    public function similar(Request $request, int $id): JsonResponse
+    {
+        $locale   = $this->resolveLocale($request);
+        $property = Property::with(['city', 'categories', 'features'])->find($id);
+
+        if (!$property) {
+            return response()->json(['data' => [], 'error' => false, 'message' => null]);
+        }
+
+        $categoryIds = $property->categories->pluck('id')->toArray();
+        $featureIds  = $property->features->pluck('id')->toArray();
+        $price       = (float) $property->price;
+        $minPrice    = $price > 0 ? $price * 0.60 : null;
+        $maxPrice    = $price > 0 ? $price * 1.40 : null;
+        $beds        = (int) $property->number_bedroom;
+        $area        = (float) $property->square;
+
+        // Fetch a broad candidate pool from the same status/city
+        $candidates = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
+            ->whereIn('status', ['selling', 'renting'])
+            ->where('moderation_status', 'approved')
+            ->where('id', '!=', $id)
+            ->when($property->city_id, fn($q) => $q->where('city_id', $property->city_id))
+            ->limit(50)
+            ->get();
+
+        // If same-city pool is too small, broaden to all
+        if ($candidates->count() < 8) {
+            $candidates = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
+                ->whereIn('status', ['selling', 'renting'])
+                ->where('moderation_status', 'approved')
+                ->where('id', '!=', $id)
+                ->limit(50)
+                ->get();
+        }
+
+        // Score each candidate
+        $scored = $candidates->map(function ($p) use (
+            $property, $categoryIds, $featureIds,
+            $price, $minPrice, $maxPrice, $beds, $area
+        ) {
+            $score = 0;
+
+            // Same status (selling/renting) — strong signal
+            if ($p->status === $property->status) {
+                $score += 25;
+            }
+
+            // Same city
+            if ($p->city_id && $p->city_id === $property->city_id) {
+                $score += 30;
+            }
+
+            // Price proximity (±40% range, scaled by closeness)
+            $pPrice = (float) $p->price;
+            if ($price > 0 && $pPrice > 0) {
+                $ratio = min($price, $pPrice) / max($price, $pPrice); // 1.0 = identical price
+                if ($ratio >= 0.60) {
+                    $score += (int) round($ratio * 20); // up to +20 pts
+                }
+            } elseif ($price === 0.0 && $pPrice === 0.0) {
+                $score += 10;
+            }
+
+            // Bedroom proximity (±1)
+            $pBeds = (int) $p->number_bedroom;
+            if ($beds > 0 && $pBeds > 0) {
+                $diff = abs($beds - $pBeds);
+                if ($diff === 0) $score += 15;
+                elseif ($diff === 1) $score += 8;
+            }
+
+            // Area proximity (±30%)
+            $pArea = (float) $p->square;
+            if ($area > 0 && $pArea > 0) {
+                $areaRatio = min($area, $pArea) / max($area, $pArea);
+                if ($areaRatio >= 0.70) {
+                    $score += (int) round($areaRatio * 10); // up to +10 pts
+                }
+            }
+
+            // Shared categories — up to +20 pts
+            $pCatIds = $p->categories->pluck('id')->toArray();
+            $sharedCats = count(array_intersect($categoryIds, $pCatIds));
+            $score += min($sharedCats * 10, 20);
+
+            // Shared features — up to +10 pts
+            $pFeatIds = $p->features->pluck('id')->toArray();
+            $sharedFeats = count(array_intersect($featureIds, $pFeatIds));
+            $score += min($sharedFeats * 3, 10);
+
+            // Boost featured properties
+            if ($p->is_featured) {
+                $score += 5;
+            }
+
+            return ['property' => $p, 'score' => $score];
+        });
+
+        $top = $scored
+            ->sortByDesc('score')
+            ->take(4)
+            ->values()
+            ->map(fn($item) => $this->formatProperty($item['property'], $locale));
+
+        return response()->json(['data' => $top, 'error' => false, 'message' => null]);
+    }
+
     public function filters(): JsonResponse
     {
         $cities = City::orderBy('name')->select('id', 'name')->get();

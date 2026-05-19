@@ -133,10 +133,10 @@ function OfflineGate({ children }) {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <OfflineGate>
-        <SiteModeGate>
-        <BrowserRouter>
+    <OfflineGate>
+      <SiteModeGate>
+      <BrowserRouter>
+        <ErrorBoundary>
           <SiteSettingsProvider>
           <CompareProvider>
             <UserAuthProvider>
@@ -225,9 +225,9 @@ export default function App() {
             </UserAuthProvider>
           </CompareProvider>
           </SiteSettingsProvider>
-        </BrowserRouter>
-        </SiteModeGate>
-      </OfflineGate>
-    </ErrorBoundary>
+        </ErrorBoundary>
+      </BrowserRouter>
+      </SiteModeGate>
+    </OfflineGate>
   )
 }

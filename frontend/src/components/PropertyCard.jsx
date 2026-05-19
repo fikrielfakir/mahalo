@@ -130,8 +130,8 @@ export default function PropertyCard({ property, className = '' }) {
           </button>
           <button
             onClick={handleCompare}
-            title={inCmp ? t('compare.remove') : isFull ? t('compare.max') : t('compare.add')}
-            aria-label={inCmp ? t('compare.remove') : t('compare.add')}
+            title={inCmp ? t('property.removeFromCompare') : isFull ? t('property.maxCompare') : t('property.addToCompare')}
+            aria-label={inCmp ? t('property.removeFromCompare') : t('property.addToCompare')}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm touch-manip ${
               inCmp ? 'scale-110' : isFull ? 'cursor-not-allowed' : 'hover:scale-110'
             }`}

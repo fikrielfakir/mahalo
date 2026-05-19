@@ -27,16 +27,16 @@ export default function CompareBar() {
   const [open, setOpen] = useState(false)
 
   const ROWS = [
-    { label: t('compare.price'),      render: p => fmt(p.price) },
-    { label: t('compare.type'),       render: p => p.type === 'rent' ? t('property.forRent') : t('property.forSale') },
-    { label: t('compare.city'),       render: p => p.city?.name || '—' },
-    { label: t('compare.category'),   render: p => p.category?.name || '—' },
-    { label: t('property.beds'),      render: p => p.number_bedroom || '—' },
-    { label: t('property.baths'),     render: p => p.number_bathroom || '—' },
-    { label: t('compare.area'),       render: p => p.square ? `${p.square} m²` : '—' },
-    { label: t('compare.verified'),   render: p => p.is_verified ? `✓ ${t('compare.yes')}` : t('compare.no') },
-    { label: t('compare.featured'),   render: p => p.is_featured ? `✓ ${t('compare.yes')}` : t('compare.no') },
-    { label: t('compare.features'),   render: p => p.features?.map(f => f.name).join(', ') || '—' },
+    { label: t('compare.rowPrice'),    render: p => fmt(p.price) },
+    { label: t('compare.rowType'),     render: p => p.type === 'rent' ? t('property.forRent') : t('property.forSale') },
+    { label: t('compare.rowCity'),     render: p => p.city?.name || '—' },
+    { label: t('compare.rowCategory'), render: p => p.category?.name || '—' },
+    { label: t('property.beds'),       render: p => p.number_bedroom || '—' },
+    { label: t('property.baths'),      render: p => p.number_bathroom || '—' },
+    { label: t('compare.rowArea'),     render: p => p.square ? `${p.square} m²` : '—' },
+    { label: t('compare.rowVerified'), render: p => p.is_verified ? t('compare.yes') : t('compare.no') },
+    { label: t('compare.rowFeatured'), render: p => p.is_featured ? t('compare.yes') : t('compare.no') },
+    { label: t('compare.rowFeatures'), render: p => p.features?.map(f => f.name).join(', ') || '—' },
   ]
 
   if (list.length === 0) return null
@@ -48,7 +48,7 @@ export default function CompareBar() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 text-white font-semibold text-sm shrink-0">
             <BarChart2 size={16} className="text-gold" />
-            {t('compare.title')} ({list.length}/{MAX})
+            {t('compare.compare')} ({list.length}/{MAX})
           </div>
 
           <div className="flex items-center gap-3 flex-1 overflow-x-auto">
@@ -63,7 +63,7 @@ export default function CompareBar() {
             ))}
             {Array.from({ length: MAX - list.length }).map((_, i) => (
               <div key={i} className="w-32 h-10 border border-dashed border-white/20 rounded-xl flex items-center justify-center text-white/25 text-xs shrink-0">
-                + {t('compare.add')}
+                {t('compare.addMore')}
               </div>
             ))}
           </div>
@@ -80,7 +80,7 @@ export default function CompareBar() {
               disabled={list.length < 2}
               className="flex items-center gap-1.5 px-4 py-2 bg-gold text-white rounded-xl text-sm font-semibold hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {t('compare.title')} <ArrowRight size={14} />
+              {t('compare.compare')} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function CompareBar() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2">
                 <BarChart2 size={18} className="text-gold" />
-                <h2 className="font-bold text-navy text-lg">{t('compare.modalTitle')}</h2>
+                <h2 className="font-bold text-navy text-lg">{t('compare.propertyComparison')}</h2>
               </div>
               <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
                 <X size={18} />
@@ -115,7 +115,7 @@ export default function CompareBar() {
                             <img src={getImg(p)} alt={p.name} className="w-full h-full object-cover" />
                           </div>
                           <Link
-                            to={`/properties/${p.slug || p.id}`}
+                            to={`/properties/${(typeof p.slug === 'string' ? p.slug : p.slug?.key) || p.id}`}
                             className="font-bold text-navy text-sm hover:text-gold transition-colors line-clamp-1 block"
                             onClick={() => setOpen(false)}
                           >

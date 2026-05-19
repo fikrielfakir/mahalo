@@ -1,0 +1,1 @@
+const e=["mp4","mov","avi","mkv","webm","m4v"];function i(t=""){if(!t)return!1;const r=t.split("?")[0].split(".").pop().toLowerCase();return e.includes(r)}function s(t){return t?t.startsWith("http")||t.startsWith("blob:")?t:i(t)?`/api/v1/stream/${t}`:`/storage/${t}`:""}export{i,s as m};

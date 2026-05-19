@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { Sparkles, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { aiApi } from '../api/aiApi'
 
+const LANG_NAMES = { fr: 'French', en: 'English', ar: 'Arabic', es: 'Spanish', de: 'German' }
+
 export default function PropertyValuation({ property }) {
+  const { t, i18n } = useTranslation()
   const [open, setOpen]       = useState(false)
   const [result, setResult]   = useState(null)
   const [loading, setLoading] = useState(false)
@@ -18,6 +22,9 @@ export default function PropertyValuation({ property }) {
         ...(property.features?.map(f => f.name) ?? []),
       ].join(', ') || 'None'
 
+      const langCode = i18n.language?.split('-')[0] || 'fr'
+      const language = LANG_NAMES[langCode] || 'French'
+
       const res = await aiApi.valuation({
         type:      property.type,
         area:      property.square,
@@ -28,10 +35,11 @@ export default function PropertyValuation({ property }) {
         condition: property.condition,
         age:       property.age_range,
         features,
+        language,
       })
       setResult(res.result)
     } catch {
-      setError('Could not generate valuation. Please try again.')
+      setError(t('property.valuationError') || 'Could not generate valuation. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -56,8 +64,8 @@ export default function PropertyValuation({ property }) {
             <Sparkles size={17} className="text-gold" />
           </div>
           <div className="text-left">
-            <div className="font-bold text-navy text-sm">AI Price Estimate</div>
-            <div className="text-navy/40 text-xs">Powered by Mahalo AI</div>
+            <div className="font-bold text-navy text-sm">{t('property.aiPriceEstimate') || 'AI Price Estimate'}</div>
+            <div className="text-navy/40 text-xs">{t('property.poweredByMahaloAi') || 'Powered by Mahalo AI'}</div>
           </div>
         </div>
         {loading
@@ -73,7 +81,7 @@ export default function PropertyValuation({ property }) {
           {loading && (
             <div className="flex items-center gap-2 py-6 text-navy/50 text-sm">
               <Loader2 size={15} className="animate-spin" />
-              Analyzing market data…
+              {t('property.analyzingMarket') || 'Analyzing market data…'}
             </div>
           )}
           {error && (

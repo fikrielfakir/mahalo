@@ -116,9 +116,26 @@ export default function PropertyDetail() {
   }
 
   const handleShare = async () => {
+    const url   = window.location.href
+    const title = property.name
+    const text  = [
+      property.city?.name,
+      formatPrice(property.price),
+      property.number_bedroom ? `${property.number_bedroom} ch.` : null,
+      property.square ? `${property.square} m²` : null,
+    ].filter(Boolean).join(' — ')
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return
+      }
+    }
     try {
-      await navigator.clipboard.writeText(window.location.href)
-      showToast('Link copied to clipboard!')
+      await navigator.clipboard.writeText(url)
+      showToast(t('property.linkCopied') || 'Lien copié !')
     } catch {
       showToast('Could not copy link', 'error')
     }
@@ -583,8 +600,17 @@ export default function PropertyDetail() {
                 <h3 className="text-navy font-bold text-lg mb-5">{t('property.contactAgent')}</h3>
                 {property.agent && (
                   <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
-                    <div className="w-12 h-12 rounded-2xl bg-navy flex items-center justify-center text-white font-bold">
-                      {property.agent.name?.charAt(0) || 'A'}
+                    <div className="w-12 h-12 rounded-2xl bg-navy flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
+                      {property.agent.avatar ? (
+                        <img
+                          src={mediaUrl(property.agent.avatar)}
+                          alt={property.agent.name}
+                          className="w-full h-full object-cover"
+                          onError={e => { e.currentTarget.style.display = 'none' }}
+                        />
+                      ) : (
+                        property.agent.name?.charAt(0) || 'A'
+                      )}
                     </div>
                     <div>
                       <div className="font-semibold text-navy text-sm">{property.agent.name}</div>

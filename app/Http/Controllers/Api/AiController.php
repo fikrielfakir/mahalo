@@ -62,6 +62,7 @@ class AiController extends Controller
             'condition' => 'nullable|string',
             'age'       => 'nullable|string',
             'features'  => 'nullable|string',
+            'language'  => 'nullable|string',
         ]);
 
         $type      = $request->type;
@@ -73,9 +74,11 @@ class AiController extends Controller
         $condition = $request->condition ?? 'N/A';
         $age       = $request->age       ?? 'N/A';
         $features  = $request->features  ?? 'None';
+        $language  = $request->language  ?? 'French';
 
         $prompt = <<<EOT
 You are an expert real estate valuation analyst for the Moroccan property market (Mahalo platform).
+Respond ENTIRELY in {$language}. Every label, number, and sentence must be in {$language}.
 
 Given the following property details:
 Type: {$type}
@@ -100,7 +103,7 @@ EOT;
 
         try {
             $result = $this->chat([
-                ['role' => 'system', 'content' => 'You are a Moroccan real estate valuation expert. Be concise and data-driven.'],
+                ['role' => 'system', 'content' => "You are a Moroccan real estate valuation expert. Be concise and data-driven. Always respond in {$language}."],
                 ['role' => 'user',   'content' => $prompt],
             ], 600);
 
@@ -190,6 +193,7 @@ EOT;
             'message'  => 'required|string|max:1000',
             'history'  => 'nullable|array',
             'property' => 'required|array',
+            'language' => 'nullable|string',
         ]);
 
         $p       = $request->property;
@@ -207,10 +211,14 @@ EOT;
         $cats    = collect($p['categories'] ?? [])->pluck('name')->join(', ') ?: 'N/A';
         $feats   = collect($p['features'] ?? [])->pluck('name')->join(', ') ?: 'N/A';
 
+        $language = $request->input('language', 'French');
+
         $system = <<<EOT
 You are Mahalo AI, a smart real estate assistant for Mahalo — Morocco's premier property platform. You help buyers, renters, and investors find and understand properties in Morocco.
 
-The user is viewing this specific property:
+IMPORTANT: Respond in {$language}. Mirror the language the user writes in if it differs.
+
+The user is currently viewing this specific property — always answer in the context of THIS property:
 Name: {$name}
 Type: {$type}
 Price: {$price}
@@ -218,14 +226,14 @@ Area: {$area} m²
 Bedrooms: {$beds}
 Bathrooms: {$baths}
 City: {$city}
-Location: {$loc}
+Location/Neighborhood: {$loc}
 Condition: {$cond}
 Age: {$age}
 Amenities: {$feats}
 Categories: {$cats}
 Listed by: {$agent}
 
-Answer questions about this property specifically, as well as related topics (neighborhood, similar properties, buying process in Morocco, mortgage options, etc.). Be helpful, warm, and concise. Always respond in the same language the user writes in (French, English, or Arabic). If asked about things you don't know, say so honestly and suggest contacting {$agent} directly through Mahalo.
+Answer questions about this property specifically, as well as related topics (neighborhood, similar properties, buying process in Morocco, mortgage options, etc.). Be helpful, warm, and concise. If you don't know something, say so honestly and suggest contacting {$agent} directly through Mahalo.
 EOT;
 
         $messages = [['role' => 'system', 'content' => $system]];

@@ -1,6 +1,46 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot, ChevronDown } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { aiApi } from '../api/aiApi'
+
+const LANG_NAMES = { fr: 'French', en: 'English', ar: 'Arabic', es: 'Spanish', de: 'German' }
+
+const SUGGESTIONS = {
+  fr: [
+    'Comment est le quartier ?',
+    'Est-ce un bon investissement ?',
+    'Comment fonctionne l\'achat au Maroc ?',
+  ],
+  ar: [
+    'كيف هو الحي ؟',
+    'هل هو استثمار جيد ؟',
+    'كيف تتم عملية الشراء في المغرب ؟',
+  ],
+  en: [
+    "What's the neighborhood like?",
+    'Is this a good investment?',
+    'How does the buying process work in Morocco?',
+  ],
+  es: [
+    '¿Cómo es el vecindario?',
+    '¿Es una buena inversión?',
+    '¿Cómo funciona el proceso de compra en Marruecos?',
+  ],
+}
+
+const INTRO = {
+  fr: 'Bonjour ! Posez-moi toutes vos questions sur ce bien — prix, quartier, processus d\'achat, ou autre.',
+  ar: 'مرحباً ! اسألني أي شيء عن هذا العقار — السعر، الحي، عملية الشراء، أو أي شيء آخر.',
+  en: 'Hi! Ask me anything about this property — price, neighborhood, buying process, or anything else.',
+  es: '¡Hola! Pregúntame lo que quieras sobre esta propiedad — precio, barrio, proceso de compra, o cualquier cosa.',
+}
+
+const PLACEHOLDER = {
+  fr: 'Posez une question sur ce bien…',
+  ar: 'اسأل عن هذا العقار…',
+  en: 'Ask about this property…',
+  es: 'Pregunta sobre esta propiedad…',
+}
 
 function Message({ role, content }) {
   const isUser = role === 'user'
@@ -17,6 +57,7 @@ function Message({ role, content }) {
             ? 'bg-navy text-white rounded-tr-sm'
             : 'bg-surface text-navy rounded-tl-sm'
         }`}
+        style={{ whiteSpace: 'pre-wrap' }}
       >
         {content}
       </div>
@@ -25,6 +66,13 @@ function Message({ role, content }) {
 }
 
 export default function PropertyAiChat({ property }) {
+  const { i18n } = useTranslation()
+  const langCode  = i18n.language?.split('-')[0] || 'fr'
+  const language  = LANG_NAMES[langCode] || 'French'
+  const suggestions = SUGGESTIONS[langCode] || SUGGESTIONS.fr
+  const intro       = INTRO[langCode]       || INTRO.fr
+  const placeholder = PLACEHOLDER[langCode] || PLACEHOLDER.fr
+
   const [open, setOpen]       = useState(false)
   const [input, setInput]     = useState('')
   const [history, setHistory] = useState([])
@@ -39,8 +87,8 @@ export default function PropertyAiChat({ property }) {
     }
   }, [open, history])
 
-  const send = async () => {
-    const msg = input.trim()
+  const send = async (quickMsg = null) => {
+    const msg = (quickMsg ?? input).trim()
     if (!msg || loading) return
     setInput('')
     const userMsg = { role: 'user', content: msg }
@@ -50,11 +98,30 @@ export default function PropertyAiChat({ property }) {
       const res = await aiApi.propertyChat({
         message:  msg,
         history:  history,
-        property: property,
+        language,
+        property: {
+          name:             property?.name,
+          type:             property?.type,
+          price:            property?.price,
+          square:           property?.square,
+          number_bedroom:   property?.number_bedroom,
+          number_bathroom:  property?.number_bathroom,
+          location:         property?.location,
+          condition:        property?.condition,
+          age_range:        property?.age_range,
+          city:             property?.city   ? { name: property.city.name }   : null,
+          agent:            property?.agent  ? { name: property.agent.name }  : null,
+          categories:       property?.categories?.map(c => ({ name: c.name })) ?? [],
+          features:         property?.features?.map(f => ({ name: f.name }))  ?? [],
+        },
       })
       setHistory(h => [...h, { role: 'assistant', content: res.reply }])
     } catch {
-      setHistory(h => [...h, { role: 'assistant', content: 'Sorry, I could not respond right now. Please try again.' }])
+      setHistory(h => [...h, { role: 'assistant', content: langCode === 'ar'
+        ? 'عذراً، لم أتمكن من الرد الآن. حاول مرة أخرى.'
+        : langCode === 'en'
+          ? 'Sorry, I could not respond right now. Please try again.'
+          : 'Désolé, je n\'ai pas pu répondre. Veuillez réessayer.' }])
     } finally {
       setLoading(false)
     }
@@ -71,7 +138,11 @@ export default function PropertyAiChat({ property }) {
         className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-gold/30 bg-gold/5 text-gold font-semibold text-sm hover:bg-gold/10 transition-colors"
       >
         <MessageCircle size={15} />
-        Ask Mahalo AI about this property
+        {langCode === 'ar'
+          ? 'اسأل ماهالو AI عن هذا العقار'
+          : langCode === 'en'
+            ? 'Ask Mahalo AI about this property'
+            : 'Demander à Mahalo AI'}
       </button>
 
       {open && (
@@ -97,11 +168,14 @@ export default function PropertyAiChat({ property }) {
                   <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-3">
                     <Bot size={22} className="text-gold" />
                   </div>
-                  <p className="text-navy/50 text-sm">Hi! Ask me anything about this property — price, neighborhood, buying process, or anything else.</p>
+                  <p className="text-navy/50 text-sm px-2">{intro}</p>
                   <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                    {["What's the neighborhood like?", 'Is this a good investment?', 'How does the buying process work in Morocco?'].map(q => (
-                      <button key={q} onClick={() => { setInput(q); inputRef.current?.focus() }}
-                        className="text-xs px-3 py-1.5 rounded-xl bg-surface text-navy/60 hover:text-navy hover:bg-gray-100 transition-colors text-left">
+                    {suggestions.map(q => (
+                      <button
+                        key={q}
+                        onClick={() => send(q)}
+                        className="text-xs px-3 py-1.5 rounded-xl bg-surface text-navy/60 hover:text-navy hover:bg-gray-100 transition-colors text-left"
+                      >
                         {q}
                       </button>
                     ))}
@@ -129,11 +203,12 @@ export default function PropertyAiChat({ property }) {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={onKey}
-                  placeholder="Ask about this property…"
+                  placeholder={placeholder}
                   className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy/30"
+                  dir={langCode === 'ar' ? 'rtl' : 'ltr'}
                 />
                 <button
-                  onClick={send}
+                  onClick={() => send()}
                   disabled={!input.trim() || loading}
                   className="w-7 h-7 rounded-xl bg-navy flex items-center justify-center disabled:opacity-30 hover:bg-navy/80 transition-colors"
                 >

@@ -410,7 +410,7 @@ EOT;
     {
         $msg = mb_strtolower($message);
 
-        // Detect cities
+        // Detect cities — check both DB names and common Arabic/French aliases
         $cities = \App\Models\City::pluck('name')->toArray();
         $detectedCity = null;
         foreach ($cities as $city) {
@@ -420,13 +420,51 @@ EOT;
             }
         }
 
-        // Detect type
-        $wantsRent = preg_match('/louer|location|locat|rent|locataire|bail/i', $msg);
-        $wantsSale = preg_match('/acheter|achat|vente|vendre|acquérir|sale|buy|invest/i', $msg);
-        $wantsAgent = preg_match('/agent|conseiller|contact|appeler|joindre|vendeur/i', $msg);
+        // If no city found yet, try Arabic city name aliases
+        if (!$detectedCity) {
+            $arabicAliases = [
+                'مراكش'       => 'Marrakech',
+                'الدار البيضاء' => 'Casablanca',
+                'الرباط'      => 'Rabat',
+                'فاس'         => 'Fes',
+                'طنجة'        => 'Tanger',
+                'أكادير'      => 'Agadir',
+                'مكناس'       => 'Meknès',
+                'الحسيمة'     => 'Al Hoceima',
+                'تطوان'       => 'Tétouan',
+                'وجدة'        => 'Oujda',
+                'العرائش'     => 'Larache',
+                'القنيطرة'    => 'Kénitra',
+                'سلا'         => 'Salé',
+                'بني ملال'    => 'Beni Mellal',
+                'الجديدة'     => 'El Jadida',
+                'سطات'        => 'Settat',
+                'خريبكة'      => 'Khouribga',
+                'ناظور'       => 'Nador',
+                'تازة'        => 'Taza',
+            ];
+            foreach ($arabicAliases as $arabic => $french) {
+                if (str_contains($msg, $arabic)) {
+                    // Check if the French name exists in our cities
+                    $matched = collect($cities)->first(fn($c) => mb_strtolower($c) === mb_strtolower($french));
+                    if ($matched) {
+                        $detectedCity = $matched;
+                        break;
+                    }
+                    // Store the French name anyway for the query
+                    $detectedCity = $french;
+                    break;
+                }
+            }
+        }
 
-        // Property intent keywords
-        $wantsProperties = preg_match('/appartement|villa|terrain|bureau|studio|maison|bien|propriété|logement|immobilier|quartier|prix|budget|chambre|m²|m2|hectare/i', $msg);
+        // Detect type — French + Arabic keywords
+        $wantsRent = preg_match('/louer|location|locat|rent|locataire|bail|إيجار|للإيجار|أستأجر|كراء/ui', $msg);
+        $wantsSale = preg_match('/acheter|achat|vente|vendre|acquérir|sale|buy|invest|للبيع|شراء|أشتري|اقتناء/ui', $msg);
+        $wantsAgent = preg_match('/agent|conseiller|contact|appeler|joindre|vendeur|وكيل|مستشار|اتصال|تواصل/ui', $msg);
+
+        // Property intent keywords — French + Arabic
+        $wantsProperties = preg_match('/appartement|villa|terrain|bureau|studio|maison|bien|propriété|logement|immobilier|quartier|prix|budget|chambre|m²|m2|hectare|شقة|فيلا|منزل|بيت|عقار|دار|سكن|غرف|غرفة|متر/ui', $msg);
 
         $type = null;
         if ($wantsRent && !$wantsSale) $type = 'renting';
@@ -442,9 +480,10 @@ EOT;
 
     private function fetchDbContext(array $intent): array
     {
-        $properties = [];
-        $agents     = [];
-        $stats      = [];
+        $properties    = [];
+        $agents        = [];
+        $isFallback    = false;
+        $cityInDb      = false;
 
         // Always fetch platform stats for context
         $selling = \App\Models\Property::where('status', 'selling')->where('moderation_status', 'approved')->count();
@@ -467,12 +506,24 @@ EOT;
 
             $results = $query->orderByDesc('is_featured')->orderByDesc('created_at')->limit(4)->get();
 
-            // Fallback: if city filter returned nothing, broaden
+            // Check if the city exists at all in our DB
+            if ($intent['city']) {
+                $cityInDb = \App\Models\City::where('name', 'like', '%' . $intent['city'] . '%')->exists();
+            }
+
+            // Fallback: if city filter returned nothing, broaden to show other available properties
             if ($results->isEmpty() && $intent['city']) {
-                $results = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
+                $isFallback = true;
+                $broadQuery = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
                     ->whereIn('status', ['selling', 'renting'])
                     ->where('moderation_status', 'approved')
-                    ->orderByDesc('is_featured')->limit(4)->get();
+                    ->orderByDesc('is_featured');
+
+                if ($intent['type']) {
+                    $broadQuery->where('status', $intent['type']);
+                }
+
+                $results = $broadQuery->limit(4)->get();
             }
 
             $properties = $results->map(fn($p) => [
@@ -518,7 +569,14 @@ EOT;
             ])->toArray();
         }
 
-        return ['properties' => $properties, 'agents' => $agents, 'stats' => $stats];
+        return [
+            'properties' => $properties,
+            'agents'     => $agents,
+            'stats'      => $stats,
+            'isFallback' => $isFallback,
+            'cityInDb'   => $cityInDb,
+            'requestedCity' => $intent['city'] ?? null,
+        ];
     }
 
     public function generalChat(Request $request): JsonResponse
@@ -534,8 +592,17 @@ EOT;
         // Build context snippet for the AI
         $dbContext = "\n\n--- LIVE PLATFORM DATA ---\n" . $ctx['stats'];
 
+        $requestedCity = $ctx['requestedCity'] ?? null;
+        $isFallback    = $ctx['isFallback']    ?? false;
+
         if (!empty($ctx['properties'])) {
-            $dbContext .= "\n\nMatching listings from the database:\n";
+            if ($isFallback && $requestedCity) {
+                $dbContext .= "\n\nNOTE: No listings currently available specifically in \"{$requestedCity}\". Showing other available properties from the platform instead — present them as alternative suggestions, not as Marrakech/city-specific results. Be transparent that we don't have listings in that city right now.\n";
+                $dbContext .= "\nOther available listings on the platform:\n";
+            } else {
+                $dbContext .= "\n\nMatching listings from the database:\n";
+            }
+
             foreach ($ctx['properties'] as $p) {
                 $price = $p['price'] ? number_format((float)$p['price'], 0, '.', ' ') . ' MAD' : 'Prix sur demande';
                 $city  = $p['city']['name'] ?? 'N/A';
@@ -543,7 +610,12 @@ EOT;
                 if (!empty($p['agent']['name'])) $dbContext .= " | Agent: {$p['agent']['name']}";
                 $dbContext .= "\n";
             }
-            $dbContext .= "\nWhen relevant, mention specific listings from above by name and price. Be concrete.";
+
+            if (!$isFallback) {
+                $dbContext .= "\nMention specific listings above by name and price. Be concrete.";
+            }
+        } elseif ($requestedCity) {
+            $dbContext .= "\n\nNOTE: No listings found for \"{$requestedCity}\" in the database. Tell the user honestly we don't have listings there currently, and invite them to contact an agent or check back later.";
         }
 
         if (!empty($ctx['agents'])) {

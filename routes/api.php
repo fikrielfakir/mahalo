@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\Admin\AdminTranslationController;
 use App\Http\Controllers\Api\Admin\AdminContentTranslationController;
 use App\Http\Controllers\Api\Admin\AdminLanguageController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\SavedSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -82,6 +83,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/ai/property-chat',        [AiController::class, 'propertyChat']);
     Route::post('/ai/chat',                 [AiController::class, 'generalChat']);
     Route::post('/ai/match',               [AiController::class, 'matchProperties']);
+
+    // ── Saved Searches (public — email-based) ─────────────────────────────────
+    Route::post('/saved-searches',         [SavedSearchController::class, 'store']);
+    Route::get('/saved-searches',          [SavedSearchController::class, 'index']);
+    Route::delete('/saved-searches/{id}',  [SavedSearchController::class, 'destroy']);
 
     // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
     Route::get('/public-settings', [PublicSettingsController::class, 'show']);

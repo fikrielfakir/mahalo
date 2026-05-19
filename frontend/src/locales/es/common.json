@@ -166,7 +166,9 @@
     "age": "Antigüedad",
     "floorNumber": "Número de piso",
     "orientation": "Orientación",
-    "flooring": "Tipo de suelo"
+    "flooring": "Tipo de suelo",
+    "forRent": "En alquiler",
+    "forSale": "En venta"
   },
   "compare": {
     "title": "Comparar ({{count}}/{{max}})",

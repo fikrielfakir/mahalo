@@ -166,7 +166,9 @@
     "age": "Âge",
     "floorNumber": "Étage",
     "orientation": "Orientation",
-    "flooring": "Revêtement de sol"
+    "flooring": "Revêtement de sol",
+    "forRent": "À louer",
+    "forSale": "À vendre"
   },
   "compare": {
     "title": "Comparer ({{count}}/{{max}})",

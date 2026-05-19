@@ -166,7 +166,9 @@
     "age": "Age",
     "floorNumber": "Floor number",
     "orientation": "Orientation",
-    "flooring": "Flooring"
+    "flooring": "Flooring",
+    "forRent": "For Rent",
+    "forSale": "For Sale"
   },
   "compare": {
     "title": "Compare ({{count}}/{{max}})",

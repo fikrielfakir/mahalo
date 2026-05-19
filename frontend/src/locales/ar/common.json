@@ -166,7 +166,9 @@
     "age": "العمر",
     "floorNumber": "رقم الطابق",
     "orientation": "الاتجاه",
-    "flooring": "نوع الأرضية"
+    "flooring": "نوع الأرضية",
+    "forRent": "للإيجار",
+    "forSale": "للبيع"
   },
   "compare": {
     "title": "مقارنة ({{count}}/{{max}})",

@@ -1,0 +1,1 @@
+const s=["mp4","mov","avi","mkv","webm","m4v"],r="https://api.mahalo.ma";function e(t=""){if(!t)return!1;const i=t.split("?")[0].split(".").pop().toLowerCase();return s.includes(i)}function n(t){return t?t.startsWith("http")||t.startsWith("blob:")?t:e(t)?`${r}/api/v1/stream/${t}`:`${r}/storage/${t}`:""}export{e as i,n as m};

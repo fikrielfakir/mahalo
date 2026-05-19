@@ -101,107 +101,108 @@ export default function GlobalAiChat() {
         )}
       </button>
 
-      {/* Modal backdrop + dialog */}
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      {/* Right-side panel */}
+      <div
+        className="fixed top-0 right-0 z-40 h-full w-full sm:w-[380px] bg-white shadow-2xl flex flex-col"
+        style={{
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 shrink-0 bg-gradient-to-r from-[#730D26] to-[#BA1932]">
+          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+            <Bot size={17} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-white text-sm">Mahalo AI</div>
+            <div className="text-white/65 text-xs">Assistant immobilier · Maroc</div>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
 
-          {/* Dialog */}
-          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden"
-               style={{ height: 'min(580px, 90vh)' }}>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+          {history.length === 0 && (
+            <div className="space-y-4">
+              <p className="text-navy/55 text-sm leading-relaxed">
+                Bonjour ! Je suis Mahalo AI. Comment puis-je vous aider dans votre projet immobilier au Maroc ?
+              </p>
 
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 shrink-0 bg-gradient-to-r from-[#730D26] to-[#BA1932]">
-              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                <Bot size={17} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="font-bold text-white text-sm">Mahalo AI</div>
-                <div className="text-white/65 text-xs">Assistant immobilier · Maroc</div>
-              </div>
-              <button
+              <Link
+                to="/find-my-property"
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-white/20 text-white/70 hover:text-white transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-[#730D26]/8 to-[#BA1932]/8 border border-[#730D26]/20 text-[#730D26] text-sm font-semibold hover:from-[#730D26]/15 hover:to-[#BA1932]/15 transition-colors"
               >
-                <X size={16} />
-              </button>
-            </div>
+                <Sparkles size={14} />
+                Trouver mon bien idéal avec l'IA
+              </Link>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-              {history.length === 0 && (
-                <div className="space-y-4">
-                  <p className="text-navy/55 text-sm leading-relaxed">
-                    Bonjour ! Je suis Mahalo AI. Comment puis-je vous aider dans votre projet immobilier au Maroc ?
-                  </p>
-
-                  <Link
-                    to="/find-my-property"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-[#730D26]/8 to-[#BA1932]/8 border border-[#730D26]/20 text-[#730D26] text-sm font-semibold hover:from-[#730D26]/15 hover:to-[#BA1932]/15 transition-colors"
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-navy/30 uppercase tracking-wide">Suggestions</p>
+                {SUGGESTIONS.map(q => (
+                  <button
+                    key={q}
+                    onClick={() => { setInput(q); inputRef.current?.focus() }}
+                    className="w-full text-left text-sm px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-navy/60 hover:text-navy hover:border-gray-200 transition-colors"
                   >
-                    <Sparkles size={14} />
-                    Trouver mon bien idéal avec l'IA
-                  </Link>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-navy/30 uppercase tracking-wide">Suggestions</p>
-                    {SUGGESTIONS.map(q => (
-                      <button
-                        key={q}
-                        onClick={() => { setInput(q); inputRef.current?.focus() }}
-                        className="w-full text-left text-sm px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-navy/60 hover:text-navy hover:border-gray-200 transition-colors"
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {history.map((m, i) => <Message key={i} role={m.role} content={m.content} />)}
-
-              {loading && (
-                <div className="flex gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center shrink-0 shadow-sm">
-                    <Bot size={14} className="text-white" />
-                  </div>
-                  <div className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-[#730D26]" />
-                    <span className="text-xs text-navy/40">En train de répondre…</span>
-                  </div>
-                </div>
-              )}
-
-              <div ref={bottomRef} />
-            </div>
-
-            {/* Input */}
-            <div className="px-5 py-4 border-t border-gray-100 shrink-0 bg-white">
-              <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 focus-within:border-[#730D26]/40 transition-colors">
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={onKey}
-                  placeholder="Posez votre question…"
-                  className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy/35"
-                />
-                <button
-                  onClick={send}
-                  disabled={!input.trim() || loading}
-                  className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center disabled:opacity-30 hover:shadow-md transition-all"
-                >
-                  <Send size={13} className="text-white" />
-                </button>
+                    {q}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
+
+          {history.map((m, i) => <Message key={i} role={m.role} content={m.content} />)}
+
+          {loading && (
+            <div className="flex gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center shrink-0 shadow-sm">
+                <Bot size={14} className="text-white" />
+              </div>
+              <div className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-[#730D26]" />
+                <span className="text-xs text-navy/40">En train de répondre…</span>
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div className="px-5 py-4 border-t border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200 focus-within:border-[#730D26]/40 transition-colors">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={onKey}
+              placeholder="Posez votre question…"
+              className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy/35"
+            />
+            <button
+              onClick={send}
+              disabled={!input.trim() || loading}
+              className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center disabled:opacity-30 hover:shadow-md transition-all"
+            >
+              <Send size={13} className="text-white" />
+            </button>
           </div>
         </div>
+      </div>
+
+      {/* Backdrop (mobile only) */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 sm:hidden"
+          onClick={() => setOpen(false)}
+        />
       )}
     </>
   )

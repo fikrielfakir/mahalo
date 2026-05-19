@@ -265,16 +265,22 @@ export default function PropertyDetail() {
   return (
     <div className="min-h-screen bg-surface">
       <SEOHead
-        title={`${property.name}${property.city ? ` in ${property.city.name}` : ''} — ${property.type === 'sale' ? 'For Sale' : 'For Rent'}`}
-        description={`${property.type === 'sale' ? 'Buy' : 'Rent'}: ${property.name}${property.city ? ` in ${property.city.name}` : ''}, Morocco.${property.number_bedroom ? ` ${property.number_bedroom} beds.` : ''}${property.number_bathroom ? ` ${property.number_bathroom} baths.` : ''} ${property.price ? `From ${formatPrice(property.price)}.` : ''}`.trim()}
-        ogImage={property.image ? (property.image.startsWith('http') ? property.image : `/storage/${property.image}`) : undefined}
+        title={`${property.name}${property.city ? ` — ${property.city.name}` : ''}${property.price ? ` — ${formatPrice(property.price)}` : ''}`}
+        description={`${property.type === 'sale' ? 'Acheter' : 'Louer'} : ${property.name}${property.city ? ` à ${property.city.name}` : ''}, Maroc.${property.number_bedroom ? ` ${property.number_bedroom} chambres.` : ''}${property.number_bathroom ? ` ${property.number_bathroom} SdB.` : ''} ${property.price ? `À partir de ${formatPrice(property.price)}.` : ''}`.trim()}
+        ogImage={(() => {
+          const img = property.image
+          if (!img) return undefined
+          if (img.startsWith('http')) return img
+          return `${window.location.origin}/storage/${img}`
+        })()}
+        canonical={`${window.location.origin}/properties/${property.slug?.key ?? property.id}`}
         ogType="article"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',
           'name': property.name,
           'description': property.description?.slice(0, 500),
-          'url': `https://mahalo.ma/properties/${property.slug?.key ?? property.id}`,
+          'url': `${window.location.origin}/properties/${property.slug?.key ?? property.id}`,
           ...(property.price ? { offers: { '@type': 'Offer', price: property.price, priceCurrency: 'MAD' } } : {}),
         }}
         breadcrumbs={[

@@ -4,24 +4,135 @@ import { readFileSync } from 'fs'
 import { createServer as createViteServer } from 'vite'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
 import { createProxyMiddleware } from 'http-proxy-middleware'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
 const PORT = process.env.PORT || 3000
 const API_BACKEND = process.env.API_BACKEND_URL || 'http://localhost:8000'
+// Always use the local Laravel API for SSR data fetching (API_BACKEND may point to prod)
+const INTERNAL_API = 'http://localhost:8000'
 
 const BOT_PATTERN = /googlebot|bingbot|slurp|yandex|baidu|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot|embedly|ia_archiver|semrushbot|ahrefsbot|msnbot|teoma|rogerbot/i
 
 const IGNORE_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map|json|webp|avif|mp4|webm|pdf)$/i
 
+const PROPERTY_ROUTE  = /^\/properties\/([^/?#]+)/
+const PROJECT_ROUTE   = /^\/projects\/([^/?#]+)/
+
+function formatPrice(price) {
+  if (!price) return null
+  const num = parseFloat(price)
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M MAD`
+  if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K MAD`
+  return `${num.toLocaleString()} MAD`
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+async function fetchJson(url) {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.error ? null : (json?.data ?? null)
+  } catch {
+    return null
+  }
+}
+
+function buildOgTags(origin, { title, description, image, url, type = 'website' }) {
+  const safeTitle = escapeHtml(title)
+  const safeDesc  = escapeHtml(description)
+  const safeImg   = image ? escapeHtml(image) : ''
+  const safeUrl   = escapeHtml(url)
+
+  return [
+    `<title>${safeTitle}</title>`,
+    `<meta name="description" content="${safeDesc}" />`,
+    `<meta property="og:type" content="${type}" />`,
+    `<meta property="og:title" content="${safeTitle}" />`,
+    `<meta property="og:description" content="${safeDesc}" />`,
+    `<meta property="og:url" content="${safeUrl}" />`,
+    `<meta property="og:site_name" content="Mahalo Immobilier" />`,
+    safeImg ? `<meta property="og:image" content="${safeImg}" />` : '',
+    safeImg ? `<meta property="og:image:width" content="1200" />` : '',
+    safeImg ? `<meta property="og:image:height" content="630" />` : '',
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${safeTitle}" />`,
+    `<meta name="twitter:description" content="${safeDesc}" />`,
+    safeImg ? `<meta name="twitter:image" content="${safeImg}" />` : '',
+    `<link rel="canonical" href="${safeUrl}" />`,
+  ].filter(Boolean).join('\n        ')
+}
+
+async function resolveOgMeta(pathname, origin) {
+  const propMatch = pathname.match(PROPERTY_ROUTE)
+  if (propMatch) {
+    const slug = propMatch[1]
+    const data = await fetchJson(`${INTERNAL_API}/api/v1/properties/${slug}`)
+    if (!data) return null
+
+    const city       = data.city?.name || ''
+    const price      = formatPrice(data.price)
+    const beds       = data.number_bedroom ? `${data.number_bedroom} ch.` : ''
+    const baths      = data.number_bathroom ? `${data.number_bathroom} sdb.` : ''
+    const listingType = data.type === 'sale' ? 'À vendre' : 'À louer'
+    const imgPath    = data.image
+    const image      = imgPath
+      ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
+      : ''
+
+    const titleParts = [data.name, city && `— ${city}`, price && `— ${price}`].filter(Boolean)
+    const descParts  = [listingType, data.name, city && `à ${city}`, 'Maroc.', beds, baths, price && `À partir de ${price}.`].filter(Boolean)
+
+    return {
+      title:       titleParts.join(' ') + ' | Mahalo Immobilier',
+      description: descParts.join(' '),
+      image,
+      url:   `${origin}/properties/${slug}`,
+      type:  'article',
+    }
+  }
+
+  const projMatch = pathname.match(PROJECT_ROUTE)
+  if (projMatch) {
+    const slug = projMatch[1]
+    const data = await fetchJson(`${INTERNAL_API}/api/v1/projects/${slug}`)
+    if (!data) return null
+
+    const city      = data.city?.name || ''
+    const price     = formatPrice(data.price_from)
+    const imgPath   = data.image
+    const image     = imgPath
+      ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
+      : ''
+
+    const titleParts = [data.name, city && `— ${city}`, price && `— À partir de ${price}`].filter(Boolean)
+    const desc = data.description?.slice(0, 200) || 'Découvrez ce projet immobilier premium.'
+
+    return {
+      title:       titleParts.join(' ') + ' | Mahalo Immobilier',
+      description: `${data.name}${city ? ` à ${city}` : ''}, Maroc. ${desc}`.trim(),
+      image,
+      url:   `${origin}/projects/${slug}`,
+      type:  'article',
+    }
+  }
+
+  return null
+}
+
 async function start() {
   const app = express()
   app.use(compression())
 
-  // Proxy /api/ and /storage/ to the Laravel backend
-  // Mount at root so Express does NOT strip the prefix — the full path reaches Laravel
   const laravelProxy = createProxyMiddleware({
     target: API_BACKEND,
     changeOrigin: true,
@@ -70,26 +181,43 @@ async function start() {
       }
 
       if (isBot) {
-        let render
-        if (!isProd) {
-          render = (await vite.ssrLoadModule('/src/entry-server.jsx')).render
+        const origin   = `${req.protocol}://${req.get('host')}`
+        const pathname = url.split('?')[0]
+
+        const ogMeta = await resolveOgMeta(pathname, origin)
+
+        let headTags = ''
+        if (ogMeta) {
+          headTags = buildOgTags(origin, ogMeta)
+          // Strip static OG/Twitter/title tags from template so dynamic ones win
+          template = template
+            .replace(/<title>[^<]*<\/title>/gi, '')
+            .replace(/<meta\s+name="description"[^>]*>/gi, '')
+            .replace(/<meta\s+property="og:[^"]*"[^>]*>/gi, '')
+            .replace(/<meta\s+name="twitter:[^"]*"[^>]*>/gi, '')
+            .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
         } else {
-          render = (await import('./dist/server/entry-server.js')).render
+          try {
+            const render = isProd
+              ? (await import('./dist/server/entry-server.js')).render
+              : (await vite.ssrLoadModule('/src/entry-server.jsx')).render
+
+            const { html: appHtml, helmet } = await render(url)
+
+            headTags = [
+              helmet?.title?.toString()  || '',
+              helmet?.meta?.toString()   || '',
+              helmet?.link?.toString()   || '',
+              helmet?.script?.toString() || '',
+            ].join('\n        ')
+
+            template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
+          } catch (ssrErr) {
+            console.warn('[SSR] Fallback render failed:', ssrErr.message)
+          }
         }
 
-        const { html: appHtml, helmet } = await render(url)
-
-        const headTags = [
-          helmet?.title?.toString()    || '',
-          helmet?.meta?.toString()     || '',
-          helmet?.link?.toString()     || '',
-          helmet?.script?.toString()   || '',
-        ].join('\n        ')
-
-        const html = template
-          .replace('<!--app-head-->', headTags)
-          .replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
-
+        const html = template.replace('<!--app-head-->', headTags)
         return res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
       } else {
         const html = template.replace('<!--app-head-->', '')

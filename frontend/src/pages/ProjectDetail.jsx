@@ -116,16 +116,22 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen bg-surface">
       <SEOHead
-        title={project.name}
-        description={`${project.name}${project.city ? ` in ${project.city.name}` : ''}, Morocco. ${project.description?.slice(0, 200) || 'Discover this premium real estate project with modern amenities and prime location.'}`.trim()}
-        ogImage={project.image ? (project.image.startsWith('http') ? project.image : `/storage/${project.image}`) : undefined}
+        title={`${project.name}${project.city ? ` — ${project.city.name}` : ''}${project.price_from ? ` — À partir de ${project.price_from.toLocaleString()} MAD` : ''}`}
+        description={`${project.name}${project.city ? ` à ${project.city.name}` : ''}, Maroc. ${project.description?.slice(0, 200) || 'Découvrez ce projet immobilier premium avec des équipements modernes et un emplacement de choix.'}`.trim()}
+        ogImage={(() => {
+          const img = project.image
+          if (!img) return undefined
+          if (img.startsWith('http')) return img
+          return `${window.location.origin}/storage/${img}`
+        })()}
+        canonical={`${window.location.origin}/projects/${project.slug?.key ?? project.id}`}
         ogType="article"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',
           'name': project.name,
           'description': project.description?.slice(0, 500),
-          'url': `https://mahalo.ma/projects/${project.slug?.key ?? project.id}`,
+          'url': `${window.location.origin}/projects/${project.slug?.key ?? project.id}`,
           ...(project.price_from ? { offers: { '@type': 'Offer', price: project.price_from, priceCurrency: 'MAD' } } : {}),
         }}
         breadcrumbs={[

@@ -11,6 +11,7 @@ const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar']
 const RTL_LOCALES = ['ar']
 
 function applyDirection(lng) {
+  if (typeof document === 'undefined') return
   const dir = RTL_LOCALES.includes(lng) ? 'rtl' : 'ltr'
   document.documentElement.dir = dir
   document.documentElement.lang = lng

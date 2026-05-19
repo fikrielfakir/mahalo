@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import SiteModeGate from './components/SiteModeGate'
 import CompareBar from './components/CompareBar'
@@ -86,7 +86,15 @@ function PageLoader() {
 
 function CookieBannerWrapper() {
   const settings = useSiteSettings()
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/admin')) return null
   return <CookieBanner settings={settings} />
+}
+
+function PublicOnlyOverlays() {
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/admin')) return null
+  return <GlobalAiChat />
 }
 
 function OfflineGate({ children }) {
@@ -209,7 +217,7 @@ export default function App() {
                   <VerifyEmailBanner />
                   <VerifyEmailPopup />
                   <CookieBannerWrapper />
-                  <GlobalAiChat />
+                  <PublicOnlyOverlays />
                 </AuthProvider>
               </AuthModalProvider>
               </FavoritesProvider>

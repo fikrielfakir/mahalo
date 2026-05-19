@@ -7,104 +7,150 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #f0f2f5;
+      background: #f4f5f7;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+      color: #1f2937;
     }
-    .outer { padding: 40px 16px; }
+    .outer { padding: 48px 16px; }
     .wrapper {
       max-width: 600px;
       margin: 0 auto;
       background: #ffffff;
-      border-radius: 20px;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0,0,0,.10);
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    /* Top accent bar */
+    .accent-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #730D26 0%, #BA1932 100%);
     }
     /* Header */
     .header {
-      background: linear-gradient(135deg, #730D26 0%, #BA1932 100%);
-      padding: 36px 48px;
-      text-align: center;
+      background: #ffffff;
+      padding: 32px 48px 24px;
+      border-bottom: 1px solid #f0f0f0;
     }
-    .header-logo {
-      display: inline-block;
-      margin-bottom: 10px;
-    }
-    .header-logo img {
-      height: 40px;
+    .header img {
+      height: 36px;
       width: auto;
       display: block;
-    }
-    .header-icon {
-      width: 64px; height: 64px;
-      background: rgba(255,255,255,.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 28px;
     }
     /* Body */
     .body { padding: 40px 48px; }
     .greeting {
-      font-size: 22px; font-weight: 700;
-      color: #111827; margin-bottom: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+      line-height: 1.3;
     }
     .subtitle {
-      font-size: 15px; color: #6b7280; line-height: 1.6; margin-bottom: 28px;
+      font-size: 15px;
+      color: #4b5563;
+      line-height: 1.7;
+      margin-bottom: 32px;
     }
     /* CTA Button */
     .btn-wrap { text-align: center; margin: 32px 0; }
     .btn {
       display: inline-block;
-      background: linear-gradient(135deg, #730D26 0%, #BA1932 100%);
+      background: #730D26;
       color: #ffffff !important;
       text-decoration: none;
-      font-size: 15px;
-      font-weight: 700;
-      padding: 14px 36px;
-      border-radius: 50px;
-      letter-spacing: 0.2px;
-      box-shadow: 0 4px 16px rgba(115,13,38,.35);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 40px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
     }
     /* Info Card */
     .info-card {
-      background: #fdf8f9;
-      border: 1px solid #f0d4d9;
-      border-left: 4px solid #730D26;
-      border-radius: 12px;
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-left: 3px solid #730D26;
+      border-radius: 4px;
       padding: 20px 24px;
       margin: 24px 0;
     }
     .info-card p {
-      font-size: 14px; color: #374151; line-height: 1.7; margin: 0;
+      font-size: 15px;
+      color: #374151;
+      line-height: 1.7;
+      margin: 0;
     }
     /* Warning Card */
     .warn-card {
       background: #fffbeb;
       border: 1px solid #fde68a;
-      border-left: 4px solid #f59e0b;
-      border-radius: 12px;
+      border-left: 3px solid #d97706;
+      border-radius: 4px;
       padding: 16px 20px;
-      margin: 20px 0;
+      margin: 24px 0;
     }
-    .warn-card p { font-size: 13px; color: #92400e; margin: 0; line-height: 1.6; }
+    .warn-card p {
+      font-size: 13px;
+      color: #92400e;
+      margin: 0;
+      line-height: 1.7;
+    }
     /* Detail rows */
-    .detail-row {
-      display: flex; gap: 12px; align-items: flex-start;
-      padding: 10px 0; border-bottom: 1px solid #f3f4f6;
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-label { font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.6px; min-width: 80px; padding-top: 2px; }
-    .detail-value { font-size: 14px; color: #1f2937; font-weight: 500; }
+    .detail-table tr {
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .detail-table tr:last-child {
+      border-bottom: none;
+    }
+    .detail-table td {
+      padding: 10px 0;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.7px;
+      width: 90px;
+      padding-top: 12px;
+    }
+    .detail-value {
+      color: #1f2937;
+      font-weight: 500;
+      padding-top: 10px;
+    }
     /* Link fallback */
     .link-fallback {
-      background: #f9fafb; border-radius: 10px;
-      padding: 14px 18px; margin: 16px 0;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 14px 18px;
+      margin: 16px 0;
       word-break: break-all;
     }
-    .link-fallback a { font-size: 12px; color: #730D26; text-decoration: none; }
+    .link-fallback a {
+      font-size: 12px;
+      color: #730D26;
+      text-decoration: none;
+    }
     /* Divider */
-    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 28px 0; }
+    .divider {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 32px 0;
+    }
+    .fallback-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      margin-bottom: 8px;
+    }
     /* Footer */
     .footer {
       background: #f9fafb;
@@ -112,9 +158,24 @@
       padding: 28px 48px;
       text-align: center;
     }
-    .footer p { font-size: 12px; color: #9ca3af; line-height: 1.8; }
-    .footer a { color: #730D26; text-decoration: none; font-weight: 500; }
-    .footer .brand { font-weight: 700; color: #4b5563; font-size: 13px; margin-bottom: 4px; }
+    .footer p {
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.8;
+    }
+    .footer a {
+      color: #730D26;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer .brand {
+      font-weight: 700;
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
     @media (max-width: 640px) {
       .body, .header, .footer { padding-left: 24px; padding-right: 24px; }
     }
@@ -123,10 +184,10 @@
 <body>
 <div class="outer">
   <div class="wrapper">
+    <div class="accent-bar"></div>
+
     <div class="header">
-      <div class="header-logo">
-        <img src="{{ rtrim(config('app.url'), '/') }}/logo-light.png" alt="{{ config('app.name') }}" />
-      </div>
+      <img src="{{ rtrim(config('app.url'), '/') }}/logo-dark.png" alt="{{ config('app.name') }}" />
     </div>
 
     <div class="body">

@@ -1,33 +1,189 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, X, Send, Loader2, MessageCircle, Sparkles, Maximize2 } from 'lucide-react'
+import { Bot, X, Send, Loader2, MessageCircle, Sparkles, MapPin, Bed, Maximize2, Phone, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { aiApi } from '../api/aiApi'
 
-function Message({ role, content }) {
-  const isUser = role === 'user'
+function PropertyCard({ property }) {
+  const price = property.price
+    ? Number(property.price).toLocaleString('fr-MA') + ' MAD'
+    : 'Prix sur demande'
+  const slug = property.slug?.key
+  const city = property.city?.name
+
   return (
-    <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-          <Bot size={12} className="text-white" />
+    <div style={{
+      borderRadius: 10, border: '1px solid #e8e8e8',
+      background: '#fff', overflow: 'hidden', fontSize: 12,
+    }}>
+      {property.images?.[0] || property.image ? (
+        <img
+          src={property.images?.[0] || property.image}
+          alt={property.name}
+          style={{ width: '100%', height: 68, objectFit: 'cover', display: 'block' }}
+          onError={e => { e.currentTarget.style.display = 'none' }}
+        />
+      ) : (
+        <div style={{
+          width: '100%', height: 40,
+          background: 'linear-gradient(135deg,#730D26,#BA1932)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Maximize2 size={14} color="rgba(255,255,255,0.4)" />
         </div>
       )}
-      <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-[13px] leading-relaxed whitespace-pre-wrap ${
-        isUser
-          ? 'bg-[#BA1932] text-white rounded-br-sm'
-          : 'bg-[#f0f0f0] text-gray-900 rounded-bl-sm'
-      }`}>
-        {content}
+      <div style={{ padding: '7px 9px' }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+          <span style={{
+            fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+            padding: '2px 5px', borderRadius: 4,
+            background: property.status === 'selling' ? '#fef3c7' : '#dbeafe',
+            color: property.status === 'selling' ? '#92400e' : '#1e40af',
+          }}>
+            {property.status === 'selling' ? 'Vente' : 'Location'}
+          </span>
+        </div>
+        <p style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3, marginBottom: 3, fontSize: 11 }}>
+          {property.name}
+        </p>
+        <p style={{ fontWeight: 800, color: '#BA1932', marginBottom: 5, fontSize: 12 }}>
+          {price}
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, color: '#999', marginBottom: 6, fontSize: 10 }}>
+          {city && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <MapPin size={8} /> {city}
+            </span>
+          )}
+          {property.number_bedroom > 0 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Bed size={8} /> {property.number_bedroom} ch.
+            </span>
+          )}
+          {property.square && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Maximize2 size={8} /> {property.square} m²
+            </span>
+          )}
+        </div>
+        {slug && (
+          <Link
+            to={`/properties/${slug}`}
+            style={{
+              display: 'block', textAlign: 'center',
+              padding: '5px 8px', borderRadius: 7,
+              background: 'linear-gradient(135deg,#730D26,#BA1932)',
+              color: '#fff', fontWeight: 700, fontSize: 10,
+              textDecoration: 'none',
+            }}
+          >
+            Voir le bien →
+          </Link>
+        )}
       </div>
     </div>
   )
 }
 
+function AgentCard({ agent }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '8px 10px', borderRadius: 10,
+      border: '1px solid #e8e8e8', background: '#fff',
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+        background: 'linear-gradient(135deg,#730D26,#BA1932)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+      }}>
+        {agent.avatar
+          ? <img src={agent.avatar} alt={agent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+          : <User size={13} color="#fff" />
+        }
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontWeight: 700, fontSize: 12, color: '#1a1a1a', margin: 0, lineHeight: 1.2 }}>{agent.name}</p>
+        {agent.city && <p style={{ fontSize: 10, color: '#888', margin: 0 }}>{agent.city}</p>}
+      </div>
+      {agent.phone && (
+        <a
+          href={`tel:${agent.phone}`}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '5px 8px', borderRadius: 7,
+            background: '#f0fdf4', border: '1px solid #bbf7d0',
+            color: '#15803d', fontSize: 10, fontWeight: 700,
+            textDecoration: 'none', flexShrink: 0,
+          }}
+        >
+          <Phone size={9} /> Appeler
+        </a>
+      )}
+    </div>
+  )
+}
+
+function Message({ role, content, properties, agents }) {
+  const isUser  = role === 'user'
+  const hasCards = !isUser && ((properties?.length > 0) || (agents?.length > 0))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexDirection: isUser ? 'row-reverse' : 'row', maxWidth: '86%' }}>
+        {!isUser && (
+          <div style={{
+            width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(135deg,#730D26,#BA1932)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2,
+          }}>
+            <Bot size={11} color="#fff" />
+          </div>
+        )}
+        <div style={{
+          padding: '9px 12px',
+          borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+          background: isUser ? 'linear-gradient(135deg,#730D26,#BA1932)' : '#f0f0f0',
+          color: isUser ? '#fff' : '#222',
+          fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap',
+        }}>
+          {content}
+        </div>
+      </div>
+
+      {hasCards && (
+        <div style={{ paddingLeft: 34, width: '100%', boxSizing: 'border-box' }}>
+          {properties?.length > 0 && (
+            <>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '2px 0 6px' }}>
+                Biens disponibles
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {properties.map(p => <PropertyCard key={p.id} property={p} />)}
+              </div>
+            </>
+          )}
+          {agents?.length > 0 && (
+            <>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 0 6px' }}>
+                Nos agents
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {agents.map(a => <AgentCard key={a.id} agent={a} />)}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const SUGGESTIONS = [
-  'Meilleur quartier à Casablanca ?',
-  'Comment acheter un bien au Maroc ?',
-  'Rentabilité locative à Marrakech ?',
-  'Documents pour acheter au Maroc ?',
+  'Villas disponibles à Casablanca ?',
+  'Appartements à louer à Rabat ?',
+  'Biens disponibles à Marrakech ?',
+  'Contacter un agent immobilier ?',
 ]
 
 export default function GlobalAiChat() {
@@ -63,16 +219,24 @@ export default function GlobalAiChat() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const send = async () => {
-    const msg = input.trim()
-    if (!msg || loading) return
+  const send = async (quickMsg = null) => {
+    const text = (quickMsg ?? input).trim()
+    if (!text || loading) return
     setInput('')
-    const userMsg = { role: 'user', content: msg }
+    const userMsg = { role: 'user', content: text }
     setHistory(h => [...h, userMsg])
     setLoading(true)
     try {
-      const res = await aiApi.generalChat({ message: msg, history })
-      setHistory(h => [...h, { role: 'assistant', content: res.reply }])
+      const res = await aiApi.generalChat({
+        message: text,
+        history: history.map(m => ({ role: m.role, content: m.content })),
+      })
+      setHistory(h => [...h, {
+        role:       'assistant',
+        content:    res.reply,
+        properties: res.properties || [],
+        agents:     res.agents     || [],
+      }])
     } catch {
       setHistory(h => [...h, { role: 'assistant', content: 'Désolé, une erreur est survenue.' }])
     } finally {
@@ -104,8 +268,8 @@ export default function GlobalAiChat() {
           position: 'fixed',
           bottom: '88px',
           right: '16px',
-          width: '328px',
-          height: '460px',
+          width: '360px',
+          height: '520px',
           zIndex: 49,
           borderRadius: '16px',
           overflow: 'hidden',
@@ -121,16 +285,12 @@ export default function GlobalAiChat() {
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 14px',
-            background: 'linear-gradient(135deg, #730D26, #BA1932)',
-            flexShrink: 0,
-          }}
-        >
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, #730D26, #BA1932)',
+          flexShrink: 0,
+        }}>
           <div style={{
             width: 32, height: 32, borderRadius: '50%',
             background: 'rgba(255,255,255,0.2)',
@@ -157,11 +317,11 @@ export default function GlobalAiChat() {
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {history.length === 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <p style={{ color: '#888', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-                Bonjour ! Je suis <strong style={{ color: '#730D26' }}>Mahalo AI</strong>. Comment puis-je vous aider ?
+              <p style={{ color: '#888', fontSize: 13, lineHeight: 1.55, margin: 0 }}>
+                Bonjour ! Je suis <strong style={{ color: '#730D26' }}>Mahalo AI</strong>. Je peux vous montrer des biens réels de notre catalogue et vous mettre en contact avec nos agents.
               </p>
 
               <Link
@@ -170,7 +330,7 @@ export default function GlobalAiChat() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 7,
                   padding: '9px 12px', borderRadius: 12,
-                  background: 'linear-gradient(135deg, rgba(115,13,38,0.07), rgba(186,25,50,0.07))',
+                  background: 'linear-gradient(135deg,rgba(115,13,38,0.07),rgba(186,25,50,0.07))',
                   border: '1px solid rgba(115,13,38,0.2)',
                   color: '#730D26', fontSize: 12, fontWeight: 600,
                   textDecoration: 'none',
@@ -187,7 +347,7 @@ export default function GlobalAiChat() {
                 {SUGGESTIONS.map(q => (
                   <button
                     key={q}
-                    onClick={() => { setInput(q); inputRef.current?.focus() }}
+                    onClick={() => send(q)}
                     style={{
                       textAlign: 'left', fontSize: 12, padding: '7px 10px',
                       borderRadius: 10, background: '#f7f7f7',
@@ -202,23 +362,31 @@ export default function GlobalAiChat() {
             </div>
           )}
 
-          {history.map((m, i) => <Message key={i} role={m.role} content={m.content} />)}
+          {history.map((m, i) => (
+            <Message
+              key={i}
+              role={m.role}
+              content={m.content}
+              properties={m.properties}
+              agents={m.agents}
+            />
+          ))}
 
           {loading && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%',
+                width: 26, height: 26, borderRadius: '50%',
                 background: 'linear-gradient(135deg,#730D26,#BA1932)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Bot size={12} color="#fff" />
+                <Bot size={11} color="#fff" />
               </div>
               <div style={{
                 background: '#f0f0f0', borderRadius: 12,
                 padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6,
               }}>
                 <Loader2 size={12} style={{ animation: 'spin 1s linear infinite', color: '#BA1932' }} />
-                <span style={{ fontSize: 12, color: '#aaa' }}>En train de répondre…</span>
+                <span style={{ fontSize: 12, color: '#aaa' }}>Recherche dans la base…</span>
               </div>
             </div>
           )}
@@ -252,7 +420,7 @@ export default function GlobalAiChat() {
               }}
             />
             <button
-              onClick={send}
+              onClick={() => send()}
               disabled={!input.trim() || loading}
               style={{
                 width: 32, height: 32, borderRadius: '50%',

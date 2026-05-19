@@ -406,6 +406,121 @@ EOT;
         }
     }
 
+    private function extractIntent(string $message): array
+    {
+        $msg = mb_strtolower($message);
+
+        // Detect cities
+        $cities = \App\Models\City::pluck('name')->toArray();
+        $detectedCity = null;
+        foreach ($cities as $city) {
+            if (str_contains($msg, mb_strtolower($city))) {
+                $detectedCity = $city;
+                break;
+            }
+        }
+
+        // Detect type
+        $wantsRent = preg_match('/louer|location|locat|rent|locataire|bail/i', $msg);
+        $wantsSale = preg_match('/acheter|achat|vente|vendre|acquérir|sale|buy|invest/i', $msg);
+        $wantsAgent = preg_match('/agent|conseiller|contact|appeler|joindre|vendeur/i', $msg);
+
+        // Property intent keywords
+        $wantsProperties = preg_match('/appartement|villa|terrain|bureau|studio|maison|bien|propriété|logement|immobilier|quartier|prix|budget|chambre|m²|m2|hectare/i', $msg);
+
+        $type = null;
+        if ($wantsRent && !$wantsSale) $type = 'renting';
+        if ($wantsSale && !$wantsRent) $type = 'selling';
+
+        return [
+            'city'       => $detectedCity,
+            'type'       => $type,
+            'wantsAgent' => (bool) $wantsAgent,
+            'wantsProps' => (bool) ($wantsProperties || $detectedCity || $type),
+        ];
+    }
+
+    private function fetchDbContext(array $intent): array
+    {
+        $properties = [];
+        $agents     = [];
+        $stats      = [];
+
+        // Always fetch platform stats for context
+        $selling = \App\Models\Property::where('status', 'selling')->where('moderation_status', 'approved')->count();
+        $renting = \App\Models\Property::where('status', 'renting')->where('moderation_status', 'approved')->count();
+        $cities  = \App\Models\City::pluck('name')->join(', ');
+        $stats   = "Platform has {$selling} properties for sale and {$renting} for rent across cities: {$cities}.";
+
+        // Fetch relevant properties
+        if ($intent['wantsProps'] || $intent['city'] || $intent['type']) {
+            $query = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
+                ->whereIn('status', ['selling', 'renting'])
+                ->where('moderation_status', 'approved');
+
+            if ($intent['city']) {
+                $query->whereHas('city', fn($q) => $q->where('name', 'like', '%' . $intent['city'] . '%'));
+            }
+            if ($intent['type']) {
+                $query->where('status', $intent['type']);
+            }
+
+            $results = $query->orderByDesc('is_featured')->orderByDesc('created_at')->limit(4)->get();
+
+            // Fallback: if city filter returned nothing, broaden
+            if ($results->isEmpty() && $intent['city']) {
+                $results = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
+                    ->whereIn('status', ['selling', 'renting'])
+                    ->where('moderation_status', 'approved')
+                    ->orderByDesc('is_featured')->limit(4)->get();
+            }
+
+            $properties = $results->map(fn($p) => [
+                'id'             => $p->id,
+                'name'           => $p->name,
+                'type'           => $p->type,
+                'status'         => $p->status,
+                'price'          => $p->price,
+                'square'         => $p->square,
+                'number_bedroom' => $p->number_bedroom,
+                'number_bathroom'=> $p->number_bathroom,
+                'location'       => $p->location,
+                'city'           => $p->city ? ['id' => $p->city->id, 'name' => $p->city->name] : null,
+                'image'          => $p->image,
+                'images'         => $p->images,
+                'is_featured'    => $p->is_featured,
+                'slug'           => $p->slug ? ['key' => $p->slug->key] : null,
+                'agent'          => $p->agent ? ['name' => $p->agent->name, 'phone' => $p->agent->phone] : null,
+                'features'       => $p->features->map(fn($f) => ['id' => $f->id, 'name' => $f->name])->toArray(),
+                'categories'     => $p->categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->toArray(),
+            ])->toArray();
+        }
+
+        // Fetch relevant agents
+        if ($intent['wantsAgent'] || $intent['city']) {
+            $agentQuery = \App\Models\Agent::query();
+            if ($intent['city']) {
+                $agentQuery->whereHas('city', fn($q) => $q->where('name', 'like', '%' . $intent['city'] . '%'));
+            }
+            $agentResults = $agentQuery->limit(3)->get();
+
+            if ($agentResults->isEmpty()) {
+                $agentResults = \App\Models\Agent::limit(3)->get();
+            }
+
+            $agents = $agentResults->map(fn($a) => [
+                'id'     => $a->id,
+                'name'   => $a->name,
+                'email'  => $a->email,
+                'phone'  => $a->phone,
+                'avatar' => $a->avatar,
+                'city'   => $a->city?->name,
+            ])->toArray();
+        }
+
+        return ['properties' => $properties, 'agents' => $agents, 'stats' => $stats];
+    }
+
     public function generalChat(Request $request): JsonResponse
     {
         $request->validate([
@@ -413,7 +528,33 @@ EOT;
             'history' => 'nullable|array',
         ]);
 
-        $system = 'You are Mahalo AI, a smart real estate assistant for Mahalo — Morocco\'s premier property platform. You help buyers, renters, and investors find and understand properties in Morocco. Answer questions about real estate in Morocco, neighborhoods, buying/renting processes, market trends, and general property advice. Be helpful, concise, and friendly. Always respond in the same language the user writes in. If you cannot answer something, suggest the user contact a Mahalo agent.';
+        $intent = $this->extractIntent($request->message);
+        $ctx    = $this->fetchDbContext($intent);
+
+        // Build context snippet for the AI
+        $dbContext = "\n\n--- LIVE PLATFORM DATA ---\n" . $ctx['stats'];
+
+        if (!empty($ctx['properties'])) {
+            $dbContext .= "\n\nMatching listings from the database:\n";
+            foreach ($ctx['properties'] as $p) {
+                $price = $p['price'] ? number_format((float)$p['price'], 0, '.', ' ') . ' MAD' : 'Prix sur demande';
+                $city  = $p['city']['name'] ?? 'N/A';
+                $dbContext .= "• {$p['name']} | {$p['type']} | {$price} | {$p['square']} m² | {$p['number_bedroom']} ch. | {$city}";
+                if (!empty($p['agent']['name'])) $dbContext .= " | Agent: {$p['agent']['name']}";
+                $dbContext .= "\n";
+            }
+            $dbContext .= "\nWhen relevant, mention specific listings from above by name and price. Be concrete.";
+        }
+
+        if (!empty($ctx['agents'])) {
+            $dbContext .= "\n\nAvailable agents:\n";
+            foreach ($ctx['agents'] as $a) {
+                $dbContext .= "• {$a['name']}" . ($a['city'] ? " ({$a['city']})" : '') . ($a['phone'] ? " — {$a['phone']}" : '') . "\n";
+            }
+        }
+
+        $system = 'You are Mahalo AI, a smart real estate assistant for Mahalo — Morocco\'s premier property platform. You help buyers, renters, and investors find and understand properties in Morocco. Answer questions about real estate, neighborhoods, buying/renting processes, market trends, and general property advice. Be helpful, concise, and friendly. Always respond in the same language the user writes in (French, English, or Arabic). When you have real listings or agents from the database, reference them specifically. Do not invent prices or listings — only use the data provided.'
+            . $dbContext;
 
         $messages = [['role' => 'system', 'content' => $system]];
 
@@ -426,8 +567,12 @@ EOT;
         $messages[] = ['role' => 'user', 'content' => $request->message];
 
         try {
-            $reply = $this->chat($messages, 400);
-            return response()->json(['reply' => $reply]);
+            $reply = $this->chat($messages, 500);
+            return response()->json([
+                'reply'      => $reply,
+                'properties' => $ctx['properties'],
+                'agents'     => $ctx['agents'],
+            ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

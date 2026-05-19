@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AuthProvider } from './admin/context/AuthContext'
 import CookieBanner from './components/CookieBanner'
 import OfflineBanner from './components/OfflineBanner'
+import GlobalAiChat from './components/GlobalAiChat'
 
 // ── Lazy: Public pages ──────────────────────────────────────────
 const Home               = lazy(() => import('./pages/Home'))
@@ -206,6 +207,7 @@ export default function App() {
                   <VerifyEmailBanner />
                   <VerifyEmailPopup />
                   <CookieBannerWrapper />
+                  <GlobalAiChat />
                 </AuthProvider>
               </AuthModalProvider>
               </FavoritesProvider>

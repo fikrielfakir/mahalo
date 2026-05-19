@@ -8,6 +8,8 @@ import NotFoundState from '../components/NotFoundState'
 import { Toast, useToast } from '../components/Toast'
 import MortgageCalculator from '../components/MortgageCalculator'
 import SimilarProperties from '../components/SimilarProperties'
+import PropertyValuation from '../components/PropertyValuation'
+import PropertyAiChat from '../components/PropertyAiChat'
 import { trackRecentlyViewed } from '../utils/recentlyViewed'
 import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
@@ -633,6 +635,12 @@ export default function PropertyDetail() {
                   </div>
                 )}
               </div>
+
+              {/* AI Price Estimate */}
+              <PropertyValuation property={property} />
+
+              {/* AI Chat */}
+              <PropertyAiChat property={property} />
 
               {/* Mortgage Calculator */}
               {property.price && (

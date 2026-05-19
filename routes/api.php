@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\PublicTranslationsController;
 use App\Http\Controllers\Api\Admin\AdminTranslationController;
 use App\Http\Controllers\Api\Admin\AdminContentTranslationController;
 use App\Http\Controllers\Api\Admin\AdminLanguageController;
+use App\Http\Controllers\Api\AiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -74,6 +75,12 @@ Route::prefix('v1')->group(function () {
 
     // ── Video streaming (Range-request aware) ─────────────────────────────────
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
+
+    // ── AI endpoints (public — rate-limited by Groq) ──────────────────────────
+    Route::post('/ai/valuation',            [AiController::class, 'valuation']);
+    Route::post('/ai/generate-description', [AiController::class, 'generateDescription']);
+    Route::post('/ai/property-chat',        [AiController::class, 'propertyChat']);
+    Route::post('/ai/chat',                 [AiController::class, 'generalChat']);
 
     // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
     Route::get('/public-settings', [PublicSettingsController::class, 'show']);

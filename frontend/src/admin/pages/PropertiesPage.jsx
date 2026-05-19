@@ -5,7 +5,8 @@ import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components
 import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
-import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock, Link as LinkIcon, Languages } from 'lucide-react'
+import { Plus, Pencil, Trash2, Building2, Star, CheckCircle, XCircle, Clock, Link as LinkIcon, Languages, Sparkles } from 'lucide-react'
+import AiDescriptionGenerator from '../components/AiDescriptionGenerator'
 
 const EMPTY = {
   name: '', type: 'sale', description: '', content: '', location: '',
@@ -501,6 +502,12 @@ export default function PropertiesPage() {
               <FormField label="Description">
                 <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Short description..." />
               </FormField>
+              <div className="mt-2">
+                <AiDescriptionGenerator
+                  form={form}
+                  onInsert={(text) => setForm(p => ({ ...p, description: text }))}
+                />
+              </div>
             </div>
 
             <div className="col-span-2">

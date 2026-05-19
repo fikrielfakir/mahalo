@@ -77,17 +77,21 @@ Route::prefix('v1')->group(function () {
     // ── Video streaming (Range-request aware) ─────────────────────────────────
     Route::get('/stream/{path}', [VideoStreamController::class, 'stream'])->where('path', '.*');
 
-    // ── AI endpoints (public — rate-limited by Groq) ──────────────────────────
-    Route::post('/ai/valuation',            [AiController::class, 'valuation']);
-    Route::post('/ai/generate-description', [AiController::class, 'generateDescription']);
-    Route::post('/ai/property-chat',        [AiController::class, 'propertyChat']);
-    Route::post('/ai/chat',                 [AiController::class, 'generalChat']);
-    Route::post('/ai/match',               [AiController::class, 'matchProperties']);
+    // ── AI endpoints — 10 req/min per IP (expensive LLM calls) ──────────────
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/ai/valuation',            [AiController::class, 'valuation']);
+        Route::post('/ai/generate-description', [AiController::class, 'generateDescription']);
+        Route::post('/ai/property-chat',        [AiController::class, 'propertyChat']);
+        Route::post('/ai/chat',                 [AiController::class, 'generalChat']);
+        Route::post('/ai/match',                [AiController::class, 'matchProperties']);
+    });
 
-    // ── Saved Searches (public — email-based) ─────────────────────────────────
-    Route::post('/saved-searches',         [SavedSearchController::class, 'store']);
-    Route::get('/saved-searches',          [SavedSearchController::class, 'index']);
-    Route::delete('/saved-searches/{id}',  [SavedSearchController::class, 'destroy']);
+    // ── Saved Searches — 10 req/min per IP ────────────────────────────────────
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/saved-searches',         [SavedSearchController::class, 'store']);
+        Route::get('/saved-searches',          [SavedSearchController::class, 'index']);
+        Route::delete('/saved-searches/{id}',  [SavedSearchController::class, 'destroy']);
+    });
 
     // ── Public: Site settings (unauthenticated — for maintenance/coming-soon gate) ──
     Route::get('/public-settings', [PublicSettingsController::class, 'show']);
@@ -141,21 +145,27 @@ Route::prefix('v1')->group(function () {
     Route::get('/facilities/{id}', [FacilityController::class, 'show']);
     Route::get('/facilities', [FacilityController::class, 'index']);
 
-    // ── Public: Consults & Auth ───────────────────────────────────────────────
-    Route::post('/consults', [ConsultController::class, 'store']);
+    // ── Consult form — 20 req/min per IP ─────────────────────────────────────
+    Route::middleware('throttle:20,1')->group(function () {
+        Route::post('/consults', [ConsultController::class, 'store']);
+    });
     Route::get('/consults/custom-fields', [ConsultController::class, 'customFields']);
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
-    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
-    Route::post('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail']);
+
+    // ── Auth — 5 req/min per IP (brute-force prevention) ─────────────────────
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/auth/register',        [AuthController::class, 'register']);
+        Route::post('/auth/login',           [AuthController::class, 'login']);
+        Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/auth/reset-password',  [AuthController::class, 'resetPassword']);
+        Route::post('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail']);
+    });
     Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
     Route::get('/admin/auth/google', [AdminGoogleAuthController::class, 'redirect']);
     Route::get('/admin/auth/google/callback', [AdminGoogleAuthController::class, 'callback']);
 
-    // ── Protected: Account ────────────────────────────────────────────────────
-    Route::middleware('auth:sanctum')->group(function () {
+    // ── Protected: Account — 100 req/min per IP ───────────────────────────────
+    Route::middleware(['auth:sanctum', 'throttle:100,1'])->group(function () {
         Route::get('/account/profile', [AuthController::class, 'profile']);
         Route::put('/account/profile', [AuthController::class, 'updateProfile']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -202,8 +212,8 @@ Route::prefix('v1')->group(function () {
         Route::delete('/media/path', [MediaController::class, 'deleteByPath']);
     });
 
-    // ── Admin (Sanctum protected) ─────────────────────────────────────────────
-    Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    // ── Admin (Sanctum protected) — 60 req/min per user ──────────────────────
+    Route::prefix('admin')->middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::get('/stats', [AdminStatsController::class, 'index']);
 
         Route::apiResource('properties', AdminPropertyController::class);

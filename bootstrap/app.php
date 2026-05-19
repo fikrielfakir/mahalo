@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \App\Http\Middleware\DDoSProtection::class,
+            \App\Http\Middleware\EnforceRequestSize::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
         $middleware->api(append: [
             \App\Http\Middleware\TrackPageView::class,
@@ -22,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/v1/admin/media/upload',
             'api/v1/admin/media/path',
+        ]);
+        $middleware->alias([
+            'ddos'     => \App\Http\Middleware\DDoSProtection::class,
+            'security' => \App\Http\Middleware\SecurityHeaders::class,
+            'maxsize'  => \App\Http\Middleware\EnforceRequestSize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -5,7 +5,7 @@ export default defineConfig(({ mode }) => {
   // LOCAL_API_URL in .env.local takes priority (never set in Replit userenv),
   // then fall back to the system API_BACKEND_URL, then localhost.
   const env = loadEnv(mode, process.cwd(), '')
-  const apiUrl = env.LOCAL_API_URL || env.API_BACKEND_URL || process.env.API_BACKEND_URL || 'http://localhost:8000'
+  const apiUrl = process.env.API_BACKEND_URL || env.API_BACKEND_URL || 'http://localhost:8000'
   const isExternal = apiUrl.startsWith('https://')
 
   return {

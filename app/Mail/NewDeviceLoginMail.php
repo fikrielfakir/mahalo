@@ -26,7 +26,7 @@ class NewDeviceLoginMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '⚠️ New sign-in detected — ' . config('app.name'),
+            subject: 'New sign-in detected — ' . config('app.name'),
         );
     }
 

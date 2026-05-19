@@ -37,6 +37,8 @@ class AdminSettingsController extends Controller
         // Cookie consent
         'cookie_consent_enabled', 'cookie_consent_title', 'cookie_consent_message',
         'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
+        // AI
+        'groq_api_key', 'ai_model',
     ];
 
     public function show(): JsonResponse

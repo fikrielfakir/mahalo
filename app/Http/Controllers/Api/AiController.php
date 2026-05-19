@@ -5,16 +5,31 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class AiController extends Controller
 {
     private string $groqBase = 'https://api.groq.com/openai/v1';
-    private string $model    = 'llama-3.3-70b-versatile';
+    private string $defaultModel = 'llama-3.3-70b-versatile';
+
+    private function getSettings(): array
+    {
+        $rows = DB::table('site_settings')
+            ->whereIn('key', ['groq_api_key', 'ai_model'])
+            ->pluck('value', 'key')
+            ->toArray();
+
+        return $rows;
+    }
 
     private function chat(array $messages, int $maxTokens = 800): string
     {
-        $key = env('GROQ_API_KEY');
+        $settings = $this->getSettings();
+
+        $key   = $settings['groq_api_key'] ?? env('GROQ_API_KEY');
+        $model = ($settings['ai_model'] ?? '') ?: $this->defaultModel;
+
         if (!$key) {
             throw new \RuntimeException('GROQ_API_KEY is not configured.');
         }
@@ -22,7 +37,7 @@ class AiController extends Controller
         $response = Http::withToken($key)
             ->timeout(30)
             ->post("{$this->groqBase}/chat/completions", [
-                'model'       => $this->model,
+                'model'       => $model,
                 'messages'    => $messages,
                 'max_tokens'  => $maxTokens,
                 'temperature' => 0.7,

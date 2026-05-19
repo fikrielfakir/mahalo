@@ -7,7 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages,
+  Languages, Bot, ChevronDown,
 } from 'lucide-react'
 
 const TABS = [
@@ -19,6 +19,7 @@ const TABS = [
   { id: 'seo',        label: 'SEO',         icon: Globe },
   { id: 'mail',       label: 'Mail / SMTP', icon: Server  },
   { id: 'google',     label: 'Google Auth', icon: KeyRound },
+  { id: 'ai',         label: 'AI',          icon: Bot },
   { id: 'site_mode',  label: 'Site Mode',   icon: Wrench },
   { id: 'pages',      label: 'Pages',       icon: FileText },
   { id: 'cookies',    label: 'Cookies',     icon: Cookie },
@@ -90,7 +91,18 @@ const DEFAULTS = {
   cookie_accept_text: 'Accept All',
   cookie_decline_text: 'Decline',
   cookie_policy_url: '/privacy',
+  groq_api_key: '',
+  ai_model: 'llama-3.3-70b-versatile',
 }
+
+const GROQ_MODELS = [
+  { value: 'llama-3.3-70b-versatile',  label: 'Llama 3.3 70B Versatile',  badge: 'Recommended' },
+  { value: 'llama-3.1-8b-instant',      label: 'Llama 3.1 8B Instant',     badge: 'Fast' },
+  { value: 'llama3-70b-8192',           label: 'Llama 3 70B',              badge: null },
+  { value: 'llama3-8b-8192',            label: 'Llama 3 8B',               badge: 'Lightweight' },
+  { value: 'mixtral-8x7b-32768',        label: 'Mixtral 8x7B',             badge: null },
+  { value: 'gemma2-9b-it',              label: 'Gemma 2 9B',               badge: null },
+]
 
 const WATERMARK_POSITIONS = [
   { value: 'top-left',     label: 'Top Left' },
@@ -114,6 +126,9 @@ export default function SettingsPage() {
   const [copied, setCopied]               = useState(false)
   const [pinging, setPinging]             = useState(false)
   const [pingResult, setPingResult]       = useState(null)
+  const [showGroqKey, setShowGroqKey]     = useState(false)
+  const [testingAi, setTestingAi]         = useState(false)
+  const [aiTestResult, setAiTestResult]   = useState(null)
 
   // Locale state
   const [locale, setLocale]               = useState('default')
@@ -797,6 +812,130 @@ export default function SettingsPage() {
                   <><CheckCircle size={15} /> Google OAuth is configured — users and managers can sign in with Google.</>
                 ) : (
                   <><AlertCircle size={15} /> Google OAuth is not configured. Enter your Client ID and Secret above and save.</>
+                )}
+              </div>
+            </Section>
+          </>
+        )}
+
+        {/* ── AI TAB ── */}
+        {tab === 'ai' && (
+          <>
+            <Section title="Groq API Configuration" icon={Bot}>
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 mb-2 leading-relaxed">
+                The AI chat, property descriptions, and valuation features all use Groq. Get a free API key at{' '}
+                <a href="https://console.groq.com" target="_blank" rel="noreferrer" className="underline font-semibold inline-flex items-center gap-0.5">
+                  console.groq.com <ExternalLink size={10} />
+                </a>
+                . Your key is stored securely in the database and never exposed to the frontend.
+              </div>
+
+              <FormField label="Groq API Key" hint="Starts with gsk_">
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showGroqKey ? 'text' : 'password'}
+                    value={form.groq_api_key}
+                    onChange={f('groq_api_key')}
+                    placeholder="gsk_••••••••••••••••••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGroqKey(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showGroqKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </FormField>
+
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium ${
+                form.groq_api_key
+                  ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                  : 'bg-amber-50 border-amber-100 text-amber-700'
+              }`}>
+                {form.groq_api_key
+                  ? <><CheckCircle size={15} /> Groq API key is configured.</>
+                  : <><AlertCircle size={15} /> No API key set — AI features will be disabled.</>
+                }
+              </div>
+            </Section>
+
+            <Section title="AI Model" icon={Bot}>
+              <FormField label="Active Model" hint="Select the Groq model used for all AI features on the platform">
+                <div className="grid grid-cols-1 gap-2">
+                  {GROQ_MODELS.map((m) => (
+                    <label
+                      key={m.value}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
+                        form.ai_model === m.value
+                          ? 'border-[#BA1932] bg-[#BA1932]/5 ring-1 ring-[#BA1932]/20'
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="ai_model"
+                        value={m.value}
+                        checked={form.ai_model === m.value}
+                        onChange={f('ai_model')}
+                        className="accent-[#BA1932]"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-semibold text-gray-800">{m.label}</span>
+                        <span className="text-xs text-gray-400 ml-2 font-mono">{m.value}</span>
+                      </div>
+                      {m.badge && (
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg ${
+                          m.badge === 'Recommended'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : m.badge === 'Fast'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {m.badge}
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </FormField>
+
+              <div className="flex items-center gap-3 pt-1">
+                <Btn
+                  type="button"
+                  variant="ghost"
+                  disabled={testingAi}
+                  onClick={async () => {
+                    setTestingAi(true)
+                    setAiTestResult(null)
+                    try {
+                      const res = await fetch('/api/v1/ai/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: 'Reply with exactly: OK' }),
+                      })
+                      const data = await res.json()
+                      if (data.reply) {
+                        setAiTestResult({ ok: true, msg: `Model responded: "${data.reply.substring(0, 60)}"` })
+                      } else {
+                        setAiTestResult({ ok: false, msg: data.error || 'No reply received.' })
+                      }
+                    } catch (e) {
+                      setAiTestResult({ ok: false, msg: e.message || 'Request failed.' })
+                    } finally {
+                      setTestingAi(false)
+                    }
+                  }}
+                >
+                  <Bot size={14} /> {testingAi ? 'Testing…' : 'Test AI Connection'}
+                </Btn>
+                {aiTestResult && (
+                  <span className={`text-sm font-medium flex items-center gap-1.5 ${aiTestResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {aiTestResult.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+                    {aiTestResult.msg}
+                  </span>
                 )}
               </div>
             </Section>

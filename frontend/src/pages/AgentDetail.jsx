@@ -27,7 +27,7 @@ function ProjectMiniCard({ project }) {
     : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80'
 
   const rawSlug = project.slug
-  const projSlug = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.slug) || project.id
+  const projSlug = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.key) || project.id
 
   return (
     <Link

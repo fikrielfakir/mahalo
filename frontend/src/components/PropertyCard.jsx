@@ -51,7 +51,7 @@ export default function PropertyCard({ property, className = '' }) {
   if (!property) return null
 
   const rawSlug = property.slug
-  const slug    = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.slug) || property.id
+  const slug    = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.key) || property.id
   const isRent  = property.type === 'rent'
   const badge   = property.is_featured ? t('property.featured') : null
   const inCmp   = isIn(property.id)

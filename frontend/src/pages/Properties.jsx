@@ -102,7 +102,7 @@ export default function Properties() {
     setLoading(true)
     setError(false)
     const isMap = viewMode === 'map'
-    const params = { per_page: isMap ? 100 : 12, page: isMap ? 1 : page }
+    const params = { per_page: isMap ? 20 : 12, page }
     if (search)     params.search           = search
     if (type)       params.type             = type
     if (featured)   params.is_featured      = 1
@@ -377,7 +377,7 @@ export default function Properties() {
 
   if (viewMode === 'map') {
     return (
-      <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
+      <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#F5F5F5' }}>
         <SEOHead
           title={pageTitle}
           description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
@@ -388,39 +388,25 @@ export default function Properties() {
         />
         <Navbar />
 
-        {/* ── Header ─────────────────────────────────────────── */}
-        <div className="pt-24 pb-4 px-5">
+        {/* ── Header + filters (shrinks to fit content) ─────── */}
+        <div className="pt-24 pb-3 px-5 flex-shrink-0">
           <div className="max-w-screen-xl mx-auto">
-            <div className="mb-5">
+            <div className="mb-3">
               <p className="section-label mb-1">{t('filters.realEstate')}</p>
               <h1 className="text-2xl font-bold text-navy">{pageTitle}</h1>
             </div>
-
-            {/* Sentinel */}
-            <div ref={filterSentinelRef} style={{ height: 0 }} />
-            {isFilterSticky && <div style={{ height: filterHeight + 16 }} />}
-
-            {isFilterSticky ? (
-              <div
-                className="fixed left-0 right-0 z-40 px-5 py-2.5"
-                style={{ top: 64, background: '#F5F5F5', boxShadow: '0 4px 24px rgba(115,13,38,0.08)', borderBottom: '1px solid rgba(200,200,200,0.4)' }}
-              >
-                <div ref={filterBarRef} className="max-w-screen-xl mx-auto">{filterBar}</div>
-              </div>
-            ) : (
-              <div ref={filterBarRef}>{filterBar}</div>
-            )}
+            {filterBar}
           </div>
         </div>
 
-        {/* ── Split layout ───────────────────────────────────── */}
-        <div className="flex gap-5 px-5 max-w-screen-xl mx-auto pb-12">
+        {/* ── Split layout — fills remaining viewport height ── */}
+        <div className="flex gap-5 px-5 max-w-screen-xl mx-auto w-full flex-1 min-h-0 pb-4">
 
-          {/* Left: scrollable list */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4">
+          {/* Left: independently scrollable list */}
+          <div className="flex-1 min-w-0 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-3 flex-shrink-0">
               <p className="text-navy/45 text-sm font-medium">
-                {loading ? '…' : `${properties.length} ${t('filters.propertiesFound', { count: properties.length })}`}
+                {loading ? '…' : `${meta?.total ?? properties.length} ${t('filters.propertiesFound', { count: meta?.total ?? properties.length })}`}
               </p>
               {mapMarkers.length > 0 && (
                 <span className="text-xs text-navy/35 font-medium">
@@ -429,9 +415,10 @@ export default function Properties() {
               )}
             </div>
 
-            <div className="space-y-3">
+            {/* Scrollable items */}
+            <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1">
               {loading
-                ? Array.from({ length: 8 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
+                ? Array.from({ length: 6 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
                 : properties.length === 0
                   ? <div className="text-center py-24 text-navy/40">{t('filters.noProperties')}</div>
                   : properties.map(p => (
@@ -445,12 +432,28 @@ export default function Properties() {
                     ))
               }
             </div>
+
+            {/* Pagination */}
+            {meta && meta.last_page > 1 && (
+              <div className="flex-shrink-0 pt-3 flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-1.5 rounded-xl text-sm font-semibold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >←</button>
+                <span className="text-sm text-navy/50 font-medium">{page} / {meta.last_page}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
+                  disabled={page === meta.last_page}
+                  className="px-4 py-1.5 rounded-xl text-sm font-semibold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >→</button>
+              </div>
+            )}
           </div>
 
-          {/* Right: sticky map */}
+          {/* Right: map fills full remaining height — always fixed */}
           <div className="hidden lg:block w-[420px] xl:w-[500px] flex-shrink-0">
-            <div className="sticky rounded-2xl overflow-hidden shadow-lg"
-              style={{ top: 80, height: 'calc(100vh - 92px)' }}>
+            <div className="rounded-2xl overflow-hidden shadow-lg h-full">
               <MapView
                 markers={mapMarkers}
                 activeId={activeId}

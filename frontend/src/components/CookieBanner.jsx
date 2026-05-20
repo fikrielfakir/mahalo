@@ -72,18 +72,6 @@ export default function CookieBanner({ settings }) {
           <div className="px-3 py-3">
             <p className="text-gray-500 text-xs leading-relaxed mb-2.5">{message}</p>
 
-            {/* Essential always-on row */}
-            <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Shield size={13} className="text-emerald-600 shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-800 leading-none mb-0.5">{t('cookies.essential')}</p>
-                  <p className="text-[10px] text-gray-400">{t('cookies.essentialDesc')}</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full whitespace-nowrap">{t('cookies.alwaysOn')}</span>
-            </div>
-
             {expanded && (
               <div className="space-y-1.5 mb-2">
                 {/* Analytics */}

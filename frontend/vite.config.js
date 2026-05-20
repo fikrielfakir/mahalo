@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: { '@': '/src' },
     },
+    server: {
+      allowedHosts: true,
+    },
     // No proxy needed for production — handled by _redirects
   }
 })

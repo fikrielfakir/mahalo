@@ -39,6 +39,9 @@ class AdminSettingsController extends Controller
         'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
         // AI
         'groq_api_key', 'ai_model',
+        // Mobile App Section
+        'mobile_app_enabled', 'mobile_app_title', 'mobile_app_subtitle',
+        'mobile_app_description', 'mobile_app_appstore_url', 'mobile_app_playstore_url',
     ];
 
     public function show(): JsonResponse

@@ -1,7 +1,17 @@
 import { Smartphone } from 'lucide-react'
-
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 export default function MobileAppSection() {
+  const settings = useSiteSettings()
+
+  if (settings.mobile_app_enabled === '0') return null
+
+  const title       = settings.mobile_app_title       || 'Your next home'
+  const subtitle    = settings.mobile_app_subtitle    || 'is in your hands'
+  const description = settings.mobile_app_description || 'Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.'
+  const appstoreUrl  = settings.mobile_app_appstore_url  || '#'
+  const playstoreUrl = settings.mobile_app_playstore_url || '#'
+
   return (
     <section className="px-4 xs:px-5 py-10 sm:py-16">
       <div className="max-w-7xl mx-auto">
@@ -39,36 +49,34 @@ export default function MobileAppSection() {
               {/* Heading */}
               <h2 className="text-2xl xs:text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-3 sm:mb-4"
                 style={{ fontFamily:"'Plus Jakarta Sans', Inter, sans-serif", letterSpacing:'-0.02em' }}>
-                Your next home<br />
+                {title}<br />
                 <span style={{ WebkitTextFillColor:'transparent', WebkitBackgroundClip:'text', backgroundClip:'text', backgroundImage:'linear-gradient(130deg, #BA1932 0%, #f07088 55%, #c0243e 100%)' }}>
-                  is in your hands
+                  {subtitle}
                 </span>
               </h2>
 
               <p className="text-white/40 text-sm leading-relaxed mb-6 sm:mb-8 max-w-xs">
-                Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.
+                {description}
               </p>
 
               {/* Store badges */}
               <div className="flex flex-wrap gap-3 items-center">
-                <a href="#" className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5">
+                <a href={appstoreUrl} className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5" target="_blank" rel="noreferrer">
                   <img src="/badge-appstore.png" alt="Download on the App Store" className="h-10 sm:h-11 w-auto" />
                 </a>
-                <a href="#" className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5">
+                <a href={playstoreUrl} className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5" target="_blank" rel="noreferrer">
                   <img src="/badge-playstore.png" alt="Get it on Google Play" className="h-10 sm:h-11 w-auto" />
                 </a>
               </div>
             </div>
 
-            {/* ── Right spacer so card has width for phone + QR ── */}
-            <div className="hidden sm:block flex-shrink-0" style={{ width: '50%' }} />
+            {/* ── Right spacer so card has width for phone ── */}
+            <div className="hidden sm:block flex-shrink-0" style={{ width: '44%' }} />
           </div>
 
-          {/* ── Phone + QR — absolutely positioned to overflow card ── */}
-          <div className="hidden sm:flex absolute items-end gap-4 lg:gap-6"
-            style={{ right: '3%', bottom: 0, top: '-18px', zIndex: 20 }}>
-
-            {/* Phone */}
+          {/* ── Phone — absolutely positioned to overflow card ── */}
+          <div className="hidden sm:flex absolute items-end"
+            style={{ right: '6%', bottom: 0, top: '-18px', zIndex: 20 }}>
             <div className="relative flex items-end h-full">
               <div className="absolute inset-0 pointer-events-none"
                 style={{ background:'radial-gradient(ellipse at 50% 60%, rgba(186,25,50,0.35) 0%, transparent 65%)', filter:'blur(36px)' }} />
@@ -89,8 +97,6 @@ export default function MobileAppSection() {
                 }}
               />
             </div>
-
-
           </div>
 
         </div>

@@ -165,6 +165,46 @@ export default function Properties() {
     if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
+  // Compact single-row filter used only on mobile in map view
+  const mobileMapFilter = (
+    <div className="flex gap-2 items-center mb-2">
+      {/* Search */}
+      <div className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-3 py-2 shadow-card"
+        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+        <Search size={13} className="text-gold shrink-0" />
+        <input
+          type="text"
+          placeholder={t('filters.searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="flex-1 bg-transparent text-xs font-medium text-gray-800 outline-none placeholder-gray-400 min-w-0"
+        />
+        {search && (
+          <button onClick={() => { setSearch(''); setPage(1) }} className="text-gray-400 touch-manip">
+            <X size={12} />
+          </button>
+        )}
+      </div>
+      {/* Type pills — compact */}
+      <div className="flex gap-0.5 p-0.5 rounded-xl bg-white shadow-card shrink-0"
+        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+        {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
+          <button key={val} onClick={() => { setType(val); setPage(1) }}
+            className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manip whitespace-nowrap ${type === val ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {/* Grid toggle */}
+      <button onClick={() => setViewMode('grid')}
+        className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-card text-gray-500 shrink-0 touch-manip"
+        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+        <LayoutGrid size={15} />
+      </button>
+    </div>
+  )
+
   const filterBar = (
     <div className="mb-4 space-y-2">
       {/* ── Mobile layout (< md): two rows, all buttons visible ── */}
@@ -377,7 +417,7 @@ export default function Properties() {
 
   if (viewMode === 'map') {
     return (
-      <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#F5F5F5' }}>
+      <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ background: '#F5F5F5' }}>
         <SEOHead
           title={pageTitle}
           description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
@@ -388,39 +428,46 @@ export default function Properties() {
         />
         <Navbar />
 
-        {/* ── Header + filters (shrinks to fit content) ─────── */}
-        <div className="pt-24 pb-3 px-5 flex-shrink-0">
+        {/* ── Header + filters ──────────────────────────────── */}
+        <div className="pt-16 lg:pt-24 pb-0 lg:pb-3 px-3 lg:px-5 flex-shrink-0">
           <div className="max-w-screen-xl mx-auto">
-            <div className="mb-3">
-              <p className="section-label mb-1">{t('filters.realEstate')}</p>
-              <h1 className="text-2xl font-bold text-navy">{pageTitle}</h1>
+            {/* Mobile: compact single-row filter */}
+            <div className="lg:hidden pt-2">{mobileMapFilter}</div>
+            {/* Desktop: full title + filter bar */}
+            <div className="hidden lg:block">
+              <div className="mb-3">
+                <p className="section-label mb-1">{t('filters.realEstate')}</p>
+                <h1 className="text-2xl font-bold text-navy">{pageTitle}</h1>
+              </div>
+              {filterBar}
             </div>
-            {filterBar}
           </div>
         </div>
 
-        {/* ── Split layout — fills remaining viewport height ── */}
-        <div className="flex gap-5 px-5 max-w-screen-xl mx-auto w-full flex-1 min-h-0 pb-4">
+        {/* ── Split layout: stacked on mobile, side-by-side on desktop ── */}
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden lg:gap-5 lg:px-5 lg:pb-4 lg:max-w-screen-xl lg:mx-auto lg:w-full">
 
-          {/* Left: independently scrollable list */}
-          <div className="flex-1 min-w-0 flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-3 flex-shrink-0">
-              <p className="text-navy/45 text-sm font-medium">
+          {/* Top (mobile) / Left (desktop): scrollable list */}
+          <div className="flex flex-col min-h-0 flex-[0_0_47%] lg:flex-1 lg:min-w-0 px-3 lg:px-0 overflow-hidden">
+
+            {/* Count row */}
+            <div className="flex items-center justify-between py-2 flex-shrink-0">
+              <p className="text-navy/50 text-xs font-semibold">
                 {loading ? '…' : `${meta?.total ?? properties.length} ${t('filters.propertiesFound', { count: meta?.total ?? properties.length })}`}
               </p>
               {mapMarkers.length > 0 && (
-                <span className="text-xs text-navy/35 font-medium">
+                <span className="text-[10px] text-navy/35 font-medium">
                   {mapMarkers.length} {t('filters.onMap')}
                 </span>
               )}
             </div>
 
-            {/* Scrollable items */}
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1">
+            {/* Scrollable property cards */}
+            <div className="flex-1 overflow-y-auto min-h-0 space-y-2 lg:space-y-3">
               {loading
-                ? Array.from({ length: 6 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
+                ? Array.from({ length: 3 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
                 : properties.length === 0
-                  ? <div className="text-center py-24 text-navy/40">{t('filters.noProperties')}</div>
+                  ? <div className="text-center py-12 text-navy/40 text-sm">{t('filters.noProperties')}</div>
                   : properties.map(p => (
                       <ListPropertyCard
                         key={p.id}
@@ -435,33 +482,31 @@ export default function Properties() {
 
             {/* Pagination */}
             {meta && meta.last_page > 1 && (
-              <div className="flex-shrink-0 pt-3 flex items-center justify-center gap-3">
+              <div className="flex-shrink-0 py-2 flex items-center justify-center gap-3">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-1.5 rounded-xl text-sm font-semibold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                  className="w-8 h-8 rounded-xl text-sm font-bold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors flex items-center justify-center"
                 >←</button>
-                <span className="text-sm text-navy/50 font-medium">{page} / {meta.last_page}</span>
+                <span className="text-xs text-navy/50 font-semibold">{page} / {meta.last_page}</span>
                 <button
                   onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
                   disabled={page === meta.last_page}
-                  className="px-4 py-1.5 rounded-xl text-sm font-semibold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                  className="w-8 h-8 rounded-xl text-sm font-bold bg-white shadow-sm border border-gray-200 text-navy/60 disabled:opacity-40 hover:bg-gray-50 transition-colors flex items-center justify-center"
                 >→</button>
               </div>
             )}
           </div>
 
-          {/* Right: map fills full remaining height — always fixed */}
-          <div className="hidden lg:block w-[420px] xl:w-[500px] flex-shrink-0">
-            <div className="rounded-2xl overflow-hidden shadow-lg h-full">
-              <MapView
-                markers={mapMarkers}
-                activeId={activeId}
-                onMarkerClick={handleMarkerClick}
-                height="100%"
-                zoom={6}
-              />
-            </div>
+          {/* Bottom (mobile) / Right (desktop): map — always visible */}
+          <div className="flex-[0_0_53%] lg:flex-none lg:w-[420px] xl:lg:w-[500px] lg:flex-shrink-0 overflow-hidden lg:rounded-2xl shadow-lg">
+            <MapView
+              markers={mapMarkers}
+              activeId={activeId}
+              onMarkerClick={handleMarkerClick}
+              height="100%"
+              zoom={6}
+            />
           </div>
         </div>
       </div>

@@ -33,46 +33,39 @@ function MobileMapCard({ property, isActive, onClick, cardRef }) {
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all ${
+      className={`flex rounded-xl overflow-hidden bg-white cursor-pointer transition-all ${
         isActive ? 'ring-2 ring-[#BA1932]' : ''
       }`}
-      style={{ boxShadow: isActive ? '0 4px 20px rgba(115,13,38,0.18)' : '0 2px 8px rgba(115,13,38,0.07)' }}
+      style={{ height: 80, boxShadow: isActive ? '0 4px 16px rgba(115,13,38,0.18)' : '0 1px 6px rgba(115,13,38,0.08)' }}
     >
-      {/* Image */}
-      <div className="w-24 shrink-0 overflow-hidden">
+      {/* Image — fixed width, fills full card height */}
+      <div className="w-20 shrink-0 overflow-hidden">
         <img src={img} alt={property.name} onError={() => setImgErr(true)}
-          className="w-full h-full object-cover" style={{ minHeight: 96 }} />
+          className="w-full h-full object-cover" />
       </div>
       {/* Details */}
-      <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-between">
+      <div className="flex-1 min-w-0 px-2.5 py-2 flex flex-col justify-between">
         <div>
-          <p className="font-bold text-navy text-xs leading-tight line-clamp-1">{property.name}</p>
+          <p className="font-bold text-navy text-[11px] leading-tight line-clamp-1">{property.name}</p>
           {(property.city?.name || property.location) && (
-            <p className="text-[10px] text-navy/45 mt-0.5 flex items-center gap-0.5 truncate">
-              <span style={{ color: '#BA1932', fontSize: 8 }}>📍</span>
-              {property.city?.name || property.location}
+            <p className="text-[10px] text-navy/45 mt-0.5 truncate">
+              📍 {property.city?.name || property.location}
             </p>
           )}
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {property.number_bedroom > 0 && (
-              <span className="text-[10px] text-navy/55 font-medium">{property.number_bedroom} ch</span>
-            )}
-            {property.number_bathroom > 0 && (
-              <span className="text-[10px] text-navy/55 font-medium">{property.number_bathroom} sdb</span>
-            )}
-            {property.square && (
-              <span className="text-[10px] text-navy/55 font-medium">{property.square} m²</span>
-            )}
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {property.number_bedroom > 0 && <span className="text-[9px] text-navy/50 font-medium">{property.number_bedroom} ch</span>}
+            {property.number_bathroom > 0 && <span className="text-[9px] text-navy/50 font-medium">· {property.number_bathroom} sdb</span>}
+            {property.square && <span className="text-[9px] text-navy/50 font-medium">· {property.square} m²</span>}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-1.5">
+        <div className="flex items-center justify-between">
           {property.price && (
-            <span className="font-bold text-sm" style={{ color: '#BA1932' }}>{formatPrice(property.price)}</span>
+            <span className="font-bold text-xs" style={{ color: '#BA1932' }}>{formatPrice(property.price)}</span>
           )}
           <Link
             to={`/properties/${slug}`}
             onClick={e => e.stopPropagation()}
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-xl touch-manip"
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-lg touch-manip shrink-0"
             style={{ color: '#BA1932', background: 'rgba(115,13,38,0.07)' }}
           >
             Voir →
@@ -540,31 +533,31 @@ export default function Properties() {
             </div>
 
             {/* Scrollable property cards */}
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-2 lg:space-y-3">
+            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-2 lg:gap-3">
               {loading
                 ? Array.from({ length: 3 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
                 : properties.length === 0
                   ? <div className="text-center py-12 text-navy/40 text-sm">{t('filters.noProperties')}</div>
                   : properties.map(p => (
-                      <span key={p.id}>
+                      <div key={p.id}>
                         {/* Compact card on mobile, full card on desktop */}
-                        <span className="lg:hidden block">
+                        <div className="lg:hidden">
                           <MobileMapCard
                             property={p}
                             isActive={activeId === p.id}
                             onClick={() => setActiveId(p.id === activeId ? null : p.id)}
                             cardRef={el => { cardRefs.current[p.id] = el }}
                           />
-                        </span>
-                        <span className="hidden lg:block">
+                        </div>
+                        <div className="hidden lg:block">
                           <ListPropertyCard
                             property={p}
                             isActive={activeId === p.id}
                             onClick={() => setActiveId(p.id === activeId ? null : p.id)}
                             cardRef={el => { cardRefs.current[p.id] = el }}
                           />
-                        </span>
-                      </span>
+                        </div>
+                      </div>
                     ))
               }
             </div>
@@ -588,15 +581,18 @@ export default function Properties() {
           </div>
 
           {/* Bottom (mobile) / Right (desktop): map — always visible */}
-          <div className="flex-[0_0_53%] lg:flex-none lg:w-[420px] xl:lg:w-[500px] lg:flex-shrink-0 overflow-hidden lg:rounded-2xl shadow-lg">
-            <MapView
-              markers={mapMarkers}
-              activeId={activeId}
-              onMarkerClick={handleMarkerClick}
-              height="100%"
-              zoom={6}
-            />
+          <div className="flex-[0_0_53%] lg:flex-none lg:w-[420px] xl:lg:w-[500px] lg:flex-shrink-0 lg:rounded-2xl lg:shadow-lg overflow-hidden px-3 pb-3 lg:px-0 lg:pb-0">
+            <div className="rounded-2xl overflow-hidden h-full shadow-lg">
+              <MapView
+                markers={mapMarkers}
+                activeId={activeId}
+                onMarkerClick={handleMarkerClick}
+                height="100%"
+                zoom={6}
+              />
+            </div>
           </div>
+
         </div>
       </div>
     )

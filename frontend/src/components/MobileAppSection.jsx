@@ -1,66 +1,5 @@
 import { Smartphone } from 'lucide-react'
 
-function QRCodeSVG() {
-  return (
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Top-left finder */}
-      <rect x="5" y="5" width="28" height="28" rx="3" fill="white"/>
-      <rect x="9" y="9" width="20" height="20" rx="2" fill="#8B0000"/>
-      <rect x="13" y="13" width="12" height="12" rx="1" fill="white"/>
-      {/* Top-right finder */}
-      <rect x="67" y="5" width="28" height="28" rx="3" fill="white"/>
-      <rect x="71" y="9" width="20" height="20" rx="2" fill="#8B0000"/>
-      <rect x="75" y="13" width="12" height="12" rx="1" fill="white"/>
-      {/* Bottom-left finder */}
-      <rect x="5" y="67" width="28" height="28" rx="3" fill="white"/>
-      <rect x="9" y="71" width="20" height="20" rx="2" fill="#8B0000"/>
-      <rect x="13" y="75" width="12" height="12" rx="1" fill="white"/>
-      {/* Data cells */}
-      <rect x="38" y="5" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="5" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="5" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="13" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="13" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="21" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="29" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="29" width="6" height="6" rx="1" fill="white"/>
-      <rect x="5" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="13" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="29" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="62" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="78" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="86" y="38" width="6" height="6" rx="1" fill="white"/>
-      <rect x="5" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="21" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="70" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="86" y="46" width="6" height="6" rx="1" fill="white"/>
-      <rect x="13" y="54" width="6" height="6" rx="1" fill="white"/>
-      <rect x="29" y="54" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="54" width="6" height="6" rx="1" fill="white"/>
-      <rect x="62" y="54" width="6" height="6" rx="1" fill="white"/>
-      <rect x="78" y="54" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="62" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="62" width="6" height="6" rx="1" fill="white"/>
-      <rect x="70" y="62" width="6" height="6" rx="1" fill="white"/>
-      <rect x="86" y="62" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="70" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="70" width="6" height="6" rx="1" fill="white"/>
-      <rect x="62" y="70" width="6" height="6" rx="1" fill="white"/>
-      <rect x="78" y="78" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="78" width="6" height="6" rx="1" fill="white"/>
-      <rect x="54" y="78" width="6" height="6" rx="1" fill="white"/>
-      <rect x="70" y="86" width="6" height="6" rx="1" fill="white"/>
-      <rect x="46" y="86" width="6" height="6" rx="1" fill="white"/>
-      <rect x="86" y="86" width="6" height="6" rx="1" fill="white"/>
-      <rect x="38" y="86" width="6" height="6" rx="1" fill="white"/>
-      <rect x="62" y="86" width="6" height="6" rx="1" fill="white"/>
-    </svg>
-  )
-}
 
 export default function MobileAppSection() {
   return (
@@ -151,25 +90,6 @@ export default function MobileAppSection() {
               />
             </div>
 
-            {/* QR Code card */}
-            <div className="relative self-center mb-4 flex-shrink-0"
-              style={{
-                background: 'linear-gradient(145deg, #9B0E25 0%, #BA1932 50%, #8B0A1F 100%)',
-                borderRadius: '18px',
-                padding: '16px',
-                width: '130px',
-                boxShadow: '0 16px 48px rgba(0,0,0,0.55), 0 4px 16px rgba(186,25,50,0.40)',
-                border: '1px solid rgba(255,255,255,0.12)',
-              }}>
-              {/* QR */}
-              <div className="w-full aspect-square mb-3 rounded-lg overflow-hidden p-1.5"
-                style={{ background: '#8B0A1F' }}>
-                <QRCodeSVG />
-              </div>
-              <p style={{ color:'rgba(255,255,255,0.92)', fontSize:'10px', fontWeight:600, textAlign:'center', lineHeight:1.3 }}>
-                Scan to download<br />the Agentz app
-              </p>
-            </div>
 
           </div>
 

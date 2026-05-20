@@ -24,6 +24,15 @@ function getImageUrl(property) {
 
   const fallbackImg = property?.image
   if (fallbackImg && !isVideoPath(fallbackImg)) return mediaUrl(fallbackImg)
+  // property.image is a video — try its thumbnail before giving up
+  if (fallbackImg && isVideoPath(fallbackImg) && property?.video_thumbnails?.[fallbackImg]) {
+    return property.video_thumbnails[fallbackImg]
+  }
+  // Also try the first key in video_thumbnails regardless of path match
+  if (property?.video_thumbnails) {
+    const firstThumb = Object.values(property.video_thumbnails)[0]
+    if (firstThumb) return firstThumb
+  }
 
   return FALLBACK
 }

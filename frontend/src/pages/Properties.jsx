@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, X, ChevronDown, LayoutGrid, Map } from 'lucide-react'
+import { isVideoPath, mediaUrl } from '../utils/media'
 import Navbar from '../components/Navbar'
 import PropertyCard, { PropertyCardSkeleton, ListPropertyCard, ListPropertyCardSkeleton } from '../components/PropertyCard'
 import Footer from '../components/Footer'
@@ -144,7 +145,17 @@ export default function Properties() {
       title: p.name,
       subtitle: p.city?.name || p.location || '',
       rawPrice: p.price,
-      image: p.image ? (p.image.startsWith('http') ? p.image : `/storage/${p.image}`) : null,
+      image: (() => {
+        const imgs = Array.isArray(p.images) ? p.images : []
+        const firstImg = imgs.find(img => !isVideoPath(img))
+        if (firstImg) return mediaUrl(firstImg)
+        const firstVid = imgs.find(img => isVideoPath(img))
+        if (firstVid && p.video_thumbnails?.[firstVid]) return p.video_thumbnails[firstVid]
+        if (p.image && !isVideoPath(p.image)) return p.image.startsWith('http') ? p.image : `/storage/${p.image}`
+        if (p.image && isVideoPath(p.image) && p.video_thumbnails?.[p.image]) return p.video_thumbnails[p.image]
+        if (p.video_thumbnails) { const t = Object.values(p.video_thumbnails)[0]; if (t) return t }
+        return null
+      })(),
       href: `/properties/${p.slug || p.id}`,
     }))
 

@@ -105,6 +105,10 @@ Route::prefix('v1')->group(function () {
     // ── Public: Cities (all, no property restriction) ─────────────────────────
     Route::get('/cities', [AdminCityController::class, 'publicList']);
 
+    // ── Public: Newsletter subscription ───────────────────────────────────────
+    Route::post('/newsletter/subscribe',   [\App\Http\Controllers\NewsletterController::class, 'subscribe']);
+    Route::post('/newsletter/unsubscribe', [\App\Http\Controllers\NewsletterController::class, 'unsubscribe']);
+
     // ── Public: Properties ────────────────────────────────────────────────────
     Route::get('/properties/filters', [PropertyController::class, 'filters']);
     Route::get('/properties/search', [PropertyController::class, 'search']);

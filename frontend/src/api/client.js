@@ -134,6 +134,11 @@ export const publicSettingsApi = {
   get: () => api.get('/public-settings'),
 }
 
+export const newsletterApi = {
+  subscribe:   (email, source = 'footer') => api.post('/newsletter/subscribe', { email, source }),
+  unsubscribe: (email)                    => api.post('/newsletter/unsubscribe', { email }),
+}
+
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`

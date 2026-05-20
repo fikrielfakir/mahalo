@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, X, ChevronDown, LayoutGrid, Map } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import PropertyCard, { PropertyCardSkeleton } from '../components/PropertyCard'
+import PropertyCard, { PropertyCardSkeleton, ListPropertyCard, ListPropertyCardSkeleton } from '../components/PropertyCard'
 import Footer from '../components/Footer'
 import MapView from '../components/MapView'
 import { propertiesApi } from '../api/client'
@@ -366,7 +366,7 @@ export default function Properties() {
 
   if (viewMode === 'map') {
     return (
-      <div className="flex flex-col" style={{ height: '100vh' }}>
+      <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
         <SEOHead
           title={pageTitle}
           description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
@@ -376,56 +376,78 @@ export default function Properties() {
           ]}
         />
         <Navbar />
-        <div className="pt-20 pb-3 px-5" style={{ background: '#F5F5F5' }}>
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <p className="section-label mb-0.5">{t('filters.realEstate')}</p>
-                <h1 className="text-2xl font-bold text-navy">{pageTitle}</h1>
-              </div>
-              <span className="text-navy/45 text-sm">{mapMarkers.length} {t('filters.onMap')} · {properties.length} {t('filters.total')}</span>
+
+        {/* ── Header ─────────────────────────────────────────── */}
+        <div className="pt-24 pb-4 px-5">
+          <div className="max-w-screen-xl mx-auto">
+            <div className="mb-5">
+              <p className="section-label mb-1">{t('filters.realEstate')}</p>
+              <h1 className="text-2xl font-bold text-navy">{pageTitle}</h1>
             </div>
-            {filterBar}
+
+            {/* Sentinel */}
+            <div ref={filterSentinelRef} style={{ height: 0 }} />
+            {isFilterSticky && <div style={{ height: filterHeight + 16 }} />}
+
+            {isFilterSticky ? (
+              <div
+                className="fixed left-0 right-0 z-40 px-5 py-2.5"
+                style={{ top: 64, background: '#F5F5F5', boxShadow: '0 4px 24px rgba(115,13,38,0.08)', borderBottom: '1px solid rgba(200,200,200,0.4)' }}
+              >
+                <div ref={filterBarRef} className="max-w-screen-xl mx-auto">{filterBar}</div>
+              </div>
+            ) : (
+              <div ref={filterBarRef}>{filterBar}</div>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="w-80 flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 shadow-sm">
-            {loading ? (
-              <div className="p-4 space-y-3">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-16 h-16 rounded-xl bg-gray-200 shrink-0" />
-                    <div className="flex-1 space-y-2 py-1">
-                      <div className="h-3 bg-gray-200 rounded w-4/5" />
-                      <div className="h-2 bg-gray-200 rounded w-2/5" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : properties.length === 0 ? (
-              <div className="p-8 text-center text-navy/40 text-sm">{t('filters.noProperties')}</div>
-            ) : (
-              properties.map(p => (
-                <CompactPropertyCard
-                  key={p.id}
-                  property={p}
-                  isActive={activeId === p.id}
-                  onClick={() => setActiveId(p.id === activeId ? null : p.id)}
-                  cardRef={el => { cardRefs.current[p.id] = el }}
-                />
-              ))
-            )}
+        {/* ── Split layout ───────────────────────────────────── */}
+        <div className="flex gap-5 px-5 max-w-screen-xl mx-auto pb-12">
+
+          {/* Left: scrollable list */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-navy/45 text-sm font-medium">
+                {loading ? '…' : `${properties.length} ${t('filters.propertiesFound', { count: properties.length })}`}
+              </p>
+              {mapMarkers.length > 0 && (
+                <span className="text-xs text-navy/35 font-medium">
+                  {mapMarkers.length} {t('filters.onMap')}
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => <ListPropertyCardSkeleton key={i} />)
+                : properties.length === 0
+                  ? <div className="text-center py-24 text-navy/40">{t('filters.noProperties')}</div>
+                  : properties.map(p => (
+                      <ListPropertyCard
+                        key={p.id}
+                        property={p}
+                        isActive={activeId === p.id}
+                        onClick={() => setActiveId(p.id === activeId ? null : p.id)}
+                        cardRef={el => { cardRefs.current[p.id] = el }}
+                      />
+                    ))
+              }
+            </div>
           </div>
 
-          <div className="flex-1">
-            <MapView
-              markers={mapMarkers}
-              activeId={activeId}
-              onMarkerClick={handleMarkerClick}
-              height="100%"
-              zoom={6}
-            />
+          {/* Right: sticky map */}
+          <div className="hidden lg:block w-[420px] xl:w-[500px] flex-shrink-0">
+            <div className="sticky rounded-2xl overflow-hidden shadow-lg"
+              style={{ top: 80, height: 'calc(100vh - 92px)' }}>
+              <MapView
+                markers={mapMarkers}
+                activeId={activeId}
+                onMarkerClick={handleMarkerClick}
+                height="100%"
+                zoom={6}
+              />
+            </div>
           </div>
         </div>
       </div>

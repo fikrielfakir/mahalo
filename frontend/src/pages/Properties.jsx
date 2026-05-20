@@ -18,39 +18,67 @@ function formatPrice(price) {
   return `${n} MAD`
 }
 
-function CompactPropertyCard({ property, isActive, onClick, cardRef }) {
-  const img = property.image
-    ? property.image.startsWith('http') ? property.image : `/storage/${property.image}`
-    : null
-  const hasCoords = property.latitude && property.longitude
+function MobileMapCard({ property, isActive, onClick, cardRef }) {
+  const [imgErr, setImgErr] = useState(false)
+  const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&q=70&auto=format&fit=crop'
+  const imgs = Array.isArray(property.images) ? property.images : []
+  const firstImg = imgs.find(i => !isVideoPath(i))
+  const img = imgErr ? FALLBACK
+    : firstImg ? mediaUrl(firstImg)
+    : property.image && !isVideoPath(property.image) ? mediaUrl(property.image)
+    : FALLBACK
+  const slug = (typeof property.slug === 'string' ? property.slug : property.slug?.key) || property.id
+
   return (
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`flex gap-3 p-3 border-b border-gray-100 cursor-pointer transition-colors ${
-        isActive ? 'bg-[#BA1932]/8 border-l-4 border-l-[#BA1932]' : 'hover:bg-gray-50'
+      className={`flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all ${
+        isActive ? 'ring-2 ring-[#BA1932]' : ''
       }`}
+      style={{ boxShadow: isActive ? '0 4px 20px rgba(115,13,38,0.18)' : '0 2px 8px rgba(115,13,38,0.07)' }}
     >
-      {img ? (
-        <img src={img} alt="" className="w-16 h-16 rounded-xl object-cover shrink-0" onError={e => e.target.style.display = 'none'} />
-      ) : (
-        <div className="w-16 h-16 rounded-xl bg-gray-100 shrink-0 flex items-center justify-center text-gray-300 text-xs">No img</div>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-navy text-sm truncate leading-tight">{property.name}</p>
-        <p className="text-navy/45 text-xs truncate mt-0.5">{property.city?.name || property.location}</p>
-        {property.price && (
-          <p className="text-[#BA1932] font-bold text-sm mt-1">{formatPrice(property.price)}</p>
-        )}
-        {!hasCoords && <span className="text-[10px] text-gray-300 mt-0.5 block">No map location</span>}
+      {/* Image */}
+      <div className="w-24 shrink-0 overflow-hidden">
+        <img src={img} alt={property.name} onError={() => setImgErr(true)}
+          className="w-full h-full object-cover" style={{ minHeight: 96 }} />
       </div>
-      <Link
-        to={`/properties/${property.slug || property.id}`}
-        onClick={e => e.stopPropagation()}
-        className="shrink-0 self-center text-xs text-navy/40 hover:text-[#BA1932] transition-colors"
-      >
-        →
-      </Link>
+      {/* Details */}
+      <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col justify-between">
+        <div>
+          <p className="font-bold text-navy text-xs leading-tight line-clamp-1">{property.name}</p>
+          {(property.city?.name || property.location) && (
+            <p className="text-[10px] text-navy/45 mt-0.5 flex items-center gap-0.5 truncate">
+              <span style={{ color: '#BA1932', fontSize: 8 }}>📍</span>
+              {property.city?.name || property.location}
+            </p>
+          )}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {property.number_bedroom > 0 && (
+              <span className="text-[10px] text-navy/55 font-medium">{property.number_bedroom} ch</span>
+            )}
+            {property.number_bathroom > 0 && (
+              <span className="text-[10px] text-navy/55 font-medium">{property.number_bathroom} sdb</span>
+            )}
+            {property.square && (
+              <span className="text-[10px] text-navy/55 font-medium">{property.square} m²</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-1.5">
+          {property.price && (
+            <span className="font-bold text-sm" style={{ color: '#BA1932' }}>{formatPrice(property.price)}</span>
+          )}
+          <Link
+            to={`/properties/${slug}`}
+            onClick={e => e.stopPropagation()}
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-xl touch-manip"
+            style={{ color: '#BA1932', background: 'rgba(115,13,38,0.07)' }}
+          >
+            Voir →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
@@ -165,43 +193,92 @@ export default function Properties() {
     if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
-  // Compact single-row filter used only on mobile in map view
+  // Compact 2-row filter used only on mobile in map view
   const mobileMapFilter = (
-    <div className="flex gap-2 items-center mb-2">
-      {/* Search */}
-      <div className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-3 py-2 shadow-card"
-        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
-        <Search size={13} className="text-gold shrink-0" />
-        <input
-          type="text"
-          placeholder={t('filters.searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          className="flex-1 bg-transparent text-xs font-medium text-gray-800 outline-none placeholder-gray-400 min-w-0"
-        />
-        {search && (
-          <button onClick={() => { setSearch(''); setPage(1) }} className="text-gray-400 touch-manip">
-            <X size={12} />
+    <div className="space-y-1.5 mb-2">
+      {/* Row 1: Search + Grid toggle */}
+      <div className="flex gap-2 items-center">
+        <div className="flex-1 flex items-center gap-2 bg-white rounded-2xl px-3 py-2 shadow-card"
+          style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+          <Search size={13} className="text-gold shrink-0" />
+          <input
+            type="text"
+            placeholder={t('filters.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1 bg-transparent text-xs font-medium text-gray-800 outline-none placeholder-gray-400 min-w-0"
+          />
+          {search && (
+            <button onClick={() => { setSearch(''); setPage(1) }} className="text-gray-400 touch-manip">
+              <X size={12} />
+            </button>
+          )}
+        </div>
+        <button onClick={() => setViewMode('grid')}
+          className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-card text-gray-500 shrink-0 touch-manip"
+          style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+          <LayoutGrid size={15} />
+        </button>
+      </div>
+
+      {/* Row 2: Type pills + Chambres + Prix — scrollable */}
+      <div className="flex gap-1.5 items-center overflow-x-auto scrollbar-hide pb-0.5">
+        {/* Type pills */}
+        <div className="flex gap-0.5 p-0.5 rounded-xl bg-white shadow-card shrink-0"
+          style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+          {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
+            <button key={val} onClick={() => { setType(val); setPage(1) }}
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manip whitespace-nowrap ${type === val ? 'bg-navy text-white' : 'text-gray-500'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Chambres */}
+        <div className="relative shrink-0">
+          <select value={bedrooms} onChange={(e) => { setBedrooms(e.target.value); setPage(1) }}
+            className={`appearance-none pl-2.5 pr-6 py-1.5 rounded-xl text-[11px] font-semibold outline-none cursor-pointer shadow-card whitespace-nowrap ${bedrooms ? 'bg-gold/10 text-gold' : 'bg-white text-gray-600'}`}
+            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+            <option value="">{t('filters.bedrooms')}</option>
+            {['1','2','3','4','5+'].map(b => <option key={b} value={b}>{b}{b==='5+'?'+':''} {b!=='1'?t('filters.beds'):t('filters.bed')}</option>)}
+          </select>
+          <ChevronDown size={11} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        </div>
+
+        {/* Prix */}
+        <div className="relative shrink-0">
+          <button onClick={() => setShowPriceMenu(p => !p)}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold shadow-card touch-manip whitespace-nowrap ${(minPrice||maxPrice)?'bg-gold/10 text-gold':'bg-white text-gray-600'}`}
+            style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
+            {minPrice||maxPrice ? `${minPrice||'0'}K–${maxPrice||'∞'}K` : t('filters.price')}
+            <ChevronDown size={11} className="text-gray-400" />
+          </button>
+          {showPriceMenu && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-2xl shadow-card-hover p-3 w-[200px] border border-gray-100">
+              <div className="flex gap-1.5 mb-2">
+                <input type="number" placeholder={t('filters.min')} value={minPrice} onChange={e => setMinPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-2 py-1.5 text-xs text-navy outline-none" />
+                <input type="number" placeholder={t('filters.max')} value={maxPrice} onChange={e => setMaxPrice(e.target.value)}
+                  className="w-full bg-surface rounded-xl px-2 py-1.5 text-xs text-navy outline-none" />
+              </div>
+              <div className="flex gap-1.5">
+                <button onClick={() => { clearPrice(); setShowPriceMenu(false) }}
+                  className="flex-1 py-1.5 rounded-xl text-xs font-semibold border border-gray-200 text-navy/50 touch-manip">{t('filters.clear')}</button>
+                <button onClick={() => { setPage(1); setShowPriceMenu(false); fetchProperties() }}
+                  className="flex-1 py-1.5 rounded-xl text-xs font-semibold bg-navy text-white touch-manip">{t('filters.apply')}</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Active chips */}
+        {cityId && (
+          <button onClick={clearCity} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gold/10 text-gold font-semibold text-[11px] touch-manip shrink-0">
+            {t('filters.cityFilter')} <X size={10} />
           </button>
         )}
       </div>
-      {/* Type pills — compact */}
-      <div className="flex gap-0.5 p-0.5 rounded-xl bg-white shadow-card shrink-0"
-        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
-        {[['', t('filters.all')], ['sale', t('filters.buy')], ['rent', t('filters.rent')]].map(([val, label]) => (
-          <button key={val} onClick={() => { setType(val); setPage(1) }}
-            className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all touch-manip whitespace-nowrap ${type === val ? 'bg-navy text-white shadow-sm' : 'text-gray-500'}`}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {/* Grid toggle */}
-      <button onClick={() => setViewMode('grid')}
-        className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-card text-gray-500 shrink-0 touch-manip"
-        style={{ border: '1px solid rgba(200,200,200,0.5)' }}>
-        <LayoutGrid size={15} />
-      </button>
     </div>
   )
 
@@ -457,7 +534,7 @@ export default function Properties() {
               </p>
               {mapMarkers.length > 0 && (
                 <span className="text-[10px] text-navy/35 font-medium">
-                  {mapMarkers.length} {t('filters.onMap')}
+                  {t('filters.onMap', { count: mapMarkers.length, total: meta?.total ?? properties.length })}
                 </span>
               )}
             </div>
@@ -469,13 +546,25 @@ export default function Properties() {
                 : properties.length === 0
                   ? <div className="text-center py-12 text-navy/40 text-sm">{t('filters.noProperties')}</div>
                   : properties.map(p => (
-                      <ListPropertyCard
-                        key={p.id}
-                        property={p}
-                        isActive={activeId === p.id}
-                        onClick={() => setActiveId(p.id === activeId ? null : p.id)}
-                        cardRef={el => { cardRefs.current[p.id] = el }}
-                      />
+                      <span key={p.id}>
+                        {/* Compact card on mobile, full card on desktop */}
+                        <span className="lg:hidden block">
+                          <MobileMapCard
+                            property={p}
+                            isActive={activeId === p.id}
+                            onClick={() => setActiveId(p.id === activeId ? null : p.id)}
+                            cardRef={el => { cardRefs.current[p.id] = el }}
+                          />
+                        </span>
+                        <span className="hidden lg:block">
+                          <ListPropertyCard
+                            property={p}
+                            isActive={activeId === p.id}
+                            onClick={() => setActiveId(p.id === activeId ? null : p.id)}
+                            cardRef={el => { cardRefs.current[p.id] = el }}
+                          />
+                        </span>
+                      </span>
                     ))
               }
             </div>

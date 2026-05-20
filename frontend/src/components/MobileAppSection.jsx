@@ -57,14 +57,14 @@ export default function MobileAppSection() {
           </div>
 
           {/* ── Phone mockup ── */}
-          <div className="relative z-10 hidden sm:flex flex-shrink-0 items-end justify-end self-stretch w-[45%] overflow-hidden">
-            <div className="absolute inset-0"
-              style={{ background:'radial-gradient(ellipse at 50% 50%, rgba(186,25,50,0.28) 0%, transparent 65%)', filter:'blur(40px)' }} />
+          <div className="relative z-10 hidden sm:flex flex-shrink-0 items-end justify-center pr-8 lg:pr-12" style={{ width: '42%' }}>
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background:'radial-gradient(ellipse at 50% 80%, rgba(186,25,50,0.28) 0%, transparent 65%)', filter:'blur(40px)' }} />
             <img
               src="/app-mockup.png"
               alt="Agentz Mobile App"
-              className="relative z-10 h-[120%] w-auto max-w-none object-contain object-right-bottom"
-              style={{ filter:'drop-shadow(0 32px 64px rgba(115,13,38,0.70)) drop-shadow(0 12px 32px rgba(0,0,0,0.60))' }}
+              className="relative z-10 w-full max-w-[220px] lg:max-w-[260px] h-auto object-contain object-bottom"
+              style={{ filter:'drop-shadow(0 24px 48px rgba(115,13,38,0.70)) drop-shadow(0 8px 24px rgba(0,0,0,0.60))' }}
             />
           </div>
 

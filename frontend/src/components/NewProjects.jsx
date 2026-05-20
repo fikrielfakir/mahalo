@@ -39,16 +39,16 @@ export default function NewProjects() {
   if (!loading && projects.length === 0) return null
 
   return (
-    <section className="luxury-dark-section py-28 px-5">
+    <section className="luxury-dark-section py-14 sm:py-28 px-4 xs:px-5">
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex items-end justify-between mb-14">
+        <div className="flex items-end justify-between mb-8 sm:mb-14">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: '#BA1932' }}>{t('sections.projectsLabel')}</p>
-            <h2 className="text-4xl font-bold text-white leading-tight mb-3"
+            <p className="mb-2 sm:mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: '#BA1932' }}>{t('sections.projectsLabel')}</p>
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl font-bold text-white leading-tight mb-2 sm:mb-3"
               style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", letterSpacing: '-0.01em' }}>
               {t('sections.newProjects')}
             </h2>
-            <p className="text-sm font-medium text-white/40">{t('sections.projectsSub')}</p>
+            <p className="text-xs sm:text-sm font-medium text-white/40">{t('sections.projectsSub')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/projects" className="hidden sm:flex items-center gap-1.5 font-semibold text-sm mr-2 transition-all duration-300 hover:gap-2.5" style={{ color: '#BA1932' }}>
@@ -82,11 +82,11 @@ export default function NewProjects() {
             ))}
           </div>
         ) : (
-          <div className="flex gap-5 overflow-hidden">
+          <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-2 sm:overflow-hidden snap-x snap-mandatory sm:snap-none scrollbar-none">
             {projects.map((project, i) => {
               const rawImg = Array.isArray(project.images) ? project.images[0] : project.image
               const imgUrl = rawImg
-                ? (rawImg.startsWith('http') ? rawImg : `/storage/${rawImg}`)
+                ? (rawImg.startsWith('http') ? rawImg : `${import.meta.env.VITE_API_URL || ''}/storage/${rawImg}`)
                 : FALLBACK_IMAGES[i % FALLBACK_IMAGES.length]
               const isActive = i === active
 
@@ -97,8 +97,9 @@ export default function NewProjects() {
                   onClick={() => setActive(i)}
                   className="relative shrink-0 rounded-3xl overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1"
                   style={{
-                    height: '460px',
-                    width: isActive ? '320px' : '220px',
+                    height: '380px',
+                    minWidth: isActive ? '260px' : '160px',
+                    width: isActive ? '260px' : '160px',
                     boxShadow: isActive ? '0 16px 48px rgba(115,13,38,0.40)' : '0 4px 24px rgba(0,0,0,0.25)'
                   }}
                 >

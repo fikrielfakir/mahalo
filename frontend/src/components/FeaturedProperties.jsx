@@ -24,13 +24,13 @@ export default function FeaturedProperties() {
   if (error) return null
 
   return (
-    <section className="py-28 px-5" style={{ background: 'linear-gradient(180deg, #F8F6F4 0%, #F2EDE8 100%)' }}>
+    <section className="py-14 sm:py-28 px-4 xs:px-5" style={{ background: 'linear-gradient(180deg, #F8F6F4 0%, #F2EDE8 100%)' }}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-14">
+        <div className="flex items-end justify-between mb-8 sm:mb-14">
           <div>
-            <p className="section-label mb-3">{t('sections.curatedLabel')}</p>
-            <h2 className="section-title text-4xl mb-3">{t('sections.featured')}</h2>
-            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.featuredSub')}</p>
+            <p className="section-label mb-2 sm:mb-3">{t('sections.curatedLabel')}</p>
+            <h2 className="section-title text-2xl xs:text-3xl sm:text-4xl mb-2 sm:mb-3">{t('sections.featured')}</h2>
+            <p className="text-xs sm:text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.featuredSub')}</p>
           </div>
           <Link to="/properties?is_featured=1" className="section-link hidden sm:flex shrink-0">
             {t('sections.viewAll')} <ArrowRight size={15} />

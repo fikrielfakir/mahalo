@@ -60,10 +60,10 @@ export default function CookieBanner({ settings }) {
       {/* Backdrop blur on mobile */}
       <div className="fixed inset-0 z-[998] bg-black/10 backdrop-blur-[1px] md:hidden pointer-events-none" />
 
-      <div className="fixed bottom-0 left-0 right-0 z-[999] p-3 md:p-6 md:left-auto md:right-6 md:bottom-6 md:max-w-md animate-slide-up">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-[999] p-2 xs:p-3 md:p-6 md:left-auto md:right-6 md:bottom-6 md:max-w-md animate-slide-up">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[75vh] md:max-h-none">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#730D26] to-[#BA1932] px-5 py-4 flex items-center gap-3">
+          <div className="bg-gradient-to-r from-[#730D26] to-[#BA1932] px-4 py-3 xs:px-5 xs:py-4 flex items-center gap-3 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
               <Cookie size={18} className="text-white" />
             </div>
@@ -78,8 +78,8 @@ export default function CookieBanner({ settings }) {
           </div>
 
           {/* Body */}
-          <div className="p-5">
-            <p className="text-gray-600 text-sm leading-relaxed mb-4">{message}</p>
+          <div className="p-4 xs:p-5 overflow-y-auto flex-1">
+            <p className="text-gray-600 text-xs xs:text-sm leading-relaxed mb-3 xs:mb-4">{message}</p>
 
             {/* Cookie types */}
             <div className="space-y-2 mb-4">
@@ -147,21 +147,21 @@ export default function CookieBanner({ settings }) {
             <div className="flex gap-2">
               <button
                 onClick={handleDecline}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2 xs:py-2.5 rounded-xl border border-gray-200 text-xs xs:text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 {declineTxt}
               </button>
               {expanded ? (
                 <button
                   onClick={handleSavePrefs}
-                  className="flex-1 py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#BA1932] transition-colors"
+                  className="flex-1 py-2 xs:py-2.5 rounded-xl bg-[#730D26] text-white text-xs xs:text-sm font-semibold hover:bg-[#BA1932] transition-colors"
                 >
                   {t('cookies.savePreferences')}
                 </button>
               ) : (
                 <button
                   onClick={handleAcceptAll}
-                  className="flex-1 py-2.5 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#BA1932] transition-colors"
+                  className="flex-1 py-2 xs:py-2.5 rounded-xl bg-[#730D26] text-white text-xs xs:text-sm font-semibold hover:bg-[#BA1932] transition-colors"
                 >
                   {acceptTxt}
                 </button>

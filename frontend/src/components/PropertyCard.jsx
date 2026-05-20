@@ -7,7 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useTranslation } from 'react-i18next'
 
-import { isVideoPath } from '../utils/media'
+import { isVideoPath, mediaUrl } from '../utils/media'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 
@@ -15,9 +15,7 @@ function getImageUrl(property) {
   const images = Array.isArray(property?.images) ? property.images : []
 
   const firstImage = images.find(img => !isVideoPath(img))
-  if (firstImage) {
-    return firstImage.startsWith('http') ? firstImage : `/storage/${firstImage}`
-  }
+  if (firstImage) return mediaUrl(firstImage)
 
   const firstVideo = images.find(img => isVideoPath(img))
   if (firstVideo && property?.video_thumbnails?.[firstVideo]) {
@@ -25,9 +23,7 @@ function getImageUrl(property) {
   }
 
   const fallbackImg = property?.image
-  if (fallbackImg && !isVideoPath(fallbackImg)) {
-    return fallbackImg.startsWith('http') ? fallbackImg : `/storage/${fallbackImg}`
-  }
+  if (fallbackImg && !isVideoPath(fallbackImg)) return mediaUrl(fallbackImg)
 
   return FALLBACK
 }

@@ -34,6 +34,14 @@ class ProjectController extends Controller
             $query->where('city_id', $request->city_id);
         }
 
+        if ($request->filled('min_price')) {
+            $query->where('price_from', '>=', (float) $request->min_price * 1000);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price_from', '<=', (float) $request->max_price * 1000);
+        }
+
         $orderBy = in_array($request->order_by, ['created_at', 'name']) ? $request->order_by : 'created_at';
         $order   = $request->order === 'asc' ? 'asc' : 'desc';
 
@@ -139,9 +147,8 @@ class ProjectController extends Controller
 
     public function filters(): JsonResponse
     {
-        $cities = City::whereHas('projects', fn($q) => $q->where('status', 'selling'))
-            ->select('id', 'name')
-            ->get();
+        $cityIds = Project::where('status', 'selling')->pluck('city_id')->unique()->filter();
+        $cities  = City::whereIn('id', $cityIds)->select('id', 'name')->orderBy('name')->get();
 
         $priceRange = Project::where('status', 'selling')
             ->selectRaw('MIN(price_from) as min_price, MAX(price_to) as max_price')

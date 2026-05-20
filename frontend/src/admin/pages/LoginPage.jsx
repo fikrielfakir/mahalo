@@ -7,7 +7,7 @@ import logo from '/logo-light.png'
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: 'admin@mahalo.ma', password: 'admin123' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [show, setShow] = useState(false)
@@ -52,7 +52,7 @@ export default function LoginPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-[#BA1932] focus:ring-2 focus:ring-[#BA1932]/20 transition-all"
-                  placeholder="admin@mahalo.ma"
+                  placeholder="your@email.com"
                 />
               </div>
             </div>
@@ -86,9 +86,6 @@ export default function LoginPage() {
             ) : 'Sign In'}
           </button>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
-            Default: admin@mahalo.ma / admin123
-          </p>
         </form>
       </div>
     </div>

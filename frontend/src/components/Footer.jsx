@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail, ChevronDown } from 'lucide-react'
+import { Facebook, Instagram, Twitter, Youtube, ArrowRight, Mail, ChevronDown, CheckCircle, AlertCircle, Loader } from 'lucide-react'
 import logoLight from '/logo-light.png'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import { useTranslation } from 'react-i18next'
+import { newsletterApi } from '../api/client'
 
 export default function Footer() {
   const { t } = useTranslation()
   const settings = useSiteSettings()
   const [openSection, setOpenSection] = useState(null)
+  const [email, setEmail] = useState('')
+  const [nlStatus, setNlStatus] = useState(null) // null | 'loading' | 'success' | 'error' | 'duplicate'
+  const [nlMessage, setNlMessage] = useState('')
 
   const footerLinks = {
     [t('footer.company')]:   [
@@ -46,6 +50,29 @@ export default function Footer() {
 
   const toggleSection = (section) => {
     setOpenSection(prev => prev === section ? null : section)
+  }
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault()
+    if (!email.trim() || nlStatus === 'loading' || nlStatus === 'success') return
+    setNlStatus('loading')
+    setNlMessage('')
+    try {
+      const res = await newsletterApi.subscribe(email.trim())
+      setNlStatus('success')
+      setNlMessage(res.message || 'Inscription réussie !')
+      setEmail('')
+    } catch (err) {
+      const status = err?.response?.status
+      const msg = err?.response?.data?.message
+      if (status === 409) {
+        setNlStatus('duplicate')
+        setNlMessage(msg || 'Cette adresse est déjà inscrite.')
+      } else {
+        setNlStatus('error')
+        setNlMessage(msg || 'Une erreur est survenue. Réessayez.')
+      }
+    }
   }
 
   return (
@@ -159,22 +186,45 @@ export default function Footer() {
                 <p className="text-white/40 text-sm">{t('footer.newsletterDesc')}</p>
               </div>
             </div>
-            <form className="flex gap-2 w-full md:w-auto" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder={t('footer.emailPlaceholder')}
-                className="flex-1 md:w-64 text-sm text-white placeholder-white/25 outline-none px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px]"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
-                onFocus={e => { e.target.style.borderColor = 'rgba(200,169,126,0.4)'; e.target.style.background = 'rgba(255,255,255,0.1)' }}
-                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.07)' }}
-              />
-              <button
-                type="submit"
-                className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200 bg-gold hover:bg-gold-dark shrink-0 touch-manip"
-              >
-                <ArrowRight size={15} className="text-navy" />
-              </button>
-            </form>
+            <div className="flex flex-col gap-2 w-full md:w-auto">
+              {nlStatus === 'success' ? (
+                <div className="flex items-center gap-2 text-green-400 text-sm py-2">
+                  <CheckCircle size={16} className="shrink-0" />
+                  <span>{nlMessage}</span>
+                </div>
+              ) : (
+                <form className="flex gap-2 w-full md:w-auto" onSubmit={handleNewsletterSubmit}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); if (nlStatus) setNlStatus(null) }}
+                    placeholder={t('footer.emailPlaceholder')}
+                    disabled={nlStatus === 'loading'}
+                    required
+                    className="flex-1 md:w-64 text-sm text-white placeholder-white/25 outline-none px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px] disabled:opacity-50"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: `1px solid ${nlStatus === 'error' || nlStatus === 'duplicate' ? 'rgba(220,80,80,0.5)' : 'rgba(255,255,255,0.1)'}` }}
+                    onFocus={e => { e.target.style.borderColor = 'rgba(200,169,126,0.4)'; e.target.style.background = 'rgba(255,255,255,0.1)' }}
+                    onBlur={e => { e.target.style.borderColor = nlStatus === 'error' || nlStatus === 'duplicate' ? 'rgba(220,80,80,0.5)' : 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.07)' }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={nlStatus === 'loading'}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200 bg-gold hover:bg-gold-dark shrink-0 touch-manip disabled:opacity-60"
+                  >
+                    {nlStatus === 'loading'
+                      ? <Loader size={15} className="text-navy animate-spin" />
+                      : <ArrowRight size={15} className="text-navy" />
+                    }
+                  </button>
+                </form>
+              )}
+              {(nlStatus === 'error' || nlStatus === 'duplicate') && nlMessage && (
+                <div className="flex items-center gap-1.5 text-red-400 text-xs">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>{nlMessage}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -182,7 +232,6 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 py-6"
           style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Agenz'}. {t('footer.rights')}.</p>
-          <p className="text-white/25 text-sm">{t('footer.premiumRealEstate')}</p>
         </div>
       </div>
     </footer>

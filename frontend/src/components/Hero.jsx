@@ -104,7 +104,7 @@ export default function Hero() {
       </div>
 
       {/* ── Main content ── */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-28 sm:pt-32 pb-16 sm:pb-24">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 xs:px-5 sm:px-8 lg:px-10 pt-20 xs:pt-24 sm:pt-32 pb-12 sm:pb-24">
         <div className="max-w-2xl">
 
           {/* Badge */}
@@ -130,7 +130,7 @@ export default function Hero() {
             className="font-bold text-white leading-[1.06] tracking-tight mb-4 sm:mb-5 animate-fade-up"
             style={{
               fontFamily: "'Plus Jakarta Sans', Inter, sans-serif",
-              fontSize: 'clamp(2.4rem, 6.5vw, 4.5rem)',
+              fontSize: 'clamp(1.85rem, 7vw, 4.5rem)',
             }}
           >
             {t('hero.title1')}<br />
@@ -147,7 +147,7 @@ export default function Hero() {
 
           {/* Subtext */}
           <p
-            className="text-white/50 text-sm sm:text-base font-light max-w-xs sm:max-w-sm mb-7 sm:mb-9 animate-fade-up"
+            className="text-white/50 text-xs xs:text-sm sm:text-base font-light max-w-[260px] xs:max-w-xs sm:max-w-sm mb-5 sm:mb-9 animate-fade-up"
             style={{ animationDelay: '80ms' }}
           >
             {t('hero.subtitle')}
@@ -464,7 +464,7 @@ export default function Hero() {
 
           {/* ── Stats ── */}
           <div
-            className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 sm:gap-3 mt-7 sm:mt-9 animate-fade-up"
+            className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mt-5 sm:mt-9 animate-fade-up"
             style={{ animationDelay: '220ms' }}
           >
             {stats.map(({ icon: Icon, value, label }) => (

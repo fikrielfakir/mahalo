@@ -7,7 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { useTranslation } from 'react-i18next'
 
-import { isVideoPath } from '../utils/media'
+import { isVideoPath, mediaUrl } from '../utils/media'
 
 const FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 
@@ -15,9 +15,7 @@ function getImageUrl(property) {
   const images = Array.isArray(property?.images) ? property.images : []
 
   const firstImage = images.find(img => !isVideoPath(img))
-  if (firstImage) {
-    return firstImage.startsWith('http') ? firstImage : `/storage/${firstImage}`
-  }
+  if (firstImage) return mediaUrl(firstImage)
 
   const firstVideo = images.find(img => isVideoPath(img))
   if (firstVideo && property?.video_thumbnails?.[firstVideo]) {
@@ -25,8 +23,15 @@ function getImageUrl(property) {
   }
 
   const fallbackImg = property?.image
-  if (fallbackImg && !isVideoPath(fallbackImg)) {
-    return fallbackImg.startsWith('http') ? fallbackImg : `/storage/${fallbackImg}`
+  if (fallbackImg && !isVideoPath(fallbackImg)) return mediaUrl(fallbackImg)
+  // property.image is a video — try its thumbnail before giving up
+  if (fallbackImg && isVideoPath(fallbackImg) && property?.video_thumbnails?.[fallbackImg]) {
+    return property.video_thumbnails[fallbackImg]
+  }
+  // Also try the first key in video_thumbnails regardless of path match
+  if (property?.video_thumbnails) {
+    const firstThumb = Object.values(property.video_thumbnails)[0]
+    if (firstThumb) return firstThumb
   }
 
   return FALLBACK
@@ -210,6 +215,169 @@ export function PropertyCardSkeleton() {
           <div className="h-3 skeleton rounded w-10" />
           <div className="h-3 skeleton rounded w-10" />
           <div className="h-3 skeleton rounded w-14" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function ListPropertyCard({ property, isActive, onClick, cardRef }) {
+  const { t } = useTranslation()
+  const [imgError, setImgError] = useState(false)
+  const { isFavorited, toggle: toggleFavorite } = useFavorites()
+  const { isAuthenticated } = useUserAuth()
+  const { openAuthModal } = useAuthModal()
+
+  if (!property) return null
+
+  const rawSlug = property.slug
+  const slug    = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.key) || property.id
+  const isRent  = property.type === 'rent'
+  const liked   = isFavorited(property.id)
+
+  const handleLike = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isAuthenticated) { openAuthModal(() => toggleFavorite(property.id)); return }
+    toggleFavorite(property.id)
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      onClick={onClick}
+      className={`group flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
+        isActive ? 'ring-2 ring-[#BA1932]' : 'hover:shadow-md'
+      }`}
+      style={{
+        boxShadow: isActive
+          ? '0 8px 32px rgba(115,13,38,0.18)'
+          : '0 2px 12px rgba(115,13,38,0.07)',
+      }}
+    >
+      {/* Image */}
+      <div className="relative w-40 sm:w-48 shrink-0 overflow-hidden">
+        <img
+          src={imgError ? FALLBACK : getImageUrl(property)}
+          alt={property.name}
+          onError={() => setImgError(true)}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          style={{ minHeight: 140 }}
+        />
+        {(property.is_featured || isRent) && (
+          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+            {property.is_featured && (
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wide text-white"
+                style={{ background: 'linear-gradient(135deg, #730D26, #BA1932)' }}>
+                {t('property.featured')}
+              </span>
+            )}
+            {isRent && (
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase text-white"
+                style={{ background: 'rgba(0,0,0,0.55)' }}>
+                {t('property.forRent')}
+              </span>
+            )}
+          </div>
+        )}
+        {property.is_verified && (
+          <span className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-white bg-blue-500/90">
+            <BadgeCheck size={9} /> {t('property.verified')}
+          </span>
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className="font-bold text-navy text-sm leading-snug line-clamp-2 group-hover:text-[#BA1932] transition-colors duration-200"
+              style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+              {property.name}
+            </h3>
+            <button
+              onClick={handleLike}
+              aria-label={liked ? t('property.unlike') : t('property.like')}
+              className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all touch-manip"
+              style={liked
+                ? { background: 'linear-gradient(135deg, #730D26, #BA1932)', boxShadow: '0 2px 10px rgba(186,25,50,0.35)' }
+                : { background: 'rgba(115,13,38,0.06)' }}
+            >
+              <Heart size={12} className={liked ? 'fill-white text-white' : 'text-navy/50'} />
+            </button>
+          </div>
+
+          {(property.city?.name || property.location) && (
+            <div className="flex items-center gap-1 text-xs text-navy/45 mb-3">
+              <MapPin size={10} className="shrink-0" style={{ color: '#BA1932' }} />
+              <span className="truncate">{property.city?.name || property.location}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {property.number_bedroom > 0 && (
+              <div className="flex items-center gap-1 text-xs text-navy/50">
+                <Bed size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
+                <span className="font-medium">{property.number_bedroom} {t('property.beds')}</span>
+              </div>
+            )}
+            {property.number_bathroom > 0 && (
+              <div className="flex items-center gap-1 text-xs text-navy/50">
+                <Bath size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
+                <span className="font-medium">{property.number_bathroom} {t('property.baths')}</span>
+              </div>
+            )}
+            {property.square && (
+              <div className="flex items-center gap-1 text-xs text-navy/50">
+                <Maximize2 size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
+                <span className="font-medium">{property.square} m²</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
+          <div className="flex items-baseline gap-1">
+            <span className="font-bold text-base" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+              {formatPrice(property.price, isRent)}
+            </span>
+            {isRent && <span className="text-navy/35 text-xs">{t('property.perMonth')}</span>}
+          </div>
+          <Link
+            to={`/properties/${slug}`}
+            onClick={e => e.stopPropagation()}
+            className="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all duration-200 hover:text-white"
+            style={{ color: '#BA1932', background: 'rgba(115,13,38,0.07)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#BA1932'; e.currentTarget.style.color = '#fff' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(115,13,38,0.07)'; e.currentTarget.style.color = '#BA1932' }}
+          >
+            {t('common.view', 'Voir')} →
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function ListPropertyCardSkeleton() {
+  return (
+    <div className="flex rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 2px 12px rgba(115,13,38,0.07)' }}>
+      <div className="w-40 sm:w-48 shrink-0 skeleton" style={{ minHeight: 140 }} />
+      <div className="flex-1 p-4 space-y-3">
+        <div className="flex justify-between gap-2">
+          <div className="h-4 skeleton rounded-xl w-3/4" />
+          <div className="w-7 h-7 skeleton rounded-full shrink-0" />
+        </div>
+        <div className="h-3 skeleton rounded-xl w-1/3" />
+        <div className="flex gap-3 mt-2">
+          <div className="h-3 skeleton rounded w-12" />
+          <div className="h-3 skeleton rounded w-12" />
+          <div className="h-3 skeleton rounded w-16" />
+        </div>
+        <div className="h-px skeleton mt-4" />
+        <div className="flex justify-between">
+          <div className="h-5 skeleton rounded w-24" />
+          <div className="h-7 skeleton rounded-xl w-14" />
         </div>
       </div>
     </div>

@@ -134,7 +134,7 @@ export default function RecentlyViewed() {
         <style>{`.rv-scroll::-webkit-scrollbar { display: none; }`}</style>
         <div
           ref={scrollRef}
-          className="rv-scroll flex gap-4 overflow-x-auto -mx-2 px-2"
+          className="rv-scroll flex gap-4 overflow-x-auto"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {items.map((p) => (

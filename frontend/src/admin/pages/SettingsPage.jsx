@@ -7,7 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages, Bot, ChevronDown,
+  Languages, Bot, ChevronDown, Smartphone,
 } from 'lucide-react'
 
 const TABS = [
@@ -23,6 +23,7 @@ const TABS = [
   { id: 'site_mode',  label: 'Site Mode',   icon: Wrench },
   { id: 'pages',      label: 'Pages',       icon: FileText },
   { id: 'cookies',    label: 'Cookies',     icon: Cookie },
+  { id: 'mobile_app', label: 'Mobile App',  icon: Smartphone },
 ]
 
 // Tabs that contain translatable fields
@@ -93,6 +94,12 @@ const DEFAULTS = {
   cookie_policy_url: '/privacy',
   groq_api_key: '',
   ai_model: 'llama-3.3-70b-versatile',
+  mobile_app_enabled: '1',
+  mobile_app_title: 'Your next home',
+  mobile_app_subtitle: 'is in your hands',
+  mobile_app_description: 'Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.',
+  mobile_app_appstore_url: '#',
+  mobile_app_playstore_url: '#',
 }
 
 const GROQ_MODELS = [
@@ -1211,6 +1218,67 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </>
+        )}
+
+        {/* ── MOBILE APP TAB ── */}
+        {tab === 'mobile_app' && (
+          <>
+            <Section title="Mobile App Section" icon={Smartphone}>
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-3">
+                <Info size={13} className="shrink-0 mt-0.5" />
+                Controls the "Agentz Mobile App" banner shown on the homepage. Toggle it on or off and customise the text and store links.
+              </div>
+
+              {/* Enable/disable toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Show Mobile App Section</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Display the app download banner on the homepage</p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, mobile_app_enabled: p.mobile_app_enabled === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                    form.mobile_app_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.mobile_app_enabled === '1' ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </div>
+              </div>
+
+              {form.mobile_app_enabled === '0' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                  <AlertCircle size={14} /> Section is hidden on the homepage
+                </div>
+              )}
+            </Section>
+
+            <Section title="Content" icon={FileText}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Heading Line 1" hint="e.g. Your next home">
+                  <Input value={form.mobile_app_title} onChange={f('mobile_app_title')} placeholder="Your next home" />
+                </FormField>
+                <FormField label="Heading Line 2 (highlighted)" hint="Shown in red gradient">
+                  <Input value={form.mobile_app_subtitle} onChange={f('mobile_app_subtitle')} placeholder="is in your hands" />
+                </FormField>
+              </div>
+              <FormField label="Description" hint="Short paragraph shown below the heading">
+                <Textarea value={form.mobile_app_description} onChange={f('mobile_app_description')} rows={3} placeholder="Search, save and contact agents on the go…" />
+              </FormField>
+            </Section>
+
+            <Section title="Store Links" icon={ExternalLink}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="App Store URL" hint="iOS — Apple App Store link">
+                  <Input value={form.mobile_app_appstore_url} onChange={f('mobile_app_appstore_url')} placeholder="https://apps.apple.com/…" />
+                </FormField>
+                <FormField label="Google Play URL" hint="Android — Google Play Store link">
+                  <Input value={form.mobile_app_playstore_url} onChange={f('mobile_app_playstore_url')} placeholder="https://play.google.com/store/…" />
+                </FormField>
+              </div>
+            </Section>
           </>
         )}
 

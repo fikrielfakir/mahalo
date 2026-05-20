@@ -14,8 +14,9 @@ const AVATAR_COLORS = [
 function AgentCard({ agent, index, t }) {
   const displayName = agent.display_name || agent.name || 'Agent'
   const rawAvatar   = agent.avatar_url || agent.avatar
+  const API_BASE = import.meta.env.VITE_API_URL || ''
   const avatarUrl   = rawAvatar
-    ? (rawAvatar.startsWith('http') || rawAvatar.startsWith('/') ? rawAvatar : `/storage/${rawAvatar}`)
+    ? (rawAvatar.startsWith('http') || rawAvatar.startsWith('/') ? rawAvatar : `${API_BASE}/storage/${rawAvatar}`)
     : null
 
   return (
@@ -98,13 +99,13 @@ export default function AgentsSection() {
   if (!loading && agents.length === 0) return null
 
   return (
-    <section className="py-28 px-5" style={{ background: 'linear-gradient(180deg, #F8F6F4 0%, #F2EDE8 100%)' }}>
+    <section className="py-14 sm:py-28 px-4 xs:px-5" style={{ background: 'linear-gradient(180deg, #F8F6F4 0%, #F2EDE8 100%)' }}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-14">
+        <div className="flex items-end justify-between mb-8 sm:mb-14">
           <div>
-            <p className="section-label mb-3">{t('sections.agentsLabel')}</p>
-            <h2 className="section-title text-4xl mb-3">{t('sections.agents')}</h2>
-            <p className="text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.agentsSub')}</p>
+            <p className="section-label mb-2 sm:mb-3">{t('sections.agentsLabel')}</p>
+            <h2 className="section-title text-2xl xs:text-3xl sm:text-4xl mb-2 sm:mb-3">{t('sections.agents')}</h2>
+            <p className="text-xs sm:text-sm font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>{t('sections.agentsSub')}</p>
           </div>
           <Link to="/agents" className="section-link hidden sm:flex shrink-0">
             {t('sections.viewAll')} <ArrowRight size={15} />

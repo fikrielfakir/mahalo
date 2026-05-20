@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, X, ChevronDown, LayoutGrid, Map } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -78,6 +78,24 @@ export default function Properties() {
   const featured = searchParams.get('is_featured')
 
   const cardRefs = useRef({})
+  const filterSentinelRef = useRef(null)
+  const filterBarRef      = useRef(null)
+  const [isFilterSticky, setIsFilterSticky] = useState(false)
+  const [filterHeight,   setFilterHeight]   = useState(0)
+
+  useEffect(() => {
+    const sentinel = filterSentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFilterSticky(!entry.isIntersecting)
+        if (filterBarRef.current) setFilterHeight(filterBarRef.current.offsetHeight)
+      },
+      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [])
 
   const fetchProperties = useCallback(() => {
     setLoading(true)
@@ -431,7 +449,32 @@ export default function Properties() {
           <h1 className="text-3xl font-bold text-navy">{pageTitle}</h1>
           <p className="text-navy/45 text-sm mt-1.5">{meta ? t('filters.propertiesFound', { count: meta.total }) : t('filters.discoverPremium')}</p>
         </div>
-        {filterBar}
+
+        {/* Sentinel — when this scrolls behind the navbar the filter goes sticky */}
+        <div ref={filterSentinelRef} style={{ height: 0 }} />
+
+        {/* Spacer so content doesn't jump when filter lifts off */}
+        {isFilterSticky && <div style={{ height: filterHeight + 16 }} />}
+
+        {/* Sticky filter wrapper */}
+        {isFilterSticky ? (
+          <div
+            className="fixed left-0 right-0 z-40 px-5 py-2.5 transition-all"
+            style={{
+              top: 64,
+              background: '#F5F5F5',
+              boxShadow: '0 4px 24px rgba(115,13,38,0.08)',
+              borderBottom: '1px solid rgba(200,200,200,0.4)',
+            }}
+          >
+            <div ref={filterBarRef} className="max-w-7xl mx-auto">
+              {filterBar}
+            </div>
+          </div>
+        ) : (
+          <div ref={filterBarRef}>{filterBar}</div>
+        )}
+
         {hasActiveFilters && (
           <div className="flex items-center gap-2 flex-wrap mb-4">
             <span className="text-navy/40 text-xs font-medium">{t('filters.activeFilters')}:</span>

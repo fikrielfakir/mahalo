@@ -40,11 +40,11 @@ function formatPrice(price, isRent) {
 function PropertyImageThumb({ src, alt, isRent }) {
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
-  const showPlaceholder = !src || errored || !loaded
+  const showPlaceholder = !src || errored
 
   return (
-    <div className="relative w-24 h-20 rounded-xl overflow-hidden shrink-0">
-      {/* Placeholder always visible until real image fully loads */}
+    <div className="relative w-24 h-20 min-w-[96px] rounded-xl overflow-hidden bg-gray-100">
+      {/* Placeholder — shown when no image or on error */}
       <div
         className="absolute inset-0 flex items-center justify-center"
         style={{
@@ -62,13 +62,11 @@ function PropertyImageThumb({ src, alt, isRent }) {
         <img
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          style={{
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.3s ease',
-          }}
+          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
 
@@ -91,14 +89,14 @@ function MapPropertyCard({ property, isActive, onClick, cardRef }) {
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`group flex gap-3 rounded-2xl overflow-hidden bg-white cursor-pointer transition-all duration-200 p-3 ${
-        isActive ? 'ring-2 ring-[#BA1932] shadow-lg' : 'hover:shadow-md'
+      className={`group flex items-start gap-3 rounded-2xl bg-white cursor-pointer transition-all duration-200 p-3 min-h-[104px] border border-transparent overflow-hidden ${
+        isActive ? 'ring-2 ring-[#BA1932] shadow-lg' : 'hover:shadow-md hover:border-[#BA1932]/10'
       }`}
       style={{ boxShadow: isActive ? '0 6px 24px rgba(115,13,38,0.18)' : '0 2px 10px rgba(115,13,38,0.06)' }}
     >
       <PropertyImageThumb src={imgSrc} alt={property.name} isRent={isRent} />
 
-      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+      <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-between py-0.5">
         <div>
           <p className="font-bold text-xs leading-snug line-clamp-2 group-hover:text-[#BA1932] transition-colors"
             style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
@@ -294,8 +292,8 @@ export default function HomepageMapSection() {
           {/* Scrollable property list */}
           <div
             ref={listRef}
-            className="w-full lg:w-80 xl:w-96 shrink-0 bg-white overflow-y-auto flex flex-col gap-2.5 p-3"
-            style={{ maxHeight: 560, scrollbarWidth: 'thin', scrollbarColor: '#BA193240 transparent' }}
+            className="w-full lg:w-80 xl:w-96 shrink-0 bg-white overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 p-3"
+            style={{ maxHeight: 560, scrollbarWidth: 'thin', scrollbarColor: '#BA193240 transparent', WebkitOverflowScrolling: 'touch' }}
           >
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)

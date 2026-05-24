@@ -1,0 +1,149 @@
+The issue is from the card container sizing + image loading behavior.
+
+Your items are getting compressed vertically because:
+
+overflow-hidden
+fixed image size w-24 h-20
+flex container without min-h
+parent scroll container shrinking children
+text content wrapping while image stays fixed
+
+Main visual bug in screenshot:
+
+image/thumb becomes stretched or clipped
+cards collapse in height
+skeleton/loading mismatch with final content
+
+Replace your MapPropertyCard root container with this:
+
+<div
+  ref={cardRef}
+  onClick={onClick}
+  className={`
+    group
+    flex
+    items-start
+    gap-3
+    rounded-2xl
+    bg-white
+    cursor-pointer
+    transition-all
+    duration-200
+    p-3
+    min-h-[104px]
+    border
+    border-transparent
+    overflow-hidden
+    ${
+      isActive
+        ? 'ring-2 ring-[#BA1932] shadow-lg'
+        : 'hover:shadow-md hover:border-[#BA1932]/10'
+    }
+  `}
+  style={{
+    boxShadow: isActive
+      ? '0 6px 24px rgba(115,13,38,0.18)'
+      : '0 2px 10px rgba(115,13,38,0.06)',
+  }}
+>
+
+Then replace image wrapper:
+
+<div className="relative w-24 h-20 min-w-[96px] rounded-xl overflow-hidden bg-gray-100">
+
+instead of:
+
+<div className="relative w-24 h-20 rounded-xl overflow-hidden shrink-0">
+
+Critical fix:
+min-w-[96px]
+
+Without it, flexbox compresses the image width during scrolling/rendering.
+
+Also add:
+
+className="flex-1 min-w-0 overflow-hidden flex flex-col justify-between py-0.5"
+
+instead of:
+
+className="flex-1 min-w-0 flex flex-col justify-between py-0.5"
+
+Another issue:
+your scroll container needs smooth GPU rendering.
+
+Replace:
+
+className="w-full lg:w-80 xl:w-96 shrink-0 bg-white overflow-y-auto flex flex-col gap-2.5 p-3"
+
+with:
+
+className="
+  w-full
+  lg:w-80
+  xl:w-96
+  shrink-0
+  bg-white
+  overflow-y-auto
+  overflow-x-hidden
+  flex
+  flex-col
+  gap-2.5
+  p-3
+"
+
+and add:
+
+style={{
+  maxHeight: 560,
+  scrollbarWidth: 'thin',
+  scrollbarColor: '#BA193240 transparent',
+  WebkitOverflowScrolling: 'touch',
+}}
+
+Also your image fade logic causes layout flashes.
+
+Replace:
+
+const showPlaceholder = !src || errored || !loaded
+
+with:
+
+const showPlaceholder = !src || errored
+
+Then image:
+
+<img
+  src={src}
+  alt={alt}
+  loading="lazy"
+  decoding="async"
+  onLoad={() => setLoaded(true)}
+  onError={() => setErrored(true)}
+  className={`
+    w-full
+    h-full
+    object-cover
+    transition-all
+    duration-500
+    group-hover:scale-105
+    ${loaded ? 'opacity-100' : 'opacity-0'}
+  `}
+/>
+
+This fixes:
+
+collapsing items
+stretched thumbnails
+flickering
+broken scroll rendering
+inconsistent heights
+clipped titles
+Safari flex issues
+Chrome GPU repaint glitches
+
+Most important fixes:
+
+min-w-[96px]
+min-h-[104px]
+overflow-x-hidden
+remove placeholder dependency on loaded

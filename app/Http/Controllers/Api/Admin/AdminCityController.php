@@ -36,7 +36,7 @@ class AdminCityController extends Controller
 
     public function publicList(): JsonResponse
     {
-        $cities = City::orderBy('name')->get(['id', 'name', 'country', 'state', 'image_url']);
+        $cities = City::orderBy('name')->get(['id', 'name', 'country', 'state', 'image', 'image_url']);
 
         return response()->json(['data' => $cities, 'error' => false, 'message' => null]);
     }

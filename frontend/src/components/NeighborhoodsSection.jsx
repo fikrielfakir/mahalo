@@ -26,7 +26,8 @@ const CITY_IMAGES = {
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80&auto=format&fit=crop'
 
 function cityImage(city) {
-  if (city.image_url) return mediaUrl(city.image_url)
+  const raw = city.image_url || city.image
+  if (raw) return mediaUrl(raw)
   return CITY_IMAGES[city.name] || DEFAULT_IMAGE
 }
 

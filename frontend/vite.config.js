@@ -12,12 +12,14 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
+        secure: true,
       },
       '/storage': {
-        target: 'http://localhost:8000',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
+        secure: true,
       },
     },
   },

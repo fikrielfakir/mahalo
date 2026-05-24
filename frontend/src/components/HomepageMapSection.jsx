@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Bed, Bath, Maximize2, ArrowRight, Map } from 'lucide-react'
+import { MapPin, Bed, Bath, Maximize2, ArrowRight, Map, Home } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { propertiesApi } from '../api/client'
 import { mediaUrl, isVideoPath } from '../utils/media'
 import MapView from './MapView'
-
-const FALLBACK_IMG = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80&auto=format&fit=crop'
 
 const CITY_FILTERS = [
   { label: 'All', value: null },
@@ -28,7 +26,7 @@ function getPropImage(property) {
   if (first) return mediaUrl(first)
   if (property?.image && !isVideoPath(property.image)) return mediaUrl(property.image)
   const thumb = property?.video_thumbnails && Object.values(property.video_thumbnails)[0]
-  return thumb || FALLBACK_IMG
+  return thumb || null
 }
 
 function formatPrice(price, isRent) {
@@ -39,10 +37,48 @@ function formatPrice(price, isRent) {
   return `${n.toLocaleString()} MAD`
 }
 
+function PropertyImageThumb({ src, alt, isRent }) {
+  const [status, setStatus] = useState(src ? 'loading' : 'empty')
+
+  return (
+    <div className="relative w-24 h-20 rounded-xl overflow-hidden shrink-0">
+      {status !== 'empty' && src ? (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setStatus('loaded')}
+          onError={() => setStatus('empty')}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          style={{ display: status === 'empty' ? 'none' : 'block' }}
+        />
+      ) : null}
+      {(status === 'empty' || !src) && (
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, #f8e8eb 0%, #f0d0d6 100%)',
+          }}
+        >
+          <Home size={22} style={{ color: '#BA1932', opacity: 0.45 }} />
+        </div>
+      )}
+      {status === 'loading' && src && (
+        <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-xl" />
+      )}
+      {isRent && (
+        <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded-lg"
+          style={{ background: 'rgba(0,0,0,0.55)' }}>
+          Rent
+        </span>
+      )}
+    </div>
+  )
+}
+
 function MapPropertyCard({ property, isActive, onClick, cardRef }) {
-  const [imgErr, setImgErr] = useState(false)
   const isRent = property.type === 'rent'
   const slug   = (typeof property.slug === 'string' ? property.slug : property.slug?.key) || property.id
+  const imgSrc = getPropImage(property)
 
   return (
     <div
@@ -53,20 +89,7 @@ function MapPropertyCard({ property, isActive, onClick, cardRef }) {
       }`}
       style={{ boxShadow: isActive ? '0 6px 24px rgba(115,13,38,0.18)' : '0 2px 10px rgba(115,13,38,0.06)' }}
     >
-      <div className="relative w-24 h-20 rounded-xl overflow-hidden shrink-0">
-        <img
-          src={imgErr ? FALLBACK_IMG : getPropImage(property)}
-          alt={property.name}
-          onError={() => setImgErr(true)}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {isRent && (
-          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded-lg"
-            style={{ background: 'rgba(0,0,0,0.55)' }}>
-            Rent
-          </span>
-        )}
-      </div>
+      <PropertyImageThumb src={imgSrc} alt={property.name} isRent={isRent} />
 
       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
         <div>

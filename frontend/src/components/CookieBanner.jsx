@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Cookie, X, ChevronDown, ChevronUp, Shield, BarChart2, Settings } from 'lucide-react'
+import { Cookie, X, ChevronDown, ChevronUp, BarChart2, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const STORAGE_KEY = 'mahalo_cookie_consent'
@@ -20,12 +20,17 @@ export default function CookieBanner({ settings }) {
   const [prefs, setPrefs]       = useState({ analytics: true, marketing: false })
   const [mounted, setMounted]   = useState(false)
 
-  const enabled    = settings?.cookie_consent_enabled !== '0'
-  const title      = settings?.cookie_consent_title   || t('cookies.title')
-  const message    = settings?.cookie_consent_message || t('cookies.message')
-  const acceptTxt  = settings?.cookie_accept_text     || t('cookies.acceptAll')
-  const declineTxt = settings?.cookie_decline_text    || t('cookies.decline')
-  const policyUrl  = settings?.cookie_policy_url      || '/privacy'
+  const enabled = settings?.cookie_consent_enabled !== '0'
+
+  // i18n translations are always primary (they cover all 4 languages correctly).
+  // Admin settings text is used as a fallback only — when an admin sets a
+  // per-locale override in the admin panel the backend merges it into settings
+  // and that becomes the i18n fallback via SiteSettingsContext.
+  const title      = t('cookies.title',      { defaultValue: settings?.cookie_consent_title   || 'We use cookies' })
+  const message    = t('cookies.message',    { defaultValue: settings?.cookie_consent_message || 'We use cookies to enhance your experience.' })
+  const acceptTxt  = t('cookies.acceptAll',  { defaultValue: settings?.cookie_accept_text     || 'Accept All' })
+  const declineTxt = t('cookies.decline',    { defaultValue: settings?.cookie_decline_text    || 'Decline' })
+  const policyUrl  = settings?.cookie_policy_url || '/privacy'
 
   useEffect(() => {
     setMounted(true)
@@ -59,7 +64,7 @@ export default function CookieBanner({ settings }) {
       <div className="fixed bottom-0 left-0 right-0 z-[999] p-2 md:p-4 md:left-auto md:right-4 md:bottom-4 md:max-w-sm animate-slide-up">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
 
-          {/* Header — compact */}
+          {/* Header */}
           <div className="bg-gradient-to-r from-[#730D26] to-[#BA1932] px-3 py-2.5 flex items-center gap-2">
             <Cookie size={14} className="text-white shrink-0" />
             <h3 className="text-white font-bold text-sm flex-1 leading-none">{title}</h3>

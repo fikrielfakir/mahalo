@@ -1136,9 +1136,10 @@ export default function SettingsPage() {
         {/* ── COOKIES TAB ── */}
         {tab === 'cookies' && (
           <>
-            <Section title="Cookie Consent Banner" icon={Cookie}>
-              {!isLocaleMode && (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            {/* ── Enable / URL row (default mode only) ── */}
+            {!isLocaleMode && (
+              <Section title="Cookie Consent Banner" icon={Cookie}>
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
                   <div>
                     <p className="text-sm font-semibold text-gray-800">Enable Cookie Banner</p>
                     <p className="text-xs text-gray-400 mt-0.5">Show a cookie consent popup to all new visitors</p>
@@ -1153,48 +1154,70 @@ export default function SettingsPage() {
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#730D26]" />
                   </label>
                 </div>
-              )}
 
-              {isLocaleMode && (
-                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-center gap-2">
-                  <Info size={13} className="shrink-0" />
-                  Translate the cookie banner text for this language. Leave empty to use the Default text.
+                <FormField label="Cookie Policy URL" hint="Link shown at the bottom of the banner">
+                  <Input value={form.cookie_policy_url} onChange={f('cookie_policy_url')} placeholder="/privacy" />
+                </FormField>
+              </Section>
+            )}
+
+            {/* ── Translatable text fields ── */}
+            <Section title={isLocaleMode ? `Banner Text — ${LOCALES.find(l => l.code === locale)?.flag} ${LOCALES.find(l => l.code === locale)?.label}` : 'Banner Text'} icon={Cookie}>
+              {isLocaleMode ? (
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
+                  <Info size={13} className="shrink-0 mt-0.5" />
+                  <span>
+                    Translate the cookie banner for <strong>{LOCALES.find(l => l.code === locale)?.label}</strong> visitors.
+                    Leave a field blank to fall back to the site's built-in translation for that language.
+                  </span>
+                </div>
+              ) : (
+                <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs text-gray-500 flex items-start gap-2">
+                  <Info size={13} className="shrink-0 mt-0.5" />
+                  <span>
+                    These are the <strong>default</strong> (fallback) texts. Switch to a language tab above to provide per-language translations — the banner automatically shows the visitor's language.
+                  </span>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Banner Title" hint={isLocaleMode ? `Default: "${transDefaults.cookie_consent_title || form.cookie_consent_title}"` : undefined}>
-                  <Input
-                    value={isLocaleMode ? tv('cookie_consent_title') : form.cookie_consent_title}
-                    onChange={isLocaleMode ? tf('cookie_consent_title') : f('cookie_consent_title')}
-                    placeholder={isLocaleMode ? tp('cookie_consent_title', 'We use cookies') : 'We use cookies'}
-                  />
-                </FormField>
-                {!isLocaleMode && (
-                  <FormField label="Cookie Policy URL" hint="Link shown in the banner footer">
-                    <Input value={form.cookie_policy_url} onChange={f('cookie_policy_url')} placeholder="/privacy" />
-                  </FormField>
-                )}
-              </div>
+              <FormField
+                label="Banner Title"
+                hint={isLocaleMode ? `Default: "${transDefaults.cookie_consent_title || form.cookie_consent_title}"` : 'Shown in the banner header'}
+              >
+                <Input
+                  value={isLocaleMode ? tv('cookie_consent_title') : form.cookie_consent_title}
+                  onChange={isLocaleMode ? tf('cookie_consent_title') : f('cookie_consent_title')}
+                  placeholder={isLocaleMode ? tp('cookie_consent_title', 'We use cookies') : 'We use cookies'}
+                />
+              </FormField>
 
-              <FormField label="Banner Message" hint={isLocaleMode ? `Default: "${(transDefaults.cookie_consent_message || form.cookie_consent_message)?.substring(0, 60)}…"` : 'Explain what cookies you use and why'}>
+              <FormField
+                label="Banner Message"
+                hint={isLocaleMode ? `Default: "${(transDefaults.cookie_consent_message || form.cookie_consent_message)?.substring(0, 70)}…"` : 'Short explanation shown below the title'}
+              >
                 <Textarea
                   value={isLocaleMode ? tv('cookie_consent_message') : form.cookie_consent_message}
                   onChange={isLocaleMode ? tf('cookie_consent_message') : f('cookie_consent_message')}
                   rows={3}
-                  placeholder={isLocaleMode ? tp('cookie_consent_message', 'We use cookies to enhance your experience…') : 'We use cookies to enhance your experience…'}
+                  placeholder={isLocaleMode ? tp('cookie_consent_message', 'We use cookies to enhance your experience…') : 'We use cookies to enhance your experience, analyse traffic, and personalise content.'}
                 />
               </FormField>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Accept Button Text" hint={isLocaleMode ? `Default: "${transDefaults.cookie_accept_text || form.cookie_accept_text}"` : undefined}>
+                <FormField
+                  label="Accept Button"
+                  hint={isLocaleMode ? `Default: "${transDefaults.cookie_accept_text || form.cookie_accept_text}"` : 'Primary action button'}
+                >
                   <Input
                     value={isLocaleMode ? tv('cookie_accept_text') : form.cookie_accept_text}
                     onChange={isLocaleMode ? tf('cookie_accept_text') : f('cookie_accept_text')}
                     placeholder={isLocaleMode ? tp('cookie_accept_text', 'Accept All') : 'Accept All'}
                   />
                 </FormField>
-                <FormField label="Decline Button Text" hint={isLocaleMode ? `Default: "${transDefaults.cookie_decline_text || form.cookie_decline_text}"` : undefined}>
+                <FormField
+                  label="Decline Button"
+                  hint={isLocaleMode ? `Default: "${transDefaults.cookie_decline_text || form.cookie_decline_text}"` : 'Secondary action button'}
+                >
                   <Input
                     value={isLocaleMode ? tv('cookie_decline_text') : form.cookie_decline_text}
                     onChange={isLocaleMode ? tf('cookie_decline_text') : f('cookie_decline_text')}
@@ -1204,20 +1227,20 @@ export default function SettingsPage() {
               </div>
             </Section>
 
-            {!isLocaleMode && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                <div className="flex items-start gap-3">
-                  <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-800">Preview</p>
-                    <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                      The banner appears in the bottom-right corner for all new visitors. Returning visitors who have already made a choice will not see it again until they clear their browser storage.
-                      The banner respects analytics preferences — if a visitor declines, analytics cookies will not be set.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* ── Live preview ── */}
+            <Section title="Live Preview" icon={Eye}>
+              <p className="text-xs text-gray-400 -mt-1 mb-3">
+                This is how the banner looks to visitors. Text reflects the current fields above.
+              </p>
+              <CookieBannerPreview
+                title={isLocaleMode ? (tv('cookie_consent_title') || transDefaults.cookie_consent_title || form.cookie_consent_title) : form.cookie_consent_title}
+                message={isLocaleMode ? (tv('cookie_consent_message') || transDefaults.cookie_consent_message || form.cookie_consent_message) : form.cookie_consent_message}
+                acceptTxt={isLocaleMode ? (tv('cookie_accept_text') || transDefaults.cookie_accept_text || form.cookie_accept_text) : form.cookie_accept_text}
+                declineTxt={isLocaleMode ? (tv('cookie_decline_text') || transDefaults.cookie_decline_text || form.cookie_decline_text) : form.cookie_decline_text}
+                policyUrl={form.cookie_policy_url || '/privacy'}
+                enabled={form.cookie_consent_enabled === '1'}
+              />
+            </Section>
           </>
         )}
 
@@ -1288,6 +1311,57 @@ export default function SettingsPage() {
           </Btn>
         </div>
       </form>
+    </div>
+  )
+}
+
+function CookieBannerPreview({ title, message, acceptTxt, declineTxt, policyUrl, enabled }) {
+  const previewTitle      = title      || 'We use cookies'
+  const previewMessage    = message    || 'We use cookies to enhance your experience, analyse traffic, and personalise content.'
+  const previewAcceptTxt  = acceptTxt  || 'Accept All'
+  const previewDeclineTxt = declineTxt || 'Decline'
+
+  if (!enabled) {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400">
+        <Cookie size={14} />
+        Cookie banner is disabled — enable it above to preview.
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-sm">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#730D26] to-[#BA1932] px-3 py-2.5 flex items-center gap-2">
+          <Cookie size={14} className="text-white shrink-0" />
+          <h3 className="text-white font-bold text-sm flex-1 leading-none">{previewTitle}</h3>
+          <div className="text-white/60 -mr-0.5 cursor-default">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+        <div className="px-3 py-3">
+          <p className="text-gray-500 text-xs leading-relaxed mb-2.5">{previewMessage}</p>
+          <div className="text-[11px] text-[#730D26] font-semibold flex items-center gap-1 mb-2.5">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+            Manage preferences
+          </div>
+          <div className="flex gap-2 mb-2">
+            <div className="flex-1 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 text-center">
+              {previewDeclineTxt}
+            </div>
+            <div className="flex-1 py-1.5 rounded-xl bg-[#730D26] text-white text-xs font-semibold text-center">
+              {previewAcceptTxt}
+            </div>
+          </div>
+          <p className="text-center text-[10px] text-gray-400">
+            <span className="text-[#730D26]">{policyUrl === '/privacy' ? 'Cookie Policy' : policyUrl}</span>
+            {' · '}
+            <span className="text-[#730D26]">Privacy Policy</span>
+          </p>
+        </div>
+      </div>
+      <p className="text-[10px] text-gray-400 mt-2 text-center">↑ Actual banner shown bottom-right to visitors</p>
     </div>
   )
 }

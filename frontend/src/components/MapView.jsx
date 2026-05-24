@@ -63,19 +63,22 @@ function makeMarkerEl(m, onClickFn) {
   const span = document.createElement('span')
   span.dataset.markerId = String(m.id)
   if (price) {
-    span.textContent = price
+    span.textContent = price + ' MAD'
     Object.assign(span.style, {
       background: '#BA1932',
       color: 'white',
-      padding: '4px 8px',
+      padding: '4px 10px',
       borderRadius: '20px',
       fontSize: '11px',
       fontWeight: '700',
       whiteSpace: 'nowrap',
       boxShadow: '0 2px 8px rgba(0,0,0,.3)',
       border: '2px solid white',
-      display: 'inline-block',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '3px',
       transition: 'all .2s',
+      letterSpacing: '0.01em',
     })
   } else {
     Object.assign(span.style, {

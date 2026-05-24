@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck, BarChart2, Check,
   Camera, Play, Phone, MessageCircle, Share2, Building2, Layers,
-  Clock, ChevronRight, ChevronLeft,
+  Clock, ChevronRight, ChevronLeft, X, Video,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
@@ -34,6 +35,95 @@ function getFirstImage(property) {
 
 function hasVideo(property) {
   return (Array.isArray(property?.images) ? property.images : []).some(i => isVideoPath(i))
+}
+
+function getVideos(property) {
+  const imgs = Array.isArray(property?.images) ? property.images : []
+  return imgs.filter(i => isVideoPath(i)).map(path => ({
+    url: mediaUrl(path),
+    thumbnail: property?.video_thumbnails?.[path] || null,
+  }))
+}
+
+/* ─── Video Modal ───────────────────────────────────────────────── */
+function VideoModal({ videos, propertyName, onClose }) {
+  const [active, setActive] = useState(0)
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  const current = videos[active]
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9990] flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl mx-4"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute -top-11 right-0 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 z-10"
+          style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}
+        >
+          <X size={16} />
+        </button>
+
+        {/* Title */}
+        <p className="text-white/60 text-xs font-medium mb-2 flex items-center gap-1.5">
+          <Video size={12} className="text-white/40" />
+          {propertyName}
+        </p>
+
+        {/* Video player */}
+        <div className="rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
+          <video
+            ref={videoRef}
+            key={current.url}
+            src={current.url}
+            poster={current.thumbnail || undefined}
+            controls
+            autoPlay
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {/* Thumbnail strip — only when multiple videos */}
+        {videos.length > 1 && (
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+            {videos.map((v, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                className="shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all duration-200"
+                style={{ borderColor: i === active ? '#BA1932' : 'transparent', opacity: i === active ? 1 : 0.55 }}
+              >
+                {v.thumbnail
+                  ? <img src={v.thumbnail} alt="" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <Play size={14} className="text-white/60" />
+                    </div>
+                }
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  )
 }
 
 function formatPrice(price) {
@@ -99,7 +189,7 @@ function FeatureTags({ features = [], max = 3 }) {
 }
 
 /* ─── Image Slider ─────────────────────────────────────────────── */
-function ImageSlider({ images, fallback, altText, hasVid, onNavigate }) {
+function ImageSlider({ images, fallback, altText, hasVid, onVideoClick }) {
   const [idx, setIdx] = useState(0)
   const [imgError, setImgError] = useState(false)
   const touchStartX = useRef(null)
@@ -193,13 +283,32 @@ function ImageSlider({ images, fallback, altText, hasVid, onNavigate }) {
             <Camera size={10} /> {total}
           </span>
         )}
-        {hasVid && (
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(0,0,0,0.52)' }}>
-            <Play size={9} /> Tour
-          </span>
+        {hasVid && onVideoClick && (
+          <button
+            onClick={e => { e.stopPropagation(); onVideoClick() }}
+            className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(186,25,50,0.85)', backdropFilter: 'blur(4px)' }}
+          >
+            <Play size={9} className="fill-white" /> Tour
+          </button>
         )}
       </div>
+
+      {/* Centered play button — visible when card is hovered and has video */}
+      {hasVid && onVideoClick && (
+        <button
+          onClick={e => { e.stopPropagation(); onVideoClick() }}
+          aria-label="Watch video tour"
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+        >
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-110"
+            style={{ background: 'rgba(186,25,50,0.90)', boxShadow: '0 4px 24px rgba(186,25,50,0.50)', backdropFilter: 'blur(4px)' }}
+          >
+            <Play size={22} className="fill-white text-white ml-1" />
+          </div>
+        </button>
+      )}
     </div>
   )
 }
@@ -215,6 +324,7 @@ export default function PropertyCard({ property, className = '' }) {
   const { openAuthModal }         = useAuthModal()
   const { isFavorited, toggle: toggleFavorite } = useFavorites()
   const { toast, show: showToast, hide: hideToast } = useToast()
+  const [videoOpen, setVideoOpen] = useState(false)
 
   if (!property) return null
 
@@ -232,6 +342,7 @@ export default function PropertyCard({ property, className = '' }) {
   const added     = timeAgo(property.created_at)
   const isNew     = property.created_at && (Date.now() - new Date(property.created_at).getTime()) < 7 * 86_400_000
   const images    = getImages(property)
+  const videos    = getVideos(property)
   const wa        = whatsappHref(agent?.phone, property.name)
 
   const handleLike = (e) => {
@@ -317,7 +428,8 @@ export default function PropertyCard({ property, className = '' }) {
           images={images.length ? images : [FALLBACK]}
           fallback={FALLBACK}
           altText={property.name}
-          hasVid={hasVideo(property)}
+          hasVid={videos.length > 0}
+          onVideoClick={videos.length > 0 ? () => setVideoOpen(true) : null}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{
@@ -533,6 +645,14 @@ export default function PropertyCard({ property, className = '' }) {
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
+
+      {videoOpen && videos.length > 0 && (
+        <VideoModal
+          videos={videos}
+          propertyName={property.name}
+          onClose={() => setVideoOpen(false)}
+        />
+      )}
     </div>
   )
 }

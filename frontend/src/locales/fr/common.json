@@ -291,7 +291,8 @@
     "subtitle": "est entre vos mains",
     "description": "Recherchez, sauvegardez et contactez des agents en déplacement. Téléchargez l'app et découvrez des propriétés premium partout, à tout moment.",
     "appStore": "Télécharger sur l'App Store",
-    "playStore": "Disponible sur Google Play"
+    "playStore": "Disponible sur Google Play",
+    "scanQr": "Scanner pour télécharger"
   },
   "cookies": {
     "title": "Nous utilisons des cookies",

@@ -291,7 +291,8 @@
     "subtitle": "is in your hands",
     "description": "Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.",
     "appStore": "Download on the App Store",
-    "playStore": "Get it on Google Play"
+    "playStore": "Get it on Google Play",
+    "scanQr": "Scan to download the app"
   },
   "cookies": {
     "title": "We use cookies",

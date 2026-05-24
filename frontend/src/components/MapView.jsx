@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { Layers } from 'lucide-react'
+import { Layers, Map } from 'lucide-react'
+
+function supportsWebGL() {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    )
+  } catch {
+    return false
+  }
+}
 
 const STREET_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 
@@ -97,21 +109,32 @@ export default function MapView({
   const markersRef = useRef({})
   const onClickRef = useRef(onMarkerClick)
   const [isSatellite, setIsSatellite] = useState(false)
+  const [webglError, setWebglError] = useState(false)
 
   useEffect(() => { onClickRef.current = onMarkerClick }, [onMarkerClick])
 
   useEffect(() => {
     if (!containerRef.current) return
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: STREET_STYLE,
-      center: center || [-7.09, 31.79],
-      zoom,
-      attributionControl: false,
-    })
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left')
-    mapRef.current = map
+    if (!supportsWebGL()) {
+      setWebglError(true)
+      return
+    }
+    let map
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: STREET_STYLE,
+        center: center || [-7.09, 31.79],
+        zoom,
+        attributionControl: false,
+      })
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left')
+      mapRef.current = map
+    } catch {
+      setWebglError(true)
+      return
+    }
     return () => {
       Object.values(markersRef.current).forEach(m => m.remove())
       markersRef.current = {}
@@ -169,6 +192,23 @@ export default function MapView({
       mapRef.current?.setStyle(next ? SATELLITE_STYLE : STREET_STYLE)
       return next
     })
+  }
+
+  if (webglError) {
+    return (
+      <div style={{
+        width: '100%', height, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        background: '#f3f4f6', borderRadius: 12, gap: 12,
+        color: '#6b7280',
+      }}>
+        <Map size={40} strokeWidth={1.5} />
+        <div style={{ textAlign: 'center', fontSize: 14 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4, color: '#374151' }}>Map unavailable</div>
+          <div style={{ fontSize: 12 }}>WebGL is required to display the map.</div>
+        </div>
+      </div>
+    )
   }
 
   return (

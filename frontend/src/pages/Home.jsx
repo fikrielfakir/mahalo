@@ -5,6 +5,7 @@ import FeaturedProperties from '../components/FeaturedProperties'
 import RecentlyViewed from '../components/RecentlyViewed'
 import NeighborhoodsSection from '../components/NeighborhoodsSection'
 import NewProjects from '../components/NewProjects'
+import HomepageMapSection from '../components/HomepageMapSection'
 import MobileAppSection from '../components/MobileAppSection'
 import AgentsSection from '../components/AgentsSection'
 import Footer from '../components/Footer'
@@ -124,6 +125,7 @@ export default function Home() {
       <RecentlyViewed />
       <NeighborhoodsSection />
       <NewProjects />
+      <HomepageMapSection />
       <MobileAppSection />
       <AgentsSection />
       <Footer />

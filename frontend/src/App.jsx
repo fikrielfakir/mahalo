@@ -154,14 +154,14 @@ export default function App() {
     <OfflineGate>
       <SiteModeGate>
       <BrowserRouter>
-        <ErrorBoundary>
-          <SiteSettingsProvider>
-          <CompareProvider>
-            <UserAuthProvider>
-              <VerifyEmailProvider>
-              <FavoritesProvider>
-              <AuthModalProvider>
-                <AuthProvider>
+        <SiteSettingsProvider>
+        <CompareProvider>
+          <UserAuthProvider>
+            <VerifyEmailProvider>
+            <FavoritesProvider>
+            <AuthModalProvider>
+              <AuthProvider>
+                <ErrorBoundary>
                   <LangSync />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
@@ -237,14 +237,14 @@ export default function App() {
                   <VerifyEmailPopup />
                   <CookieBannerWrapper />
                   <PublicOnlyOverlays />
-                </AuthProvider>
-              </AuthModalProvider>
-              </FavoritesProvider>
-              </VerifyEmailProvider>
-            </UserAuthProvider>
-          </CompareProvider>
-          </SiteSettingsProvider>
-        </ErrorBoundary>
+                </ErrorBoundary>
+              </AuthProvider>
+            </AuthModalProvider>
+            </FavoritesProvider>
+            </VerifyEmailProvider>
+          </UserAuthProvider>
+        </CompareProvider>
+        </SiteSettingsProvider>
       </BrowserRouter>
       </SiteModeGate>
     </OfflineGate>

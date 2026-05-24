@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck } from 'lucide-react'
+import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,7 @@ const fmtPrice = (val) => {
   return `${Math.round(val / 1_000)}K`
 }
 
+/* ── Price handle (draggable circle) ── */
 function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
   return (
     <div
@@ -31,8 +32,7 @@ function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
         left: `${pct}%`,
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: size,
-        height: size,
+        width: size, height: size,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
         border: '2.5px solid white',
@@ -43,27 +43,26 @@ function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
         userSelect: 'none',
       }}
     >
-      <span
-        style={{
-          position: 'absolute',
-          bottom: size + 3,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: 9,
-          fontWeight: 800,
-          color: '#730D26',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-          lineHeight: 1,
-          letterSpacing: '0.02em',
-        }}
-      >
+      <span style={{
+        position: 'absolute',
+        bottom: size + 4,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: 10,
+        fontWeight: 800,
+        color: '#730D26',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+        lineHeight: 1,
+        letterSpacing: '0.02em',
+      }}>
         {label}
       </span>
     </div>
   )
 }
 
+/* ── Dual-handle range slider ── */
 function PriceRangeSlider({ minVal, maxVal, onChange }) {
   const { t } = useTranslation()
   const trackRef = useRef(null)
@@ -80,62 +79,42 @@ function PriceRangeSlider({ minVal, maxVal, onChange }) {
 
   const startDrag = (handle) => (e) => {
     e.preventDefault()
-
+    e.stopPropagation()
     const onMove = (ev) => {
       if (!trackRef.current) return
-      const clientX = ev.clientX ?? ev.touches?.[0]?.clientX
-      const val = getValFromClientX(clientX)
+      const val = getValFromClientX(ev.clientX ?? ev.touches?.[0]?.clientX)
       const { minVal: mn, maxVal: mx } = stateRef.current
       if (handle === 'min' && val < mx) onChange(val, mx)
       if (handle === 'max' && val > mn) onChange(mn, val)
     }
-
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
-
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
   }
 
   const minPct = pct(minVal)
   const maxPct = pct(maxVal)
-
-  const bothAny = minVal === 0 && maxVal === PRICE_MAX
   const minLabel = minVal === 0 ? t('filters.minPrice') : fmtPrice(minVal)
   const maxLabel = maxVal >= PRICE_MAX ? t('filters.maxPrice') : fmtPrice(maxVal)
 
   return (
-    <div style={{ position: 'relative', paddingTop: 20, paddingBottom: 2 }}>
-      {bothAny && (
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#730D26', position: 'absolute', top: 0, left: 8, opacity: 0.6 }}>
-          {t('filters.anyPrice')}
-        </span>
-      )}
+    <div style={{ position: 'relative', paddingTop: 28, paddingBottom: 8, paddingLeft: 8, paddingRight: 8 }}>
       <div
         ref={trackRef}
-        style={{
-          position: 'relative',
-          height: 4,
-          background: 'rgba(115,13,38,0.15)',
-          borderRadius: 2,
-          margin: '0 8px',
-        }}
+        style={{ position: 'relative', height: 4, background: 'rgba(115,13,38,0.15)', borderRadius: 2 }}
       >
         {/* Active fill */}
-        <div
-          style={{
-            position: 'absolute',
-            left: `${minPct}%`,
-            right: `${100 - maxPct}%`,
-            top: 0,
-            bottom: 0,
-            background: 'linear-gradient(90deg, #730D26, #BA1932)',
-            borderRadius: 2,
-          }}
-        />
-
+        <div style={{
+          position: 'absolute',
+          left: `${minPct}%`,
+          right: `${100 - maxPct}%`,
+          top: 0, bottom: 0,
+          background: 'linear-gradient(90deg, #730D26, #BA1932)',
+          borderRadius: 2,
+        }} />
         <PriceHandle pct={minPct} label={minLabel} onPointerDown={startDrag('min')} />
         <PriceHandle pct={maxPct} label={maxLabel} onPointerDown={startDrag('max')} />
       </div>
@@ -143,22 +122,139 @@ function PriceRangeSlider({ minVal, maxVal, onChange }) {
   )
 }
 
+/* ── Price zone with popover ── */
+function PriceZone({ minPrice, maxPrice, onChange, label, isMobile = false }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  const isDefault = minPrice === 0 && maxPrice === PRICE_MAX
+  const summary = isDefault
+    ? t('filters.anyPrice')
+    : `${fmtPrice(minPrice)} – ${fmtPrice(maxPrice)}`
+
+  /* close on outside click */
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handler)
+    return () => document.removeEventListener('pointerdown', handler)
+  }, [open])
+
+  if (isMobile) {
+    return (
+      <div ref={wrapRef} style={{ position: 'relative' }}>
+        {/* Trigger row */}
+        <div
+          className="flex items-center gap-2 px-5 py-3.5 cursor-pointer"
+          style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{label}</div>
+            <div className="text-sm font-semibold" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>{summary}</div>
+          </div>
+          <ChevronDown size={14} style={{ color: '#BA1932', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        </div>
+        {/* Popover */}
+        {open && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0, right: 0,
+            zIndex: 50,
+            background: 'white',
+            borderRadius: '0 0 16px 16px',
+            boxShadow: '0 12px 40px rgba(115,13,38,0.20)',
+            padding: '12px 16px 16px',
+          }}>
+            <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={onChange} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', flex: '1.4 1 140px', minWidth: 0 }}>
+      {/* Trigger */}
+      <div
+        className="flex items-center gap-2 px-4 h-full cursor-pointer"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{label}</div>
+          <div className="text-sm font-semibold truncate" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>{summary}</div>
+        </div>
+        <ChevronDown size={12} style={{ color: '#BA1932', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </div>
+
+      {/* Popover dropdown */}
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 10px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 280,
+          zIndex: 50,
+          background: 'white',
+          borderRadius: 16,
+          boxShadow: '0 16px 48px rgba(115,13,38,0.22), 0 4px 12px rgba(0,0,0,0.08)',
+          padding: '16px 20px 20px',
+        }}>
+          {/* Arrow */}
+          <div style={{
+            position: 'absolute',
+            top: -7, left: '50%',
+            transform: 'translateX(-50%)',
+            width: 14, height: 14,
+            background: 'white',
+            borderRadius: 2,
+            transform: 'translateX(-50%) rotate(45deg)',
+            boxShadow: '-3px -3px 6px rgba(115,13,38,0.06)',
+          }} />
+          <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>
+            {label}
+          </div>
+          <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={onChange} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Hero ── */
 export default function Hero() {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab]   = useState('Buy')
-  const [location, setLocation]     = useState('')
+
+  /* Store tab as a key — not a translated label — so switching language never breaks it */
+  const TAB_KEYS = ['buy', 'rent', 'projects']
+  const tabLabels = {
+    buy:      t('hero.tabBuy'),
+    rent:     t('hero.tabRent'),
+    projects: t('hero.tabProjects'),
+  }
+
+  const [activeTabKey, setActiveTabKey] = useState('buy')
+  const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
-  const [minPrice, setMinPrice]     = useState(0)
-  const [maxPrice, setMaxPrice]     = useState(PRICE_MAX)
-  const [bedrooms, setBedrooms]     = useState('Any')
-  const [categories, setCategories] = useState([])
+  const [minPrice, setMinPrice]         = useState(0)
+  const [maxPrice, setMaxPrice]         = useState(PRICE_MAX)
+  const [bedrooms, setBedrooms]         = useState('Any')
+  const [categories, setCategories]     = useState([])
 
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
 
   const navigate = useNavigate()
-  const tabs = [t('hero.tabBuy'), t('hero.tabRent'), t('hero.tabProjects')]
 
   useEffect(() => {
     propertiesApi.filters()
@@ -192,27 +288,24 @@ export default function Hero() {
 
   const handleSearch = () => {
     const params = new URLSearchParams()
-    if (activeTab === t('hero.tabRent')) params.set('type', 'rent')
-    else if (activeTab === t('hero.tabBuy')) params.set('type', 'sale')
+    if (activeTabKey === 'rent')     params.set('type', 'rent')
+    else if (activeTabKey === 'buy') params.set('type', 'sale')
     if (location)           params.set('search', location)
     if (propertyType)       params.set('category_id', propertyType)
     if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
     if (minPrice > 0)           params.set('min_price', minPrice)
     if (maxPrice < PRICE_MAX)   params.set('max_price', maxPrice)
-    const path = activeTab === t('hero.tabProjects') ? '/projects' : '/properties'
+    const path = activeTabKey === 'projects' ? '/projects' : '/properties'
     navigate(`${path}?${params.toString()}`)
   }
 
-  const handlePriceChange = (mn, mx) => {
-    setMinPrice(mn)
-    setMaxPrice(mx)
-  }
+  const handlePriceChange = (mn, mx) => { setMinPrice(mn); setMaxPrice(mx) }
 
   const stats = [
-    { icon: Home,        value: fmtCount(propertiesCount, '1K+'), label: t('stats.properties') },
-    { icon: Users,       value: '8K+',                            label: t('stats.happyClients') },
-    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),     label: t('stats.verifiedAgents') },
-    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+', label: t('stats.cities') },
+    { icon: Home,        value: fmtCount(propertiesCount, '1K+'),          label: t('stats.properties') },
+    { icon: Users,       value: '8K+',                                      label: t('stats.happyClients') },
+    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),               label: t('stats.verifiedAgents') },
+    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+',   label: t('stats.cities') },
   ]
 
   return (
@@ -221,12 +314,8 @@ export default function Hero() {
       {/* ── Background ── */}
       <div className="absolute inset-0 z-0">
         <img src="/hero-bg.jpg" alt="Luxury Villa" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to right, rgba(6,1,2,0.97) 0%, rgba(25,3,10,0.93) 22%, rgba(115,13,38,0.70) 48%, rgba(115,13,38,0.22) 70%, rgba(0,0,0,0.04) 100%)'
-        }} />
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 28%, transparent 62%, rgba(0,0,0,0.60) 100%)'
-        }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,1,2,0.97) 0%, rgba(25,3,10,0.93) 22%, rgba(115,13,38,0.70) 48%, rgba(115,13,38,0.22) 70%, rgba(0,0,0,0.04) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 28%, transparent 62%, rgba(0,0,0,0.60) 100%)' }} />
       </div>
 
       {/* ── Main content ── */}
@@ -255,25 +344,28 @@ export default function Hero() {
             {t('hero.subtitle')}
           </p>
 
-          {/* ── Tabs ── */}
+          {/* ── Tabs — keyed so language switching never loses active state ── */}
           <div className="flex items-center gap-1 sm:gap-2 mb-4 sm:mb-5 animate-fade-up" style={{ animationDelay: '120ms' }}>
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className="px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all duration-300"
-                style={{
-                  borderRadius: '999px',
-                  ...(activeTab === tab
-                    ? { background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', color: 'white', boxShadow: '0 4px 16px rgba(186,25,50,0.40)' }
-                    : { background: 'transparent', color: 'rgba(255,255,255,0.60)' })
-                }}
-                onMouseEnter={e => { if (activeTab !== tab) e.currentTarget.style.color = 'white' }}
-                onMouseLeave={e => { if (activeTab !== tab) e.currentTarget.style.color = 'rgba(255,255,255,0.60)' }}
-              >
-                {tab}
-              </button>
-            ))}
+            {TAB_KEYS.map((key) => {
+              const isActive = activeTabKey === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTabKey(key)}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all duration-300"
+                  style={{
+                    borderRadius: '999px',
+                    ...(isActive
+                      ? { background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', color: 'white', boxShadow: '0 4px 16px rgba(186,25,50,0.40)' }
+                      : { background: 'transparent', color: 'rgba(255,255,255,0.60)' })
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'white' }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'rgba(255,255,255,0.60)' }}
+                >
+                  {tabLabels[key]}
+                </button>
+              )
+            })}
           </div>
 
           {/* ── Search bar ── */}
@@ -281,7 +373,7 @@ export default function Hero() {
 
             {/* Desktop: single pill row */}
             <div className="hidden sm:flex items-stretch"
-              style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '999px', boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
+              style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '999px', boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)', overflow: 'visible', position: 'relative' }}>
 
               {/* Location */}
               <div className="flex items-center gap-2.5 px-5 py-3.5 cursor-text"
@@ -296,7 +388,7 @@ export default function Hero() {
               </div>
 
               {/* Type */}
-              <div className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
+              <div className="flex items-center gap-2.5 px-4 py-3.5"
                 style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 100px', minWidth: 0 }}>
                 <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -310,7 +402,7 @@ export default function Hero() {
               </div>
 
               {/* Bedrooms */}
-              <div className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
+              <div className="flex items-center gap-2.5 px-4 py-3.5"
                 style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 90px', minWidth: 0 }}>
                 <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -322,14 +414,14 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Price Range — dual handle slider */}
-              <div className="flex items-center gap-2 px-4"
-                style={{ flex: '1.6 1 160px', minWidth: 0 }}>
-                <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0, marginTop: 4 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.priceRange')}</div>
-                  <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={handlePriceChange} />
-                </div>
+              {/* Price — click to open slider popover */}
+              <div style={{ borderRight: '1px solid rgba(115,13,38,0.08)', display: 'flex', alignItems: 'stretch' }}>
+                <PriceZone
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  onChange={handlePriceChange}
+                  label={t('hero.priceRange')}
+                />
               </div>
 
               {/* Search button */}
@@ -374,7 +466,8 @@ export default function Hero() {
                     </select>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5 flex-1 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
+                <div className="flex items-center gap-2.5 flex-1 px-4 py-3.5"
+                  style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
                   <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
@@ -386,18 +479,16 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Price slider full width */}
-              <div className="px-5 pt-2 pb-1" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-0" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.priceRange')}</div>
-                <div className="flex items-center gap-2">
-                  <DollarSign size={13} style={{ color: '#BA1932', flexShrink: 0, marginTop: 14 }} />
-                  <div style={{ flex: 1 }}>
-                    <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={handlePriceChange} />
-                  </div>
-                </div>
-              </div>
+              {/* Price — click to open */}
+              <PriceZone
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                onChange={handlePriceChange}
+                label={t('hero.priceRange')}
+                isMobile
+              />
 
-              {/* Search button row */}
+              {/* Search button */}
               <div className="flex justify-end p-2 pr-3">
                 <button onClick={handleSearch}
                   className="flex items-center justify-center gap-1.5 text-white font-bold text-sm px-6 py-3 transition-all duration-300 active:scale-95"

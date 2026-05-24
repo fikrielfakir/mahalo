@@ -11,6 +11,7 @@ export function isVideoPath(p = '') {
 export function mediaUrl(path) {
   if (!path) return ''
   if (path.startsWith('http') || path.startsWith('blob:')) return path
+  if (path.startsWith('/storage/')) return `${API_BASE}${path}`
   if (isVideoPath(path)) return `${API_BASE}/api/v1/stream/${path}`
   return `${API_BASE}/storage/${path}`
 }

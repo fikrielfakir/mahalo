@@ -88,8 +88,8 @@ export default function CitiesPage() {
       const fd = new FormData()
       fd.append('file', file)
       const r = await adminSettings.uploadLogo(fd)
-      const url = r.url || r.data?.url
-      if (url) setForm(p => ({ ...p, image_url: url }))
+      const path = r.path || r.data?.path
+      if (path) setForm(p => ({ ...p, image_url: path }))
     } catch { alert(t('admin.common.error')) } finally { setUploadingImg(false) }
   }
 

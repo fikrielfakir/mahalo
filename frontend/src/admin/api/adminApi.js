@@ -188,4 +188,33 @@ export const adminReviews = {
   delete: (id)     => client.delete(`/admin/reviews/${id}`),
 }
 
+export const adminInvestors = {
+  list:   (p = {}) => client.get('/admin/investors', { params: p }),
+  get:    (id)     => client.get(`/admin/investors/${id}`),
+  create: (data)   => client.post('/admin/investors', data),
+  update: (id, d)  => client.put(`/admin/investors/${id}`, d),
+  delete: (id)     => client.delete(`/admin/investors/${id}`),
+}
+
+export const adminProfessionalApplications = {
+  list:    (p = {}) => client.get('/admin/professional-applications', { params: p }),
+  get:     (id)     => client.get(`/admin/professional-applications/${id}`),
+  approve: (id)     => client.post(`/admin/professional-applications/${id}/approve`),
+  reject:  (id, d)  => client.post(`/admin/professional-applications/${id}/reject`, d),
+}
+
+export const adminContentTranslations = {
+  get:  (type, id)     => client.get(`/admin/content-translations/${type}/${id}`),
+  save: (type, id, d)  => client.put(`/admin/content-translations/${type}/${id}`, d),
+}
+
+export const publicApi = {
+  cities:     (p = {}) => client.get('/cities', { params: p }),
+  categories: (p = {}) => client.get('/categories', { params: p }),
+}
+
+// Named re-export of the axios client for pages that call it directly
+// (e.g. adminApi.get('/admin/...'), adminApi.post(...), adminApi.delete(...))
+export { client as adminApi }
+
 export default client

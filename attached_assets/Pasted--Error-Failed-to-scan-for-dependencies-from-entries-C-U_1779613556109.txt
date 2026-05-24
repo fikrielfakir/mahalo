@@ -1,0 +1,70 @@
+
+Error:   Failed to scan for dependencies from entries:
+  C:/Users/fikri/Desktop/mahalo-main/mahalo-main/frontend/index.html
+
+  X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminContentTranslations"
+
+    src/admin/components/ContentTranslationsModal.jsx:3:9:
+      3 │ import { adminContentTranslations, adminLanguages } from '../api/ad...
+        ╵          ~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "publicApi"
+
+    src/admin/pages/AgentsPage.jsx:2:22:
+      2 │ import { adminAgents, publicApi } from '../api/adminApi'
+        ╵                       ~~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminApi"
+
+    src/admin/pages/AnalyticsPage.jsx:2:9:
+      2 │ import { adminApi } from '../api/adminApi'
+        ╵          ~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminApi"
+
+    src/admin/pages/AppUpdatePage.jsx:2:9:
+      2 │ import { adminApi } from '../api/adminApi'
+        ╵          ~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminInvestors"
+
+    src/admin/pages/InvestorsPage.jsx:2:9:
+      2 │ import { adminInvestors } from '../api/adminApi'
+        ╵          ~~~~~~~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminProfessionalApplications"
+
+    src/admin/pages/ProfessionalApplicationsPage.jsx:2:9:
+      2 │ import { adminProfessionalApplications } from '../api/adminApi'
+        ╵          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "adminInvestors"
+
+    src/admin/pages/ProjectsPage.jsx:2:24:
+      2 │ import { adminProjects, adminInvestors, publicApi } from '../api/ad...
+        ╵                         ~~~~~~~~~~~~~~
+
+
+X [ERROR] No matching export in "src/admin/api/adminApi.js" for import "publicApi"
+
+    src/admin/pages/ProjectsPage.jsx:2:40:
+      2 │ ...{ adminProjects, adminInvestors, publicApi } from '../api/adminApi'
+        ╵                                     ~~~~~~~~~
+
+
+    at failureErrorWithLog (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:1472:15)
+    at C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:945:25
+    at runOnEndCallbacks (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:1315:45)
+    at buildResponseToResult (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:943:7)
+    at C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:955:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:954:54)
+    at handleRequest (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:647:17)
+    at handleIncomingPacket (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:672:7)
+    at Socket.readFromStdout (C:\Users\fikri\Desktop\mahalo-main\mahalo-main\frontend\node_modules\esbuild\lib\main.js:600:7)

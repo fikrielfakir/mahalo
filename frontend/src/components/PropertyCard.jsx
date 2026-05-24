@@ -474,12 +474,17 @@ export default function PropertyCard({ property, className = '' }) {
         <div className={`flex items-center gap-2 ${features.length > 0 ? 'pt-3' : 'pt-3 border-t'}`}
           style={features.length === 0 ? { borderTop: '1px solid rgba(115,13,38,0.06)' } : {}}>
           {agent ? (
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold text-white"
+            <div
+              className="flex items-center gap-1.5 flex-1 min-w-0 cursor-pointer group/agent"
+              onClick={e => { e.stopPropagation(); navigate(`/agents/${agent.id}`) }}
+              title={`View ${agent.name}'s profile`}
+            >
+              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold text-white transition-transform duration-200 group-hover/agent:scale-110"
                 style={{ background: 'linear-gradient(135deg, #730D26, #BA1932)' }}>
                 {getAgentInitials(agent.name)}
               </div>
-              <span className="text-[10px] font-medium truncate" style={{ color: 'rgba(115,13,38,0.55)' }}>
+              <span className="text-[10px] font-medium truncate transition-colors duration-200 group-hover/agent:text-[#BA1932] group-hover/agent:underline"
+                style={{ color: 'rgba(115,13,38,0.55)' }}>
                 {agent.name}
               </span>
             </div>

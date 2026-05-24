@@ -129,12 +129,13 @@ export const adminConsults = {
 }
 
 export const adminSettings = {
-  get:                ()          => client.get('/admin/settings'),
-  update:             (data)      => client.put('/admin/settings', data),
-  uploadLogo:         (fd)        => client.post('/admin/settings/logo', fd, { headers: { 'Content-Type': undefined } }),
-  getTranslations:    (locale)    => client.get(`/settings/translations/${locale}`),
-  updateTranslations: (locale, d) => client.put(`/settings/translations/${locale}`, d),
-  deleteTranslation:  (locale, k) => client.delete(`/settings/translations/${locale}/${k}`),
+  get:                ()              => client.get('/admin/settings'),
+  update:             (data)          => client.put('/admin/settings', data),
+  uploadLogo:         (fd)            => client.post('/admin/settings/logo', fd, { headers: { 'Content-Type': undefined } }),
+  getTranslations:    (locale)        => client.get(`/admin/settings/translations/${locale}`),
+  updateTranslations: (locale, d)     => client.put(`/admin/settings/translations/${locale}`, d),
+  deleteTranslation:  (locale, k)     => client.delete(`/admin/settings/translations/${locale}/${k}`),
+  autoTranslate:      (locale, keys)  => client.post('/admin/settings/auto-translate', { locale, keys }),
 }
 
 export const adminApplications = {

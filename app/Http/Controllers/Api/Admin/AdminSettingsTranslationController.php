@@ -26,6 +26,9 @@ class AdminSettingsTranslationController extends Controller
         'page_about',
         'page_privacy',
         'page_terms',
+        'mobile_app_title',
+        'mobile_app_subtitle',
+        'mobile_app_description',
     ];
 
     public function show(Request $request, string $locale): JsonResponse

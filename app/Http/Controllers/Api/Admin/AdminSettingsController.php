@@ -126,6 +126,77 @@ class AdminSettingsController extends Controller
         ]);
     }
 
+    public function autoTranslate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'locale' => 'required|string|in:en,fr,es,ar',
+            'keys'   => 'required|array|min:1',
+        ]);
+
+        $locale = $request->input('locale');
+        $keys   = $request->input('keys');
+
+        $localeNames = [
+            'en' => 'English',
+            'fr' => 'French',
+            'es' => 'Spanish',
+            'ar' => 'Arabic',
+        ];
+        $localeName = $localeNames[$locale] ?? $locale;
+
+        $settings = DB::table('site_settings')
+            ->whereIn('key', ['groq_api_key', 'ai_model'])
+            ->pluck('value', 'key')
+            ->toArray();
+
+        $apiKey = $settings['groq_api_key'] ?? env('GROQ_API_KEY', '');
+        $model  = ($settings['ai_model'] ?? '') ?: 'llama-3.3-70b-versatile';
+
+        if (!$apiKey) {
+            return response()->json(['error' => true, 'message' => 'Groq API key is not configured. Please set it in the AI tab.'], 422);
+        }
+
+        $inputJson = json_encode($keys, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        $prompt = <<<EOT
+Translate the following JSON values into {$localeName}. Return ONLY a valid JSON object with exactly the same keys but with translated values. Do not add any explanation, markdown, or code fences.
+
+Input:
+{$inputJson}
+EOT;
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->timeout(30)
+                ->post('https://api.groq.com/openai/v1/chat/completions', [
+                    'model'       => $model,
+                    'messages'    => [
+                        ['role' => 'system', 'content' => "You are a professional translator. Translate text into {$localeName}. Return only valid JSON with the same keys."],
+                        ['role' => 'user',   'content' => $prompt],
+                    ],
+                    'max_tokens'  => 1000,
+                    'temperature' => 0.3,
+                ]);
+
+            if (!$response->successful()) {
+                return response()->json(['error' => true, 'message' => 'Groq API error: ' . $response->body()], 500);
+            }
+
+            $raw     = $response->json('choices.0.message.content', '');
+            $cleaned = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
+            $cleaned = preg_replace('/\s*```$/', '', $cleaned);
+            $result  = json_decode($cleaned, true);
+
+            if (!is_array($result)) {
+                return response()->json(['error' => true, 'message' => 'Could not parse translation response.'], 500);
+            }
+
+            return response()->json(['data' => $result, 'error' => false, 'message' => null]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => true, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function uploadLogo(Request $request): JsonResponse
     {
         $request->validate([

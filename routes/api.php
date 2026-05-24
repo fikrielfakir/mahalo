@@ -271,6 +271,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
         Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
+        Route::post('/settings/auto-translate', [AdminSettingsController::class, 'autoTranslate']);
 
         // Translatable settings (per-locale overrides)
         Route::get('/settings/translations/{locale}', [AdminSettingsTranslationController::class, 'show']);

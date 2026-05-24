@@ -7,11 +7,19 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages, Bot, ChevronDown, Smartphone, Building2,
+  Languages, Bot, ChevronDown, Smartphone, Building2, Wand2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const TRANSLATABLE_TABS = ['general', 'seo', 'site_mode', 'pages', 'cookies']
+const TRANSLATABLE_TABS = ['general', 'seo', 'site_mode', 'pages', 'cookies', 'mobile_app']
+
+const TAB_AUTO_TRANSLATE_KEYS = {
+  general:    ['tagline', 'footer_description'],
+  seo:        ['seo_title', 'seo_description', 'seo_keywords'],
+  site_mode:  ['maintenance_message', 'coming_soon_message'],
+  cookies:    ['cookie_consent_title', 'cookie_consent_message', 'cookie_accept_text', 'cookie_decline_text'],
+  mobile_app: ['mobile_app_title', 'mobile_app_subtitle', 'mobile_app_description'],
+}
 
 const LOCALES = [
   { code: 'default', label: 'Default', flag: '🌐' },
@@ -147,9 +155,37 @@ export default function SettingsPage() {
   const [transDefaults, setTransDefaults] = useState({})
   const [transLoading, setTransLoading]   = useState(false)
   const [transSaved, setTransSaved]       = useState(false)
+  const [autoTranslating, setAutoTranslating] = useState(false)
+  const [autoTransResult, setAutoTransResult] = useState(null)
 
   const isLocaleMode = locale !== 'default'
   const tabHasTranslations = TRANSLATABLE_TABS.includes(tab)
+  const tabAutoKeys = TAB_AUTO_TRANSLATE_KEYS[tab] || []
+
+  const handleAutoTranslate = async () => {
+    if (!locale || locale === 'default' || !tabAutoKeys.length) return
+    setAutoTranslating(true)
+    setAutoTransResult(null)
+    try {
+      const keysToTranslate = {}
+      tabAutoKeys.forEach(k => {
+        const val = form[k] || ''
+        if (val) keysToTranslate[k] = val
+      })
+      if (!Object.keys(keysToTranslate).length) {
+        setAutoTransResult({ ok: false, msg: 'No content to translate.' })
+        return
+      }
+      const r = await adminSettings.autoTranslate(locale, keysToTranslate)
+      if (r?.data) {
+        setTransForm(p => ({ ...p, ...r.data }))
+        setAutoTransResult({ ok: true, msg: `Translated ${Object.keys(r.data).length} field(s)` })
+        setTimeout(() => setAutoTransResult(null), 4000)
+      }
+    } catch (e) {
+      setAutoTransResult({ ok: false, msg: e?.message || 'Auto-translate failed.' })
+    } finally { setAutoTranslating(false) }
+  }
 
   const copyRedirectUri = () => {
     const uri = `${window.location.origin}/api/v1/auth/google/callback`
@@ -282,12 +318,12 @@ export default function SettingsPage() {
       </div>
 
       {tabHasTranslations && (
-        <div className="flex items-center gap-3 mb-6 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 mb-6 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
             <Languages size={14} className="text-[#BA1932]" />
             {t('admin.settings.langLabel')}
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {LOCALES.map(({ code, label, flag }) => (
               <button key={code} type="button" onClick={() => setLocale(code)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
@@ -299,7 +335,26 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
-          {isLocaleMode && (
+          {isLocaleMode && tabAutoKeys.length > 0 && (
+            <button
+              type="button"
+              onClick={handleAutoTranslate}
+              disabled={autoTranslating}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white transition-all disabled:opacity-60 shadow-sm"
+            >
+              {autoTranslating
+                ? <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Translating…</>
+                : <><Wand2 size={12} /> Auto Translate</>
+              }
+            </button>
+          )}
+          {autoTransResult && (
+            <span className={`text-xs font-medium flex items-center gap-1 ${autoTransResult.ok ? 'text-emerald-600' : 'text-red-500'}`}>
+              {autoTransResult.ok ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+              {autoTransResult.msg}
+            </span>
+          )}
+          {isLocaleMode && !autoTransResult && (
             <p className="text-xs text-gray-400 ml-auto">
               {t('admin.settings.editingLang', { lang: LOCALES.find(l => l.code === locale)?.label })}
             </p>
@@ -884,49 +939,75 @@ export default function SettingsPage() {
 
         {tab === 'mobile_app' && (
           <>
-            <Section title={t('admin.settings.sectionMobileApp')} icon={Smartphone}>
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-3">
-                <Info size={13} className="shrink-0 mt-0.5" /> {t('admin.settings.mobileAppNote')}
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{t('admin.settings.showMobileApp')}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{t('admin.settings.showMobileAppHint')}</p>
+            {!isLocaleMode && (
+              <Section title={t('admin.settings.sectionMobileApp')} icon={Smartphone}>
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-3">
+                  <Info size={13} className="shrink-0 mt-0.5" /> {t('admin.settings.mobileAppNote')}
                 </div>
-                <div onClick={() => setForm(p => ({ ...p, mobile_app_enabled: p.mobile_app_enabled === '1' ? '0' : '1' }))}
-                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.mobile_app_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}>
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.mobile_app_enabled === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{t('admin.settings.showMobileApp')}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('admin.settings.showMobileAppHint')}</p>
+                  </div>
+                  <div onClick={() => setForm(p => ({ ...p, mobile_app_enabled: p.mobile_app_enabled === '1' ? '0' : '1' }))}
+                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.mobile_app_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.mobile_app_enabled === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </div>
                 </div>
-              </div>
-              {form.mobile_app_enabled === '0' && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
-                  <AlertCircle size={14} /> {t('admin.settings.mobileAppHidden')}
-                </div>
+                {form.mobile_app_enabled === '0' && (
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                    <AlertCircle size={14} /> {t('admin.settings.mobileAppHidden')}
+                  </div>
+                )}
+              </Section>
+            )}
+            <Section title={isLocaleMode
+              ? `App Content — ${LOCALES.find(l => l.code === locale)?.flag} ${LOCALES.find(l => l.code === locale)?.label}`
+              : t('admin.settings.sectionMobileContent')} icon={FileText}>
+              {isLocaleMode ? (
+                <>
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
+                    <Info size={13} className="shrink-0 mt-0.5" />
+                    <span>Translating app section text for <strong>{LOCALES.find(l => l.code === locale)?.label}</strong>. Leave a field empty to use the default.</span>
+                  </div>
+                  <FormField label={t('admin.settings.fieldAppHeading1')} hint={`Default: "${transDefaults.mobile_app_title || form.mobile_app_title}"`}>
+                    <Input value={tv('mobile_app_title')} onChange={tf('mobile_app_title')} placeholder={tp('mobile_app_title', 'Your next home')} />
+                  </FormField>
+                  <FormField label={t('admin.settings.fieldAppHeading2')} hint={`Default: "${transDefaults.mobile_app_subtitle || form.mobile_app_subtitle}"`}>
+                    <Input value={tv('mobile_app_subtitle')} onChange={tf('mobile_app_subtitle')} placeholder={tp('mobile_app_subtitle', 'is in your hands')} />
+                  </FormField>
+                  <FormField label={t('admin.settings.fieldAppDesc')} hint={`Default: "${(transDefaults.mobile_app_description || form.mobile_app_description)?.substring(0, 60)}…"`}>
+                    <Textarea value={tv('mobile_app_description')} onChange={tf('mobile_app_description')} rows={3} placeholder={tp('mobile_app_description', 'Search, save and contact agents on the go…')} />
+                  </FormField>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label={t('admin.settings.fieldAppHeading1')} hint={t('admin.settings.fieldAppHeading1Hint')}>
+                      <Input value={form.mobile_app_title} onChange={f('mobile_app_title')} placeholder="Your next home" />
+                    </FormField>
+                    <FormField label={t('admin.settings.fieldAppHeading2')} hint={t('admin.settings.fieldAppHeading2Hint')}>
+                      <Input value={form.mobile_app_subtitle} onChange={f('mobile_app_subtitle')} placeholder="is in your hands" />
+                    </FormField>
+                  </div>
+                  <FormField label={t('admin.settings.fieldAppDesc')} hint={t('admin.settings.fieldAppDescHint')}>
+                    <Textarea value={form.mobile_app_description} onChange={f('mobile_app_description')} rows={3} placeholder="Search, save and contact agents on the go…" />
+                  </FormField>
+                </>
               )}
             </Section>
-            <Section title={t('admin.settings.sectionMobileContent')} icon={FileText}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label={t('admin.settings.fieldAppHeading1')} hint={t('admin.settings.fieldAppHeading1Hint')}>
-                  <Input value={form.mobile_app_title} onChange={f('mobile_app_title')} placeholder="Your next home" />
-                </FormField>
-                <FormField label={t('admin.settings.fieldAppHeading2')} hint={t('admin.settings.fieldAppHeading2Hint')}>
-                  <Input value={form.mobile_app_subtitle} onChange={f('mobile_app_subtitle')} placeholder="is in your hands" />
-                </FormField>
-              </div>
-              <FormField label={t('admin.settings.fieldAppDesc')} hint={t('admin.settings.fieldAppDescHint')}>
-                <Textarea value={form.mobile_app_description} onChange={f('mobile_app_description')} rows={3} placeholder="Search, save and contact agents on the go…" />
-              </FormField>
-            </Section>
-            <Section title={t('admin.settings.sectionStoreLinks')} icon={ExternalLink}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label={t('admin.settings.fieldAppStore')} hint={t('admin.settings.fieldAppStoreHint')}>
-                  <Input value={form.mobile_app_appstore_url} onChange={f('mobile_app_appstore_url')} placeholder="https://apps.apple.com/…" />
-                </FormField>
-                <FormField label={t('admin.settings.fieldPlayStore')} hint={t('admin.settings.fieldPlayStoreHint')}>
-                  <Input value={form.mobile_app_playstore_url} onChange={f('mobile_app_playstore_url')} placeholder="https://play.google.com/store/…" />
-                </FormField>
-              </div>
-            </Section>
+            {!isLocaleMode && (
+              <Section title={t('admin.settings.sectionStoreLinks')} icon={ExternalLink}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField label={t('admin.settings.fieldAppStore')} hint={t('admin.settings.fieldAppStoreHint')}>
+                    <Input value={form.mobile_app_appstore_url} onChange={f('mobile_app_appstore_url')} placeholder="https://apps.apple.com/…" />
+                  </FormField>
+                  <FormField label={t('admin.settings.fieldPlayStore')} hint={t('admin.settings.fieldPlayStoreHint')}>
+                    <Input value={form.mobile_app_playstore_url} onChange={f('mobile_app_playstore_url')} placeholder="https://play.google.com/store/…" />
+                  </FormField>
+                </div>
+              </Section>
+            )}
           </>
         )}
 

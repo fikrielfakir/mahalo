@@ -5,7 +5,7 @@ import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useTranslation } from 'react-i18next'
-import { SUPPORTED_LOCALES } from '../i18n.js'
+import { SUPPORTED_LOCALES, USER_LANG_KEY } from '../i18n.js'
 
 const LANG_LABELS = {
   en: { label: 'English',  short: 'EN', flag: '🇬🇧' },
@@ -70,6 +70,7 @@ export default function Navbar({ transparent = false }) {
   }
 
   const changeLanguage = async (lng) => {
+    localStorage.setItem(USER_LANG_KEY, lng)
     await i18n.changeLanguage(lng)
     setLangDropdown(false)
     setMenuOpen(false)

@@ -10,6 +10,9 @@ import arCommon from './locales/ar/common.json'
 const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar']
 const RTL_LOCALES = ['ar']
 
+const USER_LANG_KEY  = 'mahalo_lang'
+const ADMIN_LANG_KEY = 'mahalo_admin_lang'
+
 function applyDirection(lng) {
   if (typeof document === 'undefined') return
   const dir = RTL_LOCALES.includes(lng) ? 'rtl' : 'ltr'
@@ -41,8 +44,8 @@ i18n
     },
     detection: {
       order: ['localStorage'],
-      lookupLocalStorage: 'mahalo_lang',
-      caches: ['localStorage'],
+      lookupLocalStorage: USER_LANG_KEY,
+      caches: [],
     },
   })
 
@@ -69,5 +72,5 @@ i18n.on('languageChanged', (lng) => {
   fetchAndApplyOverrides(lng)
 })
 
-export { SUPPORTED_LOCALES, RTL_LOCALES }
+export { SUPPORTED_LOCALES, RTL_LOCALES, USER_LANG_KEY, ADMIN_LANG_KEY, applyDirection }
 export default i18n

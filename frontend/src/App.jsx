@@ -1,6 +1,8 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ErrorBoundary from './components/ErrorBoundary'
+import { USER_LANG_KEY, ADMIN_LANG_KEY } from './i18n.js'
 import SiteModeGate from './components/SiteModeGate'
 import CompareBar from './components/CompareBar'
 import AuthModal from './components/AuthModal'
@@ -12,7 +14,6 @@ import { VerifyEmailProvider } from './context/VerifyEmailContext'
 import { SiteSettingsProvider, useSiteSettings } from './context/SiteSettingsContext'
 import VerifyEmailBanner from './components/VerifyEmailBanner'
 import VerifyEmailPopup from './components/VerifyEmailPopup'
-import { useState, useEffect, useRef } from 'react'
 import { AuthProvider } from './admin/context/AuthContext'
 import CookieBanner from './components/CookieBanner'
 import OfflineBanner from './components/OfflineBanner'
@@ -84,6 +85,23 @@ function PageLoader() {
   )
 }
 
+function LangSync() {
+  const { pathname } = useLocation()
+  const { i18n } = useTranslation()
+  const isAdmin = pathname.startsWith('/admin')
+
+  useEffect(() => {
+    const key = isAdmin ? ADMIN_LANG_KEY : USER_LANG_KEY
+    const defaultLang = isAdmin ? 'en' : 'fr'
+    const lang = localStorage.getItem(key) || defaultLang
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang)
+    }
+  }, [isAdmin]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null
+}
+
 function CookieBannerWrapper() {
   const settings = useSiteSettings()
   const { pathname } = useLocation()
@@ -144,6 +162,7 @@ export default function App() {
               <FavoritesProvider>
               <AuthModalProvider>
                 <AuthProvider>
+                  <LangSync />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       {/* Public site */}

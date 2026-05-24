@@ -1,31 +1,41 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authApi, setAuthToken } from '../api/client'
 
+// Tokens are stored in sessionStorage (not localStorage).
+// sessionStorage is scoped to the browser tab and is never written to disk,
+// so it is not accessible to other tabs and is wiped when the tab closes.
+
 const UserAuthContext = createContext(null)
 
 const TOKEN_KEY = 'user_token'
 
+const ss = {
+  get:    ()      => { try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null } },
+  set:    (v)     => { try { sessionStorage.setItem(TOKEN_KEY, v) } catch {} },
+  remove: ()      => { try { sessionStorage.removeItem(TOKEN_KEY) } catch {} },
+}
+
 export function UserAuthProvider({ children }) {
   const [user,    setUser]    = useState(null)
-  const [token,   setToken]   = useState(() => localStorage.getItem(TOKEN_KEY))
+  const [token,   setToken]   = useState(() => ss.get())
   const [loading, setLoading] = useState(true)
 
   const saveSession = useCallback((tokenValue, userData) => {
-    localStorage.setItem(TOKEN_KEY, tokenValue)
+    ss.set(tokenValue)
     setToken(tokenValue)
     setAuthToken(tokenValue)
     setUser(userData)
   }, [])
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
+    ss.remove()
     setToken(null)
     setUser(null)
     setAuthToken(null)
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem(TOKEN_KEY)
+    const stored = ss.get()
     if (!stored) { setLoading(false); return }
     setAuthToken(stored)
     authApi.profile()
@@ -49,11 +59,7 @@ export function UserAuthProvider({ children }) {
 
   const register = async (name, email, password, passwordConfirmation, phone) => {
     const res = await authApi.register({
-      name,
-      email,
-      password,
-      password_confirmation: passwordConfirmation,
-      phone,
+      name, email, password, password_confirmation: passwordConfirmation, phone,
     })
     saveSession(res.data.token, { ...res.data.user, email_verified: res.data.email_verified })
     return res.data
@@ -64,8 +70,8 @@ export function UserAuthProvider({ children }) {
     clearSession()
   }
 
-  const isAuthenticated  = !!token && !!user
-  const isEmailVerified  = isAuthenticated && !!user?.email_verified
+  const isAuthenticated = !!token && !!user
+  const isEmailVerified = isAuthenticated && !!user?.email_verified
 
   return (
     <UserAuthContext.Provider value={{

@@ -2,6 +2,9 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 import i18n from '../i18n'
 
+// Settings are cached in sessionStorage (not localStorage) — cleared when
+// the tab closes and never persisted to disk.
+
 const SiteSettingsContext = createContext({})
 
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
@@ -12,7 +15,7 @@ function cacheKey(locale) {
 
 function readCache(locale) {
   try {
-    const raw = localStorage.getItem(cacheKey(locale))
+    const raw = sessionStorage.getItem(cacheKey(locale))
     if (!raw) return null
     const { data, ts } = JSON.parse(raw)
     if (Date.now() - ts < CACHE_TTL) return data
@@ -24,7 +27,7 @@ function readCache(locale) {
 
 function writeCache(locale, data) {
   try {
-    localStorage.setItem(cacheKey(locale), JSON.stringify({ data, ts: Date.now() }))
+    sessionStorage.setItem(cacheKey(locale), JSON.stringify({ data, ts: Date.now() }))
   } catch {}
 }
 

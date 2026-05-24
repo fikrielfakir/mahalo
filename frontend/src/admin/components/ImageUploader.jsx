@@ -5,7 +5,10 @@ import { isVideoPath, mediaUrl } from '../../utils/media'
 
 const client = axios.create({ baseURL: '/api/v1' })
 client.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')
+  const token = (
+    (sessionStorage.getItem('admin_token') ?? null) ||
+    (sessionStorage.getItem('user_token') ?? null)
+  )
   if (token) cfg.headers.Authorization = `Bearer ${token}`
   return cfg
 })

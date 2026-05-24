@@ -158,8 +158,10 @@ export default function SettingsPage() {
     adminSettings.get()
       .then((r) => { if (r?.data) setForm(prev => ({ ...prev, ...r.data })) })
       .catch(() => {
-        const stored = localStorage.getItem('mahalo_settings')
-        if (stored) { try { setForm(prev => ({ ...prev, ...JSON.parse(stored) })) } catch {} }
+        try {
+          const stored = sessionStorage.getItem('mahalo_settings')
+          if (stored) setForm(prev => ({ ...prev, ...JSON.parse(stored) }))
+        } catch {}
       })
       .finally(() => setLoading(false))
   }, [])
@@ -244,7 +246,7 @@ export default function SettingsPage() {
       }
     } catch {
       if (!isLocaleMode) {
-        localStorage.setItem('mahalo_settings', JSON.stringify(form))
+        try { sessionStorage.setItem('mahalo_settings', JSON.stringify(form)) } catch {}
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       }

@@ -3,52 +3,39 @@ import { useUserAuth } from './UserAuthContext'
 import { useVerifyEmail } from './VerifyEmailContext'
 import { favoritesApi } from '../api/client'
 
-const LS_KEY = 'mahalo_favorites'
-
-function loadLocal() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || [] } catch { return [] }
-}
+// Favorites are NEVER stored in localStorage.
+// - Logged-in users: server is the single source of truth (fetched on mount).
+// - Guest users: in-memory only (lost on page refresh — intentional).
 
 const FavoritesContext = createContext(null)
 
 export function FavoritesProvider({ children }) {
   const { isAuthenticated, isEmailVerified } = useUserAuth()
   const { openPopup } = useVerifyEmail()
-  const [ids, setIds] = useState(loadLocal)
+  const [ids, setIds] = useState([])
 
   useEffect(() => {
     if (isAuthenticated) {
       favoritesApi.ids()
-        .then(r => {
-          const backendIds = (r?.data || []).map(Number)
-          setIds(backendIds)
-          localStorage.setItem(LS_KEY, JSON.stringify(backendIds))
-        })
+        .then(r => setIds((r?.data || []).map(Number)))
         .catch(() => {})
     } else {
-      setIds(loadLocal())
+      setIds([])
     }
   }, [isAuthenticated])
 
   const toggle = useCallback(async (propertyId) => {
     const numId = Number(propertyId)
     if (isAuthenticated) {
-      if (!isEmailVerified) {
-        openPopup()
-        return
-      }
+      if (!isEmailVerified) { openPopup(); return }
       try {
         const r = await favoritesApi.toggle(numId)
-        const newIds = (r?.data?.ids || []).map(Number)
-        setIds(newIds)
-        localStorage.setItem(LS_KEY, JSON.stringify(newIds))
+        setIds((r?.data?.ids || []).map(Number))
       } catch {}
     } else {
-      setIds(prev => {
-        const next = prev.includes(numId) ? prev.filter(id => id !== numId) : [...prev, numId]
-        localStorage.setItem(LS_KEY, JSON.stringify(next))
-        return next
-      })
+      setIds(prev =>
+        prev.includes(numId) ? prev.filter(id => id !== numId) : [...prev, numId]
+      )
     }
   }, [isAuthenticated, isEmailVerified, openPopup])
 

@@ -2,13 +2,23 @@ import axios from 'axios'
 
 const BASE = (import.meta.env.VITE_API_URL || '') + '/api/v1'
 
+const TOKEN_KEY = 'admin_token'
+
+function getToken() {
+  try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null }
+}
+
+function removeToken() {
+  try { sessionStorage.removeItem(TOKEN_KEY) } catch {}
+}
+
 const client = axios.create({
   baseURL: BASE,
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })
 
 client.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem('admin_token')
+  const token = getToken()
   if (token) cfg.headers.Authorization = `Bearer ${token}`
   return cfg
 })
@@ -17,7 +27,7 @@ client.interceptors.response.use(
   (r) => r.data,
   (e) => {
     if (e.response?.status === 401) {
-      localStorage.removeItem('admin_token')
+      removeToken()
       window.location.href = '/admin/login'
     }
     return Promise.reject(e?.response?.data || e)
@@ -38,132 +48,144 @@ export const adminStats = {
 export const adminProperties = {
   list:     (p = {}) => client.get('/admin/properties', { params: p }),
   get:      (id)     => client.get(`/admin/properties/${id}`),
-  create:   (d)      => client.post('/admin/properties', d),
+  create:   (data)   => client.post('/admin/properties', data),
   update:   (id, d)  => client.put(`/admin/properties/${id}`, d),
   delete:   (id)     => client.delete(`/admin/properties/${id}`),
-  moderate: (id, d)  => client.put(`/admin/properties/${id}/moderation`, d),
+  toggle:   (id, f)  => client.patch(`/admin/properties/${id}/toggle`, { field: f }),
+  reorder:  (ids)    => client.post('/admin/properties/reorder', { ids }),
 }
 
 export const adminProjects = {
   list:   (p = {}) => client.get('/admin/projects', { params: p }),
   get:    (id)     => client.get(`/admin/projects/${id}`),
-  create: (d)      => client.post('/admin/projects', d),
+  create: (data)   => client.post('/admin/projects', data),
   update: (id, d)  => client.put(`/admin/projects/${id}`, d),
   delete: (id)     => client.delete(`/admin/projects/${id}`),
+  toggle: (id, f)  => client.patch(`/admin/projects/${id}/toggle`, { field: f }),
+  reorder:(ids)    => client.post('/admin/projects/reorder', { ids }),
 }
 
 export const adminAgents = {
   list:   (p = {}) => client.get('/admin/agents', { params: p }),
   get:    (id)     => client.get(`/admin/agents/${id}`),
-  create: (d)      => client.post('/admin/agents', d),
+  create: (data)   => client.post('/admin/agents', data),
   update: (id, d)  => client.put(`/admin/agents/${id}`, d),
   delete: (id)     => client.delete(`/admin/agents/${id}`),
-  ban:    (id, d)  => client.post(`/admin/agents/${id}/ban`, d),
-  unban:  (id)     => client.post(`/admin/agents/${id}/unban`),
+  toggle: (id, f)  => client.patch(`/admin/agents/${id}/toggle`, { field: f }),
+}
+
+export const adminUsers = {
+  list:   (p = {}) => client.get('/admin/users', { params: p }),
+  get:    (id)     => client.get(`/admin/users/${id}`),
+  update: (id, d)  => client.put(`/admin/users/${id}`, d),
+  delete: (id)     => client.delete(`/admin/users/${id}`),
+  toggle: (id, f)  => client.patch(`/admin/users/${id}/toggle`, { field: f }),
 }
 
 export const adminCategories = {
-  list:   ()       => client.get('/admin/categories'),
-  create: (d)      => client.post('/admin/categories', d),
+  list:   (p = {}) => client.get('/admin/categories', { params: p }),
+  get:    (id)     => client.get(`/admin/categories/${id}`),
+  create: (data)   => client.post('/admin/categories', data),
   update: (id, d)  => client.put(`/admin/categories/${id}`, d),
   delete: (id)     => client.delete(`/admin/categories/${id}`),
 }
 
+export const adminCities = {
+  list:   (p = {}) => client.get('/admin/cities', { params: p }),
+  get:    (id)     => client.get(`/admin/cities/${id}`),
+  create: (data)   => client.post('/admin/cities', data),
+  update: (id, d)  => client.put(`/admin/cities/${id}`, d),
+  delete: (id)     => client.delete(`/admin/cities/${id}`),
+}
+
 export const adminFeatures = {
-  list:   ()       => client.get('/admin/features'),
-  create: (d)      => client.post('/admin/features', d),
+  list:   (p = {}) => client.get('/admin/features', { params: p }),
+  create: (data)   => client.post('/admin/features', data),
   update: (id, d)  => client.put(`/admin/features/${id}`, d),
   delete: (id)     => client.delete(`/admin/features/${id}`),
 }
 
 export const adminFacilities = {
-  list:   ()       => client.get('/admin/facilities'),
-  create: (d)      => client.post('/admin/facilities', d),
+  list:   (p = {}) => client.get('/admin/facilities', { params: p }),
+  create: (data)   => client.post('/admin/facilities', data),
   update: (id, d)  => client.put(`/admin/facilities/${id}`, d),
   delete: (id)     => client.delete(`/admin/facilities/${id}`),
 }
 
-export const adminInvestors = {
-  list:   ()       => client.get('/admin/investors'),
-  create: (d)      => client.post('/admin/investors', d),
-  update: (id, d)  => client.put(`/admin/investors/${id}`, d),
-  delete: (id)     => client.delete(`/admin/investors/${id}`),
-}
-
-export const adminCities = {
-  list:   (p = {}) => client.get('/admin/cities', { params: p }),
-  create: (d)      => client.post('/admin/cities', d),
-  update: (id, d)  => client.put(`/admin/cities/${id}`, d),
-  delete: (id)     => client.delete(`/admin/cities/${id}`),
+export const adminNeighborhoods = {
+  list:   (p = {}) => client.get('/admin/neighborhoods', { params: p }),
+  get:    (id)     => client.get(`/admin/neighborhoods/${id}`),
+  create: (data)   => client.post('/admin/neighborhoods', data),
+  update: (id, d)  => client.put(`/admin/neighborhoods/${id}`, d),
+  delete: (id)     => client.delete(`/admin/neighborhoods/${id}`),
 }
 
 export const adminConsults = {
-  list:         (p = {}) => client.get('/admin/consults', { params: p }),
-  update:       (id, d)  => client.put(`/admin/consults/${id}`, d),
-  bulkUpdate:   (d)      => client.post('/admin/consults/bulk', d),
-  delete:       (id)     => client.delete(`/admin/consults/${id}`),
-  bulkDelete:   (d)      => client.post('/admin/consults/bulk-delete', d),
-}
-
-export const adminMedia = {
-  list:              (p = {})   => client.get('/admin/media', { params: p }),
-  upload:            (formData) => client.post('/admin/media/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  rethumbnail:       (id, formData = null) =>
-    client.post(`/admin/media/${id}/thumbnail`, formData ?? {}, {
-      headers: formData ? { 'Content-Type': 'multipart/form-data' } : {}
-    }),
-  batchRethumbnail:  ()         => client.post('/admin/media/thumbnail/batch'),
-  delete:            (id)       => client.delete(`/admin/media/${id}`),
-}
-
-export const adminUsers = {
-  list:   (p = {}) => client.get('/admin/users', { params: p }),
-  create: (d)      => client.post('/admin/users', d),
-  update: (id, d)  => client.put(`/admin/users/${id}`, d),
-  delete: (id)     => client.delete(`/admin/users/${id}`),
-  ban:    (id, d)  => client.post(`/admin/users/${id}/ban`, d),
-  unban:  (id)     => client.post(`/admin/users/${id}/unban`),
-}
-
-export const adminProfessionalApplications = {
-  list:    (p = {}) => client.get('/admin/professional-applications', { params: p }),
-  approve: (id)     => client.post(`/admin/professional-applications/${id}/approve`),
-  reject:  (id, reason) => client.post(`/admin/professional-applications/${id}/reject`, { reason }),
+  list:   (p = {}) => client.get('/admin/consults', { params: p }),
+  get:    (id)     => client.get(`/admin/consults/${id}`),
+  update: (id, d)  => client.put(`/admin/consults/${id}`, d),
+  delete: (id)     => client.delete(`/admin/consults/${id}`),
+  reply:  (id, d)  => client.post(`/admin/consults/${id}/reply`, d),
 }
 
 export const adminSettings = {
-  get:          ()         => client.get('/admin/settings'),
-  update:       (d)        => client.put('/admin/settings', d),
-  uploadLogo:   (formData) => client.post('/admin/settings/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  testMail:     (to)       => client.post('/admin/settings/mail-test', { to }),
-  sitemapPing:  ()         => client.post('/admin/settings/sitemap-ping'),
-  getTranslations:    (locale)     => client.get(`/admin/settings/translations/${locale}`),
-  updateTranslations: (locale, d)  => client.put(`/admin/settings/translations/${locale}`, d),
-  deleteTranslation:  (locale, key) => client.delete(`/admin/settings/translations/${locale}/${key}`),
+  get:                ()          => client.get('/admin/settings'),
+  update:             (data)      => client.put('/admin/settings', data),
+  uploadLogo:         (fd)        => client.post('/admin/settings/logo', fd, { headers: { 'Content-Type': undefined } }),
+  getTranslations:    (locale)    => client.get(`/settings/translations/${locale}`),
+  updateTranslations: (locale, d) => client.put(`/settings/translations/${locale}`, d),
+  deleteTranslation:  (locale, k) => client.delete(`/settings/translations/${locale}/${k}`),
+}
+
+export const adminApplications = {
+  list:   (p = {}) => client.get('/admin/applications', { params: p }),
+  get:    (id)     => client.get(`/admin/applications/${id}`),
+  approve:(id)     => client.post(`/admin/applications/${id}/approve`),
+  reject: (id, d)  => client.post(`/admin/applications/${id}/reject`, d),
+}
+
+export const adminMedia = {
+  list:   (p = {}) => client.get('/admin/media', { params: p }),
+  delete: (id)     => client.delete(`/admin/media/${id}`),
+}
+
+export const adminAnalytics = {
+  overview:   (p = {}) => client.get('/admin/analytics/overview', { params: p }),
+  properties: (p = {}) => client.get('/admin/analytics/properties', { params: p }),
+  users:      (p = {}) => client.get('/admin/analytics/users', { params: p }),
+}
+
+export const adminNewsletterApi = {
+  list:        (p = {}) => client.get('/admin/newsletter', { params: p }),
+  export:      ()       => client.get('/admin/newsletter/export'),
+  delete:      (id)     => client.delete(`/admin/newsletter/${id}`),
+  bulkDelete:  (ids)    => client.post('/admin/newsletter/bulk-delete', { ids }),
 }
 
 export const adminLanguages = {
   list:   ()       => client.get('/admin/languages'),
-  create: (d)      => client.post('/admin/languages', d),
   update: (id, d)  => client.put(`/admin/languages/${id}`, d),
-  delete: (id)     => client.delete(`/admin/languages/${id}`),
+  sync:   ()       => client.post('/admin/languages/sync'),
 }
 
-export const publicLanguages = {
-  list: () => client.get('/languages'),
+export const adminTranslations = {
+  list:   (p = {}) => client.get('/admin/translations', { params: p }),
+  update: (id, d)  => client.put(`/admin/translations/${id}`, d),
+  reset:  (id)     => client.delete(`/admin/translations/${id}`),
+  import: (fd)     => client.post('/admin/translations/import', fd, { headers: { 'Content-Type': undefined } }),
+  export: (locale) => client.get(`/admin/translations/export/${locale}`),
 }
 
-export const adminContentTranslations = {
-  get:  (type, id)       => client.get(`/admin/content-translations/${type}/${id}`),
-  save: (type, id, data) => client.put(`/admin/content-translations/${type}/${id}`, data),
-  del:  (type, id)       => client.delete(`/admin/content-translations/${type}/${id}`),
+export const adminSavedSearches = {
+  list:   (p = {}) => client.get('/admin/saved-searches', { params: p }),
+  delete: (id)     => client.delete(`/admin/saved-searches/${id}`),
 }
 
-export const publicApi = {
-  cities:     () => client.get('/properties/filters'),
-  features:   () => client.get('/features/all'),
-  categories: () => client.get('/categories'),
-  investors:  () => client.get('/admin/investors'),
+export const adminReviews = {
+  list:   (p = {}) => client.get('/admin/reviews', { params: p }),
+  approve:(id)     => client.patch(`/admin/reviews/${id}/approve`),
+  reject: (id)     => client.patch(`/admin/reviews/${id}/reject`),
+  delete: (id)     => client.delete(`/admin/reviews/${id}`),
 }
 
-export const adminApi = client
+export default client

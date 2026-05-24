@@ -1,18 +1,27 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { adminAuth } from '../api/adminApi'
 
+// Admin token stored in sessionStorage — never persisted to disk.
 const AuthContext = createContext(null)
 
+const TOKEN_KEY = 'admin_token'
+
+const ss = {
+  get:    ()  => { try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null } },
+  set:    (v) => { try { sessionStorage.setItem(TOKEN_KEY, v) } catch {} },
+  remove: ()  => { try { sessionStorage.removeItem(TOKEN_KEY) } catch {} },
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser]     = useState(null)
+  const [user,    setUser]    = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token')
+    const token = ss.get()
     if (token) {
       adminAuth.profile()
         .then((res) => setUser(res.data))
-        .catch(() => localStorage.removeItem('admin_token'))
+        .catch(() => ss.remove())
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -21,7 +30,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await adminAuth.login({ email, password })
-    localStorage.setItem('admin_token', res.data.token)
+    ss.set(res.data.token)
     const profile = await adminAuth.profile()
     setUser(profile.data)
     return profile.data
@@ -29,7 +38,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try { await adminAuth.logout() } catch {}
-    localStorage.removeItem('admin_token')
+    ss.remove()
     setUser(null)
   }
 

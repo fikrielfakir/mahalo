@@ -3,7 +3,7 @@ import { Search, RotateCcw, Save, CheckCircle, AlertCircle, Languages } from 'lu
 import { adminLanguages } from '../api/adminApi'
 
 function getToken() {
-  return localStorage.getItem('admin_token') ?? ''
+  try { return sessionStorage.getItem('admin_token') ?? '' } catch { return '' }
 }
 
 const API_BASE = '/api/v1/admin/translations'

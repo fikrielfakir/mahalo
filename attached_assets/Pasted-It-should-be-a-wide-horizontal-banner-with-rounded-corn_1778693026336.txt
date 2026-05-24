@@ -2,11 +2,11 @@ It should be a wide horizontal banner with rounded corners, a deep dark red grad
 
 Layout (left to right):
 
-Left — Text content (≈35% width): A small pill badge at the top reading "AGENTZ MOBILE APP" with a smartphone icon and subtle glassmorphism style. Below it a large heading: "Your next home" in white, then "is in your hands" in a crimson-to-rose gradient (#BA1932 → #f07088). Below that a short paragraph in muted white. At the bottom, two glassmorphism store buttons side by side — "Download on the App Store" (Apple icon) and "GET IT ON Google Play" (Play icon).
+Left — Text content (≈35% width): A small pill badge at the top reading "Mahalo MOBILE APP" with a smartphone icon and subtle glassmorphism style. Below it a large heading: "Your next home" in white, then "is in your hands" in a crimson-to-rose gradient (#BA1932 → #f07088). Below that a short paragraph in muted white. At the bottom, two glassmorphism store buttons side by side — "Download on the App Store" (Apple icon) and "GET IT ON Google Play" (Play icon).
 
 Center — Smartphone mockup (≈40% width): A realistic floating phone image (/app-mockup.png) that overflows the top and bottom edges of the banner by ~60px on each side. The phone has a warm red radial glow behind it and a subtle elliptical glow beneath it simulating a floor reflection. Use drop-shadow for depth. The phone should be slightly perspective-tilted.
 
-Right — QR code card (≈20% width): A glassmorphism card with rounded corners, dark red tinted glass background (rgba(115,13,38,0.4)), a white QR code image in the center, and the text "Scan to download the Agentz app" below it (with "Agentz" in red #BA1932). The card has a subtle border (rgba(255,255,255,0.15)) and soft backdrop blur.
+Right — QR code card (≈20% width): A glassmorphism card with rounded corners, dark red tinted glass background (rgba(115,13,38,0.4)), a white QR code image in the center, and the text "Scan to download the Mahalo app" below it (with "Mahalo" in red #BA1932). The card has a subtle border (rgba(255,255,255,0.15)) and soft backdrop blur.
 
 Implementation rules:
 

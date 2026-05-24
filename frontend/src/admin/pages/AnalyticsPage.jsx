@@ -5,12 +5,7 @@ import {
   TrendingUp, TrendingDown, Activity, Map, Chrome,
   BarChart2, Clock, RefreshCw
 } from 'lucide-react'
-
-const DAYS_OPTIONS = [
-  { label: '7 days', value: 7 },
-  { label: '30 days', value: 30 },
-  { label: '90 days', value: 90 },
-]
+import { useTranslation } from 'react-i18next'
 
 const DEVICE_ICONS = {
   desktop: Monitor,
@@ -139,8 +134,8 @@ function DonutChart({ data, colorMap, valueKey = 'views', labelKey }) {
   )
 }
 
-function BarList({ data, valueKey = 'views', labelKey, max }) {
-  if (!data?.length) return <p className="text-gray-400 text-sm text-center py-6">No data</p>
+function BarList({ data, valueKey = 'views', labelKey, max, emptyLabel }) {
+  if (!data?.length) return <p className="text-gray-400 text-sm text-center py-6">{emptyLabel || 'No data'}</p>
   const m = max || Math.max(...data.map(d => Number(d[valueKey])), 1)
   return (
     <div className="space-y-2">
@@ -155,10 +150,7 @@ function BarList({ data, valueKey = 'views', labelKey, max }) {
               <span className="text-sm font-semibold text-gray-900 ml-2">{val.toLocaleString()}</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#730D26]/70 rounded-full transition-all duration-500"
-                style={{ width: `${pct}%` }}
-              />
+              <div className="h-full bg-[#730D26]/70 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         )
@@ -167,14 +159,22 @@ function BarList({ data, valueKey = 'views', labelKey, max }) {
   )
 }
 
-function RecentVisitorsTable({ rows }) {
-  if (!rows?.length) return <p className="text-gray-400 text-sm text-center py-10">No visitors yet</p>
+function RecentVisitorsTable({ rows, t }) {
+  if (!rows?.length) return <p className="text-gray-400 text-sm text-center py-10">{t('admin.analytics.noVisitors')}</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100">
-            {['IP Address', 'Page', 'Country', 'Device', 'Browser', 'OS', 'Time'].map(h => (
+            {[
+              t('admin.analytics.colIp'),
+              t('admin.analytics.colPage'),
+              t('admin.analytics.colCountry'),
+              t('admin.analytics.colDevice'),
+              t('admin.analytics.colBrowser'),
+              t('admin.analytics.colOs'),
+              t('admin.analytics.colTime'),
+            ].map(h => (
               <th key={h} className="text-left text-xs font-semibold text-gray-400 py-2 px-3 whitespace-nowrap">{h}</th>
             ))}
           </tr>
@@ -182,8 +182,8 @@ function RecentVisitorsTable({ rows }) {
         <tbody className="divide-y divide-gray-50">
           {rows.map(r => {
             const DIcon = DEVICE_ICONS[r.device_type] || Monitor
-            const t = new Date(r.created_at)
-            const timeStr = t.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            const ts = new Date(r.created_at)
+            const timeStr = ts.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             return (
               <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                 <td className="py-2 px-3 font-mono text-xs text-gray-600">{r.ip_address || '—'}</td>
@@ -210,10 +210,17 @@ function RecentVisitorsTable({ rows }) {
 }
 
 export default function AnalyticsPage() {
-  const [days, setDays] = useState(30)
-  const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
+  const [days, setDays]         = useState(30)
+  const [loading, setLoading]   = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [data, setData] = useState({})
+  const [data, setData]         = useState({})
+
+  const DAYS_OPTIONS = [
+    { label: t('admin.analytics.7days'),  value: 7 },
+    { label: t('admin.analytics.30days'), value: 30 },
+    { label: t('admin.analytics.90days'), value: 90 },
+  ]
 
   const load = useCallback(async (d, isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true)
@@ -261,78 +268,44 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Visitor traffic, devices, locations & more</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.analytics.title')}</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{t('admin.analytics.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
             {DAYS_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setDays(opt.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${days === opt.value ? 'bg-white text-[#730D26] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
+              <button key={opt.value} onClick={() => setDays(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${days === opt.value ? 'bg-white text-[#730D26] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 {opt.label}
               </button>
             ))}
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
+          <button onClick={handleRefresh} disabled={refreshing}
             className="p-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50"
-            title="Refresh"
-          >
+            title={t('admin.analytics.refresh')}>
             <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
 
-      {/* Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Page Views"
-          value={overview?.total_views?.toLocaleString()}
-          icon={Eye}
-          color="red"
-          change={overview?.views_change}
-          changeLabel="vs previous period"
-        />
-        <StatCard
-          label="Unique Visitors"
-          value={overview?.unique_visitors?.toLocaleString()}
-          icon={Users}
-          color="blue"
-          change={overview?.uniq_change}
-          changeLabel="vs previous period"
-        />
-        <StatCard
-          label="Unique IPs"
-          value={overview?.unique_ips?.toLocaleString()}
-          icon={Globe}
-          color="green"
-        />
-        <StatCard
-          label="Bot Traffic"
-          value={overview?.bot_views?.toLocaleString()}
-          icon={Activity}
-          color="amber"
-          sub="Filtered from stats"
-        />
+        <StatCard label={t('admin.analytics.pageViews')} value={overview?.total_views?.toLocaleString()} icon={Eye} color="red" change={overview?.views_change} changeLabel={t('admin.analytics.vsPrevious')} />
+        <StatCard label={t('admin.analytics.uniqueVisitors')} value={overview?.unique_visitors?.toLocaleString()} icon={Users} color="blue" change={overview?.uniq_change} changeLabel={t('admin.analytics.vsPrevious')} />
+        <StatCard label={t('admin.analytics.uniqueIps')} value={overview?.unique_ips?.toLocaleString()} icon={Globe} color="green" />
+        <StatCard label={t('admin.analytics.botTraffic')} value={overview?.bot_views?.toLocaleString()} icon={Activity} color="amber" sub={t('admin.analytics.filteredStats')} />
       </div>
 
-      {/* Time Series Chart */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
             <BarChart2 size={16} className="text-[#730D26]" />
-            Traffic Over Time
+            {t('admin.analytics.traffic')}
           </h2>
           <div className="flex items-center gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#730D26]/60 inline-block" /> Views
+              <span className="w-2 h-2 rounded-full bg-[#730D26]/60 inline-block" /> {t('admin.analytics.views')}
             </span>
           </div>
         </div>
@@ -343,56 +316,50 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Top Pages */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Eye size={16} className="text-[#730D26]" /> Top Pages
+            <Eye size={16} className="text-[#730D26]" /> {t('admin.analytics.topPages')}
           </h2>
-          <BarList data={topPages?.slice(0, 10)} valueKey="views" labelKey="page" />
+          <BarList data={topPages?.slice(0, 10)} valueKey="views" labelKey="page" emptyLabel={t('admin.analytics.noData')} />
         </div>
 
-        {/* Countries */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Map size={16} className="text-[#730D26]" /> Top Countries
+            <Map size={16} className="text-[#730D26]" /> {t('admin.analytics.topCountries')}
           </h2>
-          <BarList data={countries?.slice(0, 10)} valueKey="views" labelKey="country" />
+          <BarList data={countries?.slice(0, 10)} valueKey="views" labelKey="country" emptyLabel={t('admin.analytics.noData')} />
         </div>
 
-        {/* Devices */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Monitor size={16} className="text-[#730D26]" /> Devices
+            <Monitor size={16} className="text-[#730D26]" /> {t('admin.analytics.devices')}
           </h2>
           <DonutChart data={devices} colorMap={DEVICE_COLORS} valueKey="views" labelKey="device_type" />
         </div>
 
-        {/* Browsers */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Chrome size={16} className="text-[#730D26]" /> Browsers
+            <Chrome size={16} className="text-[#730D26]" /> {t('admin.analytics.browsers')}
           </h2>
           <DonutChart data={browsers} colorMap={BROWSER_COLORS} valueKey="views" labelKey="browser" />
         </div>
       </div>
 
-      {/* OS & Recent Visitors */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Activity size={16} className="text-[#730D26]" /> Operating Systems
+            <Activity size={16} className="text-[#730D26]" /> {t('admin.analytics.os')}
           </h2>
-          <BarList data={os} valueKey="views" labelKey="os" />
+          <BarList data={os} valueKey="views" labelKey="os" emptyLabel={t('admin.analytics.noData')} />
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-[#730D26]" /> Recent Visitors
-            <span className="ml-auto text-xs text-gray-400 font-normal">Last 50</span>
+            <Clock size={16} className="text-[#730D26]" /> {t('admin.analytics.recentVisitors')}
+            <span className="ml-auto text-xs text-gray-400 font-normal">{t('admin.analytics.last50')}</span>
           </h2>
-          <RecentVisitorsTable rows={recent} />
+          <RecentVisitorsTable rows={recent} t={t} />
         </div>
       </div>
     </div>

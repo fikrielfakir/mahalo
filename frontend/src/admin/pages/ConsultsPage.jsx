@@ -3,6 +3,7 @@ import { adminConsults } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal from '../components/Modal'
 import { Trash2, Eye, MessageSquare, Download, Mail, Phone, CheckSquare, Square, Building2, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_OPTIONS = ['unread', 'read', 'processing', 'done']
 
@@ -37,6 +38,7 @@ function exportCSV(rows) {
 }
 
 export default function ConsultsPage() {
+  const { t } = useTranslation()
   const [rows, setRows]         = useState([])
   const [meta, setMeta]         = useState({})
   const [loading, setLoading]   = useState(true)
@@ -77,7 +79,7 @@ export default function ConsultsPage() {
   }
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this inquiry?')) return
+    if (!window.confirm(t('admin.consults.confirmDelete'))) return
     await adminConsults.delete(id)
     load()
     if (detail?.id === id) setDetail(null)
@@ -103,7 +105,7 @@ export default function ConsultsPage() {
 
   const bulkDelete = async () => {
     if (!selected.size) return
-    if (!window.confirm(`Delete ${selected.size} selected inquiries?`)) return
+    if (!window.confirm(t('admin.consults.confirmBulkDelete', { count: selected.size }))) return
     setBulkWorking(true)
     for (const id of selected) {
       await adminConsults.delete(id).catch(() => {})
@@ -131,7 +133,7 @@ export default function ConsultsPage() {
       ),
     },
     {
-      key: 'name', label: 'From',
+      key: 'name', label: t('admin.consults.colFrom'),
       render: (r) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-[#BA1932]/10 flex items-center justify-center text-[#BA1932] font-bold text-xs shrink-0">
@@ -145,7 +147,7 @@ export default function ConsultsPage() {
       ),
     },
     {
-      key: 'source', label: 'Source',
+      key: 'source', label: t('admin.consults.colSource'),
       render: (r) => (
         <div className="text-xs text-gray-500">
           {r.property && <div className="flex items-center gap-1"><Building2 size={11} className="text-gray-400" /> {r.property.name}</div>}
@@ -155,11 +157,11 @@ export default function ConsultsPage() {
       ),
     },
     {
-      key: 'content', label: 'Message',
+      key: 'content', label: t('admin.consults.colMessage'),
       render: (r) => <span className="text-xs text-gray-500 line-clamp-1 max-w-[200px]">{r.content || r.message || '—'}</span>,
     },
     {
-      key: 'status', label: 'Status',
+      key: 'status', label: t('admin.consults.colStatus'),
       render: (r) => (
         <select
           value={r.status}
@@ -177,7 +179,7 @@ export default function ConsultsPage() {
       ),
     },
     {
-      key: 'created_at', label: 'Date',
+      key: 'created_at', label: t('admin.consults.colDate'),
       render: (r) => <span className="text-xs text-gray-500 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>,
     },
     {
@@ -193,26 +195,25 @@ export default function ConsultsPage() {
 
   return (
     <div>
-      <PageHeader title="Inquiries" subtitle={`${meta.total ?? 0} total`}>
+      <PageHeader title={t('admin.consults.title')} subtitle={`${meta.total ?? 0} ${t('admin.common.total')}`}>
         <div className="flex items-center gap-2 flex-wrap">
           <select
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(1) }}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#BA1932]"
           >
-            <option value="">All statuses</option>
+            <option value="">{t('admin.consults.allStatuses')}</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <Btn variant="ghost" onClick={() => exportCSV(rows)}>
-            <Download size={14} /> Export CSV
+            <Download size={14} /> {t('admin.consults.exportCsv')}
           </Btn>
         </div>
       </PageHeader>
 
-      {/* Bulk action bar */}
       {selected.size > 0 && (
         <div className="mb-4 p-3 bg-[#730D26] rounded-2xl flex items-center gap-3 flex-wrap">
-          <span className="text-white text-sm font-medium">{selected.size} selected</span>
+          <span className="text-white text-sm font-medium">{selected.size} {t('admin.consults.selected')}</span>
           <div className="flex items-center gap-2 flex-1">
             <select
               value={bulkStatus}
@@ -222,13 +223,13 @@ export default function ConsultsPage() {
               {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <Btn size="sm" variant="gold" onClick={bulkAction} disabled={bulkWorking}>
-              {bulkWorking ? 'Working…' : 'Apply Status'}
+              {bulkWorking ? t('admin.common.working') : t('admin.consults.applyStatus')}
             </Btn>
           </div>
           <Btn size="sm" variant="danger" onClick={bulkDelete} disabled={bulkWorking}>
-            <Trash2 size={13} /> Delete Selected
+            <Trash2 size={13} /> {t('admin.consults.deleteSelected')}
           </Btn>
-          <button onClick={() => setSelected(new Set())} className="text-white/50 hover:text-white text-xs">Clear</button>
+          <button onClick={() => setSelected(new Set())} className="text-white/50 hover:text-white text-xs">{t('admin.consults.clear')}</button>
         </div>
       )}
 
@@ -243,11 +244,9 @@ export default function ConsultsPage() {
         onPage={setPage}
       />
 
-      {/* Rich detail modal */}
-      <Modal open={!!detail} onClose={() => setDetail(null)} title="Inquiry Detail" size="md">
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={t('admin.consults.detailTitle')} size="md">
         {detail && (
           <div className="space-y-5">
-            {/* Header */}
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-[#BA1932]/10 flex items-center justify-center text-[#BA1932] font-bold text-2xl shrink-0">
                 {detail.name?.[0]}
@@ -270,32 +269,29 @@ export default function ConsultsPage() {
               <Badge color={statusColor(detail.status)}>{detail.status}</Badge>
             </div>
 
-            {/* Message */}
             {(detail.content || detail.message) && (
               <div className="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {detail.content || detail.message}
               </div>
             )}
 
-            {/* Source */}
             {(detail.property || detail.agent) && (
               <div className="flex flex-wrap gap-3">
                 {detail.property && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-xl text-sm text-blue-700">
-                    <Building2 size={13} /> Re: {detail.property.name}
+                    <Building2 size={13} /> {t('admin.consults.re')} {detail.property.name}
                   </div>
                 )}
                 {detail.agent && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-xl text-sm text-purple-700">
-                    <User size={13} /> Agent: {detail.agent.name}
+                    <User size={13} /> {t('admin.consults.agentLabel')} {detail.agent.name}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Status + actions */}
             <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-              <span className="text-sm text-gray-500 font-medium">Status:</span>
+              <span className="text-sm text-gray-500 font-medium">{t('admin.consults.statusLabel')}</span>
               <select
                 value={detail.status}
                 onChange={(e) => updateStatus(detail.id, e.target.value)}
@@ -309,14 +305,13 @@ export default function ConsultsPage() {
               </span>
             </div>
 
-            {/* Quick reply buttons */}
             <div className="flex flex-wrap gap-2 pt-1">
               {detail.email && (
                 <a
                   href={`mailto:${detail.email}?subject=Re: Your inquiry on Mahalo&body=Hello ${detail.name},%0D%0A%0D%0AThank you for contacting us.`}
                   className="flex items-center gap-2 px-4 py-2 bg-[#BA1932] text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
                 >
-                  <Mail size={13} /> Reply by Email
+                  <Mail size={13} /> {t('admin.consults.replyEmail')}
                 </a>
               )}
               {detail.phone && (
@@ -325,7 +320,7 @@ export default function ConsultsPage() {
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity"
                 >
-                  <MessageSquare size={13} /> WhatsApp
+                  <MessageSquare size={13} /> {t('admin.consults.whatsapp')}
                 </a>
               )}
               {detail.phone && (
@@ -333,7 +328,7 @@ export default function ConsultsPage() {
                   href={`tel:${detail.phone}`}
                   className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  <Phone size={13} /> Call
+                  <Phone size={13} /> {t('admin.consults.call')}
                 </a>
               )}
             </div>

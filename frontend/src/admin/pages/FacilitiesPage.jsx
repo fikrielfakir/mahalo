@@ -4,8 +4,10 @@ import { PageHeader, Btn } from '../components/DataTable'
 import Modal, { FormField, Input } from '../components/Modal'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
 import { Plus, Pencil, Trash2, MapPin, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function FacilitiesPage() {
+  const { t } = useTranslation()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
@@ -23,18 +25,18 @@ export default function FacilitiesPage() {
   const submit = async (e) => {
     e.preventDefault(); setSaving(true)
     try { editing ? await adminFacilities.update(editing.id, form) : await adminFacilities.create(form); setModal(false); load() }
-    catch (err) { alert(err?.message || 'Error') } finally { setSaving(false) }
+    catch (err) { alert(err?.message || t('admin.common.error')) } finally { setSaving(false) }
   }
 
-  const remove = async (id) => { if (!window.confirm('Delete?')) return; await adminFacilities.delete(id); load() }
+  const remove = async (id) => { if (!window.confirm(t('admin.facilities.confirmDelete'))) return; await adminFacilities.delete(id); load() }
 
   return (
     <div>
-      <PageHeader title="Facilities" subtitle={`${rows.length} total`}>
-        <Btn variant="gold" onClick={() => open()}><Plus size={15} /> Add Facility</Btn>
+      <PageHeader title={t('admin.facilities.title')} subtitle={`${rows.length} ${t('admin.common.total')}`}>
+        <Btn variant="gold" onClick={() => open()}><Plus size={15} /> {t('admin.facilities.addFacility')}</Btn>
       </PageHeader>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? <div className="p-8 text-center text-gray-400">Loading…</div> : (
+        {loading ? <div className="p-8 text-center text-gray-400">{t('admin.common.loading')}</div> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100">
             {rows.map((r) => (
               <div key={r.id} className="bg-white p-4 flex items-center gap-3">
@@ -62,13 +64,13 @@ export default function FacilitiesPage() {
         item={transModal}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Facility' : 'Add Facility'} size="sm">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('admin.facilities.editFacility') : t('admin.facilities.addFacility')} size="sm">
         <form onSubmit={submit} className="space-y-4">
-          <FormField label="Name" required><Input value={form.name} onChange={f('name')} required placeholder="Hospital" /></FormField>
-          <FormField label="Icon class" hint="e.g. ti ti-hospital"><Input value={form.icon} onChange={f('icon')} placeholder="ti ti-hospital" /></FormField>
+          <FormField label={t('admin.facilities.nameLabel')} required><Input value={form.name} onChange={f('name')} required placeholder={t('admin.facilities.namePlaceholder')} /></FormField>
+          <FormField label={t('admin.facilities.iconLabel')} hint="e.g. ti ti-hospital"><Input value={form.icon} onChange={f('icon')} placeholder={t('admin.facilities.iconPlaceholder')} /></FormField>
           <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
-            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>Cancel</Btn>
-            <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>{t('admin.common.cancel')}</Btn>
+            <Btn type="submit" variant="gold" disabled={saving}>{saving ? t('admin.common.saving') : editing ? t('admin.common.update') : t('admin.common.create')}</Btn>
           </div>
         </form>
       </Modal>

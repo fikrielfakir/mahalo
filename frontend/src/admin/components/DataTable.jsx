@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function DataTable({ columns, data, loading, search, onSearch, page, lastPage, onPage, actions }) {
+  const { t } = useTranslation()
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {(onSearch || actions) && (
@@ -11,7 +13,7 @@ export function DataTable({ columns, data, loading, search, onSearch, page, last
               <input
                 value={search}
                 onChange={(e) => onSearch(e.target.value)}
-                placeholder="Search..."
+                placeholder={t('admin.dataTable.search')}
                 className="bg-transparent text-sm outline-none text-gray-700 w-full"
               />
             </div>
@@ -46,7 +48,7 @@ export function DataTable({ columns, data, loading, search, onSearch, page, last
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="text-center py-16 text-gray-400">
-                  No records found
+                  {t('admin.dataTable.noRecords')}
                 </td>
               </tr>
             ) : (
@@ -66,7 +68,7 @@ export function DataTable({ columns, data, loading, search, onSearch, page, last
 
       {lastPage > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <span className="text-xs text-gray-400">Page {page} of {lastPage}</span>
+          <span className="text-xs text-gray-400">{t('admin.dataTable.page')} {page} {t('admin.dataTable.of')} {lastPage}</span>
           <div className="flex gap-1">
             <button
               onClick={() => onPage(page - 1)}

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Sparkles, Loader2, Check, Copy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function AiDescriptionGenerator({ form, onInsert }) {
+  const { t } = useTranslation()
   const [loading, setLoading]   = useState(false)
   const [result, setResult]     = useState(null)
   const [error, setError]       = useState(null)
@@ -10,10 +12,10 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
   const [tone, setTone]         = useState('luxury and prestigious, targeting high-net-worth buyers')
 
   const TONES = [
-    { value: 'luxury and prestigious, targeting high-net-worth buyers', label: 'Luxury & Prestigious' },
-    { value: 'warm and family-friendly', label: 'Family-Friendly' },
-    { value: 'professional and investment-focused', label: 'Investment-Focused' },
-    { value: 'modern and minimalist', label: 'Modern & Minimalist' },
+    { value: 'luxury and prestigious, targeting high-net-worth buyers', label: t('admin.aiGenerator.toneLuxury') },
+    { value: 'warm and family-friendly', label: t('admin.aiGenerator.toneFamily') },
+    { value: 'professional and investment-focused', label: t('admin.aiGenerator.toneInvestment') },
+    { value: 'modern and minimalist', label: t('admin.aiGenerator.toneModern') },
   ]
   const LANGUAGES = ['French', 'English', 'Arabic']
 
@@ -49,7 +51,7 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
       if (data.error) throw new Error(data.error)
       setResult(data.description)
     } catch (e) {
-      setError(e.message || 'Generation failed. Please try again.')
+      setError(e.message || t('admin.aiGenerator.failed'))
     } finally {
       setLoading(false)
     }
@@ -66,12 +68,12 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
     <div className="border border-dashed border-[#730D26]/30 rounded-2xl p-4 bg-[#730D26]/3 space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles size={14} className="text-[#730D26]" />
-        <span className="text-xs font-semibold text-[#730D26] uppercase tracking-wide">AI Description Generator</span>
+        <span className="text-xs font-semibold text-[#730D26] uppercase tracking-wide">{t('admin.aiGenerator.title')}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Language</label>
+          <label className="block text-xs text-gray-500 mb-1">{t('admin.aiGenerator.languageLabel')}</label>
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
@@ -81,13 +83,13 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Tone</label>
+          <label className="block text-xs text-gray-500 mb-1">{t('admin.aiGenerator.toneLabel')}</label>
           <select
             value={tone}
             onChange={e => setTone(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#730D26]/40 bg-white"
           >
-            {TONES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {TONES.map(to => <option key={to.value} value={to.value}>{to.label}</option>)}
           </select>
         </div>
       </div>
@@ -99,7 +101,7 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#730D26] text-white text-sm font-semibold hover:bg-[#BA1932] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-        {loading ? 'Generating…' : 'Generate Description'}
+        {loading ? t('admin.aiGenerator.generating') : t('admin.aiGenerator.generate')}
       </button>
 
       {error && <p className="text-red-500 text-xs">{error}</p>}
@@ -116,7 +118,7 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
             >
               {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? t('admin.aiGenerator.copied') : t('admin.aiGenerator.copy')}
             </button>
             <button
               type="button"
@@ -124,7 +126,7 @@ export default function AiDescriptionGenerator({ form, onInsert }) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#730D26] text-white text-xs font-semibold hover:bg-[#BA1932] transition-colors"
             >
               <Check size={12} />
-              Insert into Description
+              {t('admin.aiGenerator.insert')}
             </button>
           </div>
         </div>

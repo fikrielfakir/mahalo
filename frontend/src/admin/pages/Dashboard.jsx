@@ -3,6 +3,7 @@ import { adminStats } from '../api/adminApi'
 import { Building2, FolderKanban, Users, MessageSquare, TrendingUp, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '../components/DataTable'
+import { useTranslation } from 'react-i18next'
 
 function StatCard({ label, value, icon: Icon, color, sub }) {
   const colors = {
@@ -43,6 +44,7 @@ function consultColor(s) {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -68,25 +70,25 @@ export default function Dashboard() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Welcome back — here's what's happening</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.dashboard.title')}</h1>
+        <p className="text-gray-500 text-sm mt-0.5">{t('admin.dashboard.welcome')}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Total Properties"  value={stats?.properties}        icon={Building2}    color="blue"   sub={`${stats?.properties_active} active`} />
-        <StatCard label="Featured"          value={stats?.featured_properties} icon={Star}        color="gold"   />
-        <StatCard label="Projects"          value={stats?.projects}           icon={FolderKanban} color="navy"   />
-        <StatCard label="Agents"            value={stats?.agents}             icon={Users}        color="green"  />
-        <StatCard label="Total Inquiries"   value={stats?.consults}           icon={MessageSquare}color="purple" />
-        <StatCard label="Unread Inquiries"  value={stats?.consults_unread}    icon={TrendingUp}   color="red"    />
+        <StatCard label={t('admin.dashboard.totalProperties')} value={stats?.properties}          icon={Building2}    color="blue"   sub={`${stats?.properties_active} ${t('admin.dashboard.activeSub')}`} />
+        <StatCard label={t('admin.dashboard.featured')}        value={stats?.featured_properties} icon={Star}         color="gold"   />
+        <StatCard label={t('admin.dashboard.projects')}        value={stats?.projects}            icon={FolderKanban} color="navy"   />
+        <StatCard label={t('admin.dashboard.agents')}          value={stats?.agents}              icon={Users}        color="green"  />
+        <StatCard label={t('admin.dashboard.totalInquiries')}  value={stats?.consults}            icon={MessageSquare}color="purple" />
+        <StatCard label={t('admin.dashboard.unreadInquiries')} value={stats?.consults_unread}     icon={TrendingUp}   color="red"    />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Properties */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800 text-sm">Recent Properties</h2>
-            <Link to="/admin/properties" className="text-xs text-[#BA1932] font-semibold hover:underline">View all</Link>
+            <h2 className="font-semibold text-gray-800 text-sm">{t('admin.dashboard.recentProperties')}</h2>
+            <Link to="/admin/properties" className="text-xs text-[#BA1932] font-semibold hover:underline">{t('admin.dashboard.viewAll')}</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {recent_properties?.map((p) => (
@@ -107,12 +109,12 @@ export default function Dashboard() {
         {/* Recent Consults */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800 text-sm">Recent Inquiries</h2>
-            <Link to="/admin/consults" className="text-xs text-[#BA1932] font-semibold hover:underline">View all</Link>
+            <h2 className="font-semibold text-gray-800 text-sm">{t('admin.dashboard.recentInquiries')}</h2>
+            <Link to="/admin/consults" className="text-xs text-[#BA1932] font-semibold hover:underline">{t('admin.dashboard.viewAll')}</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {recent_consults?.length === 0 && (
-              <p className="text-center text-gray-400 text-sm py-10">No inquiries yet</p>
+              <p className="text-center text-gray-400 text-sm py-10">{t('admin.dashboard.noInquiries')}</p>
             )}
             {recent_consults?.map((c) => (
               <div key={c.id} className="flex items-center gap-3 px-5 py-3">

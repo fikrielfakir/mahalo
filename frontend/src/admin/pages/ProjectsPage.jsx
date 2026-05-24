@@ -6,6 +6,7 @@ import ImageUploader from '../components/ImageUploader'
 import LocationPicker from '../../components/LocationPicker'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
 import { Plus, Pencil, Trash2, FolderKanban, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const EMPTY = {
   name: '', description: '', content: '', location: '', images: [],
@@ -15,6 +16,7 @@ const EMPTY = {
 }
 
 export default function ProjectsPage() {
+  const { t } = useTranslation()
   const [rows, setRows]       = useState([])
   const [meta, setMeta]       = useState({})
   const [loading, setLoading] = useState(true)
@@ -70,16 +72,16 @@ export default function ProjectsPage() {
       }
       editing ? await adminProjects.update(editing.id, payload) : await adminProjects.create(payload)
       setModal(false); load()
-    } catch (err) { alert(err?.message || 'Error') } finally { setSaving(false) }
+    } catch (err) { alert(err?.message || t('admin.common.error')) } finally { setSaving(false) }
   }
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this project?')) return
+    if (!window.confirm(t('admin.projects.confirmDelete'))) return
     await adminProjects.delete(id); load()
   }
 
   const cols = [
-    { key: 'name', label: 'Project', render: (r) => (
+    { key: 'name', label: t('admin.projects.colProject'), render: (r) => (
       <div className="flex items-center gap-2">
         {r.images?.[0] ? (
           <img src={`/storage/${r.images[0]}`} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" onError={(e) => { e.target.style.display='none' }} />
@@ -94,13 +96,13 @@ export default function ProjectsPage() {
         </div>
       </div>
     )},
-    { key: 'investor',   label: 'Investor',    render: (r) => r.investor?.name || '—' },
-    { key: 'price_from', label: 'Price From',  render: (r) => r.price_from ? `${Number(r.price_from).toLocaleString()} MAD` : '—' },
-    { key: 'is_featured',label: 'Featured',    render: (r) => <Badge color={r.is_featured ? 'gold' : 'gray'}>{r.is_featured ? 'Yes' : 'No'}</Badge> },
-    { key: 'status',     label: 'Status',      render: (r) => <Badge color={r.status === 'selling' ? 'green' : 'gray'}>{r.status}</Badge> },
-    { key: 'coords',     label: 'Map',         render: (r) => r.latitude && r.longitude
-      ? <span className="text-xs text-emerald-500 font-semibold">✓ Located</span>
-      : <span className="text-xs text-gray-300">No location</span>
+    { key: 'investor',   label: t('admin.projects.colInvestor'),  render: (r) => r.investor?.name || '—' },
+    { key: 'price_from', label: t('admin.projects.colPriceFrom'), render: (r) => r.price_from ? `${Number(r.price_from).toLocaleString()} MAD` : '—' },
+    { key: 'is_featured',label: t('admin.projects.colFeatured'),  render: (r) => <Badge color={r.is_featured ? 'gold' : 'gray'}>{r.is_featured ? t('admin.common.yes') : t('admin.common.no')}</Badge> },
+    { key: 'status',     label: t('admin.projects.colStatus'),    render: (r) => <Badge color={r.status === 'selling' ? 'green' : 'gray'}>{r.status}</Badge> },
+    { key: 'coords',     label: t('admin.projects.colMap'),       render: (r) => r.latitude && r.longitude
+      ? <span className="text-xs text-emerald-500 font-semibold">✓ {t('admin.projects.located')}</span>
+      : <span className="text-xs text-gray-300">{t('admin.projects.noLocation')}</span>
     },
     { key: 'actions', label: '', render: (r) => (
       <div className="flex gap-1 justify-end">
@@ -113,8 +115,8 @@ export default function ProjectsPage() {
 
   return (
     <div>
-      <PageHeader title="Projects" subtitle={`${meta.total ?? 0} total`}>
-        <Btn variant="gold" onClick={openCreate}><Plus size={15} /> Add Project</Btn>
+      <PageHeader title={t('admin.projects.title')} subtitle={`${meta.total ?? 0} ${t('admin.common.total')}`}>
+        <Btn variant="gold" onClick={openCreate}><Plus size={15} /> {t('admin.projects.addProject')}</Btn>
       </PageHeader>
       <DataTable columns={cols} data={rows} loading={loading} search={search} onSearch={(v) => { setSearch(v); setPage(1) }} page={page} lastPage={meta.last_page || 1} onPage={setPage} />
 
@@ -125,56 +127,46 @@ export default function ProjectsPage() {
         item={transModal}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Project' : 'Add Project'} size="lg">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('admin.projects.editProject') : t('admin.projects.addProject')} size="lg">
         <form onSubmit={submit} className="space-y-4">
-          <FormField label="Project Name" required>
-            <Input value={form.name} onChange={f('name')} required placeholder="The View Anfa" />
+          <FormField label={t('admin.projects.nameLabel')} required>
+            <Input value={form.name} onChange={f('name')} required placeholder={t('admin.projects.namePlaceholder')} />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Investor">
+            <FormField label={t('admin.projects.investorLabel')}>
               <Select value={form.investor_id} onChange={f('investor_id')}>
-                <option value="">Select investor</option>
+                <option value="">{t('admin.projects.selectInvestor')}</option>
                 {investors.map((inv) => <option key={inv.id} value={inv.id}>{inv.name}</option>)}
               </Select>
             </FormField>
-            <FormField label="City">
+            <FormField label={t('admin.projects.cityLabel')}>
               <Select value={form.city_id} onChange={f('city_id')}>
-                <option value="">Select city</option>
+                <option value="">{t('admin.projects.selectCity')}</option>
                 {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
             </FormField>
-            <FormField label="Price From (MAD)">
+            <FormField label={t('admin.projects.priceFromLabel')}>
               <Input type="number" value={form.price_from} onChange={f('price_from')} placeholder="1500000" />
             </FormField>
-            <FormField label="Price To (MAD)">
+            <FormField label={t('admin.projects.priceToLabel')}>
               <Input type="number" value={form.price_to} onChange={f('price_to')} placeholder="5000000" />
             </FormField>
-            <FormField label="Status">
+            <FormField label={t('admin.projects.statusLabel')}>
               <Select value={form.status} onChange={f('status')}>
-                <option value="selling">Selling</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
+                <option value="selling">{t('admin.projects.statusSelling')}</option>
+                <option value="pending">{t('admin.projects.statusPending')}</option>
+                <option value="completed">{t('admin.projects.statusCompleted')}</option>
               </Select>
             </FormField>
           </div>
-          <FormField label="Address / Location">
-            <Input value={form.location} onChange={f('location')} placeholder="Anfa, Casablanca" />
+          <FormField label={t('admin.projects.addressLabel')}>
+            <Input value={form.location} onChange={f('location')} placeholder={t('admin.projects.addressPlaceholder')} />
           </FormField>
 
-          <FormField label="Map Location" hint="Click on the map to place a pin — drag to adjust">
+          <FormField label={t('admin.projects.mapLabel')} hint={t('admin.projects.mapHint')}>
             <div className="grid grid-cols-2 gap-2 mb-2">
-              <Input
-                type="number" step="any"
-                value={form.latitude}
-                onChange={f('latitude')}
-                placeholder="Latitude (e.g. 33.5731)"
-              />
-              <Input
-                type="number" step="any"
-                value={form.longitude}
-                onChange={f('longitude')}
-                placeholder="Longitude (e.g. -7.5898)"
-              />
+              <Input type="number" step="any" value={form.latitude} onChange={f('latitude')} placeholder="Latitude (e.g. 33.5731)" />
+              <Input type="number" step="any" value={form.longitude} onChange={f('longitude')} placeholder="Longitude (e.g. -7.5898)" />
             </div>
             {modal && (
               <LocationPicker
@@ -186,11 +178,11 @@ export default function ProjectsPage() {
             )}
           </FormField>
 
-          <FormField label="Description">
-            <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Short description..." />
+          <FormField label={t('admin.projects.descLabel')}>
+            <Textarea value={form.description} onChange={f('description')} rows={2} placeholder={t('admin.projects.descPlaceholder')} />
           </FormField>
 
-          <FormField label="Images" hint="Upload files or add URLs — first image is the main photo">
+          <FormField label={t('admin.projects.imagesLabel')} hint={t('admin.projects.imagesHint')}>
             <ImageUploader
               images={form.images}
               onChange={(imgs) => setForm((p) => ({ ...p, images: imgs }))}
@@ -199,10 +191,10 @@ export default function ProjectsPage() {
             />
           </FormField>
 
-          <Toggle checked={form.is_featured} onChange={(v) => setForm(p => ({ ...p, is_featured: v }))} label="Featured project" />
+          <Toggle checked={form.is_featured} onChange={(v) => setForm(p => ({ ...p, is_featured: v }))} label={t('admin.projects.featuredLabel')} />
           <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
-            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>Cancel</Btn>
-            <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>{t('admin.common.cancel')}</Btn>
+            <Btn type="submit" variant="gold" disabled={saving}>{saving ? t('admin.common.saving') : editing ? t('admin.common.update') : t('admin.common.create')}</Btn>
           </div>
         </form>
       </Modal>

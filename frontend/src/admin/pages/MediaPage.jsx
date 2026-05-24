@@ -3,6 +3,7 @@ import { adminMedia } from '../api/adminApi'
 import { PageHeader, Btn } from '../components/DataTable'
 import { Upload, Trash2, Copy, Image, Check, X, RefreshCw, Video, Wand2, Loader2 } from 'lucide-react'
 import { isVideoPath } from '../../utils/media'
+import { useTranslation } from 'react-i18next'
 
 function bytesToSize(bytes) {
   if (!bytes) return '—'
@@ -12,6 +13,7 @@ function bytesToSize(bytes) {
 }
 
 export default function MediaPage() {
+  const { t } = useTranslation()
   const [files, setFiles]             = useState([])
   const [loading, setLoading]         = useState(true)
   const [uploading, setUploading]     = useState(false)
@@ -28,23 +30,15 @@ export default function MediaPage() {
   const load = useCallback(() => {
     setLoading(true)
     adminMedia.list({ per_page: 60 })
-      .then((r) => {
-        setFiles(Array.isArray(r?.data) ? r.data : [])
-        setError(null)
-      })
-      .catch(() => {
-        setError('Media library API not available on this backend yet.')
-        setFiles([])
-      })
+      .then((r) => { setFiles(Array.isArray(r?.data) ? r.data : []); setError(null) })
+      .catch(() => { setError(t('admin.media.apiNotAvailable')); setFiles([]) })
       .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => { load() }, [load])
 
   const handleFiles = async (fileList) => {
-    const allowed = [...fileList].filter(f =>
-      f.type.startsWith('image/') || f.type.startsWith('video/')
-    )
+    const allowed = [...fileList].filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
     if (!allowed.length) return
     setUploading(true)
     try {
@@ -55,15 +49,11 @@ export default function MediaPage() {
         await adminMedia.upload(fd)
       }
       load()
-    } catch (err) {
-      alert('Upload failed — ' + (err?.message || 'unknown error'))
-    } finally {
-      setUploading(false)
-    }
+    } catch (err) { alert(t('admin.media.uploadFailed') + ' — ' + (err?.message || 'unknown error')) } finally { setUploading(false) }
   }
 
   const remove = async (item) => {
-    if (!window.confirm(`Delete "${item.name || item.file_name}"?`)) return
+    if (!window.confirm(t('admin.media.confirmDelete', { name: item.name || item.file_name }))) return
     await adminMedia.delete(item.id)
     if (selected?.id === item.id) setSelected(null)
     load()
@@ -76,8 +66,7 @@ export default function MediaPage() {
   }
 
   const generateThumbnail = async (item) => {
-    setThumbLoading(item.id)
-    setThumbError(null)
+    setThumbLoading(item.id); setThumbError(null)
     try {
       const blob = await captureVideoThumbnailFromUrl(item.url || item.original_url)
       if (!blob) throw new Error('Could not capture frame from video')
@@ -86,71 +75,46 @@ export default function MediaPage() {
       const res = await adminMedia.rethumbnail(item.id, fd)
       const newThumb = res.data?.thumbnail_url || res.thumbnail_url
       setFiles(prev => prev.map(f => f.id === item.id ? { ...f, thumbnail_url: newThumb } : f))
-      if (selected?.id === item.id) {
-        setSelected(prev => ({ ...prev, thumbnail_url: newThumb }))
-      }
-    } catch (err) {
-      setThumbError(err?.message || 'Thumbnail generation failed')
-    } finally {
-      setThumbLoading(null)
-    }
+      if (selected?.id === item.id) setSelected(prev => ({ ...prev, thumbnail_url: newThumb }))
+    } catch (err) { setThumbError(err?.message || t('admin.media.thumbnailFailed')) } finally { setThumbLoading(null) }
   }
 
   function captureVideoThumbnailFromUrl(url) {
     return new Promise((resolve) => {
       const video = document.createElement('video')
-      video.preload = 'metadata'
-      video.muted = true
-      video.playsInline = true
-      video.crossOrigin = 'anonymous'
-      video.src = url
-
-      video.onloadeddata = () => {
-        video.currentTime = Math.min(1, video.duration * 0.1 || 0)
-      }
-
+      video.preload = 'metadata'; video.muted = true; video.playsInline = true; video.crossOrigin = 'anonymous'; video.src = url
+      video.onloadeddata = () => { video.currentTime = Math.min(1, video.duration * 0.1 || 0) }
       video.onseeked = () => {
         const canvas = document.createElement('canvas')
-        canvas.width = 640
-        canvas.height = Math.round((640 / video.videoWidth) * video.videoHeight) || 360
+        canvas.width = 640; canvas.height = Math.round((640 / video.videoWidth) * video.videoHeight) || 360
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
-        canvas.toBlob((blob) => {
-          video.remove()
-          resolve(blob)
-        }, 'image/jpeg', 0.85)
+        canvas.toBlob((blob) => { video.remove(); resolve(blob) }, 'image/jpeg', 0.85)
       }
-
       video.onerror = () => { video.remove(); resolve(null) }
     })
   }
 
   const generateAllThumbnails = async () => {
-    setBatchLoading(true)
-    setBatchResult(null)
-    setThumbError(null)
+    setBatchLoading(true); setBatchResult(null); setThumbError(null)
     try {
       const res = await adminMedia.batchRethumbnail()
-      setBatchResult(res.message || `Done: ${res.done} generated`)
+      setBatchResult(res.message || `${t('admin.media.done')}: ${res.done} ${t('admin.media.generated')}`)
       load()
-    } catch (err) {
-      setThumbError(err?.message || 'Batch thumbnail generation failed')
-    } finally {
-      setBatchLoading(false)
-    }
+    } catch (err) { setThumbError(err?.message || t('admin.media.batchFailed')) } finally { setBatchLoading(false) }
   }
 
   const getUrl = (item) => item.original_url || item.url || `/storage/${item.file_name}`
 
   return (
     <div>
-      <PageHeader title="Media Library" subtitle={`${files.length} files`}>
+      <PageHeader title={t('admin.media.title')} subtitle={`${files.length} ${t('admin.media.filesLabel')}`}>
         <div className="flex gap-2">
-          <Btn variant="ghost" onClick={load}><RefreshCw size={14} /> Refresh</Btn>
-          <Btn variant="ghost" onClick={generateAllThumbnails} disabled={batchLoading} title="Generate thumbnails for all videos that are missing one">
-            {batchLoading ? <><Loader2 size={14} className="animate-spin" /> Processing…</> : <><Wand2 size={14} /> Re-thumbnail All</>}
+          <Btn variant="ghost" onClick={load}><RefreshCw size={14} /> {t('admin.media.refresh')}</Btn>
+          <Btn variant="ghost" onClick={generateAllThumbnails} disabled={batchLoading} title={t('admin.media.reThumbnailAll')}>
+            {batchLoading ? <><Loader2 size={14} className="animate-spin" /> {t('admin.media.processing')}</> : <><Wand2 size={14} /> {t('admin.media.reThumbnailAll')}</>}
           </Btn>
           <Btn variant="gold" onClick={() => inputRef.current?.click()} disabled={uploading}>
-            <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload'}
+            <Upload size={14} /> {uploading ? t('admin.media.uploading') : t('admin.media.upload')}
           </Btn>
         </div>
         <input ref={inputRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm,video/x-msvideo" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
@@ -164,19 +128,18 @@ export default function MediaPage() {
 
       {batchResult && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm flex items-center justify-between">
-          <span><strong>Done:</strong> {batchResult}</span>
+          <span><strong>{t('admin.media.done')}:</strong> {batchResult}</span>
           <button onClick={() => setBatchResult(null)}><X size={14} /></button>
         </div>
       )}
 
       {thumbError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center justify-between">
-          <span><strong>Thumbnail error:</strong> {thumbError}</span>
+          <span><strong>{t('admin.media.thumbnailError')}:</strong> {thumbError}</span>
           <button onClick={() => setThumbError(null)}><X size={14} /></button>
         </div>
       )}
 
-      {/* Drop zone */}
       <div
         className={`mb-6 border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragOver ? 'border-[#BA1932] bg-[#BA1932]/5' : 'border-gray-200 hover:border-[#BA1932]/50'}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -185,11 +148,10 @@ export default function MediaPage() {
         onClick={() => inputRef.current?.click()}
       >
         <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-[#BA1932]' : 'text-gray-300'}`} />
-        <p className="text-gray-500 text-sm font-medium">Drop images or videos here or click to browse</p>
+        <p className="text-gray-500 text-sm font-medium">{t('admin.media.dropZoneText')}</p>
         <p className="text-gray-400 text-xs mt-1">PNG, JPG, WebP · MP4, MOV, WebM</p>
       </div>
 
-      {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -200,7 +162,7 @@ export default function MediaPage() {
         !error && (
           <div className="text-center py-20 text-gray-400">
             <Image size={40} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No media uploaded yet</p>
+            <p className="text-sm">{t('admin.media.noMedia')}</p>
           </div>
         )
       ) : (
@@ -227,19 +189,16 @@ export default function MediaPage() {
                   <img src={url} alt={item.name || item.file_name} className="w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-
-                {/* Generate thumbnail button for videos missing thumbnail */}
                 {isVid && !thumbUrl && (
                   <button
                     onClick={(e) => { e.stopPropagation(); generateThumbnail(item) }}
                     disabled={isGenerating}
-                    title="Generate thumbnail"
+                    title={t('admin.media.generateThumbnail')}
                     className="absolute bottom-1.5 left-1.5 w-6 h-6 rounded-lg bg-[#BA1932] text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity disabled:opacity-50"
                   >
                     {isGenerating ? <Loader2 size={10} className="animate-spin" /> : <Wand2 size={10} />}
                   </button>
                 )}
-
                 <button
                   onClick={(e) => { e.stopPropagation(); remove(item) }}
                   className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-red-500 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
@@ -252,7 +211,6 @@ export default function MediaPage() {
         </div>
       )}
 
-      {/* Selected file detail panel */}
       {selected && (() => {
         const selIsVid = isVideoPath(selected.path || selected.file_name || '')
         const selThumb = selected.thumbnail_url
@@ -260,7 +218,7 @@ export default function MediaPage() {
         return (
           <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-2xl border-l border-gray-100 z-40 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800 text-sm">File Details</h3>
+              <h3 className="font-bold text-gray-800 text-sm">{t('admin.media.fileDetails')}</h3>
               <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><X size={15} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -270,52 +228,46 @@ export default function MediaPage() {
                     ? <img src={selThumb} alt={selected.file_name} className="w-full h-full object-cover" />
                     : <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center gap-2">
                         <Video size={32} className="text-gray-400" />
-                        <span className="text-xs text-gray-400">No thumbnail</span>
+                        <span className="text-xs text-gray-400">{t('admin.media.noThumbnail')}</span>
                       </div>
                 ) : (
                   <img src={selUrl} alt={selected.name} className="w-full h-full object-cover" />
                 )}
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">File name</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('admin.media.fileName')}</p>
                 <p className="text-sm text-gray-800 break-all">{selected.file_name || selected.name}</p>
               </div>
               {selected.size && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Size</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('admin.media.fileSize')}</p>
                   <p className="text-sm text-gray-800">{bytesToSize(selected.size)}</p>
                 </div>
               )}
               {selIsVid && selThumb && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Thumbnail URL</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('admin.media.thumbnailUrl')}</p>
                   <p className="text-xs text-gray-600 break-all bg-gray-50 rounded-lg p-2">{selThumb}</p>
                 </div>
               )}
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">URL</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('admin.media.fileUrl')}</p>
                 <p className="text-xs text-gray-600 break-all bg-gray-50 rounded-lg p-2">{selUrl}</p>
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 space-y-2">
               {selIsVid && !selThumb && (
-                <Btn
-                  variant="ghost"
-                  className="w-full justify-center"
-                  disabled={thumbLoading === selected.id}
-                  onClick={() => generateThumbnail(selected)}
-                >
+                <Btn variant="ghost" className="w-full justify-center" disabled={thumbLoading === selected.id} onClick={() => generateThumbnail(selected)}>
                   {thumbLoading === selected.id
-                    ? <><Loader2 size={14} className="animate-spin" /> Generating…</>
-                    : <><Wand2 size={14} /> Generate Thumbnail</>
-                  }
+                    ? <><Loader2 size={14} className="animate-spin" /> {t('admin.media.generating')}</>
+                    : <><Wand2 size={14} /> {t('admin.media.generateThumbnail')}</>}
                 </Btn>
               )}
               <Btn variant="gold" className="w-full justify-center" onClick={() => copy(selUrl, selected.id)}>
-                {copiedId === selected.id ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy URL</>}
+                {copiedId === selected.id ? <><Check size={14} /> {t('admin.media.copied')}</> : <><Copy size={14} /> {t('admin.media.copyUrl')}</>}
               </Btn>
               <Btn variant="danger" className="w-full justify-center" onClick={() => remove(selected)}>
-                <Trash2 size={14} /> Delete
+                <Trash2 size={14} /> {t('admin.media.delete')}
               </Btn>
             </div>
           </div>

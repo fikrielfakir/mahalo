@@ -2,29 +2,30 @@ import { useState, useEffect } from 'react'
 import Modal, { FormField, Input, Textarea } from './Modal'
 import { adminContentTranslations, adminLanguages } from '../api/adminApi'
 import { Languages, Save, Check, Wand2, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const TYPE_FIELDS = {
   property:  [
-    { key: 'name',        label: 'Name',        type: 'input' },
-    { key: 'description', label: 'Description', type: 'textarea', rows: 3 },
-    { key: 'content',     label: 'Content',     type: 'textarea', rows: 5 },
+    { key: 'name',        labelKey: 'admin.contentTranslations.fieldName',        type: 'input' },
+    { key: 'description', labelKey: 'admin.contentTranslations.fieldDescription', type: 'textarea', rows: 3 },
+    { key: 'content',     labelKey: 'admin.contentTranslations.fieldContent',     type: 'textarea', rows: 5 },
   ],
   project:   [
-    { key: 'name',        label: 'Name',        type: 'input' },
-    { key: 'description', label: 'Description', type: 'textarea', rows: 3 },
-    { key: 'content',     label: 'Content',     type: 'textarea', rows: 5 },
+    { key: 'name',        labelKey: 'admin.contentTranslations.fieldName',        type: 'input' },
+    { key: 'description', labelKey: 'admin.contentTranslations.fieldDescription', type: 'textarea', rows: 3 },
+    { key: 'content',     labelKey: 'admin.contentTranslations.fieldContent',     type: 'textarea', rows: 5 },
   ],
   agent:     [
-    { key: 'description', label: 'Bio / Description', type: 'textarea', rows: 4 },
+    { key: 'description', labelKey: 'admin.contentTranslations.fieldBio', type: 'textarea', rows: 4 },
   ],
   category:  [
-    { key: 'name',        label: 'Name',        type: 'input' },
-    { key: 'description', label: 'Description', type: 'textarea', rows: 3 },
+    { key: 'name',        labelKey: 'admin.contentTranslations.fieldName',        type: 'input' },
+    { key: 'description', labelKey: 'admin.contentTranslations.fieldDescription', type: 'textarea', rows: 3 },
   ],
-  feature:   [{ key: 'name', label: 'Name', type: 'input' }],
-  facility:  [{ key: 'name', label: 'Name', type: 'input' }],
-  investor:  [{ key: 'name', label: 'Name', type: 'input' }],
-  city:      [{ key: 'name', label: 'Name', type: 'input' }],
+  feature:   [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
+  facility:  [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
+  investor:  [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
+  city:      [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
 }
 
 async function translateText(text, targetLang) {
@@ -36,6 +37,7 @@ async function translateText(text, targetLang) {
 }
 
 export default function ContentTranslationsModal({ open, onClose, type, item }) {
+  const { t } = useTranslation()
   const [locales, setLocales]             = useState([])
   const [localesLoading, setLocalesLoading] = useState(true)
   const [activeLocale, setActiveLocale]   = useState(null)
@@ -47,7 +49,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   const [translateError, setTranslateError] = useState(null)
   const [error, setError]                 = useState(null)
 
-  const fields = TYPE_FIELDS[type] || []
+  const rawFields = TYPE_FIELDS[type] || []
 
   useEffect(() => {
     adminLanguages.list()
@@ -72,7 +74,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
     setTranslations(empty)
     adminContentTranslations.get(type, item.id)
       .then(r => setTranslations(r.data || empty))
-      .catch(() => setError('Failed to load translations'))
+      .catch(() => setError(t('admin.contentTranslations.loadFailed')))
       .finally(() => setLoading(false))
   }, [open, type, item?.id, locales])
 
@@ -89,7 +91,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
     if (!locMeta) return
     if (activeLocale === 'en') {
       const result = {}
-      fields.forEach(f => { result[f.key] = item[f.key] || '' })
+      rawFields.forEach(f => { result[f.key] = item[f.key] || '' })
       setTranslations(prev => ({ ...prev, en: result }))
       return
     }
@@ -97,13 +99,13 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
     setTranslateError(null)
     try {
       const result = {}
-      for (const field of fields) {
+      for (const field of rawFields) {
         const source = item[field.key] || ''
         result[field.key] = source ? await translateText(source, locMeta.mymemory_code || locMeta.code) : ''
       }
       setTranslations(prev => ({ ...prev, [activeLocale]: result }))
     } catch {
-      setTranslateError('Auto-translate failed. Please try again or fill in manually.')
+      setTranslateError(t('admin.contentTranslations.translateFailed'))
     } finally {
       setTranslating(false)
     }
@@ -121,7 +123,7 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch {
-      setError('Failed to save translations')
+      setError(t('admin.contentTranslations.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -130,13 +132,13 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
   const currentData   = translations[activeLocale] || {}
   const activeLocMeta = locales.find(l => l.code === activeLocale)
   const itemLabel     = item?.name || (item?.first_name ? `${item.first_name} ${item.last_name}` : `#${item?.id}`)
-  const hasSourceData = fields.some(f => item?.[f.key])
+  const hasSourceData = rawFields.some(f => item?.[f.key])
 
   return (
     <Modal open={open} onClose={onClose} title={
       <div className="flex items-center gap-2">
         <Languages size={18} className="text-[#BA1932]" />
-        <span>Translations — <span className="text-[#BA1932]">{itemLabel}</span></span>
+        <span>{t('admin.contentTranslations.title')} — <span className="text-[#BA1932]">{itemLabel}</span></span>
       </div>
     } size="lg">
       <div className="flex gap-4 h-full" style={{ minHeight: 360 }}>
@@ -165,16 +167,15 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
         {/* Editor area */}
         <div className="flex-1 min-w-0">
           {loading ? (
-            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Loading translations…</div>
+            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">{t('admin.contentTranslations.loading')}</div>
           ) : (
             <div className="space-y-4">
-              {/* Header row */}
               <div className="flex items-center justify-between mb-2 pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{activeLocMeta?.flag}</span>
                   <div>
                     <p className="font-semibold text-gray-800 text-sm">{activeLocMeta?.label}</p>
-                    <p className="text-xs text-gray-400">Leave blank to fall back to the default value</p>
+                    <p className="text-xs text-gray-400">{t('admin.contentTranslations.fallbackHint')}</p>
                   </div>
                 </div>
 
@@ -186,8 +187,8 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-blue-100"
                   >
                     {translating
-                      ? <><Loader2 size={13} className="animate-spin" /> Translating…</>
-                      : <><Wand2 size={13} /> Auto Translate</>
+                      ? <><Loader2 size={13} className="animate-spin" /> {t('admin.contentTranslations.translating')}</>
+                      : <><Wand2 size={13} /> {t('admin.contentTranslations.autoTranslate')}</>
                     }
                   </button>
                 )}
@@ -199,21 +200,21 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
                 </p>
               )}
 
-              {fields.map(field => (
-                <FormField key={field.key} label={field.label}>
+              {rawFields.map(field => (
+                <FormField key={field.key} label={t(field.labelKey)}>
                   {field.type === 'textarea' ? (
                     <Textarea
                       value={currentData[field.key] || ''}
                       onChange={e => setValue(activeLocale, field.key, e.target.value)}
                       rows={field.rows || 3}
-                      placeholder={`${field.label} in ${activeLocMeta?.label}…`}
+                      placeholder={`${t(field.labelKey)} in ${activeLocMeta?.label}…`}
                       dir={activeLocMeta?.is_rtl ? 'rtl' : 'ltr'}
                     />
                   ) : (
                     <Input
                       value={currentData[field.key] || ''}
                       onChange={e => setValue(activeLocale, field.key, e.target.value)}
-                      placeholder={`${field.label} in ${activeLocMeta?.label}…`}
+                      placeholder={`${t(field.labelKey)} in ${activeLocMeta?.label}…`}
                       dir={activeLocMeta?.is_rtl ? 'rtl' : 'ltr'}
                     />
                   )}
@@ -235,10 +236,10 @@ export default function ContentTranslationsModal({ open, onClose, type, item }) 
                   } disabled:opacity-60 disabled:cursor-not-allowed`}
                 >
                   {saved
-                    ? <><Check size={15} /> Saved!</>
+                    ? <><Check size={15} /> {t('admin.contentTranslations.saved')}</>
                     : saving
-                      ? <><Save size={15} className="animate-pulse" /> Saving…</>
-                      : <><Save size={15} /> Save {activeLocMeta?.label}</>
+                      ? <><Save size={15} className="animate-pulse" /> {t('admin.contentTranslations.saving')}</>
+                      : <><Save size={15} /> {t('admin.contentTranslations.save')} {activeLocMeta?.label}</>
                   }
                 </button>
               </div>

@@ -4,8 +4,10 @@ import { PageHeader, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
 import { Plus, Pencil, Trash2, TrendingUp, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function InvestorsPage() {
+  const { t } = useTranslation()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
@@ -23,18 +25,18 @@ export default function InvestorsPage() {
   const submit = async (e) => {
     e.preventDefault(); setSaving(true)
     try { editing ? await adminInvestors.update(editing.id, form) : await adminInvestors.create(form); setModal(false); load() }
-    catch (err) { alert(err?.message || 'Error') } finally { setSaving(false) }
+    catch (err) { alert(err?.message || t('admin.common.error')) } finally { setSaving(false) }
   }
 
-  const remove = async (id) => { if (!window.confirm('Delete?')) return; await adminInvestors.delete(id); load() }
+  const remove = async (id) => { if (!window.confirm(t('admin.investors.confirmDelete'))) return; await adminInvestors.delete(id); load() }
 
   return (
     <div>
-      <PageHeader title="Investors" subtitle={`${rows.length} total`}>
-        <Btn variant="gold" onClick={() => open()}><Plus size={15} /> Add Investor</Btn>
+      <PageHeader title={t('admin.investors.title')} subtitle={`${rows.length} ${t('admin.common.total')}`}>
+        <Btn variant="gold" onClick={() => open()}><Plus size={15} /> {t('admin.investors.addInvestor')}</Btn>
       </PageHeader>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? <div className="p-8 text-center text-gray-400">Loading…</div> : rows.length === 0 ? <div className="p-8 text-center text-gray-400">No investors yet</div> : (
+        {loading ? <div className="p-8 text-center text-gray-400">{t('admin.common.loading')}</div> : rows.length === 0 ? <div className="p-8 text-center text-gray-400">{t('admin.investors.noInvestors')}</div> : (
           <div className="divide-y divide-gray-50">
             {rows.map((r) => (
               <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50">
@@ -62,13 +64,13 @@ export default function InvestorsPage() {
         item={transModal}
       />
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit Investor' : 'Add Investor'} size="sm">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('admin.investors.editInvestor') : t('admin.investors.addInvestor')} size="sm">
         <form onSubmit={submit} className="space-y-4">
-          <FormField label="Name" required><Input value={form.name} onChange={f('name')} required placeholder="Horizon Group" /></FormField>
-          <FormField label="Description"><Textarea value={form.description} onChange={f('description')} rows={2} placeholder="About this investor..." /></FormField>
+          <FormField label={t('admin.investors.nameLabel')} required><Input value={form.name} onChange={f('name')} required placeholder={t('admin.investors.namePlaceholder')} /></FormField>
+          <FormField label={t('admin.investors.descLabel')}><Textarea value={form.description} onChange={f('description')} rows={2} placeholder={t('admin.investors.descPlaceholder')} /></FormField>
           <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
-            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>Cancel</Btn>
-            <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>{t('admin.common.cancel')}</Btn>
+            <Btn type="submit" variant="gold" disabled={saving}>{saving ? t('admin.common.saving') : editing ? t('admin.common.update') : t('admin.common.create')}</Btn>
           </div>
         </form>
       </Modal>

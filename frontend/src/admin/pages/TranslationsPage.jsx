@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, RotateCcw, Save, CheckCircle, AlertCircle, Languages } from 'lucide-react'
 import { adminLanguages } from '../api/adminApi'
+import { useTranslation } from 'react-i18next'
 
 function getToken() {
   try { return sessionStorage.getItem('admin_token') ?? '' } catch { return '' }
@@ -21,16 +22,14 @@ function Toast({ message, type, onDone }) {
   )
 }
 
-function TranslationRow({ row, locale, onSaved, onReset }) {
+function TranslationRow({ row, locale, onSaved, onReset, t }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(row.value)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
   const textareaRef = useRef(null)
 
-  useEffect(() => {
-    setValue(row.value)
-  }, [row.value])
+  useEffect(() => { setValue(row.value) }, [row.value])
 
   useEffect(() => {
     if (editing && textareaRef.current) {
@@ -39,6 +38,12 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
     }
   }, [editing])
+
+  const handleKeyChange = (e) => {
+    setValue(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = e.target.scrollHeight + 'px'
+  }
 
   const handleSave = async () => {
     if (value === row.value) { setEditing(false); return }
@@ -52,11 +57,7 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
       if (!res.ok) throw new Error()
       onSaved(row.key, value)
       setEditing(false)
-    } catch {
-      onSaved(null, null, 'error')
-    } finally {
-      setSaving(false)
-    }
+    } catch { onSaved(null, null, 'error') } finally { setSaving(false) }
   }
 
   const handleReset = async () => {
@@ -71,17 +72,7 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
       onReset(row.key, row.default)
       setValue(row.default)
       setEditing(false)
-    } catch {
-      onSaved(null, null, 'error')
-    } finally {
-      setResetting(false)
-    }
-  }
-
-  const handleKeyChange = (e) => {
-    setValue(e.target.value)
-    e.target.style.height = 'auto'
-    e.target.style.height = e.target.scrollHeight + 'px'
+    } catch { onSaved(null, null, 'error') } finally { setResetting(false) }
   }
 
   return (
@@ -89,7 +80,7 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
       <td className="px-4 py-3 align-top w-2/5">
         <div className="flex items-start gap-2">
           {row.overridden && (
-            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[#BA1932] shrink-0 mt-1.5" title="Overridden" />
+            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[#BA1932] shrink-0 mt-1.5" title={t('admin.translationsMgr.overridden')} />
           )}
           <span className="font-mono text-xs text-gray-500 break-all leading-relaxed">{row.key}</span>
         </div>
@@ -110,7 +101,7 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
             onClick={() => setEditing(true)}
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
           >
-            {value || <span className="text-gray-300 italic">empty</span>}
+            {value || <span className="text-gray-300 italic">{t('admin.translationsMgr.empty')}</span>}
           </span>
         )}
       </td>
@@ -118,36 +109,21 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {editing ? (
             <>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-1 px-3 py-1.5 bg-[#730D26] text-white text-xs rounded-lg hover:bg-[#BA1932] disabled:opacity-50 transition-colors"
-              >
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 bg-[#730D26] text-white text-xs rounded-lg hover:bg-[#BA1932] disabled:opacity-50 transition-colors">
                 <Save size={12} />
-                {saving ? '...' : 'Save'}
+                {saving ? '...' : t('admin.common.save')}
               </button>
-              <button
-                onClick={() => { setValue(row.value); setEditing(false) }}
-                className="px-3 py-1.5 text-gray-500 text-xs rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Cancel
+              <button onClick={() => { setValue(row.value); setEditing(false) }} className="px-3 py-1.5 text-gray-500 text-xs rounded-lg hover:bg-gray-100 transition-colors">
+                {t('admin.common.cancel')}
               </button>
             </>
           ) : (
             <>
-              <button
-                onClick={() => setEditing(true)}
-                className="px-3 py-1.5 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Edit
+              <button onClick={() => setEditing(true)} className="px-3 py-1.5 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors">
+                {t('admin.translationsMgr.editBtn')}
               </button>
               {row.overridden && (
-                <button
-                  onClick={handleReset}
-                  disabled={resetting}
-                  title="Reset to default"
-                  className="p-1.5 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 disabled:opacity-50 transition-colors"
-                >
+                <button onClick={handleReset} disabled={resetting} title={t('admin.translationsMgr.resetToDefault')} className="p-1.5 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 disabled:opacity-50 transition-colors">
                   <RotateCcw size={13} />
                 </button>
               )}
@@ -160,6 +136,7 @@ function TranslationRow({ row, locale, onSaved, onReset }) {
 }
 
 export default function TranslationsPage() {
+  const { t } = useTranslation()
   const [locales, setLocales]   = useState([])
   const [locale, setLocale]     = useState(null)
   const [rows, setRows]         = useState([])
@@ -175,67 +152,50 @@ export default function TranslationsPage() {
         setLocales(list)
         if (list.length > 0) setLocale(list[0].code)
       })
-      .catch(() => setToast({ message: 'Failed to load languages', type: 'error' }))
+      .catch(() => setToast({ message: t('admin.translationsMgr.failedLoadLangs'), type: 'error' }))
       .finally(() => setLocalesLoading(false))
   }, [])
 
   const fetchTranslations = useCallback(async (loc) => {
     if (!loc) return
-    setLoading(true)
-    setSearch('')
+    setLoading(true); setSearch('')
     try {
-      const res = await fetch(`${API_BASE}?locale=${loc}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      })
+      const res = await fetch(`${API_BASE}?locale=${loc}`, { headers: { Authorization: `Bearer ${getToken()}` } })
       const json = await res.json()
       setRows(json.data ?? [])
-    } catch {
-      setToast({ message: 'Failed to load translations', type: 'error' })
-    } finally {
-      setLoading(false)
-    }
+    } catch { setToast({ message: t('admin.translationsMgr.failedLoad'), type: 'error' }) } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => {
-    if (locale) fetchTranslations(locale)
-  }, [locale, fetchTranslations])
+  useEffect(() => { if (locale) fetchTranslations(locale) }, [locale, fetchTranslations])
 
   const handleSaved = useCallback((key, value, error) => {
-    if (error) {
-      setToast({ message: 'Failed to save', type: 'error' })
-      return
-    }
+    if (error) { setToast({ message: t('admin.translationsMgr.failedSave'), type: 'error' }); return }
     setRows(prev => prev.map(r => r.key === key ? { ...r, value, overridden: true } : r))
-    setToast({ message: 'Translation saved', type: 'success' })
+    setToast({ message: t('admin.translationsMgr.toastSaved'), type: 'success' })
   }, [])
 
   const handleReset = useCallback((key, defaultValue) => {
     setRows(prev => prev.map(r => r.key === key ? { ...r, value: defaultValue, overridden: false } : r))
-    setToast({ message: 'Reset to default', type: 'success' })
+    setToast({ message: t('admin.translationsMgr.toastReset'), type: 'success' })
   }, [])
 
   const filtered = search.trim()
-    ? rows.filter(r =>
-        r.key.toLowerCase().includes(search.toLowerCase()) ||
-        (r.value || '').toLowerCase().includes(search.toLowerCase())
-      )
+    ? rows.filter(r => r.key.toLowerCase().includes(search.toLowerCase()) || (r.value || '').toLowerCase().includes(search.toLowerCase()))
     : rows
 
   const overriddenCount = rows.filter(r => r.overridden).length
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)} />}
 
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-[#730D26]/10 flex items-center justify-center">
           <Languages size={20} className="text-[#730D26]" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Translation Manager</h1>
-          <p className="text-sm text-gray-500">Edit UI strings for any language without redeploying</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('admin.translationsMgr.title')}</h1>
+          <p className="text-sm text-gray-500">{t('admin.translationsMgr.subtitle')}</p>
         </div>
       </div>
 
@@ -246,15 +206,9 @@ export default function TranslationsPage() {
       ) : (
         <div className="flex gap-2 mb-5 flex-wrap">
           {locales.map(l => (
-            <button
-              key={l.code}
-              onClick={() => setLocale(l.code)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                locale === l.code
-                  ? 'bg-[#730D26] text-white shadow-md'
-                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-              }`}
-            >
+            <button key={l.code} onClick={() => setLocale(l.code)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              locale === l.code ? 'bg-[#730D26] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}>
               <span>{l.flag}</span>
               {l.native_label || l.label}
             </button>
@@ -265,21 +219,15 @@ export default function TranslationsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-1">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
           <Search size={16} className="text-gray-400 shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by key or value…"
-            className="flex-1 text-sm outline-none placeholder-gray-400"
-          />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('admin.translationsMgr.searchPlaceholder')} className="flex-1 text-sm outline-none placeholder-gray-400" />
           <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
             {overriddenCount > 0 && (
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#BA1932]" />
-                {overriddenCount} overridden
+                {overriddenCount} {t('admin.translationsMgr.overridden')}
               </span>
             )}
-            <span>{filtered.length} / {rows.length} keys</span>
+            <span>{filtered.length} / {rows.length} {t('admin.translationsMgr.keys')}</span>
           </div>
         </div>
 
@@ -292,27 +240,21 @@ export default function TranslationsPage() {
             <table className="w-full text-left">
               <thead className="sticky top-0 bg-gray-50 z-10">
                 <tr className="border-b border-gray-100">
-                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-2/5">Key</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Value</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-36">Actions</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-2/5">{t('admin.translationsMgr.colKey')}</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('admin.translationsMgr.colValue')}</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-36">{t('admin.translationsMgr.colActions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="py-16 text-center text-gray-400 text-sm">
-                      {rows.length === 0 ? 'No translation file found for this language' : 'No results match your search'}
+                      {rows.length === 0 ? t('admin.translationsMgr.noFile') : t('admin.translationsMgr.noResults')}
                     </td>
                   </tr>
                 ) : (
                   filtered.map(row => (
-                    <TranslationRow
-                      key={`${locale}-${row.key}`}
-                      row={row}
-                      locale={locale}
-                      onSaved={handleSaved}
-                      onReset={handleReset}
-                    />
+                    <TranslationRow key={`${locale}-${row.key}`} row={row} locale={locale} onSaved={handleSaved} onReset={handleReset} t={t} />
                   ))
                 )}
               </tbody>
@@ -321,9 +263,7 @@ export default function TranslationsPage() {
         )}
       </div>
 
-      <p className="text-xs text-gray-400 px-1 mt-2">
-        Click any value to edit inline. Red dot = overridden from default. Changes go live immediately.
-      </p>
+      <p className="text-xs text-gray-400 px-1 mt-2">{t('admin.translationsMgr.footerNote')}</p>
     </div>
   )
 }

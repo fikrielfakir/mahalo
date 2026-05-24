@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import logo from '/logo-light.png'
+import { useTranslation } from 'react-i18next'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -20,7 +22,7 @@ export default function LoginPage() {
       await login(form.email, form.password)
       navigate('/admin/dashboard')
     } catch (err) {
-      setError(err?.message || 'Invalid credentials')
+      setError(err?.message || t('admin.login.invalidCredentials'))
     } finally {
       setLoading(false)
     }
@@ -31,7 +33,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src={logo} alt="Mahalo" className="h-14 w-auto object-contain mx-auto mb-4" />
-          <p className="text-white/40 text-sm mt-1">Sign in to manage your platform</p>
+          <p className="text-white/40 text-sm mt-1">{t('admin.login.subtitle')}</p>
         </div>
 
         <form onSubmit={submit} className="bg-white rounded-3xl p-8 shadow-2xl">
@@ -43,7 +45,7 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('admin.login.emailLabel')}</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -58,7 +60,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('admin.login.passwordLabel')}</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -83,9 +85,8 @@ export default function LoginPage() {
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : 'Sign In'}
+            ) : t('admin.login.signIn')}
           </button>
-
         </form>
       </div>
     </div>

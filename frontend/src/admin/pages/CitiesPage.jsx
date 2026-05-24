@@ -4,9 +4,9 @@ import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
 import { Plus, Pencil, Trash2, Globe, Building2, Download, Upload, CheckCircle, AlertCircle, X, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const EMPTY = { name: '', country: 'Morocco', state: '', image_url: '', description: '' }
-
 const CSV_HEADERS = ['name', 'country', 'state', 'description', 'image_url']
 
 function parseCSV(text) {
@@ -37,6 +37,7 @@ function generateCSV(cities) {
 }
 
 export default function CitiesPage() {
+  const { t } = useTranslation()
   const [rows, setRows]       = useState([])
   const [meta, setMeta]       = useState({})
   const [loading, setLoading] = useState(true)
@@ -71,37 +72,24 @@ export default function CitiesPage() {
   const open = (row = null) => {
     setEditing(row)
     setForm(row ? {
-      name:        row.name        || '',
-      country:     row.country     || 'Morocco',
-      state:       row.state       || '',
-      image_url:   row.image_url   || '',
-      description: row.description || '',
+      name: row.name || '', country: row.country || 'Morocco',
+      state: row.state || '', image_url: row.image_url || '', description: row.description || '',
     } : EMPTY)
     setModal(true)
   }
-
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
 
   const submit = async (e) => {
-    e.preventDefault()
-    setSaving(true)
+    e.preventDefault(); setSaving(true)
     try {
-      editing
-        ? await adminCities.update(editing.id, form)
-        : await adminCities.create(form)
-      setModal(false)
-      load()
-    } catch (err) {
-      alert(err?.message || 'Error saving city')
-    } finally {
-      setSaving(false)
-    }
+      editing ? await adminCities.update(editing.id, form) : await adminCities.create(form)
+      setModal(false); load()
+    } catch (err) { alert(err?.message || t('admin.common.error')) } finally { setSaving(false) }
   }
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this city? Properties linked to it will lose their city.')) return
-    await adminCities.delete(id)
-    load()
+    if (!window.confirm(t('admin.cities.confirmDelete'))) return
+    await adminCities.delete(id); load()
   }
 
   const handleExport = async () => {
@@ -118,17 +106,11 @@ export default function CitiesPage() {
       }
       const csv = generateCSV(all)
       const blob = new Blob([csv], { type: 'text/csv' })
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href     = url
-      a.download = `mahalo-cities-${new Date().toISOString().slice(0, 10)}.csv`
-      a.click()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `mahalo-cities-${new Date().toISOString().slice(0, 10)}.csv`; a.click()
       URL.revokeObjectURL(url)
-    } catch {
-      alert('Export failed. Please try again.')
-    } finally {
-      setExporting(false)
-    }
+    } catch { alert(t('admin.cities.exportFailed')) } finally { setExporting(false) }
   }
 
   const downloadTemplate = () => {
@@ -139,35 +121,26 @@ export default function CitiesPage() {
       'Rabat,Morocco,Rabat-Salé-Kénitra,Capital of Morocco,,',
     ].join('\n')
     const blob = new Blob([sample], { type: 'text/csv' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = 'cities-import-template.csv'
-    a.click()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'cities-import-template.csv'; a.click()
     URL.revokeObjectURL(url)
   }
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImportFile(file)
-    setImportError(null)
-    setImportResult(null)
+    setImportFile(file); setImportError(null); setImportResult(null)
     const reader = new FileReader()
     reader.onload = (ev) => {
       const { rows, error } = parseCSV(ev.target.result)
-      if (error) { setImportError(error); setImportRows([]) }
-      else setImportRows(rows)
+      if (error) { setImportError(error); setImportRows([]) } else setImportRows(rows)
     }
     reader.readAsText(file)
   }
 
   const openImport = () => {
-    setImportFile(null)
-    setImportRows([])
-    setImportError(null)
-    setImportResult(null)
-    setImportModal(true)
+    setImportFile(null); setImportRows([]); setImportError(null); setImportResult(null); setImportModal(true)
   }
 
   const runImport = async () => {
@@ -177,32 +150,20 @@ export default function CitiesPage() {
     const errors = []
     for (const row of importRows) {
       try {
-        await adminCities.create({
-          name:        row.name        || '',
-          country:     row.country     || 'Morocco',
-          state:       row.state       || '',
-          description: row.description || '',
-          image_url:   row.image_url   || '',
-        })
+        await adminCities.create({ name: row.name || '', country: row.country || 'Morocco', state: row.state || '', description: row.description || '', image_url: row.image_url || '' })
         created++
       } catch (err) {
         const msg = err?.message || 'Unknown error'
-        if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
-          skipped++
-        } else {
-          failed++
-          errors.push(`"${row.name}": ${msg}`)
-        }
+        if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) { skipped++ }
+        else { failed++; errors.push(`"${row.name}": ${msg}`) }
       }
     }
-    setImportResult({ created, failed, skipped, errors })
-    setImporting(false)
-    load()
+    setImportResult({ created, failed, skipped, errors }); setImporting(false); load()
   }
 
   const cols = [
     {
-      key: 'name', label: 'City',
+      key: 'name', label: t('admin.cities.colCity'),
       render: (r) => (
         <div className="flex items-center gap-3">
           {r.image_url ? (
@@ -220,16 +181,15 @@ export default function CitiesPage() {
       ),
     },
     {
-      key: 'properties_count', label: 'Properties',
+      key: 'properties_count', label: t('admin.cities.colProperties'),
       render: (r) => (
         <div className="flex items-center gap-1.5 text-gray-600 text-sm">
-          <Building2 size={13} className="text-gray-400" />
-          {r.properties_count ?? 0}
+          <Building2 size={13} className="text-gray-400" /> {r.properties_count ?? 0}
         </div>
       ),
     },
     {
-      key: 'description', label: 'Description',
+      key: 'description', label: t('admin.cities.colDescription'),
       render: (r) => <span className="text-xs text-gray-400 line-clamp-1 max-w-xs">{r.description || '—'}</span>,
     },
     {
@@ -246,59 +206,45 @@ export default function CitiesPage() {
 
   return (
     <div>
-      <PageHeader title="Cities" subtitle={`${meta.total ?? rows.length} cities`}>
+      <PageHeader title={t('admin.cities.title')} subtitle={`${meta.total ?? rows.length} ${t('admin.cities.citiesLabel')}`}>
         <div className="flex gap-2">
           <Btn variant="ghost" onClick={handleExport} disabled={exporting}>
-            <Download size={14} /> {exporting ? 'Exporting…' : 'Export CSV'}
+            <Download size={14} /> {exporting ? t('admin.cities.exporting') : t('admin.cities.exportCsv')}
           </Btn>
           <Btn variant="ghost" onClick={openImport}>
-            <Upload size={14} /> Import CSV
+            <Upload size={14} /> {t('admin.cities.importCsv')}
           </Btn>
           <Btn variant="gold" onClick={() => open()}>
-            <Plus size={15} /> Add City
+            <Plus size={15} /> {t('admin.cities.addCity')}
           </Btn>
         </div>
       </PageHeader>
 
       {error && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 text-sm">
-          <strong>Note:</strong> {error} You can still manage cities here once the backend endpoint is deployed.
+          <strong>Note:</strong> {error}
         </div>
       )}
 
-      <DataTable
-        columns={cols}
-        data={rows}
-        loading={loading}
-        search={search}
-        onSearch={(v) => { setSearch(v); setPage(1) }}
-        page={page}
-        lastPage={meta.last_page || 1}
-        onPage={setPage}
-      />
+      <DataTable columns={cols} data={rows} loading={loading} search={search}
+        onSearch={(v) => { setSearch(v); setPage(1) }} page={page} lastPage={meta.last_page || 1} onPage={setPage} />
 
-      <ContentTranslationsModal
-        open={!!transModal}
-        onClose={() => setTransModal(null)}
-        type="city"
-        item={transModal}
-      />
+      <ContentTranslationsModal open={!!transModal} onClose={() => setTransModal(null)} type="city" item={transModal} />
 
-      {/* Edit / Create modal */}
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit City' : 'Add City'} size="sm">
+      <Modal open={modal} onClose={() => setModal(false)} title={editing ? t('admin.cities.editCity') : t('admin.cities.addCity')} size="sm">
         <form onSubmit={submit} className="space-y-4">
-          <FormField label="City Name" required>
-            <Input value={form.name} onChange={f('name')} required placeholder="Casablanca" />
+          <FormField label={t('admin.cities.nameLabel')} required>
+            <Input value={form.name} onChange={f('name')} required placeholder={t('admin.cities.namePlaceholder')} />
           </FormField>
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Country">
-              <Input value={form.country} onChange={f('country')} placeholder="Morocco" />
+            <FormField label={t('admin.cities.countryLabel')}>
+              <Input value={form.country} onChange={f('country')} placeholder={t('admin.cities.countryPlaceholder')} />
             </FormField>
-            <FormField label="State / Region">
-              <Input value={form.state} onChange={f('state')} placeholder="Grand Casablanca" />
+            <FormField label={t('admin.cities.stateLabel')}>
+              <Input value={form.state} onChange={f('state')} placeholder={t('admin.cities.statePlaceholder')} />
             </FormField>
           </div>
-          <FormField label="Cover Image URL" hint="Used on the Neighborhoods page">
+          <FormField label={t('admin.cities.imageUrlLabel')} hint={t('admin.cities.imageUrlHint')}>
             <Input value={form.image_url} onChange={f('image_url')} placeholder="https://images.unsplash.com/..." />
           </FormField>
           {form.image_url && (
@@ -306,68 +252,55 @@ export default function CitiesPage() {
               <img src={form.image_url} alt="preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
             </div>
           )}
-          <FormField label="Description">
-            <Textarea value={form.description} onChange={f('description')} rows={2} placeholder="Brief description of the city..." />
+          <FormField label={t('admin.cities.descLabel')}>
+            <Textarea value={form.description} onChange={f('description')} rows={2} placeholder={t('admin.cities.descPlaceholder')} />
           </FormField>
           <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
-            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>Cancel</Btn>
-            <Btn type="submit" variant="gold" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</Btn>
+            <Btn type="button" variant="ghost" onClick={() => setModal(false)}>{t('admin.common.cancel')}</Btn>
+            <Btn type="submit" variant="gold" disabled={saving}>{saving ? t('admin.common.saving') : editing ? t('admin.common.update') : t('admin.common.create')}</Btn>
           </div>
         </form>
       </Modal>
 
-      {/* Import modal */}
       {importModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
               <div>
-                <h2 className="font-bold text-gray-800 text-base">Import Cities from CSV</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Bulk-create cities from a CSV file</p>
+                <h2 className="font-bold text-gray-800 text-base">{t('admin.cities.importTitle')}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">{t('admin.cities.importSubtitle')}</p>
               </div>
-              <button onClick={() => setImportModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <X size={18} />
-              </button>
+              <button onClick={() => setImportModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
             </div>
-
             <div className="px-6 py-5 space-y-4">
-              {/* Template download */}
               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-xl">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">Download Template</p>
-                  <p className="text-xs text-gray-400">CSV with the correct column headers</p>
+                  <p className="text-sm font-semibold text-gray-700">{t('admin.cities.downloadTemplate')}</p>
+                  <p className="text-xs text-gray-400">{t('admin.cities.downloadTemplateHint')}</p>
                 </div>
                 <Btn size="sm" variant="ghost" onClick={downloadTemplate}>
-                  <Download size={13} /> Template
+                  <Download size={13} /> {t('admin.cities.templateBtn')}
                 </Btn>
               </div>
-
-              {/* File picker */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-gray-200 hover:border-[#BA1932]/40 rounded-xl px-4 py-6 text-center cursor-pointer transition-colors"
               >
                 <Upload size={22} className="mx-auto mb-2 text-gray-300" />
-                {importFile ? (
-                  <p className="text-sm font-semibold text-gray-700">{importFile.name}</p>
-                ) : (
-                  <p className="text-sm text-gray-400">Click to select a CSV file</p>
-                )}
+                {importFile
+                  ? <p className="text-sm font-semibold text-gray-700">{importFile.name}</p>
+                  : <p className="text-sm text-gray-400">{t('admin.cities.clickToSelect')}</p>}
                 <p className="text-xs text-gray-300 mt-1">Columns: name, country, state, description, image_url</p>
                 <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleFileChange} />
               </div>
-
-              {/* Parse error */}
               {importError && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
                   <AlertCircle size={14} className="shrink-0" /> {importError}
                 </div>
               )}
-
-              {/* Preview */}
               {importRows.length > 0 && !importResult && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-2">{importRows.length} cities found in file — preview:</p>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">{importRows.length} {t('admin.cities.citiesFound')}</p>
                   <div className="max-h-40 overflow-y-auto rounded-xl border border-gray-100 divide-y divide-gray-50">
                     {importRows.slice(0, 8).map((r, i) => (
                       <div key={i} className="px-3 py-2 flex items-center gap-2">
@@ -377,42 +310,33 @@ export default function CitiesPage() {
                       </div>
                     ))}
                     {importRows.length > 8 && (
-                      <div className="px-3 py-2 text-xs text-gray-400">…and {importRows.length - 8} more</div>
+                      <div className="px-3 py-2 text-xs text-gray-400">…{t('admin.cities.andMore', { count: importRows.length - 8 })}</div>
                     )}
                   </div>
                 </div>
               )}
-
-              {/* Result */}
               {importResult && (
                 <div className="rounded-xl border border-gray-100 px-4 py-3 space-y-1">
                   <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                    <CheckCircle size={15} /> Import complete
+                    <CheckCircle size={15} /> {t('admin.cities.importComplete')}
                   </div>
-                  <p className="text-xs text-gray-600">{importResult.created} created · {importResult.skipped} skipped (already exist) · {importResult.failed} failed</p>
+                  <p className="text-xs text-gray-600">{importResult.created} {t('admin.cities.created')} · {importResult.skipped} {t('admin.cities.skipped')} · {importResult.failed} {t('admin.cities.failed')}</p>
                   {importResult.errors.length > 0 && (
                     <div className="mt-2 space-y-0.5">
-                      {importResult.errors.map((e, i) => (
-                        <p key={i} className="text-xs text-red-500">{e}</p>
-                      ))}
+                      {importResult.errors.map((e, i) => <p key={i} className="text-xs text-red-500">{e}</p>)}
                     </div>
                   )}
                 </div>
               )}
             </div>
-
             <div className="px-6 pb-5 flex gap-2 justify-end border-t border-gray-100 pt-4">
               <Btn variant="ghost" onClick={() => setImportModal(false)}>
-                {importResult ? 'Close' : 'Cancel'}
+                {importResult ? t('admin.common.close') : t('admin.common.cancel')}
               </Btn>
               {!importResult && (
-                <Btn
-                  variant="gold"
-                  disabled={!importRows.length || importing}
-                  onClick={runImport}
-                >
+                <Btn variant="gold" disabled={!importRows.length || importing} onClick={runImport}>
                   <Upload size={14} />
-                  {importing ? `Importing…` : `Import ${importRows.length} cities`}
+                  {importing ? t('admin.cities.importingCities') : t('admin.cities.importCount', { count: importRows.length })}
                 </Btn>
               )}
             </div>

@@ -158,6 +158,13 @@ function PriceZone({ minPrice, maxPrice, onChange, label, isMobile = false }) {
     setOpen(true)
   }, [isMobile])
 
+  useEffect(() => {
+    if (!open) return
+    const handleScroll = () => setOpen(false)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [open])
+
   const toggle = () => (open ? setOpen(false) : openPopover())
 
   /* Popover panel (rendered via portal at body level — no z-index stacking issues) */

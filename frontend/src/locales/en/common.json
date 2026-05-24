@@ -55,7 +55,15 @@
     "type": "Type",
     "bedrooms": "Bedrooms",
     "priceRange": "Price Range",
-    "price": "Price"
+    "price": "Price",
+    "priceRanges": {
+      "any": "Any",
+      "under500k": "< 500K",
+      "500k1m": "500K – 1M",
+      "1m3m": "1M – 3M",
+      "3m5m": "3M – 5M",
+      "over5m": "5M+"
+    }
   },
   "filters": {
     "allTypes": "All Types",

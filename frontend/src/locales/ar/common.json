@@ -55,7 +55,15 @@
     "type": "النوع",
     "bedrooms": "غرف النوم",
     "priceRange": "نطاق السعر",
-    "price": "السعر"
+    "price": "السعر",
+    "priceRanges": {
+      "any": "أي سعر",
+      "under500k": "أقل من 500K",
+      "500k1m": "500K – 1M",
+      "1m3m": "1M – 3M",
+      "3m5m": "3M – 5M",
+      "over5m": "أكثر من 5M"
+    }
   },
   "filters": {
     "allTypes": "جميع الأنواع",

@@ -55,7 +55,15 @@
     "type": "Tipo",
     "bedrooms": "Habitaciones",
     "priceRange": "Rango de precio",
-    "price": "Precio"
+    "price": "Precio",
+    "priceRanges": {
+      "any": "Cualquier precio",
+      "under500k": "< 500K",
+      "500k1m": "500K – 1M",
+      "1m3m": "1M – 3M",
+      "3m5m": "3M – 5M",
+      "over5m": "5M+"
+    }
   },
   "filters": {
     "allTypes": "Todos los tipos",

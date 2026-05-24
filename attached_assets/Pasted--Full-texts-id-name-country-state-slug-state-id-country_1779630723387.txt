@@ -1,0 +1,305 @@
+
+Full texts
+id
+name
+country
+state
+slug
+state_id
+country_id
+order
+image
+image_url
+description
+is_default
+status
+created_at
+updated_at
+
+Edit Edit
+Copy Copy
+Delete Delete
+28
+Safi
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+1
+published
+2026-05-15 11:28:50
+2026-05-15 11:28:50
+
+Edit Edit
+Copy Copy
+Delete Delete
+30
+Nador
+Morocco
+NULL
+NULL
+NULL
+NULL
+2
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:51
+2026-05-15 11:28:51
+
+Edit Edit
+Copy Copy
+Delete Delete
+32
+Beni Mellal
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/72398c8f-e326-...
+NULL
+0
+published
+2026-05-15 11:28:52
+2026-05-24 13:38:15
+
+Edit Edit
+Copy Copy
+Delete Delete
+33
+Khouribga
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:52
+2026-05-15 11:28:52
+
+Edit Edit
+Copy Copy
+Delete Delete
+36
+Ifrane
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:53
+2026-05-15 11:28:53
+
+Edit Edit
+Copy Copy
+Delete Delete
+38
+Nador
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:53
+2026-05-15 11:28:53
+
+Edit Edit
+Copy Copy
+Delete Delete
+39
+Ouarzazate
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:54
+2026-05-15 11:28:54
+
+Edit Edit
+Copy Copy
+Delete Delete
+40
+Kenitra
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:54
+2026-05-15 11:28:54
+
+Edit Edit
+Copy Copy
+Delete Delete
+42
+Tangier
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:55
+2026-05-15 11:28:55
+
+Edit Edit
+Copy Copy
+Delete Delete
+44
+Kenitra
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:55
+2026-05-15 11:28:55
+
+Edit Edit
+Copy Copy
+Delete Delete
+45
+Dakhla
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-15 11:28:56
+
+Edit Edit
+Copy Copy
+Delete Delete
+46
+Casablanca
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/27a84420-e0d2-...
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-24 13:38:49
+
+Edit Edit
+Copy Copy
+Delete Delete
+47
+Fes
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-15 11:28:56
+
+Edit Edit
+Copy Copy
+Delete Delete
+48
+Marrakech
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+NULL
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-15 11:28:57
+
+Edit Edit
+Copy Copy
+Delete Delete
+49
+Al Hoceima
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/1167a6ea-68e4-...
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-24 13:37:39
+
+Edit Edit
+Copy Copy

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { useSiteSettings } from '../../context/SiteSettingsContext'
 import {
   LayoutDashboard, Building2, FolderKanban, Users, Tag,
   Star, MapPin, MessageSquare, LogOut, X, TrendingUp,
@@ -9,56 +10,59 @@ import {
 } from 'lucide-react'
 import logoLight from '/logo-light.png'
 
-const groups = [
-  {
-    labelKey: 'admin.sidebar.overview',
-    links: [
-      { to: '/admin/dashboard',  labelKey: 'admin.sidebar.dashboard', icon: LayoutDashboard },
-      { to: '/admin/analytics',  labelKey: 'admin.sidebar.analytics', icon: BarChart2 },
-    ],
-  },
-  {
-    labelKey: 'admin.sidebar.listings',
-    links: [
-      { to: '/admin/properties', labelKey: 'admin.sidebar.properties', icon: Building2 },
-      { to: '/admin/projects',   labelKey: 'admin.sidebar.projects',   icon: FolderKanban },
-      { to: '/admin/agents',     labelKey: 'admin.sidebar.agents',     icon: Users },
-    ],
-  },
-  {
-    labelKey: 'admin.sidebar.taxonomy',
-    links: [
-      { to: '/admin/categories', labelKey: 'admin.sidebar.categories', icon: Tag },
-      { to: '/admin/features',   labelKey: 'admin.sidebar.amenities',  icon: Star },
-      { to: '/admin/facilities', labelKey: 'admin.sidebar.facilities', icon: MapPin },
-      { to: '/admin/investors',  labelKey: 'admin.sidebar.investors',  icon: TrendingUp },
-      { to: '/admin/cities',     labelKey: 'admin.sidebar.cities',     icon: Globe },
-    ],
-  },
-  {
-    labelKey: 'admin.sidebar.operations',
-    links: [
-      { to: '/admin/consults', labelKey: 'admin.sidebar.inquiries', icon: MessageSquare },
-      { to: '/admin/media',    labelKey: 'admin.sidebar.media',     icon: Image },
-    ],
-  },
-  {
-    labelKey: 'admin.sidebar.system',
-    links: [
-      { to: '/admin/users',                     labelKey: 'admin.sidebar.users',         icon: UserCog },
-      { to: '/admin/professional-applications', labelKey: 'admin.sidebar.applications',  icon: Briefcase },
-      { to: '/admin/languages',                 labelKey: 'admin.sidebar.languages',     icon: Globe },
-      { to: '/admin/translations',              labelKey: 'admin.sidebar.translations',  icon: Languages },
-      { to: '/admin/settings',                  labelKey: 'admin.sidebar.settings',      icon: Settings },
-      { to: '/admin/app-update',                labelKey: 'admin.sidebar.appUpdate',     icon: PackageOpen },
-    ],
-  },
-]
-
 export default function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const settings = useSiteSettings()
+
+  const projectsEnabled = settings.projects_enabled !== '0'
+
+  const groups = [
+    {
+      labelKey: 'admin.sidebar.overview',
+      links: [
+        { to: '/admin/dashboard',  labelKey: 'admin.sidebar.dashboard', icon: LayoutDashboard },
+        { to: '/admin/analytics',  labelKey: 'admin.sidebar.analytics', icon: BarChart2 },
+      ],
+    },
+    {
+      labelKey: 'admin.sidebar.listings',
+      links: [
+        { to: '/admin/properties', labelKey: 'admin.sidebar.properties', icon: Building2 },
+        ...(projectsEnabled ? [{ to: '/admin/projects', labelKey: 'admin.sidebar.projects', icon: FolderKanban }] : []),
+        { to: '/admin/agents',     labelKey: 'admin.sidebar.agents',     icon: Users },
+      ],
+    },
+    {
+      labelKey: 'admin.sidebar.taxonomy',
+      links: [
+        { to: '/admin/categories', labelKey: 'admin.sidebar.categories', icon: Tag },
+        { to: '/admin/features',   labelKey: 'admin.sidebar.amenities',  icon: Star },
+        { to: '/admin/facilities', labelKey: 'admin.sidebar.facilities', icon: MapPin },
+        { to: '/admin/investors',  labelKey: 'admin.sidebar.investors',  icon: TrendingUp },
+        { to: '/admin/cities',     labelKey: 'admin.sidebar.cities',     icon: Globe },
+      ],
+    },
+    {
+      labelKey: 'admin.sidebar.operations',
+      links: [
+        { to: '/admin/consults', labelKey: 'admin.sidebar.inquiries', icon: MessageSquare },
+        { to: '/admin/media',    labelKey: 'admin.sidebar.media',     icon: Image },
+      ],
+    },
+    {
+      labelKey: 'admin.sidebar.system',
+      links: [
+        { to: '/admin/users',                     labelKey: 'admin.sidebar.users',         icon: UserCog },
+        { to: '/admin/professional-applications', labelKey: 'admin.sidebar.applications',  icon: Briefcase },
+        { to: '/admin/languages',                 labelKey: 'admin.sidebar.languages',     icon: Globe },
+        { to: '/admin/translations',              labelKey: 'admin.sidebar.translations',  icon: Languages },
+        { to: '/admin/settings',                  labelKey: 'admin.sidebar.settings',      icon: Settings },
+        { to: '/admin/app-update',                labelKey: 'admin.sidebar.appUpdate',     icon: PackageOpen },
+      ],
+    },
+  ]
 
   const handleLogout = async () => {
     await logout()

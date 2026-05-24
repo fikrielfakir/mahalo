@@ -6,6 +6,7 @@ import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LOCALES, USER_LANG_KEY } from '../i18n.js'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 const LANG_LABELS = {
   en: { label: 'English',  short: 'EN', flag: '🇬🇧' },
@@ -26,13 +27,14 @@ export default function Navbar({ transparent = false }) {
   const navigate                          = useNavigate()
   const { user, isAuthenticated, isEmailVerified, logout } = useUserAuth()
 
+  const siteSettings = useSiteSettings()
   const activeLng   = i18n.resolvedLanguage?.split('-')[0] || 'en'
   const currentLang = LANG_LABELS[activeLng] || LANG_LABELS.en
 
   const navLinks = [
-    { label: t('nav.buy'),           to: '/properties?type=sale' },
-    { label: t('nav.rent'),          to: '/properties?type=rent' },
-    { label: t('nav.newProjects'),   to: '/projects' },
+    ...(siteSettings.sale_enabled !== '0' ? [{ label: t('nav.buy'),         to: '/properties?type=sale' }] : []),
+    ...(siteSettings.rent_enabled !== '0' ? [{ label: t('nav.rent'),        to: '/properties?type=rent' }] : []),
+    ...(siteSettings.projects_enabled !== '0' ? [{ label: t('nav.newProjects'), to: '/projects' }] : []),
     { label: t('nav.neighborhoods'), to: '/neighborhoods' },
     { label: t('nav.agents'),        to: '/agents' },
     { label: t('nav.about'),         to: '/about' },

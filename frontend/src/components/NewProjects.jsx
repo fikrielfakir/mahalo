@@ -3,6 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Building } from 'lucide-
 import { Link } from 'react-router-dom'
 import { projectsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=700&q=80&auto=format&fit=crop',
@@ -22,20 +23,23 @@ function formatPrice(price) {
 
 export default function NewProjects() {
   const { t } = useTranslation()
+  const settings = useSiteSettings()
   const [projects, setProjects] = useState([])
   const [loading, setLoading]   = useState(true)
   const [active, setActive]     = useState(0)
 
   useEffect(() => {
+    if (settings.projects_enabled === '0') { setLoading(false); return }
     projectsApi.list({ per_page: 5 })
       .then((res) => setProjects(Array.isArray(res?.data) ? res.data : []))
       .catch(() => setProjects([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [settings.projects_enabled])
 
   const prev = () => setActive((a) => (a - 1 + projects.length) % projects.length)
   const next = () => setActive((a) => (a + 1) % projects.length)
 
+  if (settings.projects_enabled === '0') return null
   if (!loading && projects.length === 0) return null
 
   return (

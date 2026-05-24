@@ -7,7 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages, Bot, ChevronDown, Smartphone,
+  Languages, Bot, ChevronDown, Smartphone, Building2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -83,6 +83,9 @@ const DEFAULTS = {
   mobile_app_description: 'Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.',
   mobile_app_appstore_url: '#',
   mobile_app_playstore_url: '#',
+  sale_enabled: '1',
+  rent_enabled: '1',
+  projects_enabled: '1',
 }
 
 const GROQ_MODELS = [
@@ -119,6 +122,7 @@ export default function SettingsPage() {
     { id: 'pages',      label: t('admin.settings.tabPages'),      icon: FileText },
     { id: 'cookies',    label: t('admin.settings.tabCookies'),    icon: Cookie },
     { id: 'mobile_app', label: t('admin.settings.tabMobileApp'),  icon: Smartphone },
+    { id: 'listings',   label: 'Listings',                        icon: Building2 },
   ]
 
   const [form, setForm]                   = useState(DEFAULTS)
@@ -922,6 +926,68 @@ export default function SettingsPage() {
                   <Input value={form.mobile_app_playstore_url} onChange={f('mobile_app_playstore_url')} placeholder="https://play.google.com/store/…" />
                 </FormField>
               </div>
+            </Section>
+          </>
+        )}
+
+        {tab === 'listings' && (
+          <>
+            <Section title="Property Types" icon={Building2}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Enable Sale Properties</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Show "For Sale" listings in the navigation and search filters.</p>
+                  </div>
+                  <div
+                    onClick={() => setForm(p => ({ ...p, sale_enabled: p.sale_enabled === '1' ? '0' : '1' }))}
+                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.sale_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.sale_enabled === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </div>
+                </div>
+                {form.sale_enabled === '0' && (
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                    <AlertCircle size={14} /> Sale properties are hidden from navigation and user interface.
+                  </div>
+                )}
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Enable Rent Properties</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Show "For Rent" listings in the navigation and search filters.</p>
+                  </div>
+                  <div
+                    onClick={() => setForm(p => ({ ...p, rent_enabled: p.rent_enabled === '1' ? '0' : '1' }))}
+                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.rent_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.rent_enabled === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </div>
+                </div>
+                {form.rent_enabled === '0' && (
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                    <AlertCircle size={14} /> Rent properties are hidden from navigation and user interface.
+                  </div>
+                )}
+              </div>
+            </Section>
+            <Section title="Projects Section" icon={Building2}>
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Enable Projects</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Show the Projects section in the navigation, homepage, and admin sidebar.</p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, projects_enabled: p.projects_enabled === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.projects_enabled === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.projects_enabled === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              {form.projects_enabled === '0' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
+                  <AlertCircle size={14} /> Projects section is hidden from admin sidebar and user interface.
+                </div>
+              )}
             </Section>
           </>
         )}

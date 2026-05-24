@@ -25,6 +25,11 @@ class PublicSettingsController extends Controller
         // Cookie consent
         'cookie_consent_enabled', 'cookie_consent_title', 'cookie_consent_message',
         'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
+        // Mobile App Section
+        'mobile_app_enabled', 'mobile_app_title', 'mobile_app_subtitle',
+        'mobile_app_description', 'mobile_app_appstore_url', 'mobile_app_playstore_url',
+        // Property type toggles
+        'sale_enabled', 'rent_enabled', 'projects_enabled',
     ];
 
     private const TRANSLATABLE_KEYS = [

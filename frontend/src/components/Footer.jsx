@@ -21,9 +21,9 @@ export default function Footer() {
       { label: t('footer.contact'),        to: '/contact' },
     ],
     [t('footer.discover')]:  [
-      { label: t('footer.buy'),            to: '/properties?type=sale' },
-      { label: t('footer.rent'),           to: '/properties?type=rent' },
-      { label: t('footer.newProjects'),    to: '/projects' },
+      ...(settings.sale_enabled !== '0'     ? [{ label: t('footer.buy'),           to: '/properties?type=sale' }] : []),
+      ...(settings.rent_enabled !== '0'     ? [{ label: t('footer.rent'),          to: '/properties?type=rent' }] : []),
+      ...(settings.projects_enabled !== '0' ? [{ label: t('footer.newProjects'),   to: '/projects'             }] : []),
       { label: t('footer.neighborhoods'),  to: '/neighborhoods' },
     ],
     [t('footer.resources')]: [

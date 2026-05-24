@@ -285,6 +285,14 @@
     "creating": "Création du compte…",
     "signUpGoogle": "S'inscrire avec Google"
   },
+  "mobileApp": {
+    "badge": "Application Mobile Agentz",
+    "title": "Votre prochain chez-vous",
+    "subtitle": "est entre vos mains",
+    "description": "Recherchez, sauvegardez et contactez des agents en déplacement. Téléchargez l'app et découvrez des propriétés premium partout, à tout moment.",
+    "appStore": "Télécharger sur l'App Store",
+    "playStore": "Disponible sur Google Play"
+  },
   "cookies": {
     "title": "Nous utilisons des cookies",
     "message": "Nous utilisons des cookies pour améliorer votre expérience, analyser le trafic et personnaliser le contenu. Gérez vos préférences ci-dessous.",

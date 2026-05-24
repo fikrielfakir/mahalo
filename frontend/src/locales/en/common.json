@@ -285,6 +285,14 @@
     "creating": "Creating account…",
     "signUpGoogle": "Sign up with Google"
   },
+  "mobileApp": {
+    "badge": "Agentz Mobile App",
+    "title": "Your next home",
+    "subtitle": "is in your hands",
+    "description": "Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.",
+    "appStore": "Download on the App Store",
+    "playStore": "Get it on Google Play"
+  },
   "cookies": {
     "title": "We use cookies",
     "message": "We use cookies to enhance your experience, analyse traffic, and personalise content. You can manage your preferences below.",

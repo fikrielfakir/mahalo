@@ -1,14 +1,16 @@
 import { Smartphone } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
 export default function MobileAppSection() {
   const settings = useSiteSettings()
+  const { t } = useTranslation()
 
   if (settings.mobile_app_enabled === '0') return null
 
-  const title       = settings.mobile_app_title       || 'Your next home'
-  const subtitle    = settings.mobile_app_subtitle    || 'is in your hands'
-  const description = settings.mobile_app_description || 'Search, save and contact agents on the go. Download the app and discover premium properties anywhere, anytime.'
+  const title       = settings.mobile_app_title       || t('mobileApp.title')
+  const subtitle    = settings.mobile_app_subtitle    || t('mobileApp.subtitle')
+  const description = settings.mobile_app_description || t('mobileApp.description')
   const appstoreUrl  = settings.mobile_app_appstore_url  || '#'
   const playstoreUrl = settings.mobile_app_playstore_url || '#'
 
@@ -43,7 +45,7 @@ export default function MobileAppSection() {
               <div className="inline-flex items-center gap-2 mb-5 sm:mb-6"
                 style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.14)', borderRadius:'999px', padding:'6px 16px', backdropFilter:'blur(14px)' }}>
                 <Smartphone size={11} color="#BA1932" />
-                <span style={{ color:'rgba(255,255,255,0.58)', fontSize:'10px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.13em' }}>Agentz Mobile App</span>
+                <span style={{ color:'rgba(255,255,255,0.58)', fontSize:'10px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.13em' }}>{t('mobileApp.badge')}</span>
               </div>
 
               {/* Heading */}
@@ -62,10 +64,10 @@ export default function MobileAppSection() {
               {/* Store badges */}
               <div className="flex flex-wrap gap-3 items-center">
                 <a href={appstoreUrl} className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5" target="_blank" rel="noreferrer">
-                  <img src="/badge-appstore.png" alt="Download on the App Store" className="h-10 sm:h-11 w-auto" />
+                  <img src="/badge-appstore.png" alt={t('mobileApp.appStore')} className="h-10 sm:h-11 w-auto" />
                 </a>
                 <a href={playstoreUrl} className="block rounded-xl overflow-hidden transition-all hover:-translate-y-0.5" target="_blank" rel="noreferrer">
-                  <img src="/badge-playstore.png" alt="Get it on Google Play" className="h-10 sm:h-11 w-auto" />
+                  <img src="/badge-playstore.png" alt={t('mobileApp.playStore')} className="h-10 sm:h-11 w-auto" />
                 </a>
               </div>
             </div>
@@ -82,7 +84,7 @@ export default function MobileAppSection() {
                 style={{ background:'radial-gradient(ellipse at 50% 60%, rgba(186,25,50,0.35) 0%, transparent 65%)', filter:'blur(36px)' }} />
               <img
                 src="/app-mockup.png"
-                alt="Agentz Mobile App"
+                alt={t('mobileApp.badge')}
                 style={{
                   height: '115%',
                   width: 'auto',

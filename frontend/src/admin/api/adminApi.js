@@ -170,11 +170,9 @@ export const adminLanguages = {
 }
 
 export const adminTranslations = {
-  list:   (p = {}) => client.get('/admin/translations', { params: p }),
-  update: (id, d)  => client.put(`/admin/translations/${id}`, d),
-  reset:  (id)     => client.delete(`/admin/translations/${id}`),
-  import: (fd)     => client.post('/admin/translations/import', fd, { headers: { 'Content-Type': undefined } }),
-  export: (locale) => client.get(`/admin/translations/export/${locale}`),
+  list:   (locale)       => client.get('/admin/translations', { params: { locale } }),
+  update: (locale, key, value) => client.put(`/admin/translations/${locale}/${encodeURIComponent(key)}`, { value }),
+  reset:  (locale, key)  => client.delete(`/admin/translations/${locale}/${encodeURIComponent(key)}`),
 }
 
 export const adminSavedSearches = {

@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, RotateCcw, Save, CheckCircle, AlertCircle, Languages } from 'lucide-react'
-import { adminLanguages } from '../api/adminApi'
+import { adminLanguages, adminTranslations } from '../api/adminApi'
 import { useTranslation } from 'react-i18next'
-
-function getToken() {
-  try { return sessionStorage.getItem('admin_token') ?? '' } catch { return '' }
-}
-
-const API_BASE = '/api/v1/admin/translations'
 
 function Toast({ message, type, onDone }) {
   useEffect(() => {
@@ -49,30 +43,29 @@ function TranslationRow({ row, locale, onSaved, onReset, t }) {
     if (value === row.value) { setEditing(false); return }
     setSaving(true)
     try {
-      const res = await fetch(`${API_BASE}/${locale}/${encodeURIComponent(row.key)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ value }),
-      })
-      if (!res.ok) throw new Error()
+      await adminTranslations.update(locale, row.key, value)
       onSaved(row.key, value)
       setEditing(false)
-    } catch { onSaved(null, null, 'error') } finally { setSaving(false) }
+    } catch {
+      onSaved(null, null, 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleReset = async () => {
     if (!row.overridden) return
     setResetting(true)
     try {
-      const res = await fetch(`${API_BASE}/${locale}/${encodeURIComponent(row.key)}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
-      })
-      if (!res.ok) throw new Error()
+      await adminTranslations.reset(locale, row.key)
       onReset(row.key, row.default)
       setValue(row.default)
       setEditing(false)
-    } catch { onSaved(null, null, 'error') } finally { setResetting(false) }
+    } catch {
+      onSaved(null, null, 'error')
+    } finally {
+      setResetting(false)
+    }
   }
 
   return (
@@ -158,12 +151,16 @@ export default function TranslationsPage() {
 
   const fetchTranslations = useCallback(async (loc) => {
     if (!loc) return
-    setLoading(true); setSearch('')
+    setLoading(true)
+    setSearch('')
     try {
-      const res = await fetch(`${API_BASE}?locale=${loc}`, { headers: { Authorization: `Bearer ${getToken()}` } })
-      const json = await res.json()
-      setRows(json.data ?? [])
-    } catch { setToast({ message: t('admin.translationsMgr.failedLoad'), type: 'error' }) } finally { setLoading(false) }
+      const res = await adminTranslations.list(loc)
+      setRows(res.data ?? [])
+    } catch {
+      setToast({ message: t('admin.translationsMgr.failedLoad'), type: 'error' })
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { if (locale) fetchTranslations(locale) }, [locale, fetchTranslations])

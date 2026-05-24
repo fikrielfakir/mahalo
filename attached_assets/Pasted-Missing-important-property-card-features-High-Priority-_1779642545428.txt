@@ -1,0 +1,202 @@
+Missing important property-card features:
+
+High Priority Missing Features
+1. Property Type
+
+Example:
+
+Apartment
+Villa
+Penthouse
+Office
+
+Add small badge near title.
+
+2. Image Gallery Count
+
+Example:
+
+1/12
+camera icon + count
+
+Very important for real-estate UX.
+
+3. Verified / Featured Status
+
+You have featured badge partially.
+
+Missing:
+
+Verified badge
+Premium badge
+New listing badge
+4. Agency / Owner Info
+
+Missing:
+
+Agency logo
+Agent name
+Verified agency
+
+Adds trust.
+
+5. Property Description Preview
+
+Short 1-line preview:
+
+Modern villa with sea view and private pool
+
+Improves engagement.
+
+6. Property Actions
+
+Missing:
+
+Share
+Quick view
+Contact
+Call
+WhatsApp
+
+Very important conversion features.
+
+7. Hover Interaction
+
+Missing:
+
+Image zoom
+Gradient animation
+Card elevation
+Reveal actions
+
+Current cards feel static.
+
+8. Map Integration Indicator
+
+Missing:
+
+Distance
+Nearby
+Area tag
+"View on map"
+9. Price Improvements
+
+Missing:
+
+Old price
+Discount %
+Price per m²
+
+Example:
+
+950K MAD
+1.2M MAD (-20%)
+8,500 MAD/m²
+10. Availability / Date
+
+Missing:
+
+Added 2 days ago
+Available now
+Updated today
+Premium Features Missing
+11. Video Indicator
+
+If property has video:
+
+play icon
+"virtual tour"
+12. Amenities Badges
+
+Examples:
+
+Pool
+Parking
+Garden
+Sea view
+Furnished
+13. Save State Animation
+
+Favorite button should animate.
+
+14. Skeleton Loading State
+
+Your placeholders are basic.
+Could improve with:
+
+shimmer
+image skeleton
+text hierarchy
+15. Mobile Swipe Gallery
+
+Important on mobile:
+
+swipe images inside card
+UI Problems Currently
+Text overflow
+
+Location text cuts badly.
+
+Use:
+
+truncate
+Price overlay too large
+
+Gradient overlay occupies too much image height.
+
+Reduce:
+
+height: 35%
+Action buttons floating awkwardly
+
+Right-side buttons need:
+
+glass effect
+smaller size
+better spacing
+Cards too empty
+
+Bottom area has too much whitespace.
+
+Add:
+
+description
+tags
+actions
+Best Modern Layout
+
+Recommended structure:
+
+[Image]
+ ├ Featured
+ ├ Rent
+ ├ Gallery Count
+ ├ Favorite
+ ├ Compare
+
+[Price]
+[Old Price]
+[Title]
+[Location]
+[Description]
+
+[Beds] [Baths] [Area] [Parking]
+
+[Tags]
+Pool • Sea View • Furnished
+
+[Contact] [WhatsApp]
+Most Important Features To Add First
+
+Priority order:
+
+Gallery count
+Property type
+Price per m²
+Description preview
+Contact buttons
+Amenities tags
+Agent logo
+Added date
+Video tour
+Share button

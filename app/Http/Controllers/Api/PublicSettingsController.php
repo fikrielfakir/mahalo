@@ -39,6 +39,7 @@ class PublicSettingsController extends Controller
         'cookie_consent_title', 'cookie_consent_message',
         'cookie_accept_text', 'cookie_decline_text',
         'page_about', 'page_privacy', 'page_terms',
+        'mobile_app_title', 'mobile_app_subtitle', 'mobile_app_description',
     ];
 
     private const SUPPORTED_LOCALES = ['en', 'fr', 'es', 'ar'];

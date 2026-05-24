@@ -8,6 +8,7 @@ use App\Models\Property;
 use App\Models\Slug;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -100,6 +101,13 @@ class UserListingController extends Controller
             'best_time'      => $data['best_time']      ?? null,
         ], fn($v) => $v !== null);
 
+        $autoApprove = DB::table('site_settings')
+            ->where('key', 'list_property_auto_approve')
+            ->value('value') === '1';
+
+        $propertyStatus     = $autoApprove ? 'published' : 'pending';
+        $moderationStatus   = $autoApprove ? 'approved'  : 'pending';
+
         $property = Property::create([
             'name'            => $data['name'],
             'type'            => $data['type'],
@@ -115,8 +123,8 @@ class UserListingController extends Controller
             'latitude'        => $data['latitude']        ?? null,
             'longitude'       => $data['longitude']       ?? null,
             'content'         => !empty($contentData) ? json_encode($contentData) : null,
-            'status'          => 'pending',
-            'moderation_status' => 'pending',
+            'status'          => $propertyStatus,
+            'moderation_status' => $moderationStatus,
             'author_id'       => $authorId,
             'author_type'     => $authorType,
             'unique_id'       => 'USER-' . strtoupper(Str::random(6)),
@@ -151,10 +159,14 @@ class UserListingController extends Controller
             'prefix'         => 'properties',
         ]);
 
+        $message = $autoApprove
+            ? 'Listing published successfully.'
+            : 'Listing submitted for review.';
+
         return response()->json([
             'data'    => $this->format($property->fresh(['city', 'categories', 'features'])),
             'error'   => false,
-            'message' => 'Listing submitted for review.',
+            'message' => $message,
         ], 201);
     }
 

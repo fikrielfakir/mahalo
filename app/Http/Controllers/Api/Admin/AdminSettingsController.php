@@ -44,6 +44,8 @@ class AdminSettingsController extends Controller
         'mobile_app_description', 'mobile_app_appstore_url', 'mobile_app_playstore_url',
         // Property type & projects toggles
         'sale_enabled', 'rent_enabled', 'projects_enabled',
+        // List Property submission
+        'list_property_auto_approve',
     ];
 
     public function show(): JsonResponse

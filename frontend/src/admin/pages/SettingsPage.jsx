@@ -94,6 +94,7 @@ const DEFAULTS = {
   sale_enabled: '1',
   rent_enabled: '1',
   projects_enabled: '1',
+  list_property_auto_approve: '0',
 }
 
 const GROQ_MODELS = [
@@ -1067,6 +1068,31 @@ export default function SettingsPage() {
               {form.projects_enabled === '0' && (
                 <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-600 font-medium">
                   <AlertCircle size={14} /> Projects section is hidden from admin sidebar and user interface.
+                </div>
+              )}
+            </Section>
+
+            <Section title="List Property Submissions" icon={Building2}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800">Auto-approve submitted listings</p>
+                  <p className="text-xs text-gray-500 mt-0.5">When enabled, properties submitted via the "List Property" page are published immediately without admin review.</p>
+                </div>
+                <div
+                  onClick={() => setForm(p => ({ ...p, list_property_auto_approve: p.list_property_auto_approve === '1' ? '0' : '1' }))}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${form.list_property_auto_approve === '1' ? 'bg-[#BA1932]' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.list_property_auto_approve === '1' ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              {form.list_property_auto_approve === '1' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-100 rounded-xl text-sm text-green-700 font-medium">
+                  <AlertCircle size={14} /> Listings are published instantly upon submission — no admin review required.
+                </div>
+              )}
+              {form.list_property_auto_approve === '0' && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium">
+                  <AlertCircle size={14} /> Listings require admin approval before appearing on the site.
                 </div>
               )}
             </Section>

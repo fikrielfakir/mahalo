@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   Heart, Bed, Bath, Maximize2, MapPin, BadgeCheck, BarChart2, Check,
   Camera, Play, Phone, MessageCircle, Share2, Building2, Layers,
-  Clock, ChevronRight,
+  Clock, ChevronRight, ChevronLeft,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCompare } from '../context/CompareContext'
@@ -97,24 +97,108 @@ function FeatureTags({ features = [], max = 3 }) {
   )
 }
 
-/* ─── Gallery Counter Overlay ─────────────────────────────────── */
-function GalleryBadges({ property }) {
-  const count   = getImages(property).length
-  const hasVid  = hasVideo(property)
+/* ─── Image Slider ─────────────────────────────────────────────── */
+function ImageSlider({ images, fallback, altText, hasVid, onNavigate }) {
+  const [idx, setIdx] = useState(0)
+  const [imgError, setImgError] = useState(false)
+  const touchStartX = useRef(null)
+
+  const total = images.length
+  const src = imgError ? fallback : (images[idx] || fallback)
+
+  const prev = useCallback((e) => {
+    e.stopPropagation()
+    setIdx(i => (i - 1 + total) % total)
+    setImgError(false)
+  }, [total])
+
+  const next = useCallback((e) => {
+    e.stopPropagation()
+    setIdx(i => (i + 1) % total)
+    setImgError(false)
+  }, [total])
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 40) {
+      if (delta > 0) setIdx(i => (i + 1) % total)
+      else setIdx(i => (i - 1 + total) % total)
+      setImgError(false)
+    }
+    touchStartX.current = null
+  }
+
   return (
-    <div className="absolute bottom-14 left-3 flex items-center gap-1.5">
-      {count > 0 && (
-        <span className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(0,0,0,0.52)' }}>
-          <Camera size={10} /> {count}
-        </span>
+    <div
+      className="relative w-full h-full"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <img
+        src={src}
+        alt={altText}
+        onError={() => setImgError(true)}
+        className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.06]"
+      />
+
+      {/* Prev / Next arrows — only show if multiple images */}
+      {total > 1 && (
+        <>
+          <button
+            onClick={prev}
+            aria-label="Previous image"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}
+          >
+            <ChevronLeft size={14} className="text-white" />
+          </button>
+          <button
+            onClick={next}
+            aria-label="Next image"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}
+          >
+            <ChevronRight size={14} className="text-white" />
+          </button>
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10">
+            {images.slice(0, 8).map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setIdx(i); setImgError(false) }}
+                className="rounded-full transition-all duration-200"
+                style={{
+                  width: i === idx ? 16 : 5,
+                  height: 5,
+                  background: i === idx ? '#fff' : 'rgba(255,255,255,0.45)',
+                }}
+              />
+            ))}
+          </div>
+        </>
       )}
-      {hasVid && (
-        <span className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(0,0,0,0.52)' }}>
-          <Play size={9} /> Tour
-        </span>
-      )}
+
+      {/* Camera / video badges */}
+      <div className="absolute bottom-14 left-3 flex items-center gap-1.5 z-10">
+        {total > 0 && (
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(0,0,0,0.52)' }}>
+            <Camera size={10} /> {total}
+          </span>
+        )}
+        {hasVid && (
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(0,0,0,0.52)' }}>
+            <Play size={9} /> Tour
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -125,7 +209,6 @@ function GalleryBadges({ property }) {
 export default function PropertyCard({ property, className = '' }) {
   const { t }    = useTranslation()
   const navigate = useNavigate()
-  const [imgError, setImgError]   = useState(false)
   const { toggle: toggleCompare, isIn, isFull } = useCompare()
   const { isAuthenticated }       = useUserAuth()
   const { openAuthModal }         = useAuthModal()
@@ -146,7 +229,7 @@ export default function PropertyCard({ property, className = '' }) {
   const priceLabel= formatPrice(property.price)
   const added     = timeAgo(property.created_at)
   const isNew     = property.created_at && (Date.now() - new Date(property.created_at).getTime()) < 7 * 86_400_000
-  const imgSrc    = imgError ? FALLBACK : getFirstImage(property)
+  const images    = getImages(property)
   const wa        = whatsappHref(agent?.phone, property.name)
 
   const handleLike = (e) => {
@@ -180,14 +263,14 @@ export default function PropertyCard({ property, className = '' }) {
     >
       {/* ── Image ── */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img
-          src={imgSrc}
-          alt={property.name}
-          onError={() => setImgError(true)}
-          className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.06]"
+        <ImageSlider
+          images={images.length ? images : [FALLBACK]}
+          fallback={FALLBACK}
+          altText={property.name}
+          hasVid={hasVideo(property)}
         />
         {/* Gradient overlay */}
-        <div className="absolute inset-0" style={{
+        <div className="absolute inset-0 pointer-events-none" style={{
           background: 'linear-gradient(to top, rgba(115,13,38,0.78) 0%, rgba(0,0,0,0.20) 40%, transparent 100%)'
         }} />
 
@@ -249,8 +332,6 @@ export default function PropertyCard({ property, className = '' }) {
           </button>
         </div>
 
-        {/* Gallery / video badges */}
-        <GalleryBadges property={property} />
 
         {/* Price overlay */}
         <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between gap-2">

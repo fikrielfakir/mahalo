@@ -292,7 +292,7 @@ class PropertyController extends Controller
 
     public function filters(): JsonResponse
     {
-        $cities = City::orderBy('name')->select('id', 'name')->get();
+        $cities = City::orderBy('name')->select('id', 'name', 'image_url')->get();
 
         $categories = Category::where('status', 'published')
             ->select('id', 'name')

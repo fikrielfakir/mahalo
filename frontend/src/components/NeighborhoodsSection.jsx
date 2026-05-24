@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { propertiesApi } from '../api/client'
+import { propertiesApi, citiesApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
+import { mediaUrl } from '../utils/media'
 
 const CITY_IMAGES = {
   'Casablanca':  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80&auto=format&fit=crop',
@@ -23,6 +24,11 @@ const CITY_IMAGES = {
   'Tokyo':       'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80&auto=format&fit=crop',
 }
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80&auto=format&fit=crop'
+
+function cityImage(city) {
+  if (city.image_url) return mediaUrl(city.image_url)
+  return CITY_IMAGES[city.name] || DEFAULT_IMAGE
+}
 
 function extractCitiesFromProperties(properties) {
   const seen = new Set()
@@ -45,19 +51,28 @@ export default function NeighborhoodsSection() {
   useEffect(() => {
     async function load() {
       try {
-        const res  = await propertiesApi.filters()
+        const res  = await citiesApi.list()
         const data = res?.data
-        if (Array.isArray(data?.cities) && data.cities.length > 0) {
-          setCities(data.cities); return
+        if (Array.isArray(data) && data.length > 0) {
+          setCities(data); return
         }
         throw new Error('no cities')
       } catch {
         try {
-          const res   = await propertiesApi.list({ per_page: 100 })
-          const props = Array.isArray(res?.data) ? res.data : []
-          setCities(extractCitiesFromProperties(props))
+          const res  = await propertiesApi.filters()
+          const data = res?.data
+          if (Array.isArray(data?.cities) && data.cities.length > 0) {
+            setCities(data.cities); return
+          }
+          throw new Error('no cities in filters')
         } catch {
-          setCities([])
+          try {
+            const res   = await propertiesApi.list({ per_page: 100 })
+            const props = Array.isArray(res?.data) ? res.data : []
+            setCities(extractCitiesFromProperties(props))
+          } catch {
+            setCities([])
+          }
         }
       } finally { setLoading(false) }
     }
@@ -127,7 +142,7 @@ export default function NeighborhoodsSection() {
                   onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 24px rgba(115,13,38,0.10)'}
                 >
                   <img
-                    src={CITY_IMAGES[city.name] || DEFAULT_IMAGE}
+                    src={cityImage(city)}
                     alt={city.name}
                     className="w-full h-full object-cover transition-transform duration-600 group-hover:scale-[1.08]"
                   />

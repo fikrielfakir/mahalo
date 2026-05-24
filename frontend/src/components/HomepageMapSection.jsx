@@ -38,33 +38,40 @@ function formatPrice(price, isRent) {
 }
 
 function PropertyImageThumb({ src, alt, isRent }) {
-  const [status, setStatus] = useState(src ? 'loading' : 'empty')
+  const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
+  const showPlaceholder = !src || errored || !loaded
 
   return (
     <div className="relative w-24 h-20 rounded-xl overflow-hidden shrink-0">
-      {status !== 'empty' && src ? (
+      {/* Placeholder always visible until real image fully loads */}
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(135deg, #f8e8eb 0%, #f0d0d6 100%)',
+          opacity: showPlaceholder ? 1 : 0,
+          transition: 'opacity 0.3s ease',
+          pointerEvents: 'none',
+        }}
+      >
+        <Home size={22} style={{ color: '#BA1932', opacity: 0.45 }} />
+      </div>
+
+      {/* Real image — fades in once loaded */}
+      {src && !errored && (
         <img
           src={src}
           alt={alt}
-          onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('empty')}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          style={{ display: status === 'empty' ? 'none' : 'block' }}
-        />
-      ) : null}
-      {(status === 'empty' || !src) && (
-        <div
-          className="w-full h-full flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, #f8e8eb 0%, #f0d0d6 100%)',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.3s ease',
           }}
-        >
-          <Home size={22} style={{ color: '#BA1932', opacity: 0.45 }} />
-        </div>
+        />
       )}
-      {status === 'loading' && src && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-xl" />
-      )}
+
       {isRent && (
         <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded-lg"
           style={{ background: 'rgba(0,0,0,0.55)' }}>

@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
 
+/* ─────────────────────────── Price helpers ──────────────────────────── */
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
-
 const PRICE_MAX = 10_000_000
 const SNAP_POINTS = [0, 300_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 7_000_000, 10_000_000]
 
@@ -22,8 +23,9 @@ const fmtPrice = (val) => {
   return `${Math.round(val / 1_000)}K`
 }
 
-/* ── Price handle (draggable circle) ── */
-function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
+/* ─────────────────── Single draggable handle circle ─────────────────── */
+function PriceHandle({ pct, label, onPointerDown }) {
+  const SIZE = 18
   return (
     <div
       onPointerDown={onPointerDown}
@@ -32,20 +34,20 @@ function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
         left: `${pct}%`,
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: size, height: size,
+        width: SIZE, height: SIZE,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
         border: '2.5px solid white',
-        boxShadow: '0 2px 8px rgba(186,25,50,0.55)',
+        boxShadow: '0 2px 10px rgba(186,25,50,0.55)',
         cursor: 'grab',
-        zIndex: 3,
+        zIndex: 2,
         touchAction: 'none',
         userSelect: 'none',
       }}
     >
       <span style={{
         position: 'absolute',
-        bottom: size + 4,
+        bottom: SIZE + 5,
         left: '50%',
         transform: 'translateX(-50%)',
         fontSize: 10,
@@ -62,7 +64,7 @@ function PriceHandle({ pct, label, onPointerDown, size = 16 }) {
   )
 }
 
-/* ── Dual-handle range slider ── */
+/* ────────────────────── Dual-handle range slider ────────────────────── */
 function PriceRangeSlider({ minVal, maxVal, onChange }) {
   const { t } = useTranslation()
   const trackRef = useRef(null)
@@ -79,18 +81,23 @@ function PriceRangeSlider({ minVal, maxVal, onChange }) {
 
   const startDrag = (handle) => (e) => {
     e.preventDefault()
+    /* Stop the event reaching the fixed backdrop so the popover stays open */
     e.stopPropagation()
+
     const onMove = (ev) => {
       if (!trackRef.current) return
-      const val = getValFromClientX(ev.clientX ?? ev.touches?.[0]?.clientX)
+      const clientX = ev.clientX ?? ev.touches?.[0]?.clientX
+      const val = getValFromClientX(clientX)
       const { minVal: mn, maxVal: mx } = stateRef.current
       if (handle === 'min' && val < mx) onChange(val, mx)
       if (handle === 'max' && val > mn) onChange(mn, val)
     }
+
     const onUp = () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
+
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
   }
@@ -101,12 +108,18 @@ function PriceRangeSlider({ minVal, maxVal, onChange }) {
   const maxLabel = maxVal >= PRICE_MAX ? t('filters.maxPrice') : fmtPrice(maxVal)
 
   return (
-    <div style={{ position: 'relative', paddingTop: 28, paddingBottom: 8, paddingLeft: 8, paddingRight: 8 }}>
+    <div style={{ position: 'relative', paddingTop: 32, paddingBottom: 6 }}>
       <div
         ref={trackRef}
-        style={{ position: 'relative', height: 4, background: 'rgba(115,13,38,0.15)', borderRadius: 2 }}
+        style={{
+          position: 'relative',
+          height: 4,
+          background: 'rgba(115,13,38,0.15)',
+          borderRadius: 2,
+          margin: '0 10px',
+        }}
       >
-        {/* Active fill */}
+        {/* Filled range */}
         <div style={{
           position: 'absolute',
           left: `${minPct}%`,
@@ -122,125 +135,119 @@ function PriceRangeSlider({ minVal, maxVal, onChange }) {
   )
 }
 
-/* ── Price zone with popover ── */
+/* ──────────── Price zone trigger + portal popover ───────────────────── */
 function PriceZone({ minPrice, maxPrice, onChange, label, isMobile = false }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const wrapRef = useRef(null)
+  const triggerRef = useRef(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
 
   const isDefault = minPrice === 0 && maxPrice === PRICE_MAX
   const summary = isDefault
     ? t('filters.anyPrice')
     : `${fmtPrice(minPrice)} – ${fmtPrice(maxPrice)}`
 
-  /* close on outside click */
-  useEffect(() => {
-    if (!open) return
-    const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setOpen(false)
-      }
+  const openPopover = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setPos({
+        top:  rect.bottom + 10,
+        left: isMobile ? rect.left : rect.left + rect.width / 2,
+      })
     }
-    document.addEventListener('pointerdown', handler)
-    return () => document.removeEventListener('pointerdown', handler)
-  }, [open])
+    setOpen(true)
+  }, [isMobile])
 
-  if (isMobile) {
-    return (
-      <div ref={wrapRef} style={{ position: 'relative' }}>
-        {/* Trigger row */}
-        <div
-          className="flex items-center gap-2 px-5 py-3.5 cursor-pointer"
-          style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{label}</div>
-            <div className="text-sm font-semibold" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>{summary}</div>
-          </div>
-          <ChevronDown size={14} style={{ color: '#BA1932', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-        </div>
-        {/* Popover */}
-        {open && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0, right: 0,
-            zIndex: 50,
-            background: 'white',
-            borderRadius: '0 0 16px 16px',
-            boxShadow: '0 12px 40px rgba(115,13,38,0.20)',
-            padding: '12px 16px 16px',
-          }}>
+  const toggle = () => (open ? setOpen(false) : openPopover())
+
+  /* Popover panel (rendered via portal at body level — no z-index stacking issues) */
+  const popover = open
+    ? createPortal(
+        <>
+          {/* Transparent backdrop — click it to close */}
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 9990 }}
+            onPointerDown={() => setOpen(false)}
+          />
+
+          {/* Floating panel */}
+          <div
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              transform: isMobile ? 'none' : 'translateX(-50%)',
+              width: isMobile ? 'calc(100vw - 32px)' : 300,
+              zIndex: 9999,
+              background: 'white',
+              borderRadius: 18,
+              boxShadow: '0 20px 60px rgba(115,13,38,0.22), 0 4px 16px rgba(0,0,0,0.10)',
+              padding: '18px 22px 22px',
+            }}
+            /* Prevent backdrop from catching pointer events inside panel */
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>
+              {label}
+            </div>
             <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={onChange} />
+
+            {/* Reset link */}
+            {!isDefault && (
+              <button
+                onClick={() => onChange(0, PRICE_MAX)}
+                className="mt-1 text-[10px] font-semibold"
+                style={{ color: '#BA1932', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {t('filters.anyPrice')} ×
+              </button>
+            )}
           </div>
-        )}
-      </div>
-    )
-  }
+        </>,
+        document.body
+      )
+    : null
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative', flex: '1.4 1 140px', minWidth: 0 }}>
-      {/* Trigger */}
+    <>
+      {/* Trigger (inline in search bar) */}
       <div
-        className="flex items-center gap-2 px-4 h-full cursor-pointer"
-        onClick={() => setOpen((v) => !v)}
+        ref={triggerRef}
+        onClick={toggle}
+        className="flex items-center gap-2 cursor-pointer"
+        style={isMobile
+          ? { padding: '14px 20px', borderBottom: '1px solid rgba(115,13,38,0.07)' }
+          : { padding: '0 16px', height: '100%', flex: '1.4 1 140px', minWidth: 0 }
+        }
       >
         <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{label}</div>
-          <div className="text-sm font-semibold truncate" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>{summary}</div>
-        </div>
-        <ChevronDown size={12} style={{ color: '#BA1932', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-      </div>
-
-      {/* Popover dropdown */}
-      {open && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 10px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 280,
-          zIndex: 50,
-          background: 'white',
-          borderRadius: 16,
-          boxShadow: '0 16px 48px rgba(115,13,38,0.22), 0 4px 12px rgba(0,0,0,0.08)',
-          padding: '16px 20px 20px',
-        }}>
-          {/* Arrow */}
-          <div style={{
-            position: 'absolute',
-            top: -7, left: '50%',
-            transform: 'translateX(-50%)',
-            width: 14, height: 14,
-            background: 'white',
-            borderRadius: 2,
-            transform: 'translateX(-50%) rotate(45deg)',
-            boxShadow: '-3px -3px 6px rgba(115,13,38,0.06)',
-          }} />
-          <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>
+          <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>
             {label}
           </div>
-          <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={onChange} />
+          <div className="text-sm font-semibold truncate" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>
+            {summary}
+          </div>
         </div>
-      )}
-    </div>
+        <ChevronDown
+          size={12}
+          style={{ color: '#BA1932', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        />
+      </div>
+
+      {popover}
+    </>
   )
 }
 
-/* ── Hero ── */
+/* ═══════════════════════════════ Hero ═══════════════════════════════════ */
 export default function Hero() {
   const { t } = useTranslation()
 
-  /* Store tab as a key — not a translated label — so switching language never breaks it */
+  /* Store tab as a stable key — NEVER the translated label.
+     This means language switches never lose the active state. */
   const TAB_KEYS = ['buy', 'rent', 'projects']
-  const tabLabels = {
-    buy:      t('hero.tabBuy'),
-    rent:     t('hero.tabRent'),
-    projects: t('hero.tabProjects'),
-  }
+  const tabLabels = { buy: t('hero.tabBuy'), rent: t('hero.tabRent'), projects: t('hero.tabProjects') }
 
   const [activeTabKey, setActiveTabKey] = useState('buy')
   const [location, setLocation]         = useState('')
@@ -249,7 +256,6 @@ export default function Hero() {
   const [maxPrice, setMaxPrice]         = useState(PRICE_MAX)
   const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
-
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
@@ -295,18 +301,19 @@ export default function Hero() {
     if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
     if (minPrice > 0)           params.set('min_price', minPrice)
     if (maxPrice < PRICE_MAX)   params.set('max_price', maxPrice)
-    const path = activeTabKey === 'projects' ? '/projects' : '/properties'
-    navigate(`${path}?${params.toString()}`)
+    navigate(`${activeTabKey === 'projects' ? '/projects' : '/properties'}?${params.toString()}`)
   }
 
   const handlePriceChange = (mn, mx) => { setMinPrice(mn); setMaxPrice(mx) }
 
   const stats = [
-    { icon: Home,        value: fmtCount(propertiesCount, '1K+'),          label: t('stats.properties') },
-    { icon: Users,       value: '8K+',                                      label: t('stats.happyClients') },
-    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),               label: t('stats.verifiedAgents') },
-    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+',   label: t('stats.cities') },
+    { icon: Home,        value: fmtCount(propertiesCount, '1K+'),         label: t('stats.properties') },
+    { icon: Users,       value: '8K+',                                     label: t('stats.happyClients') },
+    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),              label: t('stats.verifiedAgents') },
+    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+',  label: t('stats.cities') },
   ]
+
+  const divider = { borderRight: '1px solid rgba(115,13,38,0.08)' }
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
@@ -318,7 +325,7 @@ export default function Hero() {
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 28%, transparent 62%, rgba(0,0,0,0.60) 100%)' }} />
       </div>
 
-      {/* ── Main content ── */}
+      {/* ── Content ── */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 xs:px-5 sm:px-8 lg:px-10 pt-20 xs:pt-24 sm:pt-32 pb-12 sm:pb-24">
         <div className="max-w-2xl">
 
@@ -339,15 +346,15 @@ export default function Hero() {
             </span>
           </h1>
 
-          {/* Subtext */}
+          {/* Subtitle */}
           <p className="text-white/50 text-xs xs:text-sm sm:text-base font-light max-w-[260px] xs:max-w-xs sm:max-w-sm mb-5 sm:mb-9 animate-fade-up" style={{ animationDelay: '80ms' }}>
             {t('hero.subtitle')}
           </p>
 
-          {/* ── Tabs — keyed so language switching never loses active state ── */}
+          {/* ── Tabs — keyed so language switching never loses the active highlight ── */}
           <div className="flex items-center gap-1 sm:gap-2 mb-4 sm:mb-5 animate-fade-up" style={{ animationDelay: '120ms' }}>
             {TAB_KEYS.map((key) => {
-              const isActive = activeTabKey === key
+              const active = activeTabKey === key
               return (
                 <button
                   key={key}
@@ -355,12 +362,12 @@ export default function Hero() {
                   className="px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all duration-300"
                   style={{
                     borderRadius: '999px',
-                    ...(isActive
+                    ...(active
                       ? { background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', color: 'white', boxShadow: '0 4px 16px rgba(186,25,50,0.40)' }
                       : { background: 'transparent', color: 'rgba(255,255,255,0.60)' })
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'white' }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'rgba(255,255,255,0.60)' }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'white' }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.60)' }}
                 >
                   {tabLabels[key]}
                 </button>
@@ -371,30 +378,41 @@ export default function Hero() {
           {/* ── Search bar ── */}
           <div className="animate-fade-up" style={{ animationDelay: '160ms' }}>
 
-            {/* Desktop: single pill row */}
-            <div className="hidden sm:flex items-stretch"
-              style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '999px', boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)', overflow: 'visible', position: 'relative' }}>
-
+            {/* Desktop pill */}
+            <div
+              className="hidden sm:flex items-stretch"
+              style={{
+                background: 'rgba(255,255,255,0.97)',
+                backdropFilter: 'blur(32px)',
+                WebkitBackdropFilter: 'blur(32px)',
+                borderRadius: '999px',
+                boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)',
+                overflow: 'hidden',   /* keeps rounded corners on inner children */
+              }}
+            >
               {/* Location */}
-              <div className="flex items-center gap-2.5 px-5 py-3.5 cursor-text"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '2 1 160px', minWidth: 0 }}>
+              <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ ...divider, flex: '2 1 160px', minWidth: 0 }}>
                 <MapPin size={15} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.location')}</div>
-                  <input type="text" placeholder={t('hero.locationPlaceholder')} value={location}
-                    onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    style={{ display: 'block', width: '100%', fontSize: '14px', fontWeight: '600', background: 'transparent', outline: 'none', color: '#730D26', border: 'none', padding: 0 }} />
+                  <input
+                    type="text" placeholder={t('hero.locationPlaceholder')} value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    style={{ display: 'block', width: '100%', fontSize: 14, fontWeight: 600, background: 'transparent', outline: 'none', color: '#730D26', border: 'none', padding: 0 }}
+                  />
                 </div>
               </div>
 
               {/* Type */}
-              <div className="flex items-center gap-2.5 px-4 py-3.5"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 100px', minWidth: 0 }}>
+              <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ ...divider, flex: '1 1 100px', minWidth: 0 }}>
                 <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
-                  <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}
-                    style={{ display: 'block', width: '100%', fontSize: '13px', fontWeight: '600', background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}>
+                  <select
+                    value={propertyType} onChange={(e) => setPropertyType(e.target.value)}
+                    style={{ display: 'block', width: '100%', fontSize: 13, fontWeight: 600, background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}
+                  >
                     <option value="">{t('filters.allTypes')}</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -402,97 +420,102 @@ export default function Hero() {
               </div>
 
               {/* Bedrooms */}
-              <div className="flex items-center gap-2.5 px-4 py-3.5"
-                style={{ borderRight: '1px solid rgba(115,13,38,0.08)', flex: '1 1 90px', minWidth: 0 }}>
+              <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ ...divider, flex: '1 1 90px', minWidth: 0 }}>
                 <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
-                  <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}
-                    style={{ display: 'block', width: '100%', fontSize: '13px', fontWeight: '600', background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}>
-                    {bedroomOptions.map((b) => <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b} ${t('property.beds')}`}</option>)}
+                  <select
+                    value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}
+                    style={{ display: 'block', width: '100%', fontSize: 13, fontWeight: 600, background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}
+                  >
+                    {bedroomOptions.map((b) => (
+                      <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b} ${t('property.beds')}`}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Price — click to open slider popover */}
-              <div style={{ borderRight: '1px solid rgba(115,13,38,0.08)', display: 'flex', alignItems: 'stretch' }}>
+              {/* Price — portal popover, no overflow clipping issues */}
+              <div style={{ ...divider, display: 'flex', alignItems: 'stretch', flex: '1.4 1 140px', minWidth: 0 }}>
                 <PriceZone
-                  minPrice={minPrice}
-                  maxPrice={maxPrice}
-                  onChange={handlePriceChange}
-                  label={t('hero.priceRange')}
+                  minPrice={minPrice} maxPrice={maxPrice}
+                  onChange={handlePriceChange} label={t('hero.priceRange')}
                 />
               </div>
 
               {/* Search button */}
               <div className="p-1.5 shrink-0 flex items-center">
-                <button onClick={handleSearch}
+                <button
+                  onClick={handleSearch}
                   className="flex items-center justify-center gap-2 text-white font-bold text-sm transition-all duration-300 active:scale-95"
                   style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', borderRadius: '999px', boxShadow: '0 4px 20px rgba(186,25,50,0.40)', padding: '12px 24px', whiteSpace: 'nowrap' }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 28px rgba(186,25,50,0.55)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}>
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(186,25,50,0.40)'}
+                >
                   <Search size={16} />
                   {t('hero.searchBtn')}
                 </button>
               </div>
             </div>
 
-            {/* Mobile: stacked card */}
-            <div className="flex sm:hidden flex-col gap-0"
-              style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '24px', boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)', overflow: 'visible' }}>
-
+            {/* Mobile stacked card */}
+            <div
+              className="flex sm:hidden flex-col"
+              style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: 24, boxShadow: '0 20px 60px rgba(115,13,38,0.28), 0 4px 16px rgba(0,0,0,0.12)', overflow: 'hidden' }}
+            >
               {/* Location */}
               <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
                 <MapPin size={16} style={{ color: '#BA1932', flexShrink: 0 }} />
                 <div className="flex-1">
                   <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.location')}</div>
-                  <input type="text" placeholder={t('hero.locationPlaceholder')} value={location}
-                    onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="w-full text-sm font-semibold bg-transparent outline-none" style={{ color: '#730D26' }} />
+                  <input
+                    type="text" placeholder={t('hero.locationPlaceholder')} value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="w-full text-sm font-semibold bg-transparent outline-none" style={{ color: '#730D26' }}
+                  />
                 </div>
               </div>
 
-              {/* Type + Bedrooms */}
+              {/* Type + Bedrooms row */}
               <div className="flex">
-                <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5"
-                  style={{ borderBottom: '1px solid rgba(115,13,38,0.07)', borderRight: '1px solid rgba(115,13,38,0.07)' }}>
+                <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)', borderRight: '1px solid rgba(115,13,38,0.07)' }}>
                   <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
-                    <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}
-                      className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
+                    <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
                       <option value="">{t('filters.allTypes')}</option>
                       {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5 flex-1 px-4 py-3.5"
-                  style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
+                <div className="flex items-center gap-2.5 flex-1 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
                   <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
-                    <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}
-                      className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
-                      {bedroomOptions.map((b) => <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b}`}</option>)}
+                    <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
+                      {bedroomOptions.map((b) => (
+                        <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : b}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Price — click to open */}
+              {/* Price */}
               <PriceZone
-                minPrice={minPrice}
-                maxPrice={maxPrice}
-                onChange={handlePriceChange}
-                label={t('hero.priceRange')}
+                minPrice={minPrice} maxPrice={maxPrice}
+                onChange={handlePriceChange} label={t('hero.priceRange')}
                 isMobile
               />
 
               {/* Search button */}
               <div className="flex justify-end p-2 pr-3">
-                <button onClick={handleSearch}
-                  className="flex items-center justify-center gap-1.5 text-white font-bold text-sm px-6 py-3 transition-all duration-300 active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', borderRadius: '999px', boxShadow: '0 4px 20px rgba(186,25,50,0.40)', whiteSpace: 'nowrap' }}>
+                <button
+                  onClick={handleSearch}
+                  className="flex items-center gap-1.5 text-white font-bold text-sm px-6 py-3 transition-all active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', borderRadius: '999px', boxShadow: '0 4px 20px rgba(186,25,50,0.40)', whiteSpace: 'nowrap' }}
+                >
                   <Search size={15} /> {t('hero.searchBtn')}
                 </button>
               </div>
@@ -503,14 +526,13 @@ export default function Hero() {
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mt-5 sm:mt-9 animate-fade-up" style={{ animationDelay: '220ms' }}>
             {stats.map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3"
-                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px' }}>
+                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16 }}>
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(186,25,50,0.18)', border: '1px solid rgba(186,25,50,0.22)' }}>
                   <Icon size={13} style={{ color: '#f5748a' }} />
                 </div>
                 <div>
-                  <div className="text-white font-bold text-sm sm:text-base leading-none mb-0.5"
-                    style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>{value}</div>
+                  <div className="text-white font-bold text-sm sm:text-base leading-none mb-0.5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>{value}</div>
                   <div className="text-white/40 text-[10px] sm:text-xs font-medium">{label}</div>
                 </div>
               </div>

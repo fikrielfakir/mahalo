@@ -30,6 +30,8 @@ class PublicSettingsController extends Controller
         'mobile_app_description', 'mobile_app_appstore_url', 'mobile_app_playstore_url',
         // Property type toggles
         'sale_enabled', 'rent_enabled', 'projects_enabled',
+        // Hero background
+        'hero_bg_url', 'hero_bg_type',
     ];
 
     private const TRANSLATABLE_KEYS = [

@@ -4,6 +4,7 @@ import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, 
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 /* ─────────────────────────── Price helpers ──────────────────────────── */
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
@@ -256,6 +257,7 @@ function PriceZone({ minPrice, maxPrice, onChange, label, isMobile = false }) {
 /* ═══════════════════════════════ Hero ═══════════════════════════════════ */
 export default function Hero() {
   const { t } = useTranslation()
+  const siteSettings = useSiteSettings()
 
   /* Store tab as a stable key — NEVER the translated label.
      This means language switches never lose the active state. */
@@ -333,7 +335,19 @@ export default function Hero() {
 
       {/* ── Background ── */}
       <div className="absolute inset-0 z-0">
-        <img src="/hero-bg.jpg" alt="Luxury Villa" className="w-full h-full object-cover object-center" />
+        {siteSettings.hero_bg_url && siteSettings.hero_bg_type === 'video' ? (
+          <video
+            src={siteSettings.hero_bg_url}
+            className="w-full h-full object-cover object-center"
+            autoPlay muted loop playsInline
+          />
+        ) : (
+          <img
+            src={siteSettings.hero_bg_url || '/hero-bg.jpg'}
+            alt="Luxury Villa"
+            className="w-full h-full object-cover object-center"
+          />
+        )}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,1,2,0.97) 0%, rgba(25,3,10,0.93) 22%, rgba(115,13,38,0.70) 48%, rgba(115,13,38,0.22) 70%, rgba(0,0,0,0.04) 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.40) 0%, transparent 28%, transparent 62%, rgba(0,0,0,0.60) 100%)' }} />
       </div>

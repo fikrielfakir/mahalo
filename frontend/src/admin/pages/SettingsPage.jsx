@@ -7,7 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages, Bot, ChevronDown, Smartphone, Building2, Wand2,
+  Languages, Bot, ChevronDown, Smartphone, Building2, Wand2, Film,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -95,6 +95,8 @@ const DEFAULTS = {
   rent_enabled: '1',
   projects_enabled: '1',
   list_property_auto_approve: '0',
+  hero_bg_url: '',
+  hero_bg_type: 'image',
 }
 
 const GROQ_MODELS = [
@@ -132,6 +134,7 @@ export default function SettingsPage() {
     { id: 'cookies',    label: t('admin.settings.tabCookies'),    icon: Cookie },
     { id: 'mobile_app', label: t('admin.settings.tabMobileApp'),  icon: Smartphone },
     { id: 'listings',   label: 'Listings',                        icon: Building2 },
+    { id: 'hero',       label: 'Hero',                            icon: Film },
   ]
 
   const [form, setForm]                   = useState(DEFAULTS)
@@ -252,6 +255,21 @@ export default function SettingsPage() {
       setForm(p => ({ ...p, [field]: r.url || r.data?.url }))
     } catch (err) { alert(t('admin.settings.logoUploadFailed') + ': ' + (err?.message || 'unknown error')) } finally {
       setUploading(u => ({ ...u, [field]: false }))
+    }
+  }
+
+  const uploadHeroBg = async (file) => {
+    if (!file) return
+    setUploading(u => ({ ...u, hero_bg: true }))
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const r = await adminSettings.uploadHeroBg(fd)
+      const url  = r.url  || r.data?.url
+      const type = r.type || r.data?.type || 'image'
+      setForm(p => ({ ...p, hero_bg_url: url, hero_bg_type: type }))
+    } catch (err) { alert('Hero background upload failed: ' + (err?.message || 'unknown error')) } finally {
+      setUploading(u => ({ ...u, hero_bg: false }))
     }
   }
 
@@ -1095,6 +1113,76 @@ export default function SettingsPage() {
                   <AlertCircle size={14} /> Listings require admin approval before appearing on the site.
                 </div>
               )}
+            </Section>
+          </>
+        )}
+
+        {tab === 'hero' && (
+          <>
+            <Section title="Hero Background" icon={Film}>
+              <div className="space-y-5">
+                <p className="text-xs text-gray-500">Upload an image or video to use as the full-screen Hero section background. Supports JPEG, PNG, WebP, GIF (images) and MP4, WebM (videos up to 100 MB). The file type is detected automatically — no watermark is applied.</p>
+
+                {/* Current preview */}
+                {form.hero_bg_url && (
+                  <div className="rounded-xl overflow-hidden border border-gray-100" style={{ height: 200 }}>
+                    {form.hero_bg_type === 'video' ? (
+                      <video src={form.hero_bg_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                    ) : (
+                      <img src={form.hero_bg_url} alt="Hero background preview" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none' }} />
+                    )}
+                  </div>
+                )}
+
+                {/* Upload area */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-2">Upload new background</label>
+                  {(() => {
+                    const heroBgRef = { current: null }
+                    return (
+                      <div
+                        onClick={() => document.getElementById('hero-bg-input')?.click()}
+                        className="relative border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#BA1932]/50 transition-colors min-h-[120px] bg-gray-50"
+                      >
+                        {uploading.hero_bg ? (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <div className="w-5 h-5 border-2 border-[#BA1932] border-t-transparent rounded-full animate-spin" />
+                            Uploading…
+                          </div>
+                        ) : (
+                          <>
+                            <Film size={24} className="text-gray-300" />
+                            <span className="text-sm text-gray-400 font-medium">Click to upload image or video</span>
+                            <span className="text-xs text-gray-300">JPG, PNG, WebP, GIF · MP4, WebM — max 100 MB</span>
+                          </>
+                        )}
+                      </div>
+                    )
+                  })()}
+                  <input
+                    id="hero-bg-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                    className="hidden"
+                    onChange={e => e.target.files[0] && uploadHeroBg(e.target.files[0])}
+                  />
+                </div>
+
+                {/* Clear button */}
+                {form.hero_bg_url && (
+                  <button
+                    type="button"
+                    onClick={() => setForm(p => ({ ...p, hero_bg_url: '', hero_bg_type: 'image' }))}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                  >
+                    Remove background (revert to default)
+                  </button>
+                )}
+
+                {form.hero_bg_url && (
+                  <p className="text-xs text-gray-400 truncate">Current: <span className="font-medium">{form.hero_bg_url}</span> — Type: <span className="font-medium">{form.hero_bg_type}</span></p>
+                )}
+              </div>
             </Section>
           </>
         )}

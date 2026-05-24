@@ -46,6 +46,8 @@ class AdminSettingsController extends Controller
         'sale_enabled', 'rent_enabled', 'projects_enabled',
         // List Property submission
         'list_property_auto_approve',
+        // Hero background
+        'hero_bg_url', 'hero_bg_type',
     ];
 
     public function show(): JsonResponse
@@ -216,6 +218,32 @@ EOT;
             'path'    => $path,
             'error'   => false,
             'message' => 'Logo uploaded.',
+        ]);
+    }
+
+    public function uploadHeroBg(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|max:102400|mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg,video/quicktime',
+        ]);
+
+        $file  = $request->file('file');
+        $mime  = $file->getMimeType();
+        $isVideo = str_starts_with($mime, 'video/');
+        $type  = $isVideo ? 'video' : 'image';
+        $ext   = $file->getClientOriginalExtension() ?: ($isVideo ? 'mp4' : 'jpg');
+        $name  = Str::uuid() . '.' . $ext;
+        $path  = $file->storeAs('hero', $name, 'public');
+        $url   = Storage::disk('public')->url($path);
+
+        DB::table('site_settings')->updateOrInsert(['key' => 'hero_bg_url'],  ['value' => $url,  'updated_at' => now(), 'created_at' => now()]);
+        DB::table('site_settings')->updateOrInsert(['key' => 'hero_bg_type'], ['value' => $type, 'updated_at' => now(), 'created_at' => now()]);
+
+        return response()->json([
+            'url'   => $url,
+            'type'  => $type,
+            'error' => false,
+            'message' => 'Hero background uploaded.',
         ]);
     }
 }

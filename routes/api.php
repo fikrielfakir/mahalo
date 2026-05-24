@@ -269,6 +269,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/settings', [AdminSettingsController::class, 'show']);
         Route::put('/settings', [AdminSettingsController::class, 'update']);
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
+        Route::post('/settings/hero-bg', [AdminSettingsController::class, 'uploadHeroBg']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
         Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
         Route::post('/settings/auto-translate', [AdminSettingsController::class, 'autoTranslate']);

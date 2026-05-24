@@ -1,0 +1,359 @@
+
+Full texts
+id
+name
+country
+state
+slug
+state_id
+country_id
+order
+image
+image_url
+description
+is_default
+status
+created_at
+updated_at
+
+Edit Edit
+Copy Copy
+Delete Delete
+28
+Safi
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/9dfba020-aa23-...
+NULL
+1
+published
+2026-05-15 11:28:50
+2026-05-24 14:00:22
+
+Edit Edit
+Copy Copy
+Delete Delete
+32
+Beni Mellal
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/72398c8f-e326-...
+NULL
+0
+published
+2026-05-15 11:28:52
+2026-05-24 13:38:15
+
+Edit Edit
+Copy Copy
+Delete Delete
+33
+Khouribga
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/4a73898f-96c4-...
+NULL
+0
+published
+2026-05-15 11:28:52
+2026-05-24 13:50:11
+
+Edit Edit
+Copy Copy
+Delete Delete
+36
+Ifrane
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/487dba92-4feb-...
+NULL
+0
+published
+2026-05-15 11:28:53
+2026-05-24 13:47:06
+
+Edit Edit
+Copy Copy
+Delete Delete
+38
+Nador
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/cd72c9f4-43a7-...
+NULL
+0
+published
+2026-05-15 11:28:53
+2026-05-24 13:59:05
+
+Edit Edit
+Copy Copy
+Delete Delete
+39
+Ouarzazate
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/ac44e0a4-ec72-...
+NULL
+0
+published
+2026-05-15 11:28:54
+2026-05-24 13:59:32
+
+Edit Edit
+Copy Copy
+Delete Delete
+42
+Tangier
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/e9796a0f-f404-...
+NULL
+0
+published
+2026-05-15 11:28:55
+2026-05-24 14:00:51
+
+Edit Edit
+Copy Copy
+Delete Delete
+44
+Kenitra
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/3723e42d-6365-...
+NULL
+0
+published
+2026-05-15 11:28:55
+2026-05-24 13:47:47
+
+Edit Edit
+Copy Copy
+Delete Delete
+45
+Dakhla
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/3dfabb82-d0aa-...
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-24 13:45:20
+
+Edit Edit
+Copy Copy
+Delete Delete
+46
+Casablanca
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/27a84420-e0d2-...
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-24 13:38:49
+
+Edit Edit
+Copy Copy
+Delete Delete
+47
+Fes
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/f184512e-6ffa-...
+NULL
+0
+published
+2026-05-15 11:28:56
+2026-05-24 13:46:27
+
+Edit Edit
+Copy Copy
+Delete Delete
+48
+Marrakech
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/30dc6ee1-49ef-...
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-24 13:54:48
+
+Edit Edit
+Copy Copy
+Delete Delete
+49
+Al Hoceima
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/1167a6ea-68e4-...
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-24 13:37:39
+
+Edit Edit
+Copy Copy
+Delete Delete
+50
+Agadir
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/07ce2522-9d89-...
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-24 13:50:42
+
+Edit Edit
+Copy Copy
+Delete Delete
+51
+Taza
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/970122f4-3f5e-...
+NULL
+0
+published
+2026-05-15 11:28:57
+2026-05-24 14:01:17
+
+Edit Edit
+Copy Copy
+Delete Delete
+52
+Essaouira
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/8cf7ce79-f7b5-...
+NULL
+0
+published
+2026-05-15 11:28:58
+2026-05-24 13:45:51
+
+Edit Edit
+Copy Copy
+Delete Delete
+53
+Meknes
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/6dd787b5-c894-...
+NULL
+0
+published
+2026-05-15 11:28:58
+2026-05-24 13:56:44
+
+Edit Edit
+Copy Copy
+Delete Delete
+54
+Larache
+Morocco
+NULL
+NULL
+NULL
+NULL
+0
+NULL
+https://api.mahalo.ma/storage/logos/b85618fd-3b51-...
+NULL
+0
+published
+2026-05-15 11:28:58
+2026-05-24 13:54:08

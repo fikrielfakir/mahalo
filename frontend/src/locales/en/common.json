@@ -69,6 +69,8 @@
     "allTypes": "All Types",
     "apartment": "Apartment",
     "villa": "Villa",
+    "condo": "Condo",
+    "house": "House",
     "riad": "Riad",
     "land": "Land",
     "commercial": "Commercial",
@@ -1570,5 +1572,25 @@
       "translateFailed": "Auto-translate failed. Please try again or fill in manually.",
       "loading": "Loading translations…"
     }
+  },
+  "aiChat": {
+    "subtitle": "Real estate assistant",
+    "greeting": "Hello! I'm Mahalo AI. I can show you real properties from our catalogue and connect you with our agents.",
+    "findIdeal": "Find my ideal property with AI",
+    "suggestions": "Suggestions",
+    "s1": "Villas available in Casablanca?",
+    "s2": "Apartments for rent in Rabat?",
+    "s3": "Properties available in Marrakech?",
+    "s4": "Contact a real estate agent?",
+    "placeholder": "Write a message…",
+    "searching": "Searching the database…",
+    "error": "Sorry, an error occurred.",
+    "propertiesLabel": "Available properties",
+    "agentsLabel": "Our agents",
+    "viewProperty": "View property →",
+    "call": "Call",
+    "sale": "For Sale",
+    "rent": "For Rent",
+    "open": "Open Mahalo AI"
   }
 }

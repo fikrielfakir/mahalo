@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle, LayoutDashboard, Check, Sparkles } from 'lucide-react'
+import { Globe, ChevronDown, Menu, X, UserCircle, LogOut, MessageCircle, LayoutDashboard, Check } from 'lucide-react'
 import logo from '/logo.png'
 import logoLight from '/logo-light.png'
 import { useUserAuth } from '../context/UserAuthContext'
@@ -125,19 +125,6 @@ export default function Navbar({ transparent = false }) {
                 </Link>
               )
             })}
-            <Link
-              to="/find-my-property"
-              className={`nav-pill relative flex items-center gap-1.5 transition-all duration-200 ${
-                isTransparent
-                  ? 'text-gold/90 hover:text-gold hover:bg-white/12'
-                  : location.pathname === '/find-my-property'
-                    ? 'text-[#730D26] font-semibold'
-                    : 'text-[#730D26]/70 hover:text-[#730D26] hover:bg-[#730D26]/6'
-              }`}
-            >
-              <Sparkles size={12} />
-              AI Match
-            </Link>
           </div>
 
           {/* Right actions — desktop only */}

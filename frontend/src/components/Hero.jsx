@@ -7,6 +7,12 @@ import { useTranslation } from 'react-i18next'
 
 /* ─────────────────────────── Price helpers ──────────────────────────── */
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
+
+const CAT_SLUG = {
+  'Apartment': 'apartment', 'Villa': 'villa', 'Condo': 'condo',
+  'House': 'house', 'Land': 'land', 'Commercial Property': 'commercial',
+  'Riad': 'riad', 'Office': 'office',
+}
 const PRICE_MAX = 10_000_000
 const SNAP_POINTS = [0, 300_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 7_000_000, 10_000_000]
 
@@ -421,7 +427,7 @@ export default function Hero() {
                     style={{ display: 'block', width: '100%', fontSize: 13, fontWeight: 600, background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}
                   >
                     <option value="">{t('filters.allTypes')}</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.map((c) => <option key={c.id} value={c.id}>{t('filters.' + CAT_SLUG[c.name], c.name)}</option>)}
                   </select>
                 </div>
               </div>
@@ -492,7 +498,7 @@ export default function Hero() {
                     <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
                     <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
                       <option value="">{t('filters.allTypes')}</option>
-                      {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {categories.map((c) => <option key={c.id} value={c.id}>{t('filters.' + CAT_SLUG[c.name], c.name)}</option>)}
                     </select>
                   </div>
                 </div>

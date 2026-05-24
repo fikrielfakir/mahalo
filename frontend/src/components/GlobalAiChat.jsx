@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, X, Send, Loader2, MessageCircle, Sparkles, MapPin, Bed, Maximize2, Phone, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { aiApi } from '../api/aiApi'
 
-function PropertyCard({ property }) {
+function PropertyCard({ property, t }) {
   const price = property.price
     ? Number(property.price).toLocaleString('fr-MA') + ' MAD'
     : 'Prix sur demande'
   const slug = property.slug?.key
   const city = property.city?.name
+  const isSale = property.status === 'selling' || property.status === 'sale'
 
   return (
     <div style={{
@@ -36,10 +38,10 @@ function PropertyCard({ property }) {
           <span style={{
             fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
             padding: '2px 5px', borderRadius: 4,
-            background: property.status === 'selling' ? '#fef3c7' : '#dbeafe',
-            color: property.status === 'selling' ? '#92400e' : '#1e40af',
+            background: isSale ? '#fef3c7' : '#dbeafe',
+            color: isSale ? '#92400e' : '#1e40af',
           }}>
-            {property.status === 'selling' ? 'Vente' : 'Location'}
+            {isSale ? t('aiChat.sale') : t('aiChat.rent')}
           </span>
         </div>
         <p style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3, marginBottom: 3, fontSize: 11 }}>
@@ -56,7 +58,7 @@ function PropertyCard({ property }) {
           )}
           {property.number_bedroom > 0 && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Bed size={8} /> {property.number_bedroom} ch.
+              <Bed size={8} /> {property.number_bedroom}
             </span>
           )}
           {property.square && (
@@ -76,7 +78,7 @@ function PropertyCard({ property }) {
               textDecoration: 'none',
             }}
           >
-            Voir le bien →
+            {t('aiChat.viewProperty')}
           </Link>
         )}
       </div>
@@ -84,7 +86,7 @@ function PropertyCard({ property }) {
   )
 }
 
-function AgentCard({ agent }) {
+function AgentCard({ agent, t }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
@@ -117,14 +119,14 @@ function AgentCard({ agent }) {
             textDecoration: 'none', flexShrink: 0,
           }}
         >
-          <Phone size={9} /> Appeler
+          <Phone size={9} /> {t('aiChat.call')}
         </a>
       )}
     </div>
   )
 }
 
-function Message({ role, content, properties, agents }) {
+function Message({ role, content, properties, agents, t }) {
   const isUser  = role === 'user'
   const hasCards = !isUser && ((properties?.length > 0) || (agents?.length > 0))
 
@@ -156,20 +158,20 @@ function Message({ role, content, properties, agents }) {
           {properties?.length > 0 && (
             <>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '2px 0 6px' }}>
-                Biens disponibles
+                {t('aiChat.propertiesLabel')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {properties.map(p => <PropertyCard key={p.id} property={p} />)}
+                {properties.map(p => <PropertyCard key={p.id} property={p} t={t} />)}
               </div>
             </>
           )}
           {agents?.length > 0 && (
             <>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 0 6px' }}>
-                Nos agents
+                {t('aiChat.agentsLabel')}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {agents.map(a => <AgentCard key={a.id} agent={a} />)}
+                {agents.map(a => <AgentCard key={a.id} agent={a} t={t} />)}
               </div>
             </>
           )}
@@ -179,14 +181,8 @@ function Message({ role, content, properties, agents }) {
   )
 }
 
-const SUGGESTIONS = [
-  'Villas disponibles à Casablanca ?',
-  'Appartements à louer à Rabat ?',
-  'Biens disponibles à Marrakech ?',
-  'Contacter un agent immobilier ?',
-]
-
 export default function GlobalAiChat() {
+  const { t } = useTranslation()
   const [open, setOpen]       = useState(false)
   const [input, setInput]     = useState('')
   const [history, setHistory] = useState([])
@@ -194,6 +190,13 @@ export default function GlobalAiChat() {
   const [unread, setUnread]   = useState(false)
   const bottomRef             = useRef(null)
   const inputRef              = useRef(null)
+
+  const SUGGESTIONS = [
+    t('aiChat.s1'),
+    t('aiChat.s2'),
+    t('aiChat.s3'),
+    t('aiChat.s4'),
+  ]
 
   useEffect(() => {
     if (open) {
@@ -238,7 +241,7 @@ export default function GlobalAiChat() {
         agents:     res.agents     || [],
       }])
     } catch {
-      setHistory(h => [...h, { role: 'assistant', content: 'Désolé, une erreur est survenue.' }])
+      setHistory(h => [...h, { role: 'assistant', content: t('aiChat.error') }])
     } finally {
       setLoading(false)
     }
@@ -254,7 +257,7 @@ export default function GlobalAiChat() {
       <button
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-[#730D26] to-[#BA1932] flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Ouvrir Mahalo AI"
+        aria-label={t('aiChat.open')}
       >
         <MessageCircle size={20} className="text-white" />
         {unread && !open && (
@@ -300,7 +303,7 @@ export default function GlobalAiChat() {
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, color: '#fff', fontSize: 13, lineHeight: 1.2 }}>Mahalo AI</div>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>Assistant immobilier</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{t('aiChat.subtitle')}</div>
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -321,7 +324,7 @@ export default function GlobalAiChat() {
           {history.length === 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <p style={{ color: '#888', fontSize: 13, lineHeight: 1.55, margin: 0 }}>
-                Bonjour ! Je suis <strong style={{ color: '#730D26' }}>Mahalo AI</strong>. Je peux vous montrer des biens réels de notre catalogue et vous mettre en contact avec nos agents.
+                {t('aiChat.greeting')}
               </p>
 
               <Link
@@ -337,12 +340,12 @@ export default function GlobalAiChat() {
                 }}
               >
                 <Sparkles size={12} />
-                Trouver mon bien idéal avec l'IA
+                {t('aiChat.findIdeal')}
               </Link>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 2 }}>
                 <p style={{ fontSize: 10, fontWeight: 700, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
-                  Suggestions
+                  {t('aiChat.suggestions')}
                 </p>
                 {SUGGESTIONS.map(q => (
                   <button
@@ -369,6 +372,7 @@ export default function GlobalAiChat() {
               content={m.content}
               properties={m.properties}
               agents={m.agents}
+              t={t}
             />
           ))}
 
@@ -386,7 +390,7 @@ export default function GlobalAiChat() {
                 padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6,
               }}>
                 <Loader2 size={12} style={{ animation: 'spin 1s linear infinite', color: '#BA1932' }} />
-                <span style={{ fontSize: 12, color: '#aaa' }}>Recherche dans la base…</span>
+                <span style={{ fontSize: 12, color: '#aaa' }}>{t('aiChat.searching')}</span>
               </div>
             </div>
           )}
@@ -412,7 +416,7 @@ export default function GlobalAiChat() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={onKey}
-              placeholder="Écrivez un message…"
+              placeholder={t('aiChat.placeholder')}
               style={{
                 flex: 1, background: 'transparent',
                 fontSize: 13, color: '#222',

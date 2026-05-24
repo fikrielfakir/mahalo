@@ -69,6 +69,8 @@
     "allTypes": "Todos los tipos",
     "apartment": "Apartamento",
     "villa": "Villa",
+    "condo": "Condominio",
+    "house": "Casa",
     "riad": "Riad",
     "land": "Terreno",
     "commercial": "Comercial",
@@ -1570,5 +1572,25 @@
       "translateFailed": "La traducción automática falló. Por favor, inténtalo de nuevo o rellena manualmente.",
       "loading": "Cargando traducciones…"
     }
+  },
+  "aiChat": {
+    "subtitle": "Asistente inmobiliario",
+    "greeting": "¡Hola! Soy Mahalo AI. Puedo mostrarte propiedades reales de nuestro catálogo y ponerte en contacto con nuestros agentes.",
+    "findIdeal": "Encontrar mi propiedad ideal con IA",
+    "suggestions": "Sugerencias",
+    "s1": "¿Villas disponibles en Casablanca?",
+    "s2": "¿Apartamentos en alquiler en Rabat?",
+    "s3": "¿Propiedades disponibles en Marrakech?",
+    "s4": "¿Contactar a un agente inmobiliario?",
+    "placeholder": "Escribe un mensaje…",
+    "searching": "Buscando en la base de datos…",
+    "error": "Lo siento, ocurrió un error.",
+    "propertiesLabel": "Propiedades disponibles",
+    "agentsLabel": "Nuestros agentes",
+    "viewProperty": "Ver propiedad →",
+    "call": "Llamar",
+    "sale": "En venta",
+    "rent": "En alquiler",
+    "open": "Abrir Mahalo AI"
   }
 }

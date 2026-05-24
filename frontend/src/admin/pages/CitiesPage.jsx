@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { adminCities } from '../api/adminApi'
+import { adminCities, adminSettings } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea } from '../components/Modal'
 import ContentTranslationsModal from '../components/ContentTranslationsModal'
-import { Plus, Pencil, Trash2, Globe, Building2, Download, Upload, CheckCircle, AlertCircle, X, Languages } from 'lucide-react'
+import { Plus, Pencil, Trash2, Globe, Building2, Download, Upload, CheckCircle, AlertCircle, X, Languages, ImagePlus, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const EMPTY = { name: '', country: 'Morocco', state: '', image_url: '', description: '' }
@@ -57,7 +57,9 @@ export default function CitiesPage() {
   const [importError, setImportError] = useState(null)
   const [importing, setImporting]     = useState(false)
   const [importResult, setImportResult] = useState(null)
-  const fileInputRef = useRef()
+  const [uploadingImg, setUploadingImg] = useState(false)
+  const fileInputRef    = useRef()
+  const imgInputRef     = useRef()
 
   const load = useCallback(() => {
     setLoading(true)
@@ -78,6 +80,18 @@ export default function CitiesPage() {
     setModal(true)
   }
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
+
+  const handleImageUpload = async (file) => {
+    if (!file) return
+    setUploadingImg(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const r = await adminSettings.uploadLogo(fd)
+      const url = r.url || r.data?.url
+      if (url) setForm(p => ({ ...p, image_url: url }))
+    } catch { alert(t('admin.common.error')) } finally { setUploadingImg(false) }
+  }
 
   const submit = async (e) => {
     e.preventDefault(); setSaving(true)
@@ -245,7 +259,44 @@ export default function CitiesPage() {
             </FormField>
           </div>
           <FormField label={t('admin.cities.imageUrlLabel')} hint={t('admin.cities.imageUrlHint')}>
-            <Input value={form.image_url} onChange={f('image_url')} placeholder="https://images.unsplash.com/..." />
+            {/* Upload zone */}
+            <div
+              className={`relative flex items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 cursor-pointer transition-colors mb-2
+                ${uploadingImg ? 'border-[#BA1932]/30 bg-[#BA1932]/5' : 'border-gray-200 hover:border-[#BA1932]/50 hover:bg-[#BA1932]/5'}`}
+              onClick={() => !uploadingImg && imgInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleImageUpload(f) }}
+            >
+              {uploadingImg ? (
+                <Loader2 size={18} className="animate-spin text-[#BA1932]" />
+              ) : (
+                <ImagePlus size={18} className="text-gray-400 shrink-0" />
+              )}
+              <span className="text-sm text-gray-500">
+                {uploadingImg ? t('admin.common.uploading') || 'Uploading…' : t('admin.cities.uploadOrDrag') || 'Click to upload or drag & drop an image'}
+              </span>
+              <input
+                ref={imgInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = '' }}
+              />
+            </div>
+            {/* URL fallback */}
+            <div className="flex gap-2 items-center">
+              <Input value={form.image_url} onChange={f('image_url')} placeholder="https://images.unsplash.com/..." />
+              {form.image_url && (
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, image_url: '' }))}
+                  className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="Clear image"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
           </FormField>
           {form.image_url && (
             <div className="rounded-xl overflow-hidden aspect-video border border-gray-100">

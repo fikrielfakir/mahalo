@@ -1,25 +1,108 @@
-import { useState, useEffect } from 'react'
-import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi, agentsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
 
 const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
+
 const priceRanges = [
-  { label: 'Any',        min: '',        max: '' },
-  { label: '< 500K',    min: '',        max: '500000' },
-  { label: '500K – 1M', min: '500000',  max: '1000000' },
-  { label: '1M – 3M',   min: '1000000', max: '3000000' },
-  { label: '3M – 5M',   min: '3000000', max: '5000000' },
-  { label: '5M+',       min: '5000000', max: '' },
+  { key: 'any',      min: '',        max: '' },
+  { key: 'under500k', min: '',       max: '500000' },
+  { key: '500k1m',   min: '500000',  max: '1000000' },
+  { key: '1m3m',     min: '1000000', max: '3000000' },
+  { key: '3m5m',     min: '3000000', max: '5000000' },
+  { key: 'over5m',   min: '5000000', max: '' },
 ]
+
+function PriceSwiper({ value, onChange }) {
+  const { t } = useTranslation()
+  const scrollRef = useRef(null)
+
+  const labels = {
+    any:      t('hero.priceRanges.any'),
+    under500k: t('hero.priceRanges.under500k'),
+    '500k1m': t('hero.priceRanges.500k1m'),
+    '1m3m':   t('hero.priceRanges.1m3m'),
+    '3m5m':   t('hero.priceRanges.3m5m'),
+    over5m:   t('hero.priceRanges.over5m'),
+  }
+
+  const scroll = (dir) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: dir * 80, behavior: 'smooth' })
+    }
+  }
+
+  return (
+    <div className="relative flex items-center" style={{ minWidth: 0 }}>
+      <button
+        type="button"
+        onClick={() => scroll(-1)}
+        className="shrink-0 flex items-center justify-center rounded-full transition-colors"
+        style={{ width: 18, height: 18, background: 'rgba(115,13,38,0.10)', color: '#730D26', marginInlineEnd: 2 }}
+        tabIndex={-1}
+      >
+        <ChevronLeft size={11} />
+      </button>
+
+      <div
+        ref={scrollRef}
+        className="flex gap-1 overflow-x-auto"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+          scrollSnapType: 'x mandatory',
+        }}
+      >
+        {priceRanges.map((r) => {
+          const isActive = value === r.key
+          return (
+            <button
+              key={r.key}
+              type="button"
+              onClick={() => onChange(r.key)}
+              className="shrink-0 font-semibold transition-all duration-200"
+              style={{
+                scrollSnapAlign: 'start',
+                fontSize: '11px',
+                padding: '3px 9px',
+                borderRadius: '999px',
+                whiteSpace: 'nowrap',
+                border: isActive ? 'none' : '1px solid rgba(115,13,38,0.18)',
+                background: isActive
+                  ? 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)'
+                  : 'transparent',
+                color: isActive ? '#fff' : '#730D26',
+                boxShadow: isActive ? '0 2px 8px rgba(186,25,50,0.30)' : 'none',
+              }}
+            >
+              {labels[r.key]}
+            </button>
+          )
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => scroll(1)}
+        className="shrink-0 flex items-center justify-center rounded-full transition-colors"
+        style={{ width: 18, height: 18, background: 'rgba(115,13,38,0.10)', color: '#730D26', marginInlineStart: 2 }}
+        tabIndex={-1}
+      >
+        <ChevronRight size={11} />
+      </button>
+    </div>
+  )
+}
 
 export default function Hero() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab]       = useState('Buy')
   const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
-  const [priceRange, setPriceRange]     = useState('Any')
+  const [priceRangeKey, setPriceRangeKey] = useState('any')
   const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
 
@@ -67,7 +150,7 @@ export default function Hero() {
     if (location)            params.set('search', location)
     if (propertyType)        params.set('category_id', propertyType)
     if (bedrooms !== 'Any')  params.set('number_bedroom', bedrooms)
-    const selected = priceRanges.find(r => r.label === priceRange)
+    const selected = priceRanges.find(r => r.key === priceRangeKey)
     if (selected?.min) params.set('min_price', selected.min)
     if (selected?.max) params.set('max_price', selected.max)
     const path = activeTab === t('hero.tabProjects') ? '/projects' : '/properties'
@@ -297,36 +380,15 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Price Range */}
+              {/* Price Range — swiper pills */}
               <div
-                className="flex items-center gap-2.5 px-4 py-3.5 cursor-pointer"
-                style={{ flex: '1 1 105px', minWidth: 0 }}
+                className="flex items-center gap-2 px-4 py-3.5"
+                style={{ flex: '1.4 1 140px', minWidth: 0, overflow: 'hidden' }}
               >
                 <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.priceRange')}</div>
-                  <select
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      background: 'transparent',
-                      outline: 'none',
-                      border: 'none',
-                      color: '#730D26',
-                      cursor: 'pointer',
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      padding: 0,
-                    }}
-                  >
-                    {priceRanges.map((r) => (
-                      <option key={r.label} value={r.label}>{r.label}</option>
-                    ))}
-                  </select>
+                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.priceRange')}</div>
+                  <PriceSwiper value={priceRangeKey} onChange={setPriceRangeKey} />
                 </div>
               </div>
 
@@ -426,25 +488,16 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Price Range + Search row */}
+              {/* Price Range (swiper) + Search row */}
               <div className="flex items-center">
-                <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5">
+                <div className="flex items-center gap-2 flex-1 px-4 py-3.5 min-w-0 overflow-hidden">
                   <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.price')}</div>
-                    <select
-                      value={priceRange}
-                      onChange={(e) => setPriceRange(e.target.value)}
-                      className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none"
-                      style={{ color: '#730D26' }}
-                    >
-                      {priceRanges.map((r) => (
-                        <option key={r.label} value={r.label}>{r.label}</option>
-                      ))}
-                    </select>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.price')}</div>
+                    <PriceSwiper value={priceRangeKey} onChange={setPriceRangeKey} />
                   </div>
                 </div>
-                <div className="p-2 pr-3">
+                <div className="p-2 pr-3 shrink-0">
                   <button
                     onClick={handleSearch}
                     className="flex items-center justify-center gap-1.5 text-white font-bold text-sm px-5 py-3 transition-all duration-300 active:scale-95"

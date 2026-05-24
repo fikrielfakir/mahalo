@@ -154,24 +154,8 @@ export default function MobileAppSection() {
           ════════════════════════════════════════ */}
           <div className="lg:hidden relative z-10">
 
-            {/* ── Phone — fully contained, no overflow ── */}
-            <div className="relative flex justify-center items-end overflow-hidden" style={{ height: 260 }}>
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "radial-gradient(circle at 50% 90%, rgba(186,25,50,0.30) 0%, transparent 65%)",
-                }}
-              />
-              <img
-                src="/app-mockup.png"
-                alt="Mobile App"
-                className="relative z-10 object-contain rotate-[-4deg] drop-shadow-[0_20px_60px_rgba(0,0,0,0.85)]"
-                style={{ height: "100%", width: "auto", maxWidth: "65%" }}
-              />
-            </div>
-
             {/* ── Content ── */}
-            <div className="px-6 pb-8 pt-6 sm:px-8">
+            <div className="px-6 pb-8 pt-8 sm:px-8">
               <BadgePill />
               <Heading />
               <p className="mt-4 text-sm leading-relaxed text-white/50">

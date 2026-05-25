@@ -1,12 +1,26 @@
 import { useEffect, useRef } from 'react'
-import maplibregl from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { MapPin, X } from 'lucide-react'
 
-const STREET_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
+const STREET_TILE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const STREET_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
-const MOROCCO_BOUNDS = [[-17.5, 20.5], [0.5, 36.5]]
-const MOROCCO_CENTER = [-7.09, 31.79]
+const MOROCCO_CENTER = [31.79, -7.09]
+const MOROCCO_BOUNDS = L.latLngBounds(
+  L.latLng(20.5, -17.5),
+  L.latLng(36.5, 0.5)
+)
+
+const PIN_ICON = L.divIcon({
+  className: '',
+  html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="#BA1932"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`,
+  iconSize: [28, 36],
+  iconAnchor: [14, 36],
+})
 
 export default function LocationPicker({ lat, lng, onChange, height = 280, restrictToMorocco = false }) {
   const containerRef = useRef(null)
@@ -22,47 +36,38 @@ export default function LocationPicker({ lat, lng, onChange, height = 280, restr
 
     const init = () => {
       if (!containerRef.current) return
-      try {
-        const mapOptions = {
-          container: containerRef.current,
-          style: STREET_STYLE,
-          center: latNum && lngNum ? [lngNum, latNum] : MOROCCO_CENTER,
-          zoom: latNum && lngNum ? 13 : 5,
-          attributionControl: false,
-        }
-        if (restrictToMorocco) {
-          mapOptions.maxBounds = MOROCCO_BOUNDS
-          mapOptions.minZoom = 4
-        }
-        map = new maplibregl.Map(mapOptions)
-      } catch (_) {
-        return
-      }
 
-      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+      const center = latNum && lngNum ? [latNum, lngNum] : MOROCCO_CENTER
+      const initZoom = latNum && lngNum ? 13 : 5
+
+      map = L.map(containerRef.current, {
+        center,
+        zoom: initZoom,
+        zoomControl: false,
+        ...(restrictToMorocco ? { maxBounds: MOROCCO_BOUNDS, minZoom: 4 } : {}),
+      })
+
+      L.tileLayer(STREET_TILE, { attribution: STREET_ATTR }).addTo(map)
+      L.control.zoom({ position: 'bottomright' }).addTo(map)
 
       if (latNum && lngNum) {
-        markerRef.current = new maplibregl.Marker({ color: '#BA1932', draggable: true })
-          .setLngLat([lngNum, latNum])
-          .addTo(map)
+        markerRef.current = L.marker([latNum, lngNum], { icon: PIN_ICON, draggable: true }).addTo(map)
         markerRef.current.on('dragend', () => {
-          const pos = markerRef.current.getLngLat()
+          const pos = markerRef.current.getLatLng()
           onChange({ lat: pos.lat.toFixed(6), lng: pos.lng.toFixed(6) })
         })
       }
 
       map.on('click', (e) => {
-        const { lng: clickLng, lat: clickLat } = e.lngLat
+        const { lat: clickLat, lng: clickLng } = e.latlng
         if (!markerRef.current) {
-          markerRef.current = new maplibregl.Marker({ color: '#BA1932', draggable: true })
-            .setLngLat([clickLng, clickLat])
-            .addTo(map)
+          markerRef.current = L.marker([clickLat, clickLng], { icon: PIN_ICON, draggable: true }).addTo(map)
           markerRef.current.on('dragend', () => {
-            const pos = markerRef.current.getLngLat()
+            const pos = markerRef.current.getLatLng()
             onChange({ lat: pos.lat.toFixed(6), lng: pos.lng.toFixed(6) })
           })
         } else {
-          markerRef.current.setLngLat([clickLng, clickLat])
+          markerRef.current.setLatLng([clickLat, clickLng])
         }
         onChange({ lat: clickLat.toFixed(6), lng: clickLng.toFixed(6) })
       })
@@ -88,15 +93,13 @@ export default function LocationPicker({ lat, lng, onChange, height = 280, restr
   useEffect(() => {
     if (!mapRef.current || !latNum || !lngNum) return
     if (!markerRef.current) {
-      markerRef.current = new maplibregl.Marker({ color: '#BA1932', draggable: true })
-        .setLngLat([lngNum, latNum])
-        .addTo(mapRef.current)
+      markerRef.current = L.marker([latNum, lngNum], { icon: PIN_ICON, draggable: true }).addTo(mapRef.current)
       markerRef.current.on('dragend', () => {
-        const pos = markerRef.current.getLngLat()
+        const pos = markerRef.current.getLatLng()
         onChange({ lat: pos.lat.toFixed(6), lng: pos.lng.toFixed(6) })
       })
     } else {
-      markerRef.current.setLngLat([lngNum, latNum])
+      markerRef.current.setLatLng([latNum, lngNum])
     }
   }, [latNum, lngNum]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -118,7 +121,7 @@ export default function LocationPicker({ lat, lng, onChange, height = 280, restr
           <div
             style={{
               position: 'absolute', bottom: 10, left: '50%',
-              transform: 'translateX(-50%)', zIndex: 5, pointerEvents: 'none',
+              transform: 'translateX(-50%)', zIndex: 1000, pointerEvents: 'none',
             }}
           >
             <span style={{

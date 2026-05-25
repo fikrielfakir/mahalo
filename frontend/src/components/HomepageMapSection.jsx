@@ -406,7 +406,7 @@ export default function HomepageMapSection() {
           )}
 
           {/* Mobile map */}
-          <div style={{ height: 300 }}>
+          <div style={{ height: 300, position: 'relative', zIndex: 0 }}>
             <MapView
               markers={markers}
               activeId={activeId}
@@ -420,13 +420,13 @@ export default function HomepageMapSection() {
 
         {/* ── DESKTOP LAYOUT ── */}
         <div className="hidden lg:flex gap-4 rounded-3xl overflow-hidden"
-          style={{ boxShadow: '0 8px 40px rgba(115,13,38,0.10)', minHeight: 520 }}>
+          style={{ boxShadow: '0 8px 40px rgba(115,13,38,0.10)', minHeight: 520, position: 'relative', zIndex: 0 }}>
 
           {/* Scrollable property list */}
           <div
             ref={listRef}
             className="w-80 xl:w-96 shrink-0 bg-white overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 p-3"
-            style={{ maxHeight: 560, scrollbarWidth: 'thin', scrollbarColor: '#BA193240 transparent', WebkitOverflowScrolling: 'touch' }}
+            style={{ maxHeight: 'calc(100vh - 280px)', scrollbarWidth: 'thin', scrollbarColor: '#BA193240 transparent', WebkitOverflowScrolling: 'touch' }}
           >
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)

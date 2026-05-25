@@ -1,0 +1,40 @@
+Looking at your screenshot and code, I can see two issues:
+
+Property cards cut off — the left panel has maxHeight: 560 with overflow, but cards are clipped
+Map overlaps navbar when scrolling — the map section lacks z-index management and position context
+
+Here are the fixes:Reading the skill for frontend designReading the skill for frontend designReading the skill for frontend designDoneHere are the targeted fixes for both bugs:
+Fix 1 — Cards cut off: The maxHeight: 560 is too restrictive. Change it to calc(100vh - 280px) so it adapts to the viewport.
+Fix 2 — Map overlaps navbar: The map/section needs position: relative + z-index: 0, and your navbar should have z-index higher. The Leaflet map canvas gets z-index issues on scroll.
+Here's the corrected code — only the changed parts:
+jsx{/* ── DESKTOP LAYOUT ── */}
+<div
+  className="hidden lg:flex gap-4 rounded-3xl overflow-hidden"
+  style={{
+    boxShadow: '0 8px 40px rgba(115,13,38,0.10)',
+    minHeight: 520,
+    position: 'relative',   // ← ADD THIS
+    zIndex: 0,              // ← ADD THIS — keeps map below navbar
+  }}
+>
+  {/* Scrollable property list */}
+  <div
+    ref={listRef}
+    className="w-80 xl:w-96 shrink-0 bg-white overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 p-3"
+    style={{
+      maxHeight: 'calc(100vh - 280px)',  // ← WAS: 560px — now viewport-relative
+      scrollbarWidth: 'thin',
+      scrollbarColor: '#BA193240 transparent',
+      WebkitOverflowScrolling: 'touch',
+    }}
+  >
+And for the mobile map container, add position: relative; z-index: 0:
+jsx{/* Mobile map */}
+<div style={{ height: 300, position: 'relative', zIndex: 0 }}>  {/* ← ADD position + zIndex */}
+  <MapView ... />
+</div>
+And in your navbar (wherever it lives), make sure it has:
+cssposition: sticky; /* or fixed */
+z-index: 50;      /* must be higher than 0 */
+Root cause of the navbar overlap: Leaflet injects its own z-index on the map pane elements (typically z-index: 400). When you scroll, the map container climbs above a navbar that has no explicit z-index. Setting z-index: 0 on the map wrapper creates a new stacking context, capping all Leaflet internals within it — so they can't escape above the navbar.
+Root cause of card clipping: maxHeight: 560 is a fixed pixel value. On shorter screens (laptops, 768px–900px height), this truncates cards mid-render. calc(100vh - 280px) sizes it relative to the actual viewport, giving it room to breathe on any screen.

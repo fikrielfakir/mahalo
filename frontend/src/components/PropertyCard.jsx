@@ -762,7 +762,7 @@ export function ListPropertyCard({ property, isActive, onClick, cardRef }) {
         {/* Top: title + heart */}
         <div className="flex items-start justify-between gap-1.5">
           <h3
-            className="font-bold text-sm leading-snug line-clamp-1 flex-1 min-w-0 group-hover:text-[#BA1932] transition-colors"
+            className="font-bold text-sm leading-snug line-clamp-2 flex-1 min-w-0 group-hover:text-[#BA1932] transition-colors"
             style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
           >
             {property.name}

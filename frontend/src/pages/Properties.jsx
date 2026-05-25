@@ -61,7 +61,7 @@ function MobileMapCard({ property, isActive, onClick, cardRef }) {
 
       {/* Details */}
       <div className="flex-1 min-w-0 px-2.5 py-2.5 flex flex-col justify-between">
-        <p className="font-bold text-[12px] leading-snug line-clamp-1 group-hover:text-[#BA1932] transition-colors"
+        <p className="font-bold text-[12px] leading-snug line-clamp-2 group-hover:text-[#BA1932] transition-colors"
           style={{ color: '#1a2035' }}>
           {property.name}
         </p>

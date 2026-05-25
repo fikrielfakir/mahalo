@@ -193,11 +193,23 @@ export default function MapView({
     if (!m || !isValidLatLng(m.lat, m.lng)) return
 
     try {
-      mapRef.current.flyTo([m.lat, m.lng], 14, { duration: 0.8 })
+      // Ensure Leaflet has correct pixel dimensions before any pan/zoom.
+      // If the container was zero-sized at init, internal projections are NaN
+      // and flyTo's rAF callbacks will throw asynchronously (uncatchable).
+      mapRef.current.invalidateSize({ animate: false })
+
+      // Only proceed if the container actually has real dimensions now.
+      const sz = mapRef.current.getSize()
+      if (!sz || sz.x <= 0 || sz.y <= 0) return
+
+      // setView is synchronous (no rAF animation loop) — safe even when the
+      // container just got valid dimensions for the first time.
+      mapRef.current.setView([m.lat, m.lng], 14, { animate: false })
+
       const mk = markersRef.current[String(activeId)]
       if (mk && !mk.isPopupOpen()) mk.openPopup()
     } catch (e) {
-      console.warn('[MapView] flyTo failed', e)
+      console.warn('[MapView] navigate to marker failed', e)
     }
   }, [activeId, markers])
 

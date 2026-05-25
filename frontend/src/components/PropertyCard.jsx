@@ -699,248 +699,134 @@ export function PropertyCardSkeleton() {
 ═══════════════════════════════════════════════════════════════ */
 export function ListPropertyCard({ property, isActive, onClick, cardRef }) {
   const { t } = useTranslation()
-  const [imgError, setImgError]   = useState(false)
+  const [imgError, setImgError] = useState(false)
   const { isFavorited, toggle: toggleFavorite } = useFavorites()
-  const { isAuthenticated }       = useUserAuth()
-  const { openAuthModal }         = useAuthModal()
+  const { isAuthenticated } = useUserAuth()
+  const { openAuthModal }   = useAuthModal()
 
   if (!property) return null
 
-  const rawSlug   = property.slug
-  const slug      = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.key) || property.id
-  const isRent    = property.type === 'rent'
-  const liked     = isFavorited(property.id)
-  const category  = property.categories?.[0]?.name || null
-  const features  = (property.features || []).filter(f => f.name)
-  const agent     = property.agent
-  const ppm2      = pricePerSqm(property.price, property.square)
-  const priceLabel= formatPrice(property.price)
-  const added     = timeAgo(property.created_at)
-  const imgCount  = getImages(property).length
-  const hasVid    = hasVideo(property)
-  const imgSrc    = imgError ? FALLBACK : getFirstImage(property)
-  const wa        = whatsappHref(agent?.phone, property.name)
+  const rawSlug    = property.slug
+  const slug       = (typeof rawSlug === 'string' ? rawSlug : rawSlug?.key) || property.id
+  const isRent     = property.type === 'rent'
+  const liked      = isFavorited(property.id)
+  const priceLabel = formatPrice(property.price)
+  const imgSrc     = imgError ? FALLBACK : getFirstImage(property)
 
   const handleLike = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault(); e.stopPropagation()
     if (!isAuthenticated) { openAuthModal(() => toggleFavorite(property.id)); return }
     toggleFavorite(property.id)
-  }
-
-  const handleShare = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const url = `${window.location.origin}/properties/${slug}`
-    if (navigator.share) navigator.share({ title: property.name, url })
-    else navigator.clipboard?.writeText(url)
   }
 
   return (
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`group flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all duration-200 ${
-        isActive ? 'ring-2 ring-[#BA1932] shadow-lg' : 'hover:shadow-md'
-      }`}
+      className="group flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all duration-200 hover:shadow-lg"
       style={{
-        boxShadow: isActive ? '0 8px 32px rgba(115,13,38,0.18)' : '0 2px 12px rgba(115,13,38,0.07)',
+        boxShadow: isActive
+          ? '0 6px 24px rgba(115,13,38,0.16)'
+          : '0 2px 10px rgba(115,13,38,0.07)',
+        borderLeft: isActive ? '4px solid #BA1932' : '4px solid transparent',
+        background: isActive ? 'rgba(186,25,50,0.025)' : 'white',
+        minHeight: 120,
       }}
     >
       {/* ── Image ── */}
-      <div className="relative w-44 sm:w-52 shrink-0 overflow-hidden">
+      <div className="relative shrink-0 overflow-hidden" style={{ width: 120 }}>
         <img
           src={imgSrc}
           alt={property.name}
           onError={() => setImgError(true)}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-          style={{ minHeight: 160 }}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-        {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
-          {property.is_featured && (
-            <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase text-white"
-              style={{ background: 'linear-gradient(135deg, #730D26, #BA1932)' }}>
-              {t('property.featured', 'Featured')}
-            </span>
-          )}
-          {isRent && (
-            <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase text-white"
-              style={{ background: 'rgba(0,0,0,0.55)' }}>
-              {t('property.forRent', 'Rent')}
-            </span>
-          )}
-          {property.is_verified && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-white bg-blue-500/90">
-              <BadgeCheck size={9} /> {t('property.verified', 'Verified')}
-            </span>
-          )}
-        </div>
-
-        {/* Photo/video count */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1">
-          {imgCount > 0 && (
-            <span className="flex items-center gap-1 text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(0,0,0,0.50)' }}>
-              <Camera size={9} /> {imgCount}
-            </span>
-          )}
-          {hasVid && (
-            <span className="flex items-center gap-1 text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(0,0,0,0.50)' }}>
-              <Play size={8} />
-            </span>
-          )}
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        {/* Type badge */}
+        {isRent ? (
+          <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase text-white"
+            style={{ background: 'rgba(0,0,0,0.55)' }}>
+            {t('property.forRent', 'Rent')}
+          </span>
+        ) : (
+          <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase text-white"
+            style={{ background: 'linear-gradient(135deg,#730D26,#BA1932)' }}>
+            {t('property.forSale', 'Buy')}
+          </span>
+        )}
       </div>
 
       {/* ── Details ── */}
-      <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
-        <div className="flex-1">
-          {/* Top row: category + added date */}
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            {category && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(115,13,38,0.08)', color: '#730D26' }}>
-                <Building2 size={9} /> {category}
-              </span>
-            )}
-            {added && (
-              <span className="text-[10px] text-gray-300 flex items-center gap-1 shrink-0">
-                <Clock size={9} /> {added}
-              </span>
-            )}
-          </div>
+      <div className="flex-1 min-w-0 px-3 py-3 flex flex-col justify-between">
 
-          {/* Title + heart */}
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-bold text-sm leading-snug line-clamp-2 group-hover:text-[#BA1932] transition-colors duration-200 flex-1 min-w-0"
-              style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-              {property.name}
-            </h3>
-            <button
-              onClick={handleLike}
-              className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all touch-manip"
-              style={liked
-                ? { background: 'linear-gradient(135deg, #730D26, #BA1932)', boxShadow: '0 2px 10px rgba(186,25,50,0.35)' }
-                : { background: 'rgba(115,13,38,0.06)' }}
-            >
-              <Heart size={11} className={liked ? 'fill-white text-white' : 'text-navy/50'} />
-            </button>
-          </div>
-
-          {/* Location */}
-          {(property.city?.name || property.location) && (
-            <div className="flex items-center gap-1 text-xs mb-2" style={{ color: 'rgba(115,13,38,0.45)' }}>
-              <MapPin size={10} className="shrink-0" style={{ color: '#BA1932' }} />
-              <span className="truncate">
-                {[property.city?.name, property.location].filter(Boolean).join(', ')}
-              </span>
-            </div>
-          )}
-
-          {/* Description preview */}
-          {property.description && (
-            <p className="text-[11px] text-gray-400 line-clamp-1 mb-2">
-              {property.description}
-            </p>
-          )}
-
-          {/* Stats */}
-          <div className="flex items-center gap-3 flex-wrap mb-2">
-            {property.number_bedroom > 0 && (
-              <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
-                <Bed size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
-                <span className="font-medium">{property.number_bedroom} {t('property.beds', 'beds')}</span>
-              </div>
-            )}
-            {property.number_bathroom > 0 && (
-              <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
-                <Bath size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
-                <span className="font-medium">{property.number_bathroom} {t('property.baths', 'baths')}</span>
-              </div>
-            )}
-            {property.square > 0 && (
-              <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
-                <Maximize2 size={11} style={{ color: '#BA1932', opacity: 0.7 }} />
-                <span className="font-medium">{property.square} m²</span>
-              </div>
-            )}
-            {property.number_floor > 0 && (
-              <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(115,13,38,0.50)' }}>
-                <Layers size={10} style={{ color: '#BA1932', opacity: 0.7 }} />
-                <span className="font-medium">{t('property.floor', 'Floor')} {property.number_floor}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Feature tags */}
-          {features.length > 0 && (
-            <div className="mb-2">
-              <FeatureTags features={features} max={4} />
-            </div>
-          )}
+        {/* Top: title + heart */}
+        <div className="flex items-start justify-between gap-1.5">
+          <h3
+            className="font-bold text-sm leading-snug line-clamp-1 flex-1 min-w-0 group-hover:text-[#BA1932] transition-colors"
+            style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}
+          >
+            {property.name}
+          </h3>
+          <button
+            onClick={handleLike}
+            className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all"
+            style={liked
+              ? { background: 'linear-gradient(135deg,#730D26,#BA1932)' }
+              : { background: 'rgba(115,13,38,0.07)' }}
+          >
+            <Heart size={10} className={liked ? 'fill-white text-white' : 'text-[#BA1932]'} />
+          </button>
         </div>
 
-        {/* ── Bottom row: price + actions ── */}
-        <div className="flex items-center justify-between gap-2 pt-3"
-          style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-bold text-base" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-              {priceLabel || t('property.onRequest', 'On request')}
+        {/* Location */}
+        {(property.city?.name || property.location) && (
+          <div className="flex items-center gap-1 mt-1" style={{ color: 'rgba(115,13,38,0.5)' }}>
+            <MapPin size={9} style={{ color: '#BA1932', flexShrink: 0 }} />
+            <span className="text-[11px] truncate">
+              {[property.city?.name, property.location].filter(Boolean).join(', ')}
             </span>
-            {isRent && priceLabel && (
-              <span className="text-xs text-gray-400">{t('property.perMonth', '/mo')}</span>
-            )}
-            {ppm2 && (
-              <span className="text-[10px] text-gray-400 font-medium">{ppm2} MAD/m²</span>
-            )}
           </div>
+        )}
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {wa && (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: '#25D366', boxShadow: '0 2px 8px rgba(37,211,102,0.35)' }}
-              >
-                <svg viewBox="0 0 24 24" fill="white" width="11" height="11">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-              </a>
-            )}
-            {agent?.phone && (
-              <a
-                href={`tel:${agent.phone}`}
-                onClick={e => e.stopPropagation()}
-                className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                style={{ background: 'rgba(115,13,38,0.08)', color: '#730D26' }}
-              >
-                <Phone size={11} />
-              </a>
-            )}
-            <button
-              onClick={handleShare}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: 'rgba(115,13,38,0.06)', color: '#730D26' }}
-            >
-              <Share2 size={11} />
-            </button>
-            <Link
-              to={`/properties/${slug}`}
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #730D26, #BA1932)' }}
-            >
-              {t('common.view', 'View')} <ChevronRight size={12} />
-            </Link>
-          </div>
+        {/* Stats */}
+        <div className="flex items-center gap-3 mt-1.5">
+          {property.number_bedroom > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Bed size={10} style={{ color: '#BA1932', opacity: 0.75 }} />
+              {property.number_bedroom} ch
+            </span>
+          )}
+          {property.number_bathroom > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Bath size={10} style={{ color: '#BA1932', opacity: 0.75 }} />
+              {property.number_bathroom} sdb
+            </span>
+          )}
+          {property.square > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Maximize2 size={10} style={{ color: '#BA1932', opacity: 0.75 }} />
+              {property.square} m²
+            </span>
+          )}
         </div>
+
+        {/* Price + CTA */}
+        <div className="flex items-center justify-between mt-2 pt-2"
+          style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
+          <span className="font-bold text-sm" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+            {priceLabel || t('property.onRequest', 'On request')}
+            {isRent && priceLabel && <span className="text-[10px] font-normal text-gray-400 ml-1">/mo</span>}
+          </span>
+          <Link
+            to={`/properties/${slug}`}
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-0.5 text-[11px] font-bold transition-opacity hover:opacity-75 shrink-0"
+            style={{ color: '#BA1932' }}
+          >
+            {t('common.view', 'Voir')} <ChevronRight size={11} />
+          </Link>
+        </div>
+
       </div>
     </div>
   )
@@ -949,38 +835,22 @@ export function ListPropertyCard({ property, isActive, onClick, cardRef }) {
 /* ─── List Skeleton ─────────────────────────────────────────────── */
 export function ListPropertyCardSkeleton() {
   return (
-    <div className="flex rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 2px 12px rgba(115,13,38,0.07)' }}>
-      <div className="w-44 sm:w-52 shrink-0 skeleton" style={{ minHeight: 160 }} />
-      <div className="flex-1 p-4 space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="h-4 skeleton rounded-full w-20" />
-          <div className="h-3 skeleton rounded w-16" />
+    <div className="flex rounded-2xl overflow-hidden bg-white" style={{ minHeight: 120, boxShadow: '0 2px 10px rgba(115,13,38,0.07)' }}>
+      <div className="shrink-0 skeleton" style={{ width: 120 }} />
+      <div className="flex-1 px-3 py-3 flex flex-col justify-between">
+        <div className="flex items-start justify-between gap-2">
+          <div className="h-4 skeleton rounded w-3/4" />
+          <div className="w-6 h-6 skeleton rounded-full shrink-0" />
         </div>
-        <div className="flex justify-between gap-2">
-          <div className="h-4 skeleton rounded-xl w-3/4" />
-          <div className="w-7 h-7 skeleton rounded-full shrink-0" />
-        </div>
-        <div className="h-3 skeleton rounded-xl w-1/3" />
-        <div className="h-3 skeleton rounded w-4/5" />
-        <div className="flex gap-3">
+        <div className="h-3 skeleton rounded w-2/5 mt-1" />
+        <div className="flex gap-3 mt-1.5">
+          <div className="h-3 skeleton rounded w-10" />
+          <div className="h-3 skeleton rounded w-10" />
           <div className="h-3 skeleton rounded w-12" />
-          <div className="h-3 skeleton rounded w-12" />
-          <div className="h-3 skeleton rounded w-16" />
         </div>
-        <div className="flex gap-1.5 pt-0.5">
-          <div className="h-5 skeleton rounded-full w-16" />
-          <div className="h-5 skeleton rounded-full w-14" />
-          <div className="h-5 skeleton rounded-full w-20" />
-        </div>
-        <div className="h-px skeleton mt-2" />
-        <div className="flex justify-between items-center">
-          <div className="h-5 skeleton rounded w-24" />
-          <div className="flex gap-1.5">
-            <div className="w-7 h-7 skeleton rounded-full" />
-            <div className="w-7 h-7 skeleton rounded-full" />
-            <div className="w-7 h-7 skeleton rounded-full" />
-            <div className="h-7 skeleton rounded-xl w-14" />
-          </div>
+        <div className="flex justify-between items-center mt-2 pt-2" style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
+          <div className="h-4 skeleton rounded w-20" />
+          <div className="h-3 skeleton rounded w-10" />
         </div>
       </div>
     </div>

@@ -84,62 +84,97 @@ function MapPropertyCard({ property, isActive, onClick, cardRef, showViewLink })
   const isRent = property.type === 'rent'
   const slug   = (typeof property.slug === 'string' ? property.slug : property.slug?.key) || property.id
   const imgSrc = getPropImage(property)
-  const { t } = useTranslation()
+  const { t }  = useTranslation()
+  const [loaded, setLoaded]   = useState(false)
+  const [errored, setErrored] = useState(false)
 
   return (
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`group flex items-center gap-3 rounded-2xl bg-white cursor-pointer transition-all duration-200 p-3 border border-transparent overflow-hidden ${
-        isActive ? 'ring-2 ring-[#BA1932] shadow-lg' : 'hover:shadow-md hover:border-[#BA1932]/10'
-      }`}
-      style={{ boxShadow: isActive ? '0 6px 24px rgba(115,13,38,0.18)' : '0 2px 10px rgba(115,13,38,0.06)' }}
+      className="group flex overflow-hidden rounded-2xl bg-white cursor-pointer transition-all duration-200 hover:shadow-md"
+      style={{
+        minHeight: 100,
+        boxShadow: isActive ? '0 6px 20px rgba(115,13,38,0.16)' : '0 2px 8px rgba(115,13,38,0.06)',
+        borderLeft: isActive ? '4px solid #BA1932' : '4px solid transparent',
+        background: isActive ? 'rgba(186,25,50,0.025)' : 'white',
+      }}
     >
-      <PropertyImageThumb src={imgSrc} alt={property.name} isRent={isRent} />
+      {/* Image */}
+      <div className="relative shrink-0 overflow-hidden" style={{ width: 96 }}>
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg,#f8e8eb,#f0d0d6)',
+            opacity: (!imgSrc || errored) ? 1 : 0,
+            transition: 'opacity .3s',
+          }}
+        >
+          <Home size={20} style={{ color: '#BA1932', opacity: 0.35 }} />
+        </div>
+        {imgSrc && !errored && (
+          <img
+            src={imgSrc}
+            alt={property.name}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+            onError={() => setErrored(true)}
+            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          />
+        )}
+        <span
+          className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase text-white"
+          style={{ background: isRent ? 'rgba(0,0,0,0.55)' : 'linear-gradient(135deg,#730D26,#BA1932)' }}
+        >
+          {isRent ? t('property.forRent', 'Rent') : t('property.forSale', 'Buy')}
+        </span>
+      </div>
 
-      <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-between py-0.5">
-        <div>
-          <p className="font-bold text-xs leading-snug line-clamp-1 group-hover:text-[#BA1932] transition-colors"
-            style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-            {property.name}
-          </p>
-          {(property.city?.name || property.location) && (
-            <div className="flex items-center gap-1 mt-0.5 text-[11px]" style={{ color: 'rgba(115,13,38,0.45)' }}>
-              <MapPin size={9} style={{ color: '#BA1932' }} />
-              <span className="truncate">{property.city?.name || property.location}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 mt-1">
-            {property.number_bedroom > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>
-                <Bed size={9} style={{ color: '#BA1932', opacity: 0.7 }} /> {property.number_bedroom} ch
-              </span>
-            )}
-            {property.number_bathroom > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>
-                <Bath size={9} style={{ color: '#BA1932', opacity: 0.7 }} /> {property.number_bathroom} sdb
-              </span>
-            )}
-            {property.square && (
-              <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.45)' }}>
-                <Maximize2 size={9} style={{ color: '#BA1932', opacity: 0.7 }} /> {property.square} m²
-              </span>
-            )}
+      {/* Details */}
+      <div className="flex-1 min-w-0 px-2.5 py-2.5 flex flex-col justify-between">
+        <p className="font-bold text-[12px] leading-snug line-clamp-1 group-hover:text-[#BA1932] transition-colors"
+          style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+          {property.name}
+        </p>
+
+        {(property.city?.name || property.location) && (
+          <div className="flex items-center gap-1 mt-0.5" style={{ color: 'rgba(115,13,38,0.5)' }}>
+            <MapPin size={9} style={{ color: '#BA1932', flexShrink: 0 }} />
+            <span className="text-[11px] truncate">{property.city?.name || property.location}</span>
           </div>
+        )}
+
+        <div className="flex items-center gap-2.5 mt-1">
+          {property.number_bedroom > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Bed size={9} style={{ color: '#BA1932', opacity: 0.75 }} /> {property.number_bedroom} ch
+            </span>
+          )}
+          {property.number_bathroom > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Bath size={9} style={{ color: '#BA1932', opacity: 0.75 }} /> {property.number_bathroom} sdb
+            </span>
+          )}
+          {property.square && (
+            <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              <Maximize2 size={9} style={{ color: '#BA1932', opacity: 0.75 }} /> {property.square} m²
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center justify-between mt-1.5">
-          <span className="font-bold text-sm" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
+        <div className="flex items-center justify-between mt-1.5 pt-1.5"
+          style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
+          <span className="font-bold text-[12px]" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
             {formatPrice(property.price, isRent)}
           </span>
           {showViewLink && (
             <Link
               to={`/properties/${slug}`}
               onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1 text-[11px] font-bold shrink-0 transition-colors hover:opacity-80"
+              className="flex items-center gap-0.5 text-[11px] font-bold transition-opacity hover:opacity-70 shrink-0"
               style={{ color: '#BA1932' }}
             >
-              {t('home.mapSection.view', 'Voir')} <ArrowRight size={11} />
+              {t('home.mapSection.view', 'Voir')} <ArrowRight size={10} />
             </Link>
           )}
         </div>

@@ -28,45 +28,78 @@ function MobileMapCard({ property, isActive, onClick, cardRef }) {
     : property.image && !isVideoPath(property.image) ? mediaUrl(property.image)
     : FALLBACK
   const slug = (typeof property.slug === 'string' ? property.slug : property.slug?.key) || property.id
+  const isRent = property.type === 'rent'
 
   return (
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`flex rounded-xl overflow-hidden bg-white cursor-pointer transition-all ${
-        isActive ? 'ring-2 ring-[#BA1932]' : ''
-      }`}
-      style={{ height: 80, boxShadow: isActive ? '0 4px 16px rgba(115,13,38,0.18)' : '0 1px 6px rgba(115,13,38,0.08)' }}
+      className="group flex rounded-2xl overflow-hidden bg-white cursor-pointer transition-all duration-200"
+      style={{
+        minHeight: 100,
+        boxShadow: isActive ? '0 6px 20px rgba(115,13,38,0.16)' : '0 2px 8px rgba(115,13,38,0.07)',
+        borderLeft: isActive ? '4px solid #BA1932' : '4px solid transparent',
+        background: isActive ? 'rgba(186,25,50,0.025)' : 'white',
+      }}
     >
-      {/* Image — fixed width, fills full card height */}
-      <div className="w-20 shrink-0 overflow-hidden">
-        <img src={img} alt={property.name} onError={() => setImgErr(true)}
-          className="w-full h-full object-cover" />
+      {/* Image */}
+      <div className="relative shrink-0 overflow-hidden" style={{ width: 96 }}>
+        <img
+          src={img}
+          alt={property.name}
+          onError={() => setImgErr(true)}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+        <span
+          className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase text-white"
+          style={{ background: isRent ? 'rgba(0,0,0,0.55)' : 'linear-gradient(135deg,#730D26,#BA1932)' }}
+        >
+          {isRent ? 'Louer' : 'Acheter'}
+        </span>
       </div>
+
       {/* Details */}
-      <div className="flex-1 min-w-0 px-2.5 py-2 flex flex-col justify-between">
-        <div>
-          <p className="font-bold text-navy text-[11px] leading-tight line-clamp-1">{property.name}</p>
-          {(property.city?.name || property.location) && (
-            <p className="text-[10px] text-navy/45 mt-0.5 truncate">
-              📍 {property.city?.name || property.location}
-            </p>
+      <div className="flex-1 min-w-0 px-2.5 py-2.5 flex flex-col justify-between">
+        <p className="font-bold text-[12px] leading-snug line-clamp-1 group-hover:text-[#BA1932] transition-colors"
+          style={{ color: '#1a2035' }}>
+          {property.name}
+        </p>
+
+        {(property.city?.name || property.location) && (
+          <p className="flex items-center gap-1 text-[11px] mt-0.5 truncate" style={{ color: 'rgba(115,13,38,0.5)' }}>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="#BA1932"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            {property.city?.name || property.location}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2.5 mt-1">
+          {property.number_bedroom > 0 && (
+            <span className="text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              🛏 {property.number_bedroom}
+            </span>
           )}
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {property.number_bedroom > 0 && <span className="text-[9px] text-navy/50 font-medium">{property.number_bedroom} ch</span>}
-            {property.number_bathroom > 0 && <span className="text-[9px] text-navy/50 font-medium">· {property.number_bathroom} sdb</span>}
-            {property.square && <span className="text-[9px] text-navy/50 font-medium">· {property.square} m²</span>}
-          </div>
+          {property.number_bathroom > 0 && (
+            <span className="text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              🚿 {property.number_bathroom}
+            </span>
+          )}
+          {property.square && (
+            <span className="text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
+              📐 {property.square} m²
+            </span>
+          )}
         </div>
-        <div className="flex items-center justify-between">
-          {property.price && (
-            <span className="font-bold text-xs" style={{ color: '#BA1932' }}>{formatPrice(property.price)}</span>
-          )}
+
+        <div className="flex items-center justify-between mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
+          <span className="font-bold text-[12px]" style={{ color: '#BA1932' }}>
+            {formatPrice(property.price) || 'Sur demande'}
+          </span>
           <Link
             to={`/properties/${slug}`}
             onClick={e => e.stopPropagation()}
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-lg touch-manip shrink-0"
-            style={{ color: '#BA1932', background: 'rgba(115,13,38,0.07)' }}
+            className="text-[11px] font-bold shrink-0 transition-opacity hover:opacity-70"
+            style={{ color: '#BA1932' }}
           >
             Voir →
           </Link>

@@ -614,7 +614,7 @@ export default function Properties() {
           </div>
 
           {/* Bottom (mobile) / Right (desktop): map — always visible */}
-          <div className="flex-[0_0_53%] lg:flex-none lg:w-[420px] xl:lg:w-[500px] lg:flex-shrink-0 lg:rounded-2xl lg:shadow-lg overflow-hidden px-3 pb-3 lg:px-0 lg:pb-0">
+          <div className="flex-[0_0_53%] lg:flex-none lg:w-[420px] xl:lg:w-[500px] lg:flex-shrink-0 lg:rounded-2xl lg:shadow-lg overflow-hidden px-3 pb-3 lg:px-0 lg:pb-0" style={{ isolation: 'isolate' }}>
             <div className="rounded-2xl overflow-hidden h-full shadow-lg">
               <MapView
                 markers={mapMarkers}

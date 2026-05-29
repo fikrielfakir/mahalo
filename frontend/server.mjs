@@ -136,7 +136,15 @@ async function start() {
   const laravelProxy = createProxyMiddleware({
     target: API_BACKEND,
     changeOrigin: true,
-    pathFilter: (path) => path.startsWith('/api/') || path.startsWith('/storage/'),
+    pathFilter: (path) =>
+      path.startsWith('/api/') ||
+      path.startsWith('/storage/') ||
+      path === '/sitemap.xml' ||
+      path === '/sitemap-static.xml' ||
+      path === '/sitemap-properties.xml' ||
+      path === '/sitemap-projects.xml' ||
+      path === '/sitemap-agents.xml' ||
+      path === '/sitemap-ping',
     on: {
       error: (err, req, res) => {
         console.error('[proxy] Error:', err.message)

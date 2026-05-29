@@ -21,6 +21,36 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      '/sitemap.xml': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/sitemap-static.xml': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/sitemap-properties.xml': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/sitemap-projects.xml': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/sitemap-agents.xml': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/sitemap-ping': {
+        target: 'https://api.mahalo.ma',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 })

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\City;
+use App\Traits\AppliesContentTranslations;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminCityController extends Controller
 {
+    use AppliesContentTranslations;
     public function index(Request $request): JsonResponse
     {
         $q = City::withCount('properties');
@@ -34,11 +36,17 @@ class AdminCityController extends Controller
         ]);
     }
 
-    public function publicList(): JsonResponse
+    public function publicList(Request $request): JsonResponse
     {
+        $locale = $this->resolveLocale($request);
         $cities = City::orderBy('name')->get(['id', 'name', 'country', 'state', 'image', 'image_url']);
 
-        return response()->json(['data' => $cities, 'error' => false, 'message' => null]);
+        $translated = $cities->map(function ($city) use ($locale) {
+            $data = $city->toArray();
+            return $this->overlayTranslations($data, City::class, $city->id, $locale, ['name', 'country', 'state']);
+        });
+
+        return response()->json(['data' => $translated, 'error' => false, 'message' => null]);
     }
 
     public function store(Request $request): JsonResponse

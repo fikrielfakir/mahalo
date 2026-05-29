@@ -43,7 +43,7 @@ class AdminCityController extends Controller
 
         $translated = $cities->map(function ($city) use ($locale) {
             $data = $city->toArray();
-            return $this->overlayTranslations($data, City::class, $city->id, $locale, ['name', 'country', 'state']);
+            return $this->overlayTranslations($data, 'city', $city->id, $locale, ['name', 'country', 'state']);
         });
 
         return response()->json(['data' => $translated, 'error' => false, 'message' => null]);

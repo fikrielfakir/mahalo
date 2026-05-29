@@ -4,7 +4,8 @@ import { MapPin } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
-import { propertiesApi, citiesApi } from '../api/client'
+import { propertiesApi } from '../api/client'
+import api from '../api/client'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../utils/media'
 
@@ -47,15 +48,16 @@ function extractCitiesFromProperties(properties) {
 }
 
 export default function Neighborhoods() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [cities, setCities]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
 
   useEffect(() => {
+    const locale = i18n.language?.split('-')[0] || 'fr'
     async function load() {
       try {
-        const res  = await citiesApi.list()
+        const res  = await api.get('/cities', { headers: { 'Accept-Language': locale } })
         const data = res?.data
         if (Array.isArray(data) && data.length > 0) {
           setCities(data); return
@@ -81,7 +83,7 @@ export default function Neighborhoods() {
       } finally { setLoading(false) }
     }
     load()
-  }, [])
+  }, [i18n.language])
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F5' }}>

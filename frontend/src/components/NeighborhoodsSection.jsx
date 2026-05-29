@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { propertiesApi, citiesApi } from '../api/client'
+import { propertiesApi } from '../api/client'
+import api from '../api/client'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../utils/media'
 
@@ -44,15 +45,16 @@ function extractCitiesFromProperties(properties) {
 }
 
 export default function NeighborhoodsSection() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [cities, setCities]   = useState([])
   const [loading, setLoading] = useState(true)
   const scrollRef             = useRef(null)
 
   useEffect(() => {
+    const locale = i18n.language?.split('-')[0] || 'fr'
     async function load() {
       try {
-        const res  = await citiesApi.list()
+        const res  = await api.get('/cities', { headers: { 'Accept-Language': locale } })
         const data = res?.data
         if (Array.isArray(data) && data.length > 0) {
           setCities(data); return
@@ -78,7 +80,7 @@ export default function NeighborhoodsSection() {
       } finally { setLoading(false) }
     }
     load()
-  }, [])
+  }, [i18n.language])
 
   const scroll = (dir) => scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
 

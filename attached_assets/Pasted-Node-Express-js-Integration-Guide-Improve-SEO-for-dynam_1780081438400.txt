@@ -1,0 +1,47 @@
+Node(Express.js) Integration Guide
+Improve SEO for dynamic front-ends by serving pre-rendered HTML to search engine bots using Express.js middleware.
+If you're using Node with Express.js as your main web server, integrating Prerender.io can significantly enhance your site's SEO and load times for bots. This integration enables search engines to receive fully rendered HTML for JavaScript-heavy pages, helping them index content more accurately.
+
+Important:
+
+This integration can not be installed directly into a React, Angular or Vue project.
+Only use this integration if Express is handling every incoming connection and not just API calls.
+
+This integration uses the prerender-node middleware to detect bots and route them through Prerender's rendering service.
+
+Before proceeding, ensure you have access to your NodeJS backend, as it is required to successfully integrate Prerender.
+
+Video guide:
+
+
+Prerender token
+
+The location of the Prerender token has changed. You can find it under the Security and Access menu under Prerender Token.
+
+Text guide:
+View source on GitHub
+
+1. Install the prerender-node Middleware
+Open a terminal and run the following command in your Express.js project directory:
+
+npm install prerender-node --save
+2. Add Prerender Middleware to Your App
+In your main server file (commonly app.js or server.js), add the following code before any route handlers:
+
+app.use(require('prerender-node').set('prerenderToken', 'YOUR_TOKEN'));
+Replace 'YOUR_TOKEN_HERE' with your actual Prerender Token, found in the Prerender.io dashboard under Security and Access menu.
+
+3. Restart Your Application
+After saving your changes, restart your Express.js app so the middleware takes effect:
+
+npm start
+Or, if you're using a process manager like pm2:
+
+pm2 restart your-app-name
+Verify Your Installation
+After integration, it's important to verify that everything is working as expected. We've provided an easy-to-follow guide to help you test your setup and confirm that Prerender is functioning properly.
+
+Is the Prerender integration working on other pages?
+Test if the Prerender integration works on the other pages based on this guide: Verify the integration
+
+If you don't see the Prerender headers / IDs, then the Integration is not working, which might be why the other URL is not cached.

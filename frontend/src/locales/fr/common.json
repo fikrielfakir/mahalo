@@ -1592,5 +1592,19 @@
     "sale": "Vente",
     "rent": "Location",
     "open": "Ouvrir Mahalo AI"
+  },
+  "home": {
+    "mapSection": {
+      "eyebrow": "Explorer sur la carte",
+      "title": "Trouvez des biens près de chez vous",
+      "subtitle": "Parcourez les annonces interactivement — cliquez sur un point pour voir les détails.",
+      "viewAll": "Voir tout sur la carte",
+      "view": "Voir",
+      "results": "biens",
+      "found": "biens trouvés",
+      "onMap": "sur carte",
+      "total": "au total",
+      "noResults": "Aucun bien avec données de localisation."
+    }
   }
 }

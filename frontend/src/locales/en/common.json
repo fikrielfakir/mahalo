@@ -1592,5 +1592,19 @@
     "sale": "For Sale",
     "rent": "For Rent",
     "open": "Open Mahalo AI"
+  },
+  "home": {
+    "mapSection": {
+      "eyebrow": "Explore on the Map",
+      "title": "Find Properties Near You",
+      "subtitle": "Browse listings interactively — click a pin to see details.",
+      "viewAll": "View all on map",
+      "view": "View",
+      "results": "properties",
+      "found": "found",
+      "onMap": "on map",
+      "total": "total",
+      "noResults": "No properties with location data found."
+    }
   }
 }

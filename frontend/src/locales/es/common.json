@@ -1592,5 +1592,19 @@
     "sale": "En venta",
     "rent": "En alquiler",
     "open": "Abrir Mahalo AI"
+  },
+  "home": {
+    "mapSection": {
+      "eyebrow": "Explorar en el mapa",
+      "title": "Encuentra propiedades cerca de ti",
+      "subtitle": "Navega por los anuncios de forma interactiva — haz clic en un pin para ver detalles.",
+      "viewAll": "Ver todo en el mapa",
+      "view": "Ver",
+      "results": "propiedades",
+      "found": "encontradas",
+      "onMap": "en mapa",
+      "total": "en total",
+      "noResults": "No se encontraron propiedades con datos de ubicación."
+    }
   }
 }

@@ -157,6 +157,9 @@ export default function SettingsPage() {
   const [copied, setCopied]               = useState(false)
   const [pinging, setPinging]             = useState(false)
   const [pingResult, setPingResult]       = useState(null)
+  const [recacheUrls, setRecacheUrls]     = useState('')
+  const [recaching, setRecaching]         = useState(false)
+  const [recacheResults, setRecacheResults] = useState(null)
   const [showGroqKey, setShowGroqKey]     = useState(false)
   const [testingAi, setTestingAi]         = useState(false)
   const [aiTestResult, setAiTestResult]   = useState(null)
@@ -623,6 +626,109 @@ export default function SettingsPage() {
                     <CheckCircle size={13} /> Token configured — restart the Express server to apply changes.
                   </div>
                 )}
+
+                {/* ── Recache URLs ── */}
+                <div className="mt-5 pt-5 border-t border-gray-100">
+                  <p className="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-2">
+                    <RefreshCw size={14} className="text-gray-500" /> Recache URLs
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Force Prerender.io to re-crawl and update the cached snapshot for specific pages. Enter one URL per line.
+                  </p>
+
+                  {/* Quick-add presets */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {[
+                      { label: 'Homepage',   path: '/' },
+                      { label: 'Properties', path: '/properties' },
+                      { label: 'Projects',   path: '/projects' },
+                      { label: 'Agents',     path: '/agents' },
+                      { label: 'About',      path: '/about' },
+                    ].map(({ label, path }) => {
+                      const baseUrl = (form.site_url || 'https://mahalo.ma').replace(/\/$/, '')
+                      const full = baseUrl + path
+                      return (
+                        <button
+                          key={path}
+                          type="button"
+                          onClick={() => setRecacheUrls(prev => {
+                            const lines = prev.split('\n').map(l => l.trim()).filter(Boolean)
+                            if (lines.includes(full)) return prev
+                            return [...lines, full].join('\n')
+                          })}
+                          className="px-2.5 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-xs font-medium text-gray-600 transition-all"
+                        >
+                          + {label}
+                        </button>
+                      )
+                    })}
+                    {recacheUrls && (
+                      <button
+                        type="button"
+                        onClick={() => { setRecacheUrls(''); setRecacheResults(null) }}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-red-400 hover:text-red-600 transition-all"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  <Textarea
+                    value={recacheUrls}
+                    onChange={e => { setRecacheUrls(e.target.value); setRecacheResults(null) }}
+                    rows={4}
+                    placeholder={'https://mahalo.ma/\nhttps://mahalo.ma/properties/villa-example\nhttps://mahalo.ma/projects/my-project'}
+                    className="font-mono text-xs"
+                  />
+
+                  <div className="mt-3 flex items-center gap-3">
+                    <Btn
+                      type="button"
+                      disabled={recaching || !recacheUrls.trim() || !form.prerender_token}
+                      onClick={async () => {
+                        const urls = recacheUrls.split('\n').map(l => l.trim()).filter(Boolean)
+                        if (!urls.length) return
+                        setRecaching(true); setRecacheResults(null)
+                        try {
+                          const r = await adminSettings.prerenderRecache(urls)
+                          setRecacheResults(r?.data || null)
+                        } catch (e) {
+                          setRecacheResults({ error: e?.message || 'Request failed' })
+                        } finally { setRecaching(false) }
+                      }}
+                    >
+                      <RefreshCw size={14} className={recaching ? 'animate-spin' : ''} />
+                      {recaching ? 'Recaching…' : 'Recache URLs'}
+                    </Btn>
+                    {!form.prerender_token && (
+                      <span className="text-xs text-amber-600">Save a Prerender token above first.</span>
+                    )}
+                  </div>
+
+                  {/* Results */}
+                  {recacheResults && !recacheResults.error && (
+                    <div className="mt-3 space-y-1.5">
+                      <p className="text-xs font-semibold text-gray-600 mb-1">
+                        Results — {recacheResults.succeeded} succeeded{recacheResults.failed > 0 ? `, ${recacheResults.failed} failed` : ''}
+                      </p>
+                      {recacheResults.results?.map((r, i) => (
+                        <div key={i} className={`flex items-start gap-2 text-xs px-3 py-2 rounded-lg ${r.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                          {r.ok
+                            ? <CheckCircle size={12} className="mt-0.5 shrink-0" />
+                            : <AlertCircle size={12} className="mt-0.5 shrink-0" />}
+                          <span className="font-mono break-all">{r.url}</span>
+                          <span className="ml-auto shrink-0 font-medium">{r.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {recacheResults?.error && (
+                    <div className="mt-3 flex items-start gap-2 text-sm font-medium text-red-500">
+                      <AlertCircle size={15} className="mt-0.5 shrink-0" />
+                      <span>{recacheResults.error}</span>
+                    </div>
+                  )}
+                </div>
               </Section>
             )}
 

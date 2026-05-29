@@ -145,6 +145,8 @@ export const adminSettings = {
   updateTranslations: (locale, d)     => client.put(`/admin/settings/translations/${locale}`, d),
   deleteTranslation:  (locale, k)     => client.delete(`/admin/settings/translations/${locale}/${k}`),
   autoTranslate:      (locale, keys)  => client.post('/admin/settings/auto-translate', { locale, keys }),
+  sitemapPing:        ()              => client.post('/admin/settings/sitemap-ping'),
+  prerenderRecache:   (urls)          => client.post('/admin/settings/prerender-recache', { urls }),
 }
 
 export const adminApplications = {

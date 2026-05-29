@@ -109,6 +109,59 @@ class AdminSettingsController extends Controller
         }
     }
 
+    public function prerenderRecache(Request $request): JsonResponse
+    {
+        $request->validate([
+            'urls' => 'required|array|min:1|max:50',
+            'urls.*' => 'required|url',
+        ]);
+
+        $urls = $request->input('urls');
+
+        // Resolve token: DB setting takes priority over env var
+        $token = DB::table('site_settings')->where('key', 'prerender_token')->value('value')
+            ?: env('PRERENDER_TOKEN', '');
+
+        if (!$token) {
+            return response()->json(['error' => true, 'message' => 'Prerender token is not configured. Add it in Settings → SEO → Prerender.io.'], 422);
+        }
+
+        $results = [];
+        foreach ($urls as $url) {
+            try {
+                $res = Http::timeout(10)
+                    ->withHeaders(['Content-Type' => 'application/json'])
+                    ->post('https://api.prerender.io/recache', [
+                        'prerenderToken' => $token,
+                        'url'            => $url,
+                    ]);
+
+                $results[] = [
+                    'url'     => $url,
+                    'ok'      => $res->successful(),
+                    'status'  => $res->status(),
+                    'message' => $res->successful() ? 'Queued for recache' : ('Error ' . $res->status()),
+                ];
+            } catch (\Throwable $e) {
+                $results[] = [
+                    'url'     => $url,
+                    'ok'      => false,
+                    'status'  => 0,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        $succeeded = count(array_filter($results, fn($r) => $r['ok']));
+        $failed    = count($results) - $succeeded;
+
+        return response()->json([
+            'data'    => ['results' => $results, 'succeeded' => $succeeded, 'failed' => $failed],
+            'error'   => false,
+            'message' => "{$succeeded} URL(s) queued for recache" . ($failed > 0 ? ", {$failed} failed" : '') . '.',
+        ]);
+    }
+
     public function sitemapPing(): JsonResponse
     {
         $siteUrl = rtrim(config('app.url', url('/')), '/');

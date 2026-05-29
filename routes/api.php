@@ -285,6 +285,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/settings/hero-bg', [AdminSettingsController::class, 'uploadHeroBg']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
         Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
+        Route::post('/settings/prerender-recache', [AdminSettingsController::class, 'prerenderRecache']);
         Route::post('/settings/auto-translate', [AdminSettingsController::class, 'autoTranslate']);
 
         // Translatable settings (per-locale overrides)

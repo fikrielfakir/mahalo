@@ -12,22 +12,22 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
         secure: false,
       },
       '/storage': {
-        target: 'http://localhost:8000',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
         secure: false,
       },
       '^/sitemap.*\\.xml$': {
-        target: 'http://localhost:8000',
+        target: 'https://mahalo.ma',
         changeOrigin: true,
         secure: false,
       },
       '/sitemap-ping': {
-        target: 'http://localhost:8000',
+        target: 'https://mahalo.ma',
         changeOrigin: true,
         secure: false,
       },

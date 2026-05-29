@@ -1,4 +1,4 @@
-modules = ["php-8.2", "web", "vue-node-20", "php-8.4", "nodejs-20", "python-3.11"]
+modules = ["nodejs-20", "php-8.2", "web", "php-8.3"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -31,7 +31,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm run dev"
+args = "cd frontend && npm install && npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -43,7 +43,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data && php artisan serve --host=0.0.0.0 --port=8000"
+args = "bash setup-env.sh && mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache/data storage/logs && touch database/database.sqlite && php artisan migrate --force 2>&1 && php artisan storage:link --force 2>&1 && php artisan serve --host=0.0.0.0 --port=8000"
 waitForPort = 8000
 
 [[ports]]
@@ -53,10 +53,6 @@ externalPort = 3003
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 8000
-externalPort = 8000
 
 [userenv]
 

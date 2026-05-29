@@ -5,6 +5,9 @@ import { createServer as createViteServer } from 'vite'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { createProxyMiddleware } from 'http-proxy-middleware'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
@@ -154,6 +157,12 @@ async function resolveOgMeta(pathname, origin) {
 async function start() {
   const app = express()
   app.use(compression())
+
+  if (process.env.PRERENDER_TOKEN) {
+    const prerender = require('prerender-node')
+    prerender.set('prerenderToken', process.env.PRERENDER_TOKEN)
+    app.use(prerender)
+  }
 
   const laravelProxy = createProxyMiddleware({
     target: API_BACKEND,

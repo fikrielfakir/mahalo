@@ -2,18 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Bed, Bath, Maximize2, ArrowRight, Map, Home, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { propertiesApi } from '../api/client'
+import { propertiesApi, citiesApi } from '../api/client'
 import { mediaUrl, isVideoPath } from '../utils/media'
 import MapView from './MapView'
-
-const CITY_FILTERS = [
-  { label: 'All', value: null },
-  { label: 'Casablanca', value: 'casablanca' },
-  { label: 'Marrakech',  value: 'marrakech' },
-  { label: 'Rabat',      value: 'rabat' },
-  { label: 'Tanger',     value: 'tanger' },
-  { label: 'Agadir',     value: 'agadir' },
-]
 
 const TYPE_FILTERS = [
   { label: 'Buy',  value: 'sale' },
@@ -197,9 +188,10 @@ function SkeletonCard() {
 }
 
 export default function HomepageMapSection() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [properties, setProperties]   = useState([])
   const [loading, setLoading]         = useState(true)
+  const [cities, setCities]           = useState([])
   const [activeCity, setActiveCity]   = useState(null)
   const [activeType, setActiveType]   = useState('sale')
   const [activeId, setActiveId]       = useState(null)
@@ -207,13 +199,22 @@ export default function HomepageMapSection() {
   const cardRefs                       = useRef({})
   const listRef                        = useRef(null)
 
+  useEffect(() => {
+    citiesApi.list()
+      .then(res => {
+        const data = Array.isArray(res?.data) ? res.data : []
+        setCities(data)
+      })
+      .catch(() => setCities([]))
+  }, [i18n.language])
+
   const fetchProperties = useCallback(async () => {
     setLoading(true)
     setActiveId(null)
     setMobilePage(0)
     try {
       const params = { per_page: 40, type: activeType }
-      if (activeCity) params.city = activeCity
+      if (activeCity) params.city_id = activeCity
       const r = await propertiesApi.list(params)
       const items = (r?.data || r || []).filter(p => p.latitude && p.longitude)
       setProperties(items)
@@ -314,20 +315,35 @@ export default function HomepageMapSection() {
           </div>
 
           <div className="flex gap-1.5 flex-wrap">
-            {CITY_FILTERS.map(cf => (
+            {/* All button */}
+            <button
+              onClick={() => setActiveCity(null)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
+                activeCity === null
+                  ? 'text-white border-transparent shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-100 hover:border-[#BA1932]/30 hover:text-[#BA1932]'
+              }`}
+              style={activeCity === null
+                ? { background: 'linear-gradient(135deg, #730D26, #BA1932)' }
+                : {}}
+            >
+              {t('home.mapSection.city.all', 'All')}
+            </button>
+            {/* Dynamic cities from API */}
+            {cities.map(city => (
               <button
-                key={cf.value ?? 'all'}
-                onClick={() => setActiveCity(cf.value)}
+                key={city.id}
+                onClick={() => setActiveCity(city.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
-                  activeCity === cf.value
+                  activeCity === city.id
                     ? 'text-white border-transparent shadow-sm'
                     : 'bg-white text-gray-600 border-gray-100 hover:border-[#BA1932]/30 hover:text-[#BA1932]'
                 }`}
-                style={activeCity === cf.value
+                style={activeCity === city.id
                   ? { background: 'linear-gradient(135deg, #730D26, #BA1932)' }
                   : {}}
               >
-                {t(`home.mapSection.city.${cf.value ?? 'all'}`, cf.label)}
+                {city.name}
               </button>
             ))}
           </div>

@@ -48,6 +48,8 @@ class AdminSettingsController extends Controller
         'list_property_auto_approve',
         // Hero background
         'hero_bg_url', 'hero_bg_type',
+        // Code injection
+        'custom_head_code', 'custom_body_code',
     ];
 
     public function show(): JsonResponse

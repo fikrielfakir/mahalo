@@ -7,7 +7,7 @@ import {
   CheckCircle, Palette, Upload, Image, Droplets, Eye, EyeOff,
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
-  Languages, Bot, ChevronDown, Smartphone, Building2, Wand2, Film,
+  Languages, Bot, ChevronDown, Smartphone, Building2, Wand2, Film, Code2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -97,6 +97,8 @@ const DEFAULTS = {
   list_property_auto_approve: '0',
   hero_bg_url: '',
   hero_bg_type: 'image',
+  custom_head_code: '',
+  custom_body_code: '',
 }
 
 const GROQ_MODELS = [
@@ -135,6 +137,7 @@ export default function SettingsPage() {
     { id: 'mobile_app', label: t('admin.settings.tabMobileApp'),  icon: Smartphone },
     { id: 'listings',   label: 'Listings',                        icon: Building2 },
     { id: 'hero',       label: 'Hero',                            icon: Film },
+    { id: 'code',       label: 'Code Injection',                  icon: Code2 },
   ]
 
   const [form, setForm]                   = useState(DEFAULTS)
@@ -1182,6 +1185,47 @@ export default function SettingsPage() {
                 {form.hero_bg_url && (
                   <p className="text-xs text-gray-400 truncate">Current: <span className="font-medium">{form.hero_bg_url}</span> — Type: <span className="font-medium">{form.hero_bg_type}</span></p>
                 )}
+              </div>
+            </Section>
+          </>
+        )}
+
+        {tab === 'code' && (
+          <>
+            <Section title="Code Injection" icon={Code2}>
+              <div className="space-y-6">
+                <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700 flex items-start gap-2">
+                  <Info size={13} className="shrink-0 mt-0.5" />
+                  <span>Paste scripts like Google Tag Manager, Facebook Pixel, or any custom HTML/JS. Code in the <strong>&lt;head&gt;</strong> field is injected inside the page <code className="bg-amber-100 px-1 rounded">&lt;head&gt;</code> tag. Code in the <strong>&lt;body&gt;</strong> field is injected just after the opening <code className="bg-amber-100 px-1 rounded">&lt;body&gt;</code> tag. Changes take effect after saving — the server re-reads settings within 60 seconds.</span>
+                </div>
+
+                <FormField
+                  label="Head code"
+                  hint="Injected inside <head> — ideal for GTM script tag, analytics, fonts, or custom meta tags."
+                >
+                  <textarea
+                    value={form.custom_head_code}
+                    onChange={f('custom_head_code')}
+                    rows={10}
+                    spellCheck={false}
+                    placeholder={'<!-- Google Tag Manager -->\n<script>...</script>\n<!-- End Google Tag Manager -->'}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs font-mono bg-gray-950 text-green-400 placeholder-gray-600 resize-y focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]/50"
+                  />
+                </FormField>
+
+                <FormField
+                  label="Body code"
+                  hint="Injected just after <body> opens — ideal for GTM <noscript> fallback or other body-level scripts."
+                >
+                  <textarea
+                    value={form.custom_body_code}
+                    onChange={f('custom_body_code')}
+                    rows={6}
+                    spellCheck={false}
+                    placeholder={'<!-- Google Tag Manager (noscript) -->\n<noscript>...</noscript>\n<!-- End Google Tag Manager (noscript) -->'}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs font-mono bg-gray-950 text-green-400 placeholder-gray-600 resize-y focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932]/50"
+                  />
+                </FormField>
               </div>
             </Section>
           </>

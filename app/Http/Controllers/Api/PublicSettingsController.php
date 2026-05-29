@@ -32,6 +32,8 @@ class PublicSettingsController extends Controller
         'sale_enabled', 'rent_enabled', 'projects_enabled',
         // Hero background
         'hero_bg_url', 'hero_bg_type',
+        // Code injection
+        'custom_head_code', 'custom_body_code',
     ];
 
     private const TRANSLATABLE_KEYS = [

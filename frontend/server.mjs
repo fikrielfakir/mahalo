@@ -13,6 +13,28 @@ const API_BACKEND = process.env.API_BACKEND_URL || 'http://localhost:8000'
 // Always use the local Laravel API for SSR data fetching (API_BACKEND may point to prod)
 const INTERNAL_API = 'http://localhost:8000'
 
+let cachedSiteSettings = null
+let settingsCachedAt   = 0
+const SETTINGS_TTL_MS  = 60_000 // re-fetch every 60 s
+
+async function getSiteSettings() {
+  const now = Date.now()
+  if (cachedSiteSettings && now - settingsCachedAt < SETTINGS_TTL_MS) {
+    return cachedSiteSettings
+  }
+  try {
+    const res = await fetch(`${INTERNAL_API}/api/v1/public-settings`, { signal: AbortSignal.timeout(4000) })
+    if (res.ok) {
+      const json = await res.json()
+      cachedSiteSettings = json?.data ?? {}
+      settingsCachedAt   = now
+    }
+  } catch {
+    // fall back to cached (or empty) if unreachable
+  }
+  return cachedSiteSettings ?? {}
+}
+
 const BOT_PATTERN = /googlebot|bingbot|slurp|yandex|baidu|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|applebot|embedly|ia_archiver|semrushbot|ahrefsbot|msnbot|teoma|rogerbot/i
 
 const IGNORE_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map|json|webp|avif|mp4|webm|pdf)$/i
@@ -188,6 +210,16 @@ async function start() {
         template = await vite.transformIndexHtml(url, template)
       }
 
+      // Inject custom head/body code from admin settings
+      const siteSettings = await getSiteSettings()
+      const customHeadCode = siteSettings.custom_head_code || ''
+      const customBodyCode = siteSettings.custom_body_code || ''
+      if (customBodyCode) {
+        template = template.replace('<!--custom-body-->', customBodyCode)
+      } else {
+        template = template.replace('<!--custom-body-->', '')
+      }
+
       if (isBot) {
         const origin   = `${req.protocol}://${req.get('host')}`
         const pathname = url.split('?')[0]
@@ -225,10 +257,10 @@ async function start() {
           }
         }
 
-        const html = template.replace('<!--app-head-->', headTags)
+        const html = template.replace('<!--app-head-->', headTags + (customHeadCode ? '\n' + customHeadCode : ''))
         return res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
       } else {
-        const html = template.replace('<!--app-head-->', '')
+        const html = template.replace('<!--app-head-->', customHeadCode)
         return res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
       }
     } catch (err) {

@@ -22,12 +22,12 @@ export default defineConfig({
         secure: false,
       },
       '^/sitemap.*\\.xml$': {
-        target: 'https://mahalo.ma',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
         secure: false,
       },
       '/sitemap-ping': {
-        target: 'https://mahalo.ma',
+        target: 'https://api.mahalo.ma',
         changeOrigin: true,
         secure: false,
       },

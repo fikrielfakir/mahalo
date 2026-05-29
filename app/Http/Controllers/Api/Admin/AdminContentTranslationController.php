@@ -10,7 +10,7 @@ class AdminContentTranslationController extends Controller
 {
     private const ALLOWED_TYPES = [
         'property', 'project', 'agent', 'category',
-        'feature', 'facility', 'investor', 'city',
+        'feature', 'facility', 'investor', 'city', 'faq',
     ];
 
     private const TYPE_FIELDS = [
@@ -22,6 +22,7 @@ class AdminContentTranslationController extends Controller
         'facility'  => ['name'],
         'investor'  => ['name'],
         'city'      => ['name'],
+        'faq'       => ['question', 'answer'],
     ];
 
     private const ALLOWED_LOCALES = ['fr', 'en', 'ar', 'es', 'tr', 'id', 'vi'];

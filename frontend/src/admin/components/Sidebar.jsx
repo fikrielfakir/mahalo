@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Building2, FolderKanban, Users, Tag,
   Star, MapPin, MessageSquare, LogOut, X, TrendingUp,
   Image, Settings, UserCog, Globe, Briefcase, PackageOpen,
-  BarChart2, Languages
+  BarChart2, Languages, HelpCircle
 } from 'lucide-react'
 import logoLight from '/logo-light.png'
 
@@ -48,6 +48,7 @@ export default function Sidebar({ open, onClose }) {
       labelKey: 'admin.sidebar.operations',
       links: [
         { to: '/admin/consults', labelKey: 'admin.sidebar.inquiries', icon: MessageSquare },
+        { to: '/admin/faqs',     labelKey: 'FAQ',                     icon: HelpCircle },
         { to: '/admin/media',    labelKey: 'admin.sidebar.media',     icon: Image },
       ],
     },

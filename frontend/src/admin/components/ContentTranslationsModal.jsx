@@ -26,6 +26,10 @@ const TYPE_FIELDS = {
   facility:  [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
   investor:  [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
   city:      [{ key: 'name', labelKey: 'admin.contentTranslations.fieldName', type: 'input' }],
+  faq:       [
+    { key: 'question', labelKey: 'admin.contentTranslations.fieldName',        type: 'input' },
+    { key: 'answer',   labelKey: 'admin.contentTranslations.fieldDescription', type: 'textarea', rows: 4 },
+  ],
 }
 
 async function translateText(text, targetLang) {

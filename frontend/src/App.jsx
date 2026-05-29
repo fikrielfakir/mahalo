@@ -79,6 +79,7 @@ const AppUpdatePage                 = lazy(() => import('./admin/pages/AppUpdate
 const AnalyticsPage                 = lazy(() => import('./admin/pages/AnalyticsPage'))
 const TranslationsPage              = lazy(() => import('./admin/pages/TranslationsPage'))
 const LanguagesPage                 = lazy(() => import('./admin/pages/LanguagesPage'))
+const FaqsPage                      = lazy(() => import('./admin/pages/FaqsPage'))
 
 // ── Inline fallback spinner ──────────────────────────────────────
 function PageLoader() {
@@ -220,6 +221,7 @@ export default function App() {
                         <Route path="categories"  element={<CategoriesPage />} />
                         <Route path="features"    element={<FeaturesPage />} />
                         <Route path="facilities"  element={<FacilitiesPage />} />
+                        <Route path="faqs"        element={<FaqsPage />} />
                         <Route path="investors"   element={<InvestorsPage />} />
                         <Route path="cities"      element={<CitiesPage />} />
                         <Route path="consults"    element={<ConsultsPage />} />

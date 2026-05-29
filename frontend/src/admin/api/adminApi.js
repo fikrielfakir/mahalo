@@ -112,6 +112,14 @@ export const adminFacilities = {
   delete: (id)     => client.delete(`/admin/facilities/${id}`),
 }
 
+export const adminFaqs = {
+  list:       (p = {}) => client.get('/admin/faqs', { params: p }),
+  create:     (data)   => client.post('/admin/faqs', data),
+  update:     (id, d)  => client.put(`/admin/faqs/${id}`, d),
+  delete:     (id)     => client.delete(`/admin/faqs/${id}`),
+  bulkDelete: (ids)    => client.post('/admin/faqs/bulk-delete', { ids }),
+}
+
 export const adminNeighborhoods = {
   list:   (p = {}) => client.get('/admin/neighborhoods', { params: p }),
   get:    (id)     => client.get(`/admin/neighborhoods/${id}`),

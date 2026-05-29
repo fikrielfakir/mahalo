@@ -105,6 +105,12 @@ Route::prefix('v1')->group(function () {
     // ── Public: Cities (all, no property restriction) ─────────────────────────
     Route::get('/cities', [AdminCityController::class, 'publicList']);
 
+    // ── Public: FAQs ──────────────────────────────────────────────────────────
+    Route::get('/faqs', [\App\Http\Controllers\Api\FaqController::class, 'index']);
+
+    // ── Public: Market Insights ───────────────────────────────────────────────
+    Route::get('/market-insights', [\App\Http\Controllers\Api\MarketInsightsController::class, 'index']);
+
     // ── Public: Newsletter subscription ───────────────────────────────────────
     Route::post('/newsletter/subscribe',   [\App\Http\Controllers\NewsletterController::class, 'subscribe']);
     Route::post('/newsletter/unsubscribe', [\App\Http\Controllers\NewsletterController::class, 'unsubscribe']);
@@ -244,6 +250,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/media/{id}/thumbnail', [MediaController::class, 'rethumbnail']);
         Route::post('/media/thumbnail/batch', [MediaController::class, 'batchRethumbnail']);
         Route::delete('/media/{id}', [MediaController::class, 'destroy']);
+
+        // FAQs
+        Route::get('/faqs', [\App\Http\Controllers\Api\Admin\AdminFaqController::class, 'index']);
+        Route::post('/faqs', [\App\Http\Controllers\Api\Admin\AdminFaqController::class, 'store']);
+        Route::put('/faqs/{id}', [\App\Http\Controllers\Api\Admin\AdminFaqController::class, 'update']);
+        Route::delete('/faqs/{id}', [\App\Http\Controllers\Api\Admin\AdminFaqController::class, 'destroy']);
+        Route::post('/faqs/bulk-delete', [\App\Http\Controllers\Api\Admin\AdminFaqController::class, 'bulkDelete']);
 
         // Consults
         Route::get('/consults', [AdminConsultController::class, 'index']);

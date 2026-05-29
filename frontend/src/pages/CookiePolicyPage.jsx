@@ -1,31 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Cookie, Loader2 } from 'lucide-react'
+import { Cookie, Loader2, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
 import { publicSettingsApi } from '../api/client'
-
-const FALLBACK = `
-## 1. Qu'est-ce qu'un cookie ?
-Un cookie est un petit fichier texte déposé sur votre appareil lorsque vous visitez notre site. Il permet de mémoriser vos préférences et d'améliorer votre expérience de navigation.
-
-## 2. Cookies que nous utilisons
-- **Cookies essentiels** : nécessaires au bon fonctionnement du site (session, authentification).
-- **Cookies analytiques** : nous aident à comprendre comment vous utilisez notre plateforme (statistiques anonymisées).
-- **Cookies de préférences** : mémorisent vos choix (langue, devise, filtres de recherche).
-
-## 3. Cookies tiers
-Nous pouvons utiliser des services tiers (Google Analytics, etc.) qui déposent leurs propres cookies. Ces cookies sont régis par les politiques de confidentialité des prestataires concernés.
-
-## 4. Gestion des cookies
-Vous pouvez à tout moment accepter ou refuser les cookies non essentiels via la bannière affichée lors de votre première visite. Vous pouvez également gérer les cookies directement depuis les paramètres de votre navigateur.
-
-## 5. Durée de conservation
-Les cookies essentiels expirent à la fin de votre session. Les cookies analytiques et de préférences sont conservés pour une durée maximale de 13 mois.
-
-## 6. Contact
-Pour toute question relative à notre utilisation des cookies, contactez-nous à l'adresse indiquée dans nos informations de contact.
-`
 
 function renderMarkdown(text) {
   return text
@@ -48,13 +26,17 @@ function renderMarkdown(text) {
 }
 
 export default function CookiePolicyPage() {
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     publicSettingsApi.get()
-      .then(res => setContent(res.data?.page_cookie || FALLBACK))
-      .catch(() => setContent(FALLBACK))
+      .then(res => {
+        const val = res.data?.page_cookie
+        setContent(val && val.trim() ? val : null)
+      })
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
 
@@ -77,11 +59,30 @@ export default function CookiePolicyPage() {
 
       <main className="flex-1 py-14 px-6">
         <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-card p-8 sm:p-10">
-          {loading ? (
+          {loading && (
             <div className="flex items-center justify-center gap-3 py-16 text-navy/40">
               <Loader2 size={20} className="animate-spin" /> Chargement…
             </div>
-          ) : (
+          )}
+
+          {!loading && error && (
+            <div className="flex flex-col items-center gap-3 py-16 text-navy/40">
+              <AlertCircle size={32} className="opacity-40" />
+              <p className="text-sm">Impossible de charger le contenu.</p>
+            </div>
+          )}
+
+          {!loading && !error && !content && (
+            <div className="flex flex-col items-center gap-3 py-16 text-navy/40">
+              <Cookie size={36} className="opacity-30" />
+              <p className="text-sm font-medium">Contenu non disponible.</p>
+              <p className="text-xs text-center max-w-xs">
+                La politique de cookies n'a pas encore été configurée. Veuillez revenir ultérieurement.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && content && (
             <div className="space-y-0.5">
               {renderMarkdown(content)}
             </div>

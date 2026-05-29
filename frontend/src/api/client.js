@@ -134,6 +134,14 @@ export const publicSettingsApi = {
   get: () => api.get('/public-settings'),
 }
 
+export const faqsApi = {
+  list: () => api.get('/faqs'),
+}
+
+export const marketInsightsApi = {
+  get: () => api.get('/market-insights'),
+}
+
 export const newsletterApi = {
   subscribe:   (email, source = 'footer') => api.post('/newsletter/subscribe', { email, source }),
   unsubscribe: (email)                    => api.post('/newsletter/unsubscribe', { email }),

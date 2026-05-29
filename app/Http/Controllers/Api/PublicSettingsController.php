@@ -19,7 +19,7 @@ class PublicSettingsController extends Controller
         'maintenance_mode', 'maintenance_message',
         'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
         // Content pages
-        'page_about', 'page_privacy', 'page_terms',
+        'page_about', 'page_privacy', 'page_terms', 'page_cookie',
         // Footer & SEO
         'footer_description', 'seo_keywords', 'google_site_verification',
         // Cookie consent
@@ -42,7 +42,7 @@ class PublicSettingsController extends Controller
         'maintenance_message', 'coming_soon_message',
         'cookie_consent_title', 'cookie_consent_message',
         'cookie_accept_text', 'cookie_decline_text',
-        'page_about', 'page_privacy', 'page_terms',
+        'page_about', 'page_privacy', 'page_terms', 'page_cookie',
         'mobile_app_title', 'mobile_app_subtitle', 'mobile_app_description',
     ];
 

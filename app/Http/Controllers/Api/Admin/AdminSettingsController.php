@@ -31,7 +31,7 @@ class AdminSettingsController extends Controller
         'maintenance_mode', 'maintenance_message',
         'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
         // Content pages
-        'page_about', 'page_privacy', 'page_terms',
+        'page_about', 'page_privacy', 'page_terms', 'page_cookie',
         // Footer & SEO
         'footer_description', 'seo_keywords', 'google_site_verification',
         // Cookie consent

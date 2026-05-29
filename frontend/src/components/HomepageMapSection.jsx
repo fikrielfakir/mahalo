@@ -92,16 +92,16 @@ function MapPropertyCard({ property, isActive, onClick, cardRef, showViewLink })
     <div
       ref={cardRef}
       onClick={onClick}
-      className="group flex overflow-hidden rounded-2xl bg-white cursor-pointer transition-all duration-200 hover:shadow-md"
+      className="group flex overflow-hidden rounded-2xl bg-white cursor-pointer transition-all duration-200 hover:shadow-md items-stretch"
       style={{
-        minHeight: 100,
+        minHeight: 110,
         boxShadow: isActive ? '0 6px 20px rgba(115,13,38,0.16)' : '0 2px 8px rgba(115,13,38,0.06)',
         borderLeft: isActive ? '4px solid #BA1932' : '4px solid transparent',
         background: isActive ? 'rgba(186,25,50,0.025)' : 'white',
       }}
     >
       {/* Image */}
-      <div className="relative shrink-0 overflow-hidden" style={{ width: 96 }}>
+      <div className="relative shrink-0 overflow-hidden self-stretch" style={{ width: 96 }}>
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
@@ -131,20 +131,20 @@ function MapPropertyCard({ property, isActive, onClick, cardRef, showViewLink })
       </div>
 
       {/* Details */}
-      <div className="flex-1 min-w-0 px-2.5 py-2.5 flex flex-col justify-between">
+      <div className="flex-1 min-w-0 px-2.5 pt-2.5 pb-3 flex flex-col gap-1">
         <p className="font-bold text-[12px] leading-snug line-clamp-2 group-hover:text-[#BA1932] transition-colors"
           style={{ color: '#1a2035', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
           {property.name}
         </p>
 
         {(property.city?.name || property.location) && (
-          <div className="flex items-center gap-1 mt-0.5" style={{ color: 'rgba(115,13,38,0.5)' }}>
+          <div className="flex items-center gap-1" style={{ color: 'rgba(115,13,38,0.5)' }}>
             <MapPin size={9} style={{ color: '#BA1932', flexShrink: 0 }} />
             <span className="text-[11px] truncate">{property.city?.name || property.location}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-2.5 mt-1">
+        <div className="flex items-center gap-2.5">
           {property.number_bedroom > 0 && (
             <span className="flex items-center gap-0.5 text-[10px] font-medium" style={{ color: 'rgba(115,13,38,0.5)' }}>
               <Bed size={9} style={{ color: '#BA1932', opacity: 0.75 }} /> {property.number_bedroom} ch
@@ -162,7 +162,7 @@ function MapPropertyCard({ property, isActive, onClick, cardRef, showViewLink })
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-1.5 pt-1.5"
+        <div className="flex items-center justify-between mt-auto pt-1.5"
           style={{ borderTop: '1px solid rgba(115,13,38,0.06)' }}>
           <span className="font-bold text-[12px]" style={{ color: '#BA1932', fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
             {formatPrice(property.price, isRent)}
@@ -258,7 +258,7 @@ export default function HomepageMapSection() {
   )
 
   return (
-    <section className="py-16 lg:py-24 bg-gray-50/60">
+    <section className="py-16 lg:py-24 bg-gray-50/60" style={{ position: 'relative', zIndex: 0 }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -341,13 +341,13 @@ export default function HomepageMapSection() {
 
         {/* ── MOBILE LAYOUT ── */}
         <div className="lg:hidden flex flex-col gap-3 rounded-3xl overflow-hidden"
-          style={{ boxShadow: '0 8px 40px rgba(115,13,38,0.10)' }}>
+          style={{ boxShadow: '0 8px 40px rgba(115,13,38,0.10)', position: 'relative', zIndex: 0 }}>
 
           {/* Mobile count header */}
           {!loading && properties.length > 0 && (
             <div className="bg-white px-4 pt-4 pb-2">
               <p className="text-sm font-bold text-gray-800">
-                <span style={{ color: '#BA1932' }}>{properties.length} {properties.length}</span>{' '}
+                <span style={{ color: '#BA1932' }}>{properties.length}</span>{' '}
                 {t('home.mapSection.found', 'biens trouvés')}
               </p>
               <p className="text-[11px] text-gray-400 mt-0.5">
@@ -420,13 +420,23 @@ export default function HomepageMapSection() {
 
         {/* ── DESKTOP LAYOUT ── */}
         <div className="hidden lg:flex gap-4 rounded-3xl overflow-hidden"
-          style={{ boxShadow: '0 8px 40px rgba(115,13,38,0.10)', minHeight: 520, position: 'relative', zIndex: 0 }}>
+          style={{
+            boxShadow: '0 8px 40px rgba(115,13,38,0.10)',
+            minHeight: 520,
+            position: 'relative',
+            zIndex: 0,
+          }}>
 
           {/* Scrollable property list */}
           <div
             ref={listRef}
             className="w-80 xl:w-96 shrink-0 bg-white overflow-y-auto overflow-x-hidden flex flex-col gap-2.5 p-3"
-            style={{ maxHeight: 'calc(100vh - 280px)', scrollbarWidth: 'thin', scrollbarColor: '#BA193240 transparent', WebkitOverflowScrolling: 'touch' }}
+            style={{
+              maxHeight: 'calc(100vh - 280px)',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#BA193240 transparent',
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
@@ -453,7 +463,7 @@ export default function HomepageMapSection() {
           </div>
 
           {/* Map */}
-          <div className="flex-1">
+          <div className="flex-1" style={{ position: 'relative', zIndex: 0 }}>
             <MapView
               markers={markers}
               activeId={activeId}

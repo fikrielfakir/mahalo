@@ -222,11 +222,11 @@ export default function PropertyDetail() {
     return (
       <div className="min-h-screen bg-surface">
         <SEOHead
-          title="Property Details in Morocco"
+          title={slug ? `${slug.replace(/-/g, ' ')}` : 'Property in Morocco'}
           breadcrumbs={[
             { name: 'Home', url: '/' },
             { name: 'Properties', url: '/properties' },
-            { name: 'Property Details', url: '' },
+            { name: slug || 'Property Details', url: '' },
           ]}
         />
         <Navbar />
@@ -275,6 +275,7 @@ export default function PropertyDetail() {
         })()}
         canonical={`${window.location.origin}/properties/${property.slug?.key ?? property.id}`}
         ogType="article"
+        alternateLocales
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',

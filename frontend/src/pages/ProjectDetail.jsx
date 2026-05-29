@@ -76,11 +76,11 @@ export default function ProjectDetail() {
     return (
       <div className="min-h-screen bg-surface">
         <SEOHead
-          title="Real Estate Project in Morocco"
+          title={slug ? `${slug.replace(/-/g, ' ')}` : 'Real Estate Project in Morocco'}
           breadcrumbs={[
             { name: 'Home', url: '/' },
             { name: 'New Projects', url: '/projects' },
-            { name: 'Project Details', url: '' },
+            { name: slug || 'Project Details', url: '' },
           ]}
         />
         <Navbar />
@@ -126,6 +126,7 @@ export default function ProjectDetail() {
         })()}
         canonical={`${window.location.origin}/projects/${project.slug?.key ?? project.id}`}
         ogType="article"
+        alternateLocales
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',

@@ -7,28 +7,14 @@ import Footer from '../components/Footer'
 import { propertiesApi, agentsApi, publicSettingsApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
 
-const TEAM = [
-  { name: 'Youssef Alami',      role: 'Founder & CEO',           city: 'Casablanca', initial: 'Y', color: '#730D26' },
-  { name: 'Fatima Zahra',       role: 'Head of Operations',       city: 'Rabat',       initial: 'F', color: '#BA1932' },
-  { name: 'Karim Benchekroun',  role: 'Chief Technology Officer', city: 'Casablanca', initial: 'K', color: '#1a3a5c' },
-  { name: 'Nadia El Fassi',     role: 'Head of Agent Network',    city: 'Marrakech',   initial: 'N', color: '#8b6914' },
-  { name: 'Omar Tazi',          role: 'Head of Sales',            city: 'Tangier',     initial: 'O', color: '#132d52' },
-  { name: 'Salma Haddad',       role: 'Marketing Director',       city: 'Casablanca',  initial: 'S', color: '#a07a3c' },
-]
-
 function fmtCount(n, fallback) {
   if (n == null) return fallback
   if (n >= 1000) return `${(n / 1000).toFixed(0)}K+`
   return `${n}+`
 }
 
-const DEFAULT_ABOUT = `Fondée à Casablanca, Mahalo a été créée sur une conviction simple : trouver votre propriété idéale devrait être excitant, pas stressant. Nous mettons en relation acheteurs, locataires et investisseurs avec les meilleurs biens immobiliers du Maroc.
-
-Nous avons démarré parce que nous avons vécu de première main à quel point le marché immobilier marocain était fragmenté et opaque. Trouver une propriété nécessitait des dizaines d'appels, des visites d'annonces peu fiables, et une incertitude interminable sur les prix.
-
-Aujourd'hui, nous avons construit une plateforme où chaque annonce est vérifiée, chaque agent est certifié, et chaque transaction est accompagnée par notre équipe — du premier contact jusqu'à la remise des clés.`
-
 function renderAboutText(text) {
+  if (!text) return null
   return text.split('\n\n').filter(p => p.trim()).map((para, i) => (
     <p key={i} className="text-navy/60 leading-relaxed mb-5">{para.trim()}</p>
   ))
@@ -39,7 +25,9 @@ export default function About() {
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
-  const [aboutText, setAboutText]             = useState(DEFAULT_ABOUT)
+  const [aboutText, setAboutText]             = useState('')
+  const [team, setTeam]                       = useState([])
+  const [loading, setLoading]                 = useState(true)
 
   useEffect(() => {
     propertiesApi.list({ per_page: 1 })
@@ -55,8 +43,19 @@ export default function About() {
       .catch(() => {})
 
     publicSettingsApi.get()
-      .then(r => { if (r?.data?.page_about) setAboutText(r.data.page_about) })
+      .then(r => {
+        if (r?.data?.page_about) setAboutText(r.data.page_about)
+        if (r?.data?.team_members) {
+          try {
+            const parsed = typeof r.data.team_members === 'string'
+              ? JSON.parse(r.data.team_members)
+              : r.data.team_members
+            if (Array.isArray(parsed)) setTeam(parsed)
+          } catch {}
+        }
+      })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const VALUES = [
@@ -137,7 +136,10 @@ export default function About() {
               {t('about.missionTitle')}
             </h2>
             <div className="mb-8">
-              {renderAboutText(aboutText)}
+              {loading
+                ? <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-4 bg-navy/10 rounded animate-pulse" />)}</div>
+                : renderAboutText(aboutText)
+              }
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/properties" className="btn-navy flex items-center gap-2">
@@ -193,31 +195,35 @@ export default function About() {
       </section>
 
       {/* Team */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="section-label mb-3">{t('about.theTeam')}</p>
-            <h2 className="text-3xl font-bold text-navy">{t('about.meetPeople')}</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
-            {TEAM.map(({ name, role, city, initial, color }) => (
-              <div key={name} className="text-center group">
-                <div
-                  className="w-full aspect-square rounded-3xl flex items-center justify-center text-white font-bold text-3xl mb-4 group-hover:scale-105 transition-transform duration-300 shadow-card"
-                  style={{ background: color }}
-                >
-                  {initial}
+      {team.length > 0 && (
+        <section className="py-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-14">
+              <p className="section-label mb-3">{t('about.theTeam')}</p>
+              <h2 className="text-3xl font-bold text-navy">{t('about.meetPeople')}</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+              {team.map(({ name, role, city, initial, color }, idx) => (
+                <div key={idx} className="text-center group">
+                  <div
+                    className="w-full aspect-square rounded-3xl flex items-center justify-center text-white font-bold text-3xl mb-4 group-hover:scale-105 transition-transform duration-300 shadow-card"
+                    style={{ background: color || '#730D26' }}
+                  >
+                    {initial || (name ? name[0].toUpperCase() : '?')}
+                  </div>
+                  <div className="text-navy font-bold text-sm">{name}</div>
+                  <div className="text-navy/50 text-xs mt-0.5">{role}</div>
+                  {city && (
+                    <div className="flex items-center justify-center gap-1 text-navy/35 text-xs mt-1">
+                      <MapPin size={10} /> {city}
+                    </div>
+                  )}
                 </div>
-                <div className="text-navy font-bold text-sm">{name}</div>
-                <div className="text-navy/50 text-xs mt-0.5">{role}</div>
-                <div className="flex items-center justify-center gap-1 text-navy/35 text-xs mt-1">
-                  <MapPin size={10} /> {city}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-20 px-6 bg-navy">

@@ -32,6 +32,8 @@ class AdminSettingsController extends Controller
         'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
         // Content pages
         'page_about', 'page_privacy', 'page_terms', 'page_cookie',
+        // About page team members (JSON)
+        'team_members',
         // Footer & SEO
         'footer_description', 'seo_keywords', 'google_site_verification',
         // Cookie consent

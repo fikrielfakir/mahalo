@@ -8,6 +8,7 @@ import {
   Server, Send, Lock, AlertCircle, KeyRound, Copy, ExternalLink,
   Wrench, Clock, FileText, Shield, Info, RefreshCw, Map, Tag, Cookie,
   Languages, Bot, ChevronDown, Smartphone, Building2, Wand2, Film, Code2,
+  Plus, Trash2, GripVertical, Users,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -75,6 +76,7 @@ const DEFAULTS = {
   page_privacy: '',
   page_terms: '',
   page_cookie: '',
+  team_members: '[]',
   footer_description: 'Premium real estate experiences in Morocco. Discover your dream home with our curated selection of exceptional properties.',
   seo_keywords: 'immobilier maroc, real estate morocco, appartement vendre maroc, villa maroc, casablanca immobilier',
   google_site_verification: '',
@@ -873,7 +875,17 @@ export default function SettingsPage() {
               <FormField label={t('admin.settings.fieldAboutContent')} hint={isLocaleMode ? t('admin.settings.leaveEmptyDefault') : t('admin.settings.fieldAboutContentHint')}>
                 <textarea value={isLocaleMode ? tv('page_about') : form.page_about} onChange={isLocaleMode ? tf('page_about') : f('page_about')} rows={10} placeholder={isLocaleMode ? (transDefaults.page_about || form.page_about || t('admin.settings.leaveEmptyDefault') + '…') : "Fondée à Casablanca, Mahalo a été créée sur une conviction simple…\n\nNous avons démarré parce que…"} className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y" />
               </FormField>
-              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+              {!isLocaleMode && (
+                <div className="mt-2">
+                  <div className="border-t border-gray-100 pt-4">
+                    <TeamMembersEditor
+                      value={form.team_members}
+                      onChange={(val) => setForm(p => ({ ...p, team_members: val }))}
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-gray-400 flex items-center gap-1.5 mt-2">
                 <span>{t('admin.settings.previewOn')}</span>
                 <a href="/about" target="_blank" rel="noreferrer" className="text-[#BA1932] hover:underline inline-flex items-center gap-1">/about <ExternalLink size={10} /></a>
               </p>
@@ -1352,6 +1364,110 @@ function LogoField({ label, hint, value, field, uploading, onChange, uploadLabel
       </div>
       <input ref={ref} type="file" accept="image/*" className="hidden" onChange={e => e.target.files[0] && onChange(field, e.target.files[0])} />
       {value && <p className="text-xs text-gray-400 truncate">{value}</p>}
+    </div>
+  )
+}
+
+const PRESET_COLORS = [
+  '#730D26','#BA1932','#1a3a5c','#132d52','#8b6914','#a07a3c',
+  '#2d6a4f','#1b4332','#6b21a8','#1e40af','#374151','#0f172a',
+]
+
+function TeamMembersEditor({ value, onChange }) {
+  const parseMembers = (v) => {
+    try { return JSON.parse(v || '[]') } catch { return [] }
+  }
+  const members = parseMembers(value)
+
+  const update = (list) => onChange(JSON.stringify(list))
+
+  const addMember = () => {
+    update([...members, { name: '', role: '', city: '', initial: '', color: '#730D26' }])
+  }
+
+  const removeMember = (idx) => {
+    update(members.filter((_, i) => i !== idx))
+  }
+
+  const updateMember = (idx, field, val) => {
+    const next = members.map((m, i) => i === idx ? { ...m, [field]: val } : m)
+    update(next)
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+          <Users size={13} /> Team Members ({members.length})
+        </p>
+        <button type="button" onClick={addMember}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#730D26] hover:bg-[#BA1932] text-white transition-colors">
+          <Plus size={13} /> Add Member
+        </button>
+      </div>
+
+      {members.length === 0 && (
+        <div className="text-center py-8 text-sm text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
+          No team members yet. Click "Add Member" to get started.
+        </div>
+      )}
+
+      {members.map((m, idx) => (
+        <div key={idx} className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+              <GripVertical size={13} /> Member #{idx + 1}
+            </span>
+            <button type="button" onClick={() => removeMember(idx)}
+              className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Full Name">
+              <Input value={m.name} onChange={e => updateMember(idx, 'name', e.target.value)} placeholder="Youssef Alami" />
+            </FormField>
+            <FormField label="Role / Title">
+              <Input value={m.role} onChange={e => updateMember(idx, 'role', e.target.value)} placeholder="Founder & CEO" />
+            </FormField>
+            <FormField label="City">
+              <Input value={m.city} onChange={e => updateMember(idx, 'city', e.target.value)} placeholder="Casablanca" />
+            </FormField>
+            <FormField label="Initial (avatar letter)">
+              <Input
+                value={m.initial}
+                onChange={e => updateMember(idx, 'initial', e.target.value.slice(0, 2))}
+                placeholder="Y"
+                maxLength={2}
+              />
+            </FormField>
+          </div>
+          <FormField label="Avatar Color">
+            <div className="flex items-center gap-2 flex-wrap">
+              {PRESET_COLORS.map(c => (
+                <button key={c} type="button"
+                  onClick={() => updateMember(idx, 'color', c)}
+                  className={`w-7 h-7 rounded-lg border-2 transition-all ${m.color === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
+                  style={{ background: c }}
+                />
+              ))}
+              <input
+                type="color"
+                value={m.color || '#730D26'}
+                onChange={e => updateMember(idx, 'color', e.target.value)}
+                className="w-7 h-7 rounded-lg cursor-pointer border border-gray-200"
+                title="Custom color"
+              />
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm"
+                style={{ background: m.color || '#730D26' }}
+              >
+                {m.initial || (m.name ? m.name[0]?.toUpperCase() : '?')}
+              </div>
+            </div>
+          </FormField>
+        </div>
+      ))}
     </div>
   )
 }

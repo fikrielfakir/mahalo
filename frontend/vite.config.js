@@ -21,27 +21,7 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/sitemap.xml': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/sitemap-static.xml': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/sitemap-properties.xml': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/sitemap-projects.xml': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/sitemap-agents.xml': {
+      '^/sitemap.*\\.xml$': {
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,

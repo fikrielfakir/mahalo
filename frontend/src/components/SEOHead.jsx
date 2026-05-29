@@ -1,9 +1,12 @@
 import { Helmet } from 'react-helmet-async'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
-const SITE = 'Mahalo Real Estate'
-const SITE_URL = 'https://mahalo.ma'
+export const SITE     = 'Mahalo Real Estate'
+export const SITE_URL = 'https://mahalo.ma'
+
 const DEFAULT_DESC = "Discover premium properties across Morocco's most prestigious neighborhoods. Browse apartments, villas, and real estate projects in Casablanca, Marrakech, Rabat, Tanger, Agadir and more."
+
+const HREFLANG_LOCALES = ['en', 'fr', 'es', 'ar']
 
 function buildBreadcrumbLd(breadcrumbs) {
   return {
@@ -31,12 +34,17 @@ export default function SEOHead({
   noIndex = false,
   jsonLd = null,
   breadcrumbs = null,
+  alternateLocales = false,
+  hreflangs = null,
 }) {
-  const siteSettings = useSiteSettings()
+  const siteSettings     = useSiteSettings()
   const resolvedKeywords = keywords || siteSettings.seo_keywords || null
   const verificationCode = siteSettings.google_site_verification || null
 
-  const fullTitle = title ? `${title} | ${SITE}` : SITE
+  const fullTitle     = title ? `${title} | ${SITE}` : (siteSettings.seo_title || SITE)
+  const resolvedDesc  = description === DEFAULT_DESC
+    ? (siteSettings.seo_description || description)
+    : description
   const resolvedRobots = noIndex ? 'noindex,nofollow' : (robots || 'index,follow')
 
   const breadcrumbLd = breadcrumbs?.length ? buildBreadcrumbLd(breadcrumbs) : null
@@ -50,17 +58,28 @@ export default function SEOHead({
     combinedLd = jsonLd || breadcrumbLd
   }
 
+  const resolvedHreflangs = hreflangs
+    || (alternateLocales && canonical
+        ? [
+            ...HREFLANG_LOCALES.map(l => ({ hreflang: l, href: canonical })),
+            { hreflang: 'x-default', href: canonical },
+          ]
+        : null)
+
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+      <meta name="description" content={resolvedDesc} />
       {resolvedKeywords && <meta name="keywords" content={resolvedKeywords} />}
       <meta name="robots" content={resolvedRobots} />
       {verificationCode && <meta name="google-site-verification" content={verificationCode} />}
       {canonical && <link rel="canonical" href={canonical} />}
+      {resolvedHreflangs?.map(({ hreflang, href }) => (
+        <link key={hreflang} rel="alternate" hreflang={hreflang} href={href} />
+      ))}
 
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={resolvedDesc} />
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={SITE} />
       {canonical && <meta property="og:url" content={canonical} />}
@@ -70,7 +89,7 @@ export default function SEOHead({
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={resolvedDesc} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
 
       {combinedLd && (

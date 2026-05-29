@@ -158,10 +158,26 @@ async function start() {
   const app = express()
   app.use(compression())
 
-  if (process.env.PRERENDER_TOKEN) {
+  // Resolve Prerender token: prefer DB setting, fall back to env var
+  let prerenderToken = process.env.PRERENDER_TOKEN || ''
+  try {
+    const settingsRes = await fetch(`${INTERNAL_API}/api/v1/public-settings`, { signal: AbortSignal.timeout(5000) })
+    if (settingsRes.ok) {
+      const json = await settingsRes.json()
+      const dbToken = json?.data?.prerender_token
+      if (dbToken) prerenderToken = dbToken
+    }
+  } catch {
+    // fall back to env var
+  }
+
+  if (prerenderToken) {
     const prerender = require('prerender-node')
-    prerender.set('prerenderToken', process.env.PRERENDER_TOKEN)
+    prerender.set('prerenderToken', prerenderToken)
     app.use(prerender)
+    console.log(`  ➜  Prerender.io: enabled (token source: ${process.env.PRERENDER_TOKEN === prerenderToken ? 'env' : 'database'})`)
+  } else {
+    console.log('  ➜  Prerender.io: disabled (no token configured)')
   }
 
   const laravelProxy = createProxyMiddleware({

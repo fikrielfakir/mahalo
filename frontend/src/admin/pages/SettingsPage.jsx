@@ -102,6 +102,7 @@ const DEFAULTS = {
   hero_bg_type: 'image',
   custom_head_code: '',
   custom_body_code: '',
+  prerender_token: '',
 }
 
 const GROQ_MODELS = [
@@ -594,6 +595,36 @@ export default function SettingsPage() {
                 </>
               )}
             </Section>
+
+            {!isLocaleMode && (
+              <Section title="Prerender.io" icon={Globe}>
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 flex items-start gap-3 mb-2">
+                  <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+                  <div>
+                    <p className="font-semibold mb-1">Prerender Token</p>
+                    <p className="text-xs text-blue-700">
+                      Enter your Prerender.io token to enable pre-rendered HTML for search engine bots. Find it in your Prerender.io dashboard under <strong>Security and Access → Prerender Token</strong>.
+                    </p>
+                  </div>
+                </div>
+                <FormField label="Prerender Token" hint="Used by the Express server to serve pre-rendered pages to crawlers.">
+                  <div className="relative">
+                    <KeyRound size={14} className="absolute left-3.5 top-3 text-gray-400" />
+                    <Input
+                      value={form.prerender_token}
+                      onChange={f('prerender_token')}
+                      placeholder="Enter your Prerender.io token…"
+                      className="pl-9 font-mono text-sm"
+                    />
+                  </div>
+                </FormField>
+                {form.prerender_token && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-600 font-medium mt-1">
+                    <CheckCircle size={13} /> Token configured — restart the Express server to apply changes.
+                  </div>
+                )}
+              </Section>
+            )}
 
             {!isLocaleMode && (
               <Section title={t('admin.settings.sectionSitemap')} icon={Map}>

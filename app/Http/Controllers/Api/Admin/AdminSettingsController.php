@@ -52,6 +52,8 @@ class AdminSettingsController extends Controller
         'hero_bg_url', 'hero_bg_type',
         // Code injection
         'custom_head_code', 'custom_body_code',
+        // Prerender.io
+        'prerender_token',
     ];
 
     public function show(): JsonResponse

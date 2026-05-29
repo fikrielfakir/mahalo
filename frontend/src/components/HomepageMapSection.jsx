@@ -200,12 +200,15 @@ export default function HomepageMapSection() {
   const listRef                        = useRef(null)
 
   useEffect(() => {
-    citiesApi.list()
-      .then(res => {
-        const data = Array.isArray(res?.data) ? res.data : []
-        setCities(data)
-      })
-      .catch(() => setCities([]))
+    const locale = i18n.language?.split('-')[0] || 'fr'
+    import('../api/client').then(({ default: api }) => {
+      api.get('/cities', { headers: { 'Accept-Language': locale } })
+        .then(res => {
+          const data = Array.isArray(res?.data) ? res.data : []
+          setCities(data)
+        })
+        .catch(() => setCities([]))
+    })
   }, [i18n.language])
 
   const fetchProperties = useCallback(async () => {

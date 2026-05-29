@@ -1604,7 +1604,14 @@
       "found": "biens trouvés",
       "onMap": "sur carte",
       "total": "au total",
-      "noResults": "Aucun bien avec données de localisation."
+      "noResults": "Aucun bien avec données de localisation.",
+      "type": {
+        "sale": "Acheter",
+        "rent": "Louer"
+      },
+      "city": {
+        "all": "Tous"
+      }
     }
   }
 }

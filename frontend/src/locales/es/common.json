@@ -1604,7 +1604,14 @@
       "found": "encontradas",
       "onMap": "en mapa",
       "total": "en total",
-      "noResults": "No se encontraron propiedades con datos de ubicación."
+      "noResults": "No se encontraron propiedades con datos de ubicación.",
+      "type": {
+        "sale": "Comprar",
+        "rent": "Alquilar"
+      },
+      "city": {
+        "all": "Todos"
+      }
     }
   }
 }

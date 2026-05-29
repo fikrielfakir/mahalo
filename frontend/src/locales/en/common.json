@@ -1604,7 +1604,14 @@
       "found": "found",
       "onMap": "on map",
       "total": "total",
-      "noResults": "No properties with location data found."
+      "noResults": "No properties with location data found.",
+      "type": {
+        "sale": "Buy",
+        "rent": "Rent"
+      },
+      "city": {
+        "all": "All"
+      }
     }
   }
 }

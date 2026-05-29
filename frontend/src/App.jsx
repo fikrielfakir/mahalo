@@ -32,6 +32,10 @@ const About              = lazy(() => import('./pages/About'))
 const ListProperty       = lazy(() => import('./pages/ListProperty'))
 const PrivacyPage        = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage          = lazy(() => import('./pages/TermsPage'))
+const CookiePolicyPage   = lazy(() => import('./pages/CookiePolicyPage'))
+const ContactPage        = lazy(() => import('./pages/ContactPage'))
+const HelpCenterPage     = lazy(() => import('./pages/HelpCenterPage'))
+const MarketInsightsPage = lazy(() => import('./pages/MarketInsightsPage'))
 const PropertyMatchPage  = lazy(() => import('./pages/PropertyMatchPage'))
 
 // ── Lazy: Error / utility pages ─────────────────────────────────
@@ -194,6 +198,10 @@ export default function App() {
                       {/* Legal / content pages */}
                       <Route path="/privacy"                element={<PrivacyPage />} />
                       <Route path="/terms"                  element={<TermsPage />} />
+                      <Route path="/cookie-policy"          element={<CookiePolicyPage />} />
+                      <Route path="/contact"                element={<ContactPage />} />
+                      <Route path="/help"                   element={<HelpCenterPage />} />
+                      <Route path="/market-insights"        element={<MarketInsightsPage />} />
 
                       {/* Error pages — directly accessible */}
                       <Route path="/403"                    element={<ForbiddenPage />} />

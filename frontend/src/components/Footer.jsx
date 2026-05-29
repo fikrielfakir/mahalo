@@ -28,13 +28,13 @@ export default function Footer() {
     ],
     [t('footer.resources')]: [
       { label: t('footer.listProperty'),   to: '/list-property' },
-      { label: t('footer.helpCenter'),     to: '#' },
-      { label: t('footer.marketInsights'), to: '#' },
+      { label: t('footer.helpCenter'),     to: '/help' },
+      { label: t('footer.marketInsights'), to: '/market-insights' },
     ],
     [t('footer.legal')]:     [
-      { label: t('footer.termsOfUse'),    to: '#' },
-      { label: t('footer.privacy'),       to: '#' },
-      { label: t('footer.cookiePolicy'),  to: '#' },
+      { label: t('footer.termsOfUse'),    to: '/terms' },
+      { label: t('footer.privacy'),       to: '/privacy' },
+      { label: t('footer.cookiePolicy'),  to: '/cookie-policy' },
     ],
   }
 

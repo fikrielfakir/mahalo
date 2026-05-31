@@ -1,0 +1,50 @@
+ I have a complete picture of the issue. Let me check the rewriteStorageUrl function more carefully:Read rewriteStorageUrl in fullRead rewriteStorageUrl in fullI found the root cause. Here's a clear breakdown of the bug and the fix:
+
+Root Cause
+The issue is in server.mjs — specifically in the bot/crawler path (which is what Facebook, WhatsApp, etc. use when scraping og:image).
+The else branch for non-property/project pages (like the homepage) correctly builds globalOgHeadTags with the OG image, but then never injects it into the template. The variable is built but silently discarded:
+js// server.mjs ~line 292
+let globalOgHeadTags = ''
+if (siteOgImage) {
+  // ...builds globalOgHeadTags...
+  globalOgHeadTags = buildOgTags(origin, globalOgMeta)
+  template = template.replace(...)  // strips old tags ✅
+}
+// ❌ globalOgHeadTags is NEVER injected into the template!
+try {
+  const render = isProd  // continues without using it
+Compare this to the if (ogMeta) branch above it, which correctly calls buildOgTags and stores the result in headTags, which is then injected. The else branch forgot to assign to headTags.
+
+The Fix
+In server.mjs, change this:Get the exact context around the bug for the fixGet the exact context around the bug for the fixActually the SSR path does assign headTags = globalOgHeadTags || ssrHeadTags — so that part is fine. The real issue is in the non-SSR fallback and more importantly the SiteSettingsContext on the client side. Let me check the context:Check how og_image_url is loaded in contextCheck how og_image_url is loaded in contextNow I have the complete picture. There are actually two separate issues:
+
+The Real Problems
+Problem 1 — SSR bot path uses a 60-second stale cache (main culprit for Facebook/WhatsApp)
+In server.mjs, getSiteSettings() caches for 60 seconds. When you upload a new OG image in the admin, the server keeps serving the old (or empty) og_image_url to crawlers for up to a minute. But worse: if the server was started before the OG image was ever uploaded, the cache might have an empty value and bots that scrape right after upload still get the old cached value.
+Problem 2 — The og_image_url value stored is a localhost URL in production
+In AdminSettingsController.php, the image URL is stored using Laravel's Storage::disk('public')->url($path) — which on many server setups returns http://localhost/storage/og/.... The rewriteStorageUrl() function in server.mjs is supposed to fix this for bots, but it only runs when a bot request comes in, and only rewrites correctly if req.get('host') returns the real domain. If the app is behind a proxy without trust proxy set, req.protocol could return http instead of https, or the hostname could be wrong.
+
+The Fix
+Fix 1 — server.mjs: Clear the settings cache when needed (or reduce TTL)
+The safest fix is to force a fresh fetch after the OG image is uploaded, or reduce the TTL. But the real fix is to ensure the stored URL is already the correct public URL.
+Fix 2 (root fix) — AdminSettingsController.php: Store the full public URL correctly
+Open app/Http/Controllers/Api/Admin/AdminSettingsController.php and find the uploadOgImage method. Change it to store the URL using the request's actual origin instead of relying on Storage::url():
+php// BEFORE (stores localhost URL on some setups):
+$url = Storage::disk('public')->url($path);
+
+// AFTER (uses APP_URL from .env, which should be https://mahalo.ma):
+$url = config('app.url') . '/storage/' . $path;
+Make sure your .env has:
+APP_URL=https://mahalo.ma
+Fix 3 — server.mjs: Also reset the cache after an OG image upload
+Since the frontend server caches settings for 60s, add a cache-bust. The cleanest approach — add one line after the bot detection block to invalidate the cache when the admin API is called. Or simply reduce SETTINGS_TTL_MS:
+js// server.mjs line ~9
+// Change from:
+const SETTINGS_TTL_MS  = 60_000 // re-fetch every 60 s
+
+// Change to:
+const SETTINGS_TTL_MS  = 0 // always fresh (or set to 5_000 for 5s)
+
+Summary
+WhereWhat's wrongFixAdminSettingsController.phpStorage::url() stores http://localhost/storage/...Use config('app.url') . '/storage/' . $path.envAPP_URL may not be set to https://mahalo.maSet APP_URL=https://mahalo.maserver.mjs60s cache means bots see stale/empty OG image URL after uploadSet SETTINGS_TTL_MS = 0 or restart the Node server after uploading the OG image
+The Facebook debugger showing no og:image is because it's a bot → hits the SSR path in server.mjs → siteSettings.og_image_url is either empty (cached from before upload) or is http://localhost/... which Facebook refuses to load.

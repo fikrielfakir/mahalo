@@ -18,7 +18,7 @@ const INTERNAL_API = 'http://localhost:8000'
 
 let cachedSiteSettings = null
 let settingsCachedAt   = 0
-const SETTINGS_TTL_MS  = 60_000 // re-fetch every 60 s
+const SETTINGS_TTL_MS  = 0 // always fetch fresh — bots must see up-to-date OG image
 
 async function getSiteSettings() {
   const now = Date.now()

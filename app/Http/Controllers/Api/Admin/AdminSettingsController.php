@@ -292,7 +292,10 @@ EOT;
         $ext  = $file->getClientOriginalExtension();
         $name = Str::uuid() . '.' . $ext;
         $path = $file->storeAs('og', $name, 'public');
-        $url  = Storage::disk('public')->url($path);
+
+        // Use APP_URL from .env so the stored URL is always the public domain
+        // (e.g. https://mahalo.ma/storage/og/...) not http://localhost/storage/...
+        $url  = rtrim(config('app.url'), '/') . '/storage/' . $path;
 
         DB::table('site_settings')->updateOrInsert(
             ['key' => 'og_image_url'],

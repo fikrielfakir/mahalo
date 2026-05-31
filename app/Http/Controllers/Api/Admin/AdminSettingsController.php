@@ -283,38 +283,37 @@ EOT;
     }
 
     public function uploadOgImage(Request $request): JsonResponse
-    {
-        $request->validate([
-            'file' => 'required|file|image|max:5120',
-        ]);
+{
+    $request->validate([
+        'file' => 'required|file|image|max:5120',
+    ]);
 
-        $file = $request->file('file');
-        $ext  = $file->getClientOriginalExtension();
-        $name = Str::uuid() . '.' . $ext;
-        $path = $file->storeAs('og', $name, 'public');
+    $file = $request->file('file');
+    $ext  = $file->getClientOriginalExtension();
+    $name = Str::uuid() . '.' . $ext;
 
-        // Use APP_URL from .env so the stored URL is always the public domain
-        // (e.g. https://mahalo.ma/storage/og/...) not http://localhost/storage/...
-        $url  = rtrim(config('app.url'), '/') . '/storage/' . $path;
-
-        // Also copy to public/og-image.png — a fixed, extension-bearing path that
-        // Facebook/WhatsApp can always fetch as a real image (no redirect needed).
-        $absolutePath = Storage::disk('public')->path($path);
-        $publicDest   = public_path('og-image.png');
-        @copy($absolutePath, $publicDest);
-
-        DB::table('site_settings')->updateOrInsert(
-            ['key' => 'og_image_url'],
-            ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
-        );
-
-        return response()->json([
-            'url'     => $url,
-            'path'    => $path,
-            'error'   => false,
-            'message' => 'OG image uploaded.',
-        ]);
+    // Save directly to /files/public_html/storage/og/ (already web-accessible on your server)
+    $destDir = public_path('storage/og');
+    if (!is_dir($destDir)) {
+        mkdir($destDir, 0755, true);
     }
+    $file->move($destDir, $name);
+
+    // This URL will be https://mahalo.ma/storage/og/filename.jpg
+    $url = rtrim(config('app.url'), '/') . '/storage/og/' . $name;
+
+    DB::table('site_settings')->updateOrInsert(
+        ['key' => 'og_image_url'],
+        ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
+    );
+
+    return response()->json([
+        'url'     => $url,
+        'path'    => 'og/' . $name,
+        'error'   => false,
+        'message' => 'OG image uploaded.',
+    ]);
+}
 
     public function uploadHeroBg(Request $request): JsonResponse
     {

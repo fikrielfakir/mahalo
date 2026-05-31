@@ -1,257 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
-import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, MapPin, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { propertiesApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
-/* ─────────────────────────── Price helpers ──────────────────────────── */
-const bedroomOptions = ['Any', '1', '2', '3', '4', '5+']
-
 const CAT_SLUG = {
   'Apartment': 'apartment', 'Villa': 'villa', 'Condo': 'condo',
   'House': 'house', 'Land': 'land', 'Commercial Property': 'commercial',
   'Riad': 'riad', 'Office': 'office',
-}
-const PRICE_MAX = 10_000_000
-const SNAP_POINTS = [0, 300_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 7_000_000, 10_000_000]
-
-const snapPrice = (val) =>
-  SNAP_POINTS.reduce((a, b) => (Math.abs(b - val) < Math.abs(a - val) ? b : a))
-
-const fmtPrice = (val) => {
-  if (val <= 0) return '0'
-  if (val >= PRICE_MAX) return '10M+'
-  if (val >= 1_000_000) {
-    const m = val / 1_000_000
-    return `${Number.isInteger(m) ? m : m.toFixed(1)}M`
-  }
-  return `${Math.round(val / 1_000)}K`
-}
-
-/* ─────────────────── Single draggable handle circle ─────────────────── */
-function PriceHandle({ pct, label, onPointerDown }) {
-  const SIZE = 18
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      style={{
-        position: 'absolute',
-        left: `${pct}%`,
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: SIZE, height: SIZE,
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)',
-        border: '2.5px solid white',
-        boxShadow: '0 2px 10px rgba(186,25,50,0.55)',
-        cursor: 'grab',
-        zIndex: 2,
-        touchAction: 'none',
-        userSelect: 'none',
-      }}
-    >
-      <span style={{
-        position: 'absolute',
-        bottom: SIZE + 5,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        fontSize: 10,
-        fontWeight: 800,
-        color: '#730D26',
-        whiteSpace: 'nowrap',
-        pointerEvents: 'none',
-        lineHeight: 1,
-        letterSpacing: '0.02em',
-      }}>
-        {label}
-      </span>
-    </div>
-  )
-}
-
-/* ────────────────────── Dual-handle range slider ────────────────────── */
-function PriceRangeSlider({ minVal, maxVal, onChange }) {
-  const { t } = useTranslation()
-  const trackRef = useRef(null)
-  const stateRef = useRef({ minVal, maxVal })
-  stateRef.current = { minVal, maxVal }
-
-  const pct = (val) => (val / PRICE_MAX) * 100
-
-  const getValFromClientX = (clientX) => {
-    const rect = trackRef.current.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    return snapPrice(ratio * PRICE_MAX)
-  }
-
-  const startDrag = (handle) => (e) => {
-    e.preventDefault()
-    /* Stop the event reaching the fixed backdrop so the popover stays open */
-    e.stopPropagation()
-
-    const onMove = (ev) => {
-      if (!trackRef.current) return
-      const clientX = ev.clientX ?? ev.touches?.[0]?.clientX
-      const val = getValFromClientX(clientX)
-      const { minVal: mn, maxVal: mx } = stateRef.current
-      if (handle === 'min' && val < mx) onChange(val, mx)
-      if (handle === 'max' && val > mn) onChange(mn, val)
-    }
-
-    const onUp = () => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
-  }
-
-  const minPct = pct(minVal)
-  const maxPct = pct(maxVal)
-  const minLabel = minVal === 0 ? t('filters.minPrice') : fmtPrice(minVal)
-  const maxLabel = maxVal >= PRICE_MAX ? t('filters.maxPrice') : fmtPrice(maxVal)
-
-  return (
-    <div style={{ position: 'relative', paddingTop: 32, paddingBottom: 6 }}>
-      <div
-        ref={trackRef}
-        style={{
-          position: 'relative',
-          height: 4,
-          background: 'rgba(115,13,38,0.15)',
-          borderRadius: 2,
-          margin: '0 10px',
-        }}
-      >
-        {/* Filled range */}
-        <div style={{
-          position: 'absolute',
-          left: `${minPct}%`,
-          right: `${100 - maxPct}%`,
-          top: 0, bottom: 0,
-          background: 'linear-gradient(90deg, #730D26, #BA1932)',
-          borderRadius: 2,
-        }} />
-        <PriceHandle pct={minPct} label={minLabel} onPointerDown={startDrag('min')} />
-        <PriceHandle pct={maxPct} label={maxLabel} onPointerDown={startDrag('max')} />
-      </div>
-    </div>
-  )
-}
-
-/* ──────────── Price zone trigger + portal popover ───────────────────── */
-function PriceZone({ minPrice, maxPrice, onChange, label, isMobile = false }) {
-  const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
-
-  const isDefault = minPrice === 0 && maxPrice === PRICE_MAX
-  const summary = isDefault
-    ? t('filters.anyPrice')
-    : `${fmtPrice(minPrice)} – ${fmtPrice(maxPrice)}`
-
-  const openPopover = useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      setPos({
-        top:  rect.bottom + 10,
-        left: isMobile ? rect.left : rect.left + rect.width / 2,
-      })
-    }
-    setOpen(true)
-  }, [isMobile])
-
-  useEffect(() => {
-    if (!open) return
-    const handleScroll = () => setOpen(false)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [open])
-
-  const toggle = () => (open ? setOpen(false) : openPopover())
-
-  /* Popover panel (rendered via portal at body level — no z-index stacking issues) */
-  const popover = open
-    ? createPortal(
-        <>
-          {/* Transparent backdrop — click it to close */}
-          <div
-            style={{ position: 'fixed', inset: 0, zIndex: 9990 }}
-            onPointerDown={() => setOpen(false)}
-          />
-
-          {/* Floating panel */}
-          <div
-            style={{
-              position: 'fixed',
-              top: pos.top,
-              left: pos.left,
-              transform: isMobile ? 'none' : 'translateX(-50%)',
-              width: isMobile ? 'calc(100vw - 32px)' : 300,
-              zIndex: 9999,
-              background: 'white',
-              borderRadius: 18,
-              boxShadow: '0 20px 60px rgba(115,13,38,0.22), 0 4px 16px rgba(0,0,0,0.10)',
-              padding: '18px 22px 22px',
-            }}
-            /* Prevent backdrop from catching pointer events inside panel */
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(115,13,38,0.38)' }}>
-              {label}
-            </div>
-            <PriceRangeSlider minVal={minPrice} maxVal={maxPrice} onChange={onChange} />
-
-            {/* Reset link */}
-            {!isDefault && (
-              <button
-                onClick={() => onChange(0, PRICE_MAX)}
-                className="mt-1 text-[10px] font-semibold"
-                style={{ color: '#BA1932', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                {t('filters.anyPrice')} ×
-              </button>
-            )}
-          </div>
-        </>,
-        document.body
-      )
-    : null
-
-  return (
-    <>
-      {/* Trigger (inline in search bar) */}
-      <div
-        ref={triggerRef}
-        onClick={toggle}
-        className="flex items-center gap-2 cursor-pointer"
-        style={isMobile
-          ? { padding: '14px 20px', borderBottom: '1px solid rgba(115,13,38,0.07)' }
-          : { padding: '0 16px', height: '100%', flex: '1.4 1 140px', minWidth: 0 }
-        }
-      >
-        <DollarSign size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>
-            {label}
-          </div>
-          <div className="text-sm font-semibold truncate" style={{ color: isDefault ? 'rgba(115,13,38,0.45)' : '#730D26' }}>
-            {summary}
-          </div>
-        </div>
-        <ChevronDown
-          size={12}
-          style={{ color: '#BA1932', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-        />
-      </div>
-
-      {popover}
-    </>
-  )
 }
 
 /* ═══════════════════════════════ Hero ═══════════════════════════════════ */
@@ -267,9 +24,6 @@ export default function Hero() {
   const [activeTabKey, setActiveTabKey] = useState('buy')
   const [location, setLocation]         = useState('')
   const [propertyType, setPropertyType] = useState('')
-  const [minPrice, setMinPrice]         = useState(0)
-  const [maxPrice, setMaxPrice]         = useState(PRICE_MAX)
-  const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
   const navigate = useNavigate()
 
@@ -286,15 +40,10 @@ export default function Hero() {
     const params = new URLSearchParams()
     if (activeTabKey === 'rent')     params.set('type', 'rent')
     else if (activeTabKey === 'buy') params.set('type', 'sale')
-    if (location)           params.set('search', location)
-    if (propertyType)       params.set('category_id', propertyType)
-    if (bedrooms !== 'Any') params.set('number_bedroom', bedrooms)
-    if (minPrice > 0)           params.set('min_price', minPrice)
-    if (maxPrice < PRICE_MAX)   params.set('max_price', maxPrice)
+    if (location)     params.set('search', location)
+    if (propertyType) params.set('category_id', propertyType)
     navigate(`${activeTabKey === 'projects' ? '/projects' : '/properties'}?${params.toString()}`)
   }
-
-  const handlePriceChange = (mn, mx) => { setMinPrice(mn); setMaxPrice(mx) }
 
   const divider = { borderRight: '1px solid rgba(115,13,38,0.08)' }
 
@@ -414,30 +163,6 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Bedrooms */}
-              <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ ...divider, flex: '1 1 90px', minWidth: 0 }}>
-                <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
-                  <select
-                    value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}
-                    style={{ display: 'block', width: '100%', fontSize: 13, fontWeight: 600, background: 'transparent', outline: 'none', border: 'none', color: '#730D26', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', padding: 0 }}
-                  >
-                    {bedroomOptions.map((b) => (
-                      <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : `${b} ${t('property.beds')}`}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Price — portal popover, no overflow clipping issues */}
-              <div style={{ ...divider, display: 'flex', alignItems: 'stretch', flex: '1.4 1 140px', minWidth: 0 }}>
-                <PriceZone
-                  minPrice={minPrice} maxPrice={maxPrice}
-                  onChange={handlePriceChange} label={t('hero.priceRange')}
-                />
-              </div>
-
               {/* Search button */}
               <div className="p-1.5 shrink-0 flex items-center">
                 <button
@@ -472,37 +197,17 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Type + Bedrooms row */}
-              <div className="flex">
-                <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)', borderRight: '1px solid rgba(115,13,38,0.07)' }}>
-                  <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
-                    <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
-                      <option value="">{t('filters.allTypes')}</option>
-                      {categories.map((c) => <option key={c.id} value={c.id}>{t('filters.' + CAT_SLUG[c.name], c.name)}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2.5 flex-1 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
-                  <BedDouble size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.bedrooms')}</div>
-                    <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
-                      {bedroomOptions.map((b) => (
-                        <option key={b} value={b}>{b === 'Any' ? t('filters.anyBedrooms') : b}</option>
-                      ))}
-                    </select>
-                  </div>
+              {/* Type row */}
+              <div className="flex items-center gap-2.5 flex-1 px-5 py-3.5" style={{ borderBottom: '1px solid rgba(115,13,38,0.07)' }}>
+                <SlidersHorizontal size={14} style={{ color: '#BA1932', flexShrink: 0 }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(115,13,38,0.38)' }}>{t('hero.type')}</div>
+                  <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="w-full text-xs font-semibold bg-transparent outline-none cursor-pointer appearance-none" style={{ color: '#730D26' }}>
+                    <option value="">{t('filters.allTypes')}</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{t('filters.' + CAT_SLUG[c.name], c.name)}</option>)}
+                  </select>
                 </div>
               </div>
-
-              {/* Price */}
-              <PriceZone
-                minPrice={minPrice} maxPrice={maxPrice}
-                onChange={handlePriceChange} label={t('hero.priceRange')}
-                isMobile
-              />
 
               {/* Search button */}
               <div className="flex justify-end p-2 pr-3">

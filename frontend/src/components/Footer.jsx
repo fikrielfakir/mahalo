@@ -231,7 +231,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 py-6"
           style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-          <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Agenz'}. {t('footer.rights')}.</p>
+          <p className="text-white/25 text-sm">© {year} {settings.site_name || 'Mahalo'}. {t('footer.rights')}.</p>
         </div>
       </div>
     </footer>

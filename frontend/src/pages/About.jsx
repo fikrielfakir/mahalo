@@ -154,7 +154,7 @@ export default function About() {
             <div className="rounded-3xl overflow-hidden aspect-[4/3] shadow-card-hover">
               <img
                 src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80"
-                alt="Agenz office"
+                alt="Mahalo office"
                 className="w-full h-full object-cover"
               />
             </div>

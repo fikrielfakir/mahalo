@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 
 const FALLBACK_NUMBER = '212600000000'
-const WA_MESSAGE = "Hello! I found your listing on Agenz and I'd like to know more."
+const WA_MESSAGE = "Hello! I found your listing on Mahalo and I'd like to know more."
 
 function getWaNumber() {
   try {

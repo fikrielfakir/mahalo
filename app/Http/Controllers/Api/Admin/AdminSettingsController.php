@@ -328,8 +328,10 @@ EOT;
 
         $file = $request->file('file');
 
-        // Save to the frontend's public directory so Vite can serve it at FRONTEND_URL/og-image.png
-        $frontendPublic = base_path('frontend/public');
+        // FRONTEND_PUBLIC_PATH must point to the directory the web server serves as the frontend root.
+        // Dev (Replit):  /home/runner/workspace/frontend/public
+        // Production:    /home/u183518729/domains/mahalo.ma/public_html
+        $frontendPublic = rtrim(env('FRONTEND_PUBLIC_PATH', base_path('frontend/public')), '/');
         $file->move($frontendPublic, 'og-image.png');
 
         $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');

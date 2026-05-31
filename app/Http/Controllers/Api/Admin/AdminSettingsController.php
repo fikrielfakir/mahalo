@@ -333,11 +333,12 @@ EOT;
         $file->move($frontendPublic, 'og-image.png');
 
         $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-        $url = $frontendUrl . '/og-image.png';
+        $baseUrl = $frontendUrl . '/og-image.png';
+        $url = $baseUrl . '?v=' . time();
 
         DB::table('site_settings')->updateOrInsert(
             ['key' => 'og_image_url'],
-            ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
+            ['value' => $baseUrl, 'updated_at' => now(), 'created_at' => now()]
         );
 
         return response()->json([

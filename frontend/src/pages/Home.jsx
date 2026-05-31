@@ -116,7 +116,6 @@ export default function Home() {
         title="Trouvez Votre Bien au Maroc"
         description="La principale plateforme immobilière du Maroc. Des milliers de propriétés vérifiées à Casablanca, Marrakech, Rabat, Tanger, Agadir et partout au Maroc."
         canonical={SITE_URL}
-        ogImage={`${SITE_URL}/og-image.png`}
         jsonLd={jsonLd}
       />
       <Navbar transparent />

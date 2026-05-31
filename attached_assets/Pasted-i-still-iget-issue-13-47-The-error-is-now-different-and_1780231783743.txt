@@ -1,0 +1,53 @@
+i still iget issue
+
+13:47
+The error is now different and more specific:
+
+"https://mahalo.ma/og-image could not be processed as an image because it has an invalid content type"
+
+This means the og:image URL is now being found — but it's pointing to https://mahalo.ma/og-image which is a React route, not an actual image file. Let me find where this comes from:
+
+
+Find hardcoded og-image route
+Find hardcoded og-image route
+Found it. Line 119 of Home.jsx:
+
+js
+ogImage={`${SITE_URL}/og-image.png`}
+This is a hardcoded fallback in the Home page that overrides the admin-uploaded image. Let me check the full context:
+
+
+Check Home.jsx SEOHead usage
+Check Home.jsx SEOHead usage
+There's the exact bug. Home.jsx hardcodes ogImage={${SITE_URL}/og-image.png}, which:
+
+Overrides whatever is uploaded in the admin (siteSettings.og_image_url never gets used for the homepage)
+Points to https://mahalo.ma/og-image.png — a file that doesn't exist, so Facebook gets an HTML page back instead of an image → "invalid content type"
+The Fix
+In src/pages/Home.jsx, remove the hardcoded ogImage prop so SEOHead falls back to siteSettings.og_image_url from the context (which is exactly what it's designed to do):
+
+jsx
+// BEFORE ❌
+<SEOHead
+  title="Trouvez Votre Bien au Maroc"
+  description="La principale plateforme immobilière du Maroc. ..."
+  canonical={SITE_URL}
+  ogImage={`${SITE_URL}/og-image.png`}   // ← DELETE THIS LINE
+  jsonLd={jsonLd}
+/>
+
+// AFTER ✅
+<SEOHead
+  title="Trouvez Votre Bien au Maroc"
+  description="La principale plateforme immobilière du Maroc. ..."
+  canonical={SITE_URL}
+  jsonLd={jsonLd}
+/>
+Then in SEOHead.jsx, the fallback logic already handles it correctly:
+
+js
+const resolvedOgImage = ogImage || siteSettings.og_image_url || null
+//                      ^ undefined  ^ uses admin-uploaded image ✅
+Also check server.mjs — the SSR bot path reads siteSettings.og_image_url directly from the DB (bypassing Home.jsx), so that part is already correct once you fix the stored URL issue from before (making sure APP_URL=https://mahalo.ma is set in .env).
+
+After this one-line fix + rebuild, Facebook's scraper will get the correct image URL.

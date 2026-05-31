@@ -297,6 +297,12 @@ EOT;
         // (e.g. https://mahalo.ma/storage/og/...) not http://localhost/storage/...
         $url  = rtrim(config('app.url'), '/') . '/storage/' . $path;
 
+        // Also copy to public/og-image.png — a fixed, extension-bearing path that
+        // Facebook/WhatsApp can always fetch as a real image (no redirect needed).
+        $absolutePath = Storage::disk('public')->path($path);
+        $publicDest   = public_path('og-image.png');
+        @copy($absolutePath, $publicDest);
+
         DB::table('site_settings')->updateOrInsert(
             ['key' => 'og_image_url'],
             ['value' => $url, 'updated_at' => now(), 'created_at' => now()]

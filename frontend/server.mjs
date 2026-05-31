@@ -207,6 +207,7 @@ async function start() {
       path.startsWith('/api/') ||
       path.startsWith('/storage/') ||
       path === '/og-image' ||
+      path === '/og-image.png' ||
       path === '/sitemap.xml' ||
       path === '/sitemap-static.xml' ||
       path === '/sitemap-properties.xml' ||
@@ -278,7 +279,7 @@ async function start() {
         const rawOgImage = siteSettings.og_image_url || ''
         const siteOgImage = rawOgImage
           ? rewriteStorageUrl(rawOgImage, origin)
-          : `${origin}/og-image`
+          : `${origin}/og-image.png`
 
         let headTags = ''
         if (ogMeta) {

@@ -8,18 +8,20 @@ Route::get('/', function () {
     return response()->json(['status' => 'Homzen Real Estate API', 'version' => '1.0']);
 });
 
-// Stable canonical OG image URL — bots always hit this; it redirects to the
-// currently configured image so the URL in og:image never needs to change.
-Route::get('/og-image', function () {
-    $url = DB::table('site_settings')->where('key', 'og_image_url')->value('value');
-    if ($url) {
-        return redirect()->away($url, 301);
+// Serve public/og-image.png — real image file copied here on every admin upload.
+// Both /og-image and /og-image.png are handled so either URL works for bots.
+$ogImageHandler = function () {
+    $file = public_path('og-image.png');
+    if (file_exists($file)) {
+        return response()->file($file, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=3600']);
     }
-    // Fallback: 1×1 transparent GIF so the tag is always valid
+    // Fallback: 1×1 transparent GIF so the tag is never a broken link
     return response(base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), 200)
         ->header('Content-Type', 'image/gif')
         ->header('Cache-Control', 'no-cache');
-});
+};
+Route::get('/og-image',     $ogImageHandler);
+Route::get('/og-image.png', $ogImageHandler);
 
 Route::get('/sitemap.xml',              [SitemapController::class, 'index']);
 Route::get('/sitemap-static.xml',       [SitemapController::class, 'staticPages']);

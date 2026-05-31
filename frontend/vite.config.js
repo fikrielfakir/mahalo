@@ -31,6 +31,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/og-image': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/og-image.png': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

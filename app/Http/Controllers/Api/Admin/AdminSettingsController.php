@@ -14,44 +14,82 @@ use Illuminate\Support\Str;
 class AdminSettingsController extends Controller
 {
     private const ALLOWED = [
-        'site_name', 'tagline', 'contact_email', 'contact_phone',
-        'address', 'whatsapp_number',
-        'facebook_url', 'instagram_url', 'twitter_url', 'youtube_url',
-        'seo_title', 'seo_description', 'google_analytics_id',
-        'currency', 'properties_per_page',
+        'site_name',
+        'tagline',
+        'contact_email',
+        'contact_phone',
+        'address',
+        'whatsapp_number',
+        'facebook_url',
+        'instagram_url',
+        'twitter_url',
+        'youtube_url',
+        'seo_title',
+        'seo_description',
+        'google_analytics_id',
+        'currency',
+        'properties_per_page',
         // Theme
-        'primary_color', 'secondary_color', 'accent_color',
-        'logo_url', 'footer_logo_url',
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'logo_url',
+        'footer_logo_url',
         // Watermark
-        'watermark_enabled', 'watermark_logo_url', 'watermark_position',
-        'watermark_opacity', 'watermark_size',
+        'watermark_enabled',
+        'watermark_logo_url',
+        'watermark_position',
+        'watermark_opacity',
+        'watermark_size',
         // Google OAuth
-        'google_client_id', 'google_client_secret',
+        'google_client_id',
+        'google_client_secret',
         // Site mode
-        'maintenance_mode', 'maintenance_message',
-        'coming_soon_mode', 'coming_soon_date', 'coming_soon_message',
+        'maintenance_mode',
+        'maintenance_message',
+        'coming_soon_mode',
+        'coming_soon_date',
+        'coming_soon_message',
         // Content pages
-        'page_about', 'page_privacy', 'page_terms', 'page_cookie',
+        'page_about',
+        'page_privacy',
+        'page_terms',
+        'page_cookie',
         // About page team members (JSON)
         'team_members',
         // Footer & SEO
-        'footer_description', 'seo_keywords', 'google_site_verification',
+        'footer_description',
+        'seo_keywords',
+        'google_site_verification',
         // Cookie consent
-        'cookie_consent_enabled', 'cookie_consent_title', 'cookie_consent_message',
-        'cookie_accept_text', 'cookie_decline_text', 'cookie_policy_url',
+        'cookie_consent_enabled',
+        'cookie_consent_title',
+        'cookie_consent_message',
+        'cookie_accept_text',
+        'cookie_decline_text',
+        'cookie_policy_url',
         // AI
-        'groq_api_key', 'ai_model',
+        'groq_api_key',
+        'ai_model',
         // Mobile App Section
-        'mobile_app_enabled', 'mobile_app_title', 'mobile_app_subtitle',
-        'mobile_app_description', 'mobile_app_appstore_url', 'mobile_app_playstore_url',
+        'mobile_app_enabled',
+        'mobile_app_title',
+        'mobile_app_subtitle',
+        'mobile_app_description',
+        'mobile_app_appstore_url',
+        'mobile_app_playstore_url',
         // Property type & projects toggles
-        'sale_enabled', 'rent_enabled', 'projects_enabled',
+        'sale_enabled',
+        'rent_enabled',
+        'projects_enabled',
         // List Property submission
         'list_property_auto_approve',
         // Hero background
-        'hero_bg_url', 'hero_bg_type',
+        'hero_bg_url',
+        'hero_bg_type',
         // Code injection
-        'custom_head_code', 'custom_body_code',
+        'custom_head_code',
+        'custom_body_code',
         // Prerender.io
         'prerender_token',
         // OG Image
@@ -81,7 +119,7 @@ class AdminSettingsController extends Controller
             );
         }
 
-        $rows     = DB::table('site_settings')->get();
+        $rows = DB::table('site_settings')->get();
         $settings = [];
         foreach ($rows as $row) {
             $settings[$row->key] = $row->value;
@@ -135,31 +173,31 @@ class AdminSettingsController extends Controller
                     ->withHeaders(['Content-Type' => 'application/json'])
                     ->post('https://api.prerender.io/recache', [
                         'prerenderToken' => $token,
-                        'url'            => $url,
+                        'url' => $url,
                     ]);
 
                 $results[] = [
-                    'url'     => $url,
-                    'ok'      => $res->successful(),
-                    'status'  => $res->status(),
+                    'url' => $url,
+                    'ok' => $res->successful(),
+                    'status' => $res->status(),
                     'message' => $res->successful() ? 'Queued for recache' : ('Error ' . $res->status()),
                 ];
             } catch (\Throwable $e) {
                 $results[] = [
-                    'url'     => $url,
-                    'ok'      => false,
-                    'status'  => 0,
+                    'url' => $url,
+                    'ok' => false,
+                    'status' => 0,
                     'message' => $e->getMessage(),
                 ];
             }
         }
 
         $succeeded = count(array_filter($results, fn($r) => $r['ok']));
-        $failed    = count($results) - $succeeded;
+        $failed = count($results) - $succeeded;
 
         return response()->json([
-            'data'    => ['results' => $results, 'succeeded' => $succeeded, 'failed' => $failed],
-            'error'   => false,
+            'data' => ['results' => $results, 'succeeded' => $succeeded, 'failed' => $failed],
+            'error' => false,
             'message' => "{$succeeded} URL(s) queued for recache" . ($failed > 0 ? ", {$failed} failed" : '') . '.',
         ]);
     }
@@ -171,7 +209,7 @@ class AdminSettingsController extends Controller
 
         $engines = [
             'Google' => "https://www.google.com/ping?sitemap={$sitemapUrl}",
-            'Bing'   => "https://www.bing.com/ping?sitemap={$sitemapUrl}",
+            'Bing' => "https://www.bing.com/ping?sitemap={$sitemapUrl}",
         ];
 
         $results = [];
@@ -185,8 +223,8 @@ class AdminSettingsController extends Controller
         }
 
         return response()->json([
-            'data'    => ['results' => $results, 'sitemap_url' => $siteUrl . '/sitemap.xml'],
-            'error'   => false,
+            'data' => ['results' => $results, 'sitemap_url' => $siteUrl . '/sitemap.xml'],
+            'error' => false,
             'message' => 'Sitemap pinged.',
         ]);
     }
@@ -195,11 +233,11 @@ class AdminSettingsController extends Controller
     {
         $request->validate([
             'locale' => 'required|string|in:en,fr,es,ar',
-            'keys'   => 'required|array|min:1',
+            'keys' => 'required|array|min:1',
         ]);
 
         $locale = $request->input('locale');
-        $keys   = $request->input('keys');
+        $keys = $request->input('keys');
 
         $localeNames = [
             'en' => 'English',
@@ -215,7 +253,7 @@ class AdminSettingsController extends Controller
             ->toArray();
 
         $apiKey = $settings['groq_api_key'] ?? env('GROQ_API_KEY', '');
-        $model  = ($settings['ai_model'] ?? '') ?: 'llama-3.3-70b-versatile';
+        $model = ($settings['ai_model'] ?? '') ?: 'llama-3.3-70b-versatile';
 
         if (!$apiKey) {
             return response()->json(['error' => true, 'message' => 'Groq API key is not configured. Please set it in the AI tab.'], 422);
@@ -234,12 +272,12 @@ EOT;
             $response = Http::withToken($apiKey)
                 ->timeout(30)
                 ->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model'       => $model,
-                    'messages'    => [
+                    'model' => $model,
+                    'messages' => [
                         ['role' => 'system', 'content' => "You are a professional translator. Translate text into {$localeName}. Return only valid JSON with the same keys."],
-                        ['role' => 'user',   'content' => $prompt],
+                        ['role' => 'user', 'content' => $prompt],
                     ],
-                    'max_tokens'  => 1000,
+                    'max_tokens' => 1000,
                     'temperature' => 0.3,
                 ]);
 
@@ -247,10 +285,10 @@ EOT;
                 return response()->json(['error' => true, 'message' => 'Groq API error: ' . $response->body()], 500);
             }
 
-            $raw     = $response->json('choices.0.message.content', '');
+            $raw = $response->json('choices.0.message.content', '');
             $cleaned = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
             $cleaned = preg_replace('/\s*```$/', '', $cleaned);
-            $result  = json_decode($cleaned, true);
+            $result = json_decode($cleaned, true);
 
             if (!is_array($result)) {
                 return response()->json(['error' => true, 'message' => 'Could not parse translation response.'], 500);
@@ -269,51 +307,44 @@ EOT;
         ]);
 
         $file = $request->file('file');
-        $ext  = $file->getClientOriginalExtension();
+        $ext = $file->getClientOriginalExtension();
         $name = Str::uuid() . '.' . $ext;
         $path = $file->storeAs('logos', $name, 'public');
-        $url  = Storage::disk('public')->url($path);
+        $url = Storage::disk('public')->url($path);
 
         return response()->json([
-            'url'     => $url,
-            'path'    => $path,
-            'error'   => false,
+            'url' => $url,
+            'path' => $path,
+            'error' => false,
             'message' => 'Logo uploaded.',
         ]);
     }
 
     public function uploadOgImage(Request $request): JsonResponse
-{
-    $request->validate([
-        'file' => 'required|file|image|max:5120',
-    ]);
+    {
+        $request->validate([
+            'file' => 'required|file|image|max:5120',
+        ]);
 
-    $file = $request->file('file');
-    $ext  = $file->getClientOriginalExtension();
-    $name = Str::uuid() . '.' . $ext;
+        $file = $request->file('file');
+        $file->move(public_path(), 'og-image.png');
 
-    // Save directly to /files/public_html/storage/og/ (already web-accessible on your server)
-    $destDir = public_path('storage/og');
-    if (!is_dir($destDir)) {
-        mkdir($destDir, 0755, true);
+        // Use FRONTEND_URL, not APP_URL — API is on api.mahalo.ma, image must be on mahalo.ma
+        $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+        $url = $frontendUrl . '/og-image.png';
+
+        DB::table('site_settings')->updateOrInsert(
+            ['key' => 'og_image_url'],
+            ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
+        );
+
+        return response()->json([
+            'url' => $url,
+            'path' => 'og-image.png',
+            'error' => false,
+            'message' => 'OG image uploaded.',
+        ]);
     }
-    $file->move($destDir, $name);
-
-    // This URL will be https://mahalo.ma/storage/og/filename.jpg
-    $url = rtrim(config('app.url'), '/') . '/storage/og/' . $name;
-
-    DB::table('site_settings')->updateOrInsert(
-        ['key' => 'og_image_url'],
-        ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
-    );
-
-    return response()->json([
-        'url'     => $url,
-        'path'    => 'og/' . $name,
-        'error'   => false,
-        'message' => 'OG image uploaded.',
-    ]);
-}
 
     public function uploadHeroBg(Request $request): JsonResponse
     {
@@ -321,21 +352,21 @@ EOT;
             'file' => 'required|file|max:102400|mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg,video/quicktime',
         ]);
 
-        $file  = $request->file('file');
-        $mime  = $file->getMimeType();
+        $file = $request->file('file');
+        $mime = $file->getMimeType();
         $isVideo = str_starts_with($mime, 'video/');
-        $type  = $isVideo ? 'video' : 'image';
-        $ext   = $file->getClientOriginalExtension() ?: ($isVideo ? 'mp4' : 'jpg');
-        $name  = Str::uuid() . '.' . $ext;
-        $path  = $file->storeAs('hero', $name, 'public');
-        $url   = Storage::disk('public')->url($path);
+        $type = $isVideo ? 'video' : 'image';
+        $ext = $file->getClientOriginalExtension() ?: ($isVideo ? 'mp4' : 'jpg');
+        $name = Str::uuid() . '.' . $ext;
+        $path = $file->storeAs('hero', $name, 'public');
+        $url = Storage::disk('public')->url($path);
 
-        DB::table('site_settings')->updateOrInsert(['key' => 'hero_bg_url'],  ['value' => $url,  'updated_at' => now(), 'created_at' => now()]);
+        DB::table('site_settings')->updateOrInsert(['key' => 'hero_bg_url'], ['value' => $url, 'updated_at' => now(), 'created_at' => now()]);
         DB::table('site_settings')->updateOrInsert(['key' => 'hero_bg_type'], ['value' => $type, 'updated_at' => now(), 'created_at' => now()]);
 
         return response()->json([
-            'url'   => $url,
-            'type'  => $type,
+            'url' => $url,
+            'type' => $type,
             'error' => false,
             'message' => 'Hero background uploaded.',
         ]);

@@ -1665,5 +1665,30 @@
       "seoTitle": "Cookie Policy — Mahalo",
       "seoDesc": "Discover how Mahalo Real Estate uses cookies to improve your experience."
     }
+  },
+  "marketInsights": {
+    "seoTitle": "Market Insights — Mahalo Immobilier",
+    "seoDesc": "Discover Moroccan real estate market trends: prices, demand and opportunities by city.",
+    "badge": "Market Insights",
+    "heroTitle": "Real Estate Market Trends",
+    "heroDesc": "Real-time data from our verified listings database.",
+    "loading": "Loading data…",
+    "loadError": "Unable to load market data.",
+    "noData": "No market data available at the moment.",
+    "statActiveListings": "Active listings",
+    "statAvgPrice": "Global avg. price",
+    "statAgents": "Certified agents",
+    "cityTableTitle": "Prices by city",
+    "colCity": "City",
+    "colListings": "Listings",
+    "colAvgPrice": "Avg. price",
+    "colForSale": "For sale",
+    "colForRent": "For rent",
+    "realtimeNote": "Real-time data — approved listings only",
+    "noCityData": "No city data available.",
+    "ctaTitle": "Ready to invest?",
+    "ctaDesc": "Browse our verified listings and find the property that matches your project.",
+    "ctaBtnSale": "View properties for sale",
+    "ctaBtnContact": "Talk to an expert"
   }
 }

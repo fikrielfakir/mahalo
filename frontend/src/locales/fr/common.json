@@ -1665,5 +1665,30 @@
       "seoTitle": "Politique de cookies — Mahalo",
       "seoDesc": "Découvrez comment Mahalo Immobilier utilise les cookies pour améliorer votre expérience."
     }
+  },
+  "marketInsights": {
+    "seoTitle": "Insights marché — Mahalo Immobilier",
+    "seoDesc": "Découvrez les tendances du marché immobilier marocain : prix, demande et opportunités par ville.",
+    "badge": "Insights marché",
+    "heroTitle": "Tendances du marché immobilier",
+    "heroDesc": "Données en temps réel issues de notre base d'annonces vérifiées.",
+    "loading": "Chargement des données…",
+    "loadError": "Impossible de charger les données du marché.",
+    "noData": "Aucune donnée de marché disponible pour le moment.",
+    "statActiveListings": "Annonces actives",
+    "statAvgPrice": "Prix moyen global",
+    "statAgents": "Agents certifiés",
+    "cityTableTitle": "Prix par ville",
+    "colCity": "Ville",
+    "colListings": "Annonces",
+    "colAvgPrice": "Prix moyen",
+    "colForSale": "À vendre",
+    "colForRent": "À louer",
+    "realtimeNote": "Données en temps réel — annonces approuvées uniquement",
+    "noCityData": "Aucune donnée par ville disponible.",
+    "ctaTitle": "Prêt à investir ?",
+    "ctaDesc": "Parcourez nos annonces vérifiées et trouvez le bien qui correspond à votre projet.",
+    "ctaBtnSale": "Voir les biens à vendre",
+    "ctaBtnContact": "Parler à un expert"
   }
 }

@@ -18,7 +18,11 @@ export default function Hero() {
 
   /* Store tab as a stable key — NEVER the translated label.
      This means language switches never lose the active state. */
-  const TAB_KEYS = ['buy', 'rent', 'projects']
+  const TAB_KEYS = [
+    ...(siteSettings.sale_enabled     !== '0' ? ['buy']      : []),
+    ...(siteSettings.rent_enabled     !== '0' ? ['rent']     : []),
+    ...(siteSettings.projects_enabled !== '0' ? ['projects'] : []),
+  ]
   const tabLabels = { buy: t('hero.tabBuy'), rent: t('hero.tabRent'), projects: t('hero.tabProjects') }
 
   const [activeTabKey, setActiveTabKey] = useState('buy')

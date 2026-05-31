@@ -13,8 +13,7 @@ const DEFAULT_CENTER = [31.79, -7.09]
 function fmtPrice(price) {
   if (!price) return null
   const n = parseFloat(price)
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${Math.round(n / 1_000)}K`
+  return n.toLocaleString('en-US')
   return String(n)
 }
 

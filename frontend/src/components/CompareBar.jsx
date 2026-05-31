@@ -16,8 +16,7 @@ function getImg(property) {
 function fmt(price) {
   if (!price) return null
   const n = parseFloat(price)
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M MAD`
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K MAD`
+  return n.toLocaleString('en-US') + ' MAD'
   return `${n.toLocaleString()} MAD`
 }
 

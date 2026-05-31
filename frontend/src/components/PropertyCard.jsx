@@ -129,9 +129,7 @@ function VideoModal({ videos, propertyName, onClose }) {
 function formatPrice(price) {
   if (!price) return null
   const n = parseFloat(price)
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}M MAD`
-  if (n >= 1_000)     return `${Math.round(n / 1_000)}K MAD`
-  return `${n.toLocaleString()} MAD`
+  return n.toLocaleString('en-US') + ' MAD'
 }
 
 function pricePerSqm(price, square) {

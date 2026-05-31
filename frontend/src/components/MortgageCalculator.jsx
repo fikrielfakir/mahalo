@@ -3,8 +3,7 @@ import { Calculator, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 function formatMAD(n) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M MAD`
-  if (n >= 1_000)     return `${Math.round(n).toLocaleString()} MAD`
+  return n.toLocaleString('en-US') + ' MAD'
   return `${Math.round(n)} MAD`
 }
 

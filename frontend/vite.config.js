@@ -31,6 +31,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/og-image': {
+        target: 'http://mahalo.ma',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/og-image.png': {
+        target: 'http://mahalo.ma',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

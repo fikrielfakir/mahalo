@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { authApi } from '../../api/client'
 import logo from '/logo.png'
 
@@ -10,6 +11,8 @@ export default function ForgotPasswordPage() {
   const [sent,    setSent]    = useState(false)
   const [error,   setError]   = useState('')
 
+  const { t } = useTranslation()
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
@@ -18,7 +21,7 @@ export default function ForgotPasswordPage() {
       await authApi.forgotPassword(email)
       setSent(true)
     } catch (err) {
-      setError(err?.response?.data?.message || 'Something went wrong. Please try again.')
+      setError(err?.response?.data?.message || t('errors.generic', 'Something went wrong. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -36,19 +39,19 @@ export default function ForgotPasswordPage() {
             <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={26} className="text-green-500" />
             </div>
-            <h2 className="text-xl font-bold text-navy mb-2">Check your email</h2>
+            <h2 className="text-xl font-bold text-navy mb-2">{t('auth.checkEmailTitle')}</h2>
             <p className="text-navy/55 text-sm mb-6">
-              If an account exists for <span className="font-semibold text-navy">{email}</span>, we've sent a link to reset your password.
+              {t('auth.checkEmailDesc')}
             </p>
             <Link to="/login" className="px-6 py-3 rounded-2xl bg-gold text-white font-bold text-sm hover:bg-gold-dark transition-all inline-block">
-              Back to Sign In
+              {t('auth.backToSignIn')}
             </Link>
           </div>
         ) : (
           <>
-            <h1 className="text-2xl font-bold text-navy mb-1">Forgot password?</h1>
+            <h1 className="text-2xl font-bold text-navy mb-1">{t('auth.forgotPasswordTitle')}</h1>
             <p className="text-navy/50 text-sm mb-7">
-              Enter your email and we'll send you a reset link.
+              {t('auth.forgotPasswordDesc')}
             </p>
 
             {error && (
@@ -60,7 +63,7 @@ export default function ForgotPasswordPage() {
             <form onSubmit={submit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-navy/50 uppercase tracking-wider mb-1.5">
-                  Email Address
+                  {t('auth.emailAddressLabel')}
                 </label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/30" />
@@ -69,7 +72,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="you@example.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 text-sm text-navy focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/15 transition-all"
                   />
                 </div>
@@ -80,7 +83,7 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="w-full py-3.5 rounded-2xl bg-gold hover:bg-gold-dark text-white font-bold text-sm transition-all duration-200 disabled:opacity-60"
               >
-                {loading ? 'Sending…' : 'Send Reset Link'}
+                {loading ? t('auth.sending') : t('auth.sendResetLink')}
               </button>
             </form>
           </>
@@ -88,7 +91,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <Link to="/login" className="mt-6 flex items-center gap-1.5 text-sm text-navy/40 hover:text-navy transition-colors">
-        <ArrowLeft size={14} /> Back to Sign In
+        <ArrowLeft size={14} /> {t('auth.backToSignIn')}
       </Link>
     </div>
   )

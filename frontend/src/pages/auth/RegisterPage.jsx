@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { User, Mail, Lock, Eye, EyeOff, Phone, ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useUserAuth } from '../../context/UserAuthContext'
 import { authApi } from '../../api/client'
 import logo from '/logo.png'
@@ -13,6 +14,7 @@ export default function RegisterPage() {
   const [loading,  setLoading]  = useState(false)
   const [done,     setDone]     = useState(false)
 
+  const { t } = useTranslation()
   const { register, isAuthenticated, loading: authLoading } = useUserAuth()
   const navigate     = useNavigate()
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -25,7 +27,7 @@ export default function RegisterPage() {
       const res = await authApi.googleRedirectUrl()
       window.location.href = res.data.url
     } catch {
-      setError('Failed to connect to Google. Please try again.')
+      setError(t('auth.googleFailed'))
       setGoogleLoading(false)
     }
   }
@@ -43,7 +45,7 @@ export default function RegisterPage() {
     } catch (err) {
       const data = err?.response?.data
       if (data?.errors) setFieldErr(data.errors)
-      else setError(data?.message || 'Registration failed. Please try again.')
+      else setError(data?.message || t('auth.registrationFailed'))
     } finally {
       setLoading(false)
     }
@@ -59,16 +61,16 @@ export default function RegisterPage() {
           <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
             <Mail size={28} className="text-green-500" />
           </div>
-          <h2 className="text-xl font-bold text-navy mb-2">Check your inbox!</h2>
+          <h2 className="text-xl font-bold text-navy mb-2">{t('auth.checkInboxTitle')}</h2>
           <p className="text-navy/55 text-sm mb-6">
-            We've sent a verification link to <span className="font-semibold text-navy">{form.email}</span>.
-            Click the link to activate your account.
+            {t('auth.verificationSentTo')} <span className="font-semibold text-navy">{form.email}</span>.{' '}
+            {t('auth.clickToActivate')}
           </p>
           <button
             onClick={() => navigate('/')}
             className="px-6 py-3 rounded-2xl bg-gold text-white font-bold text-sm hover:bg-gold-dark transition-all"
           >
-            Go to Homepage
+            {t('auth.goToHomepage')}
           </button>
         </div>
       </div>
@@ -84,8 +86,8 @@ export default function RegisterPage() {
       </Link>
 
       <div className="w-full max-w-md bg-white rounded-3xl shadow-card p-8">
-        <h1 className="text-2xl font-bold text-navy mb-1">Create account</h1>
-        <p className="text-navy/50 text-sm mb-7">Join Mahalo and find your dream property</p>
+        <h1 className="text-2xl font-bold text-navy mb-1">{t('auth.createAccountTitle')}</h1>
+        <p className="text-navy/50 text-sm mb-7">{t('auth.joinMahalo')}</p>
 
         {error && (
           <div className="mb-5 px-4 py-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm">
@@ -94,27 +96,27 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Full Name" error={fe('name')}>
+          <Field label={t('auth.fullName')} error={fe('name')}>
             <User size={16} />
-            <input type="text" value={form.name} onChange={f('name')} required placeholder="Your full name"
+            <input type="text" value={form.name} onChange={f('name')} required placeholder={t('auth.fullNamePlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30" />
           </Field>
 
-          <Field label="Email" error={fe('email')}>
+          <Field label={t('auth.email')} error={fe('email')}>
             <Mail size={16} />
-            <input type="email" value={form.email} onChange={f('email')} required placeholder="you@example.com"
+            <input type="email" value={form.email} onChange={f('email')} required placeholder={t('auth.emailPlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30" />
           </Field>
 
-          <Field label="Phone (optional)" error={fe('phone')}>
+          <Field label={t('auth.phoneOptional')} error={fe('phone')}>
             <Phone size={16} />
-            <input type="tel" value={form.phone} onChange={f('phone')} placeholder="+212 600 000 000"
+            <input type="tel" value={form.phone} onChange={f('phone')} placeholder={t('auth.phonePlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30" />
           </Field>
 
-          <Field label="Password" error={fe('password')}>
+          <Field label={t('auth.password')} error={fe('password')}>
             <Lock size={16} />
-            <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={f('password')} required placeholder="Min. 8 characters"
+            <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={f('password')} required placeholder={t('auth.passwordMinPlaceholder')}
               className="w-full pl-10 pr-10 py-3 text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30" />
             <button type="button" onClick={() => setShowPwd(!showPwd)}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy/60">
@@ -122,9 +124,9 @@ export default function RegisterPage() {
             </button>
           </Field>
 
-          <Field label="Confirm Password" error={fe('password_confirmation')}>
+          <Field label={t('auth.confirmPassword')} error={fe('password_confirmation')}>
             <Lock size={16} />
-            <input type="password" value={form.password_confirmation} onChange={f('password_confirmation')} required placeholder="Repeat your password"
+            <input type="password" value={form.password_confirmation} onChange={f('password_confirmation')} required placeholder={t('auth.repeatPasswordPlaceholder')}
               className="w-full pl-10 pr-4 py-3 text-sm font-medium text-navy bg-transparent outline-none placeholder-navy/30" />
           </Field>
 
@@ -132,7 +134,7 @@ export default function RegisterPage() {
             type="submit" disabled={loading}
             className="w-full py-3.5 rounded-2xl bg-gold hover:bg-gold-dark text-white font-bold text-sm transition-all duration-200 disabled:opacity-60 mt-1"
           >
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? t('auth.creatingAccount') : t('auth.signUp')}
           </button>
         </form>
 
@@ -141,7 +143,7 @@ export default function RegisterPage() {
             <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-white px-3 text-xs text-navy/40 font-medium">or sign up with</span>
+            <span className="bg-white px-3 text-xs text-navy/40 font-medium">{t('auth.orSignUpWith')}</span>
           </div>
         </div>
 
@@ -157,19 +159,19 @@ export default function RegisterPage() {
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          {googleLoading ? 'Redirecting…' : 'Sign up with Google'}
+          {googleLoading ? t('auth.redirecting') : t('auth.signUpWithGoogle')}
         </button>
 
         <p className="text-center text-sm text-navy/50 mt-6">
-          Already have an account?{' '}
+          {t('auth.hasAccount')}{' '}
           <Link to="/login" className="text-gold font-semibold hover:text-gold-dark transition-colors">
-            Sign in
+            {t('auth.signIn')}
           </Link>
         </p>
       </div>
 
       <Link to="/" className="mt-6 flex items-center gap-1.5 text-sm text-navy/40 hover:text-navy transition-colors">
-        <ArrowLeft size={14} /> Back to Mahalo
+        <ArrowLeft size={14} /> {t('auth.backToMahalo')}
       </Link>
     </div>
   )

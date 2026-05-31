@@ -54,6 +54,8 @@ class AdminSettingsController extends Controller
         'custom_head_code', 'custom_body_code',
         // Prerender.io
         'prerender_token',
+        // OG Image
+        'og_image_url',
     ];
 
     public function show(): JsonResponse
@@ -277,6 +279,31 @@ EOT;
             'path'    => $path,
             'error'   => false,
             'message' => 'Logo uploaded.',
+        ]);
+    }
+
+    public function uploadOgImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|image|max:5120',
+        ]);
+
+        $file = $request->file('file');
+        $ext  = $file->getClientOriginalExtension();
+        $name = Str::uuid() . '.' . $ext;
+        $path = $file->storeAs('og', $name, 'public');
+        $url  = Storage::disk('public')->url($path);
+
+        DB::table('site_settings')->updateOrInsert(
+            ['key' => 'og_image_url'],
+            ['value' => $url, 'updated_at' => now(), 'created_at' => now()]
+        );
+
+        return response()->json([
+            'url'     => $url,
+            'path'    => $path,
+            'error'   => false,
+            'message' => 'OG image uploaded.',
         ]);
     }
 

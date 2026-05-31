@@ -38,6 +38,8 @@ class PublicSettingsController extends Controller
         'custom_head_code', 'custom_body_code',
         // Prerender.io
         'prerender_token',
+        // OG Image
+        'og_image_url',
     ];
 
     private const TRANSLATABLE_KEYS = [

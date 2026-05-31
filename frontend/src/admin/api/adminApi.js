@@ -141,6 +141,7 @@ export const adminSettings = {
   update:             (data)          => client.put('/admin/settings', data),
   uploadLogo:         (fd)            => client.post('/admin/settings/logo', fd, { headers: { 'Content-Type': undefined } }),
   uploadHeroBg:       (fd)            => client.post('/admin/settings/hero-bg', fd, { headers: { 'Content-Type': undefined } }),
+  uploadOgImage:      (fd)            => client.post('/admin/settings/og-image', fd, { headers: { 'Content-Type': undefined } }),
   getTranslations:    (locale)        => client.get(`/admin/settings/translations/${locale}`),
   updateTranslations: (locale, d)     => client.put(`/admin/settings/translations/${locale}`, d),
   deleteTranslation:  (locale, k)     => client.delete(`/admin/settings/translations/${locale}/${k}`),

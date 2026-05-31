@@ -103,6 +103,7 @@ const DEFAULTS = {
   custom_head_code: '',
   custom_body_code: '',
   prerender_token: '',
+  og_image_url: '',
 }
 
 const GROQ_MODELS = [
@@ -280,6 +281,20 @@ export default function SettingsPage() {
       setForm(p => ({ ...p, hero_bg_url: url, hero_bg_type: type }))
     } catch (err) { alert('Hero background upload failed: ' + (err?.message || 'unknown error')) } finally {
       setUploading(u => ({ ...u, hero_bg: false }))
+    }
+  }
+
+  const uploadOgImage = async (file) => {
+    if (!file) return
+    setUploading(u => ({ ...u, og_image: true }))
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const r = await adminSettings.uploadOgImage(fd)
+      const url = r.url || r.data?.url
+      setForm(p => ({ ...p, og_image_url: url }))
+    } catch (err) { alert('OG image upload failed: ' + (err?.message || 'unknown error')) } finally {
+      setUploading(u => ({ ...u, og_image: false }))
     }
   }
 
@@ -598,6 +613,51 @@ export default function SettingsPage() {
                 </>
               )}
             </Section>
+
+            {!isLocaleMode && (
+              <Section title="Open Graph Image" icon={Globe}>
+                <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 flex items-start gap-3 mb-2">
+                  <Info size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
+                  <div>
+                    <p className="font-semibold mb-1">Default OG Image</p>
+                    <p className="text-xs text-amber-700">
+                      This image appears when someone shares your site on WhatsApp, Facebook, Twitter, or Telegram. Use a 1200×630 px image for best results. Property and project pages use their own images automatically.
+                    </p>
+                  </div>
+                </div>
+                <FormField label="Default OG Image" hint="Recommended: 1200×630 px, JPG or PNG, max 5 MB">
+                  <div className="space-y-3">
+                    {form.og_image_url && (
+                      <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50" style={{ aspectRatio: '1200/630', maxWidth: 480 }}>
+                        <img src={form.og_image_url} alt="OG preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setForm(p => ({ ...p, og_image_url: '' }))}
+                          className="absolute top-2 right-2 bg-white rounded-full shadow p-1 text-gray-500 hover:text-red-600 transition"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+                    )}
+                    <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-gray-300 cursor-pointer text-sm font-medium transition hover:border-[#BA1932] hover:text-[#BA1932] ${uploading.og_image ? 'opacity-60 pointer-events-none' : ''}`}>
+                      {uploading.og_image ? (
+                        <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      )}
+                      {uploading.og_image ? 'Uploading…' : (form.og_image_url ? 'Replace OG Image' : 'Upload OG Image')}
+                      <input type="file" accept="image/*" className="sr-only" onChange={e => e.target.files[0] && uploadOgImage(e.target.files[0])} />
+                    </label>
+                    {form.og_image_url && (
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        OG image configured — will appear on all shared links
+                      </div>
+                    )}
+                  </div>
+                </FormField>
+              </Section>
+            )}
 
             {!isLocaleMode && (
               <Section title="Prerender.io" icon={Globe}>

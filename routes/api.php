@@ -283,6 +283,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/settings', [AdminSettingsController::class, 'update']);
         Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo']);
         Route::post('/settings/hero-bg', [AdminSettingsController::class, 'uploadHeroBg']);
+        Route::post('/settings/og-image', [AdminSettingsController::class, 'uploadOgImage']);
         Route::post('/settings/mail-test', [AdminSettingsController::class, 'testMail']);
         Route::post('/settings/sitemap-ping', [AdminSettingsController::class, 'sitemapPing']);
         Route::post('/settings/prerender-recache', [AdminSettingsController::class, 'prerenderRecache']);

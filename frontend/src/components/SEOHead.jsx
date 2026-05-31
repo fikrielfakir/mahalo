@@ -40,6 +40,7 @@ export default function SEOHead({
   const siteSettings     = useSiteSettings()
   const resolvedKeywords = keywords || siteSettings.seo_keywords || null
   const verificationCode = siteSettings.google_site_verification || null
+  const resolvedOgImage  = ogImage || siteSettings.og_image_url || null
 
   const fullTitle     = title ? `${title} | ${SITE}` : (siteSettings.seo_title || SITE)
   const resolvedDesc  = description === DEFAULT_DESC
@@ -83,14 +84,14 @@ export default function SEOHead({
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={SITE} />
       {canonical && <meta property="og:url" content={canonical} />}
-      {ogImage && <meta property="og:image" content={ogImage} />}
-      {ogImage && <meta property="og:image:width" content="1200" />}
-      {ogImage && <meta property="og:image:height" content="630" />}
+      {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
+      {resolvedOgImage && <meta property="og:image:width" content="1200" />}
+      {resolvedOgImage && <meta property="og:image:height" content="630" />}
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={resolvedDesc} />
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
 
       {combinedLd && (
         <script type="application/ld+json">

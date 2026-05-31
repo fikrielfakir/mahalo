@@ -250,8 +250,12 @@ async function start() {
 
         const ogMeta = await resolveOgMeta(pathname, origin)
 
+        // Enrich with site-wide OG image fallback from admin settings
+        const siteOgImage = siteSettings.og_image_url || ''
+
         let headTags = ''
         if (ogMeta) {
+          if (!ogMeta.image && siteOgImage) ogMeta.image = siteOgImage
           headTags = buildOgTags(origin, ogMeta)
           // Strip static OG/Twitter/title tags from template so dynamic ones win
           template = template
@@ -261,6 +265,23 @@ async function start() {
             .replace(/<meta\s+name="twitter:[^"]*"[^>]*>/gi, '')
             .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
         } else {
+          // For non-property/project pages, inject the global OG image from settings
+          if (siteOgImage) {
+            const globalOgMeta = {
+              title: siteSettings.seo_title || 'Mahalo Immobilier',
+              description: siteSettings.seo_description || '',
+              image: siteOgImage,
+              url: `${origin}${pathname}`,
+              type: 'website',
+            }
+            headTags = buildOgTags(origin, globalOgMeta)
+            template = template
+              .replace(/<title>[^<]*<\/title>/gi, '')
+              .replace(/<meta\s+name="description"[^>]*>/gi, '')
+              .replace(/<meta\s+property="og:[^"]*"[^>]*>/gi, '')
+              .replace(/<meta\s+name="twitter:[^"]*"[^>]*>/gi, '')
+              .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
+          }
           try {
             const render = isProd
               ? (await import('./dist/server/entry-server.js')).render

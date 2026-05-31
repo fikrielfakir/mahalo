@@ -206,6 +206,7 @@ async function start() {
     pathFilter: (path) =>
       path.startsWith('/api/') ||
       path.startsWith('/storage/') ||
+      path === '/og-image' ||
       path === '/sitemap.xml' ||
       path === '/sitemap-static.xml' ||
       path === '/sitemap-properties.xml' ||
@@ -271,13 +272,17 @@ async function start() {
 
         const ogMeta = await resolveOgMeta(pathname, origin)
 
-        // Enrich with site-wide OG image fallback from admin settings
-        // Rewrite any localhost storage URL to the public origin so bots can fetch it
-        const siteOgImage = rewriteStorageUrl(siteSettings.og_image_url || '', origin)
+        // Canonical OG image: use admin-configured URL (rewritten for public access),
+        // falling back to the stable /og-image route which Laravel redirects to the
+        // correct image. This ensures bots always get a fetchable image URL.
+        const rawOgImage = siteSettings.og_image_url || ''
+        const siteOgImage = rawOgImage
+          ? rewriteStorageUrl(rawOgImage, origin)
+          : `${origin}/og-image`
 
         let headTags = ''
         if (ogMeta) {
-          if (!ogMeta.image && siteOgImage) ogMeta.image = siteOgImage
+          if (!ogMeta.image) ogMeta.image = siteOgImage
           if (ogMeta.image) ogMeta.image = rewriteStorageUrl(ogMeta.image, origin)
           headTags = buildOgTags(origin, ogMeta)
           // Strip static OG/Twitter/title tags from template so dynamic ones win

@@ -1,11 +1,14 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import ComingSoonPage from '../pages/ComingSoonPage'
 import MaintenancePage from '../pages/MaintenancePage'
 import ServerOfflinePage from '../pages/ServerOfflinePage'
+import { SiteGateSkeleton } from './Skeletons'
 
 const BYPASS_KEY   = 'mahalo_admin_bypass'
 const SETTINGS_URL = '/api/v1/public-settings'
-const CACHE_TTL    = 60_000 // 1 minute
+const CACHE_TTL    = 60_000  // 1 minute
+const MAX_RETRIES  = 4       // silent retries before showing the error page
+const RETRY_DELAY  = 2_500   // ms between retries
 
 let cache     = null
 let cacheTime = 0
@@ -19,23 +22,18 @@ async function fetchSettings() {
   try {
     res = await fetch(SETTINGS_URL, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(5000), // shorter per-attempt timeout
     })
   } catch {
-    // Network error or timeout — server is not reachable
     return { settings: {}, serverDown: true }
   }
 
-  // Any non-2xx response (500 included) — the body may be HTML, not JSON
-  if (!res.ok) {
-    return { settings: {}, serverDown: true }
-  }
+  if (!res.ok) return { settings: {}, serverDown: true }
 
   let json
   try {
     json = await res.json()
   } catch {
-    // Body isn't valid JSON (e.g. PHP error page) — treat as server down
     return { settings: {}, serverDown: true }
   }
 
@@ -45,27 +43,32 @@ async function fetchSettings() {
 }
 
 export default function SiteModeGate({ children }) {
-  const [status, setStatus]     = useState('loading') // 'loading' | 'ok' | 'maintenance' | 'coming_soon' | 'server_down'
+  const [status, setStatus]     = useState('loading')
   const [settings, setSettings] = useState({})
+  const retryCount              = useRef(0)
+  const retryTimer              = useRef(null)
 
-  // Admin bypass: ?bypass=1 sets a session flag so admins can preview the live site
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('bypass') === '1') {
-      sessionStorage.setItem(BYPASS_KEY, '1')
-    }
-  }, [])
-
-  const check = useCallback(() => {
+  const check = useCallback((isRecovery = false) => {
     const bypass = sessionStorage.getItem(BYPASS_KEY) === '1'
 
     fetchSettings()
       .then(({ settings: s, serverDown }) => {
         if (serverDown) {
-          cache = null // always re-fetch on next check
-          setStatus('server_down')
+          cache = null
+
+          if (isRecovery || retryCount.current >= MAX_RETRIES) {
+            // Exhausted retries — show the error page
+            setStatus('server_down')
+          } else {
+            // Keep showing skeleton, schedule a silent retry
+            retryCount.current += 1
+            retryTimer.current = setTimeout(() => check(false), RETRY_DELAY)
+          }
           return
         }
+
+        // Connected — reset retry counter and proceed
+        retryCount.current = 0
         setSettings(s)
         if (bypass)                      { setStatus('ok');          return }
         if (s.maintenance_mode === '1')  { setStatus('maintenance'); return }
@@ -73,22 +76,37 @@ export default function SiteModeGate({ children }) {
         setStatus('ok')
       })
       .catch(() => {
-        // Last-resort safety net — never leave the gate stuck on null
         cache = null
-        setStatus('server_down')
+
+        if (isRecovery || retryCount.current >= MAX_RETRIES) {
+          setStatus('server_down')
+        } else {
+          retryCount.current += 1
+          retryTimer.current = setTimeout(() => check(false), RETRY_DELAY)
+        }
       })
   }, [])
 
-  useEffect(() => { check() }, [check])
-
-  // Called by ServerOfflinePage when a ping succeeds
-  const handleRecover = useCallback(() => {
-    cache = null
-    setStatus('loading')
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('bypass') === '1') {
+      sessionStorage.setItem(BYPASS_KEY, '1')
+    }
     check()
+    return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
   }, [check])
 
-  if (status === 'loading') return null
+  const handleRecover = useCallback(() => {
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+    retryCount.current = 0
+    cache = null
+    setStatus('loading')
+    check(true)
+  }, [check])
+
+  if (status === 'loading') {
+    return <SiteGateSkeleton />
+  }
 
   if (status === 'server_down') {
     return (

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, Home, Users, ShieldCheck, ChevronDown } from 'lucide-react'
+import { Search, MapPin, SlidersHorizontal, BedDouble, DollarSign, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { propertiesApi, agentsApi } from '../api/client'
+import { propertiesApi } from '../api/client'
 import { useTranslation } from 'react-i18next'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
@@ -271,10 +271,6 @@ export default function Hero() {
   const [maxPrice, setMaxPrice]         = useState(PRICE_MAX)
   const [bedrooms, setBedrooms]         = useState('Any')
   const [categories, setCategories]     = useState([])
-  const [propertiesCount, setPropertiesCount] = useState(null)
-  const [agentsCount, setAgentsCount]         = useState(null)
-  const [citiesCount, setCitiesCount]         = useState(null)
-
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -282,30 +278,9 @@ export default function Hero() {
       .then((res) => {
         const data = res?.data
         if (Array.isArray(data?.categories)) setCategories(data.categories)
-        if (Array.isArray(data?.cities))     setCitiesCount(data.cities.length)
-      })
-      .catch(() => {})
-
-    propertiesApi.list({ per_page: 1 })
-      .then((res) => {
-        const total = res?.meta?.total ?? res?.total
-        if (total != null) setPropertiesCount(total)
-      })
-      .catch(() => {})
-
-    agentsApi.list({ per_page: 1 })
-      .then((res) => {
-        const total = res?.meta?.total ?? res?.total
-        if (total != null) setAgentsCount(total)
       })
       .catch(() => {})
   }, [])
-
-  const fmtCount = (n, fallback) => {
-    if (n == null) return fallback
-    if (n >= 1000) return `${(n / 1000).toFixed(0)}K+`
-    return `${n}+`
-  }
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -320,13 +295,6 @@ export default function Hero() {
   }
 
   const handlePriceChange = (mn, mx) => { setMinPrice(mn); setMaxPrice(mx) }
-
-  const stats = [
-    { icon: Home,        value: fmtCount(propertiesCount, '1K+'),         label: t('stats.properties') },
-    { icon: Users,       value: '8K+',                                     label: t('stats.happyClients') },
-    { icon: ShieldCheck, value: fmtCount(agentsCount, '50+'),              label: t('stats.verifiedAgents') },
-    { icon: MapPin,      value: citiesCount ? `${citiesCount}+` : '10+',  label: t('stats.cities') },
-  ]
 
   const divider = { borderRight: '1px solid rgba(115,13,38,0.08)' }
 
@@ -549,22 +517,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* ── Stats ── */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mt-5 sm:mt-9 animate-fade-up" style={{ animationDelay: '220ms' }}>
-            {stats.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3"
-                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16 }}>
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(186,25,50,0.18)', border: '1px solid rgba(186,25,50,0.22)' }}>
-                  <Icon size={13} style={{ color: '#f5748a' }} />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm sm:text-base leading-none mb-0.5" style={{ fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>{value}</div>
-                  <div className="text-white/40 text-[10px] sm:text-xs font-medium">{label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
 
         </div>
       </div>

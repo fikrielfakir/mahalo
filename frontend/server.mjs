@@ -71,6 +71,27 @@ async function fetchJson(url) {
   }
 }
 
+function rewriteStorageUrl(imageUrl, origin) {
+  if (!imageUrl) return imageUrl
+  try {
+    const parsed = new URL(imageUrl)
+    const isInternal =
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '127.0.0.1' ||
+      parsed.hostname === '0.0.0.0'
+    if (isInternal) {
+      const publicOrigin = new URL(origin)
+      parsed.hostname = publicOrigin.hostname
+      parsed.port = publicOrigin.port || ''
+      parsed.protocol = publicOrigin.protocol
+      return parsed.toString()
+    }
+  } catch {
+    // not a valid URL, return as-is
+  }
+  return imageUrl
+}
+
 function buildOgTags(origin, { title, description, image, url, type = 'website' }) {
   const safeTitle = escapeHtml(title)
   const safeDesc  = escapeHtml(description)
@@ -251,11 +272,13 @@ async function start() {
         const ogMeta = await resolveOgMeta(pathname, origin)
 
         // Enrich with site-wide OG image fallback from admin settings
-        const siteOgImage = siteSettings.og_image_url || ''
+        // Rewrite any localhost storage URL to the public origin so bots can fetch it
+        const siteOgImage = rewriteStorageUrl(siteSettings.og_image_url || '', origin)
 
         let headTags = ''
         if (ogMeta) {
           if (!ogMeta.image && siteOgImage) ogMeta.image = siteOgImage
+          if (ogMeta.image) ogMeta.image = rewriteStorageUrl(ogMeta.image, origin)
           headTags = buildOgTags(origin, ogMeta)
           // Strip static OG/Twitter/title tags from template so dynamic ones win
           template = template
@@ -266,6 +289,7 @@ async function start() {
             .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
         } else {
           // For non-property/project pages, inject the global OG image from settings
+          let globalOgHeadTags = ''
           if (siteOgImage) {
             const globalOgMeta = {
               title: siteSettings.seo_title || 'Mahalo Immobilier',
@@ -274,7 +298,7 @@ async function start() {
               url: `${origin}${pathname}`,
               type: 'website',
             }
-            headTags = buildOgTags(origin, globalOgMeta)
+            globalOgHeadTags = buildOgTags(origin, globalOgMeta)
             template = template
               .replace(/<title>[^<]*<\/title>/gi, '')
               .replace(/<meta\s+name="description"[^>]*>/gi, '')
@@ -289,16 +313,21 @@ async function start() {
 
             const { html: appHtml, helmet } = await render(url)
 
-            headTags = [
+            const ssrHeadTags = [
               helmet?.title?.toString()  || '',
               helmet?.meta?.toString()   || '',
               helmet?.link?.toString()   || '',
               helmet?.script?.toString() || '',
             ].join('\n        ')
 
+            // Prefer the admin-configured OG image over whatever SSR helmet produces,
+            // so the uploaded image always wins for social sharing
+            headTags = globalOgHeadTags || ssrHeadTags
+
             template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
           } catch (ssrErr) {
             console.warn('[SSR] Fallback render failed:', ssrErr.message)
+            headTags = globalOgHeadTags
           }
         }
 

@@ -26,6 +26,7 @@ class AdminSettingsTranslationController extends Controller
         'page_about',
         'page_privacy',
         'page_terms',
+        'page_cookie',
         'mobile_app_title',
         'mobile_app_subtitle',
         'mobile_app_description',

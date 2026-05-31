@@ -1463,7 +1463,9 @@
       "fieldAppStoreHint": "iOS — Apple App Store link",
       "fieldPlayStore": "Google Play URL",
       "fieldPlayStoreHint": "Android — Google Play Store link",
-      "logoUploadFailed": "Logo upload failed"
+      "logoUploadFailed": "Logo upload failed",
+      "sectionCookieContent": "Cookie Policy",
+      "cookieContentHint": "Content displayed on the /cookie-policy page. Supports Markdown (## headings, - lists, **bold**)."
     },
     "appUpdate": {
       "title": "App Update Manager",
@@ -1612,6 +1614,56 @@
       "city": {
         "all": "All"
       }
+    }
+  },
+  "contact": {
+    "pageTitle": "Contact — Mahalo",
+    "heroBadge": "Contact",
+    "heroTitle": "Contact Us",
+    "heroDesc": "Our team is available to answer all your questions.",
+    "infoTitle": "Our Contact Details",
+    "noInfo": "Contact details not configured — please contact the administrator.",
+    "formTitle": "Send Us a Message",
+    "successTitle": "Message sent!",
+    "successDesc": "Our team will reply as soon as possible.",
+    "sendAnother": "Send another message",
+    "labelName": "Full Name *",
+    "placeholderName": "Your name",
+    "labelPhone": "Phone",
+    "labelEmail": "E-mail *",
+    "placeholderEmail": "your@email.com",
+    "labelMessage": "Message *",
+    "placeholderMessage": "How can we help you?",
+    "sending": "Sending…",
+    "send": "Send Message",
+    "infoEmail": "E-mail",
+    "infoPhone": "Phone",
+    "infoWhatsapp": "WhatsApp",
+    "infoAddress": "Address"
+  },
+  "pages": {
+    "lastUpdated": "Last updated by the administrator",
+    "loading": "Loading…",
+    "loadError": "Unable to load content.",
+    "noContent": "Content not available.",
+    "noContentDesc": "This page has not been configured yet. Please check back later.",
+    "terms": {
+      "badge": "Terms of Use",
+      "title": "Terms of Use",
+      "seoTitle": "Terms of Use — Mahalo",
+      "seoDesc": "Read the terms and conditions governing your use of the Mahalo Real Estate platform in Morocco."
+    },
+    "privacy": {
+      "badge": "Privacy Policy",
+      "title": "Privacy Policy",
+      "seoTitle": "Privacy Policy — Mahalo",
+      "seoDesc": "Learn how Mahalo Real Estate collects, uses, and protects your personal data."
+    },
+    "cookie": {
+      "badge": "Cookie Policy",
+      "title": "Cookie Policy",
+      "seoTitle": "Cookie Policy — Mahalo",
+      "seoDesc": "Discover how Mahalo Real Estate uses cookies to improve your experience."
     }
   }
 }

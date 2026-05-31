@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Cookie, Loader2, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
@@ -26,58 +27,61 @@ function renderMarkdown(text) {
 }
 
 export default function CookiePolicyPage() {
+  const { t, i18n } = useTranslation()
   const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    publicSettingsApi.get()
+    const locale = i18n.language?.slice(0, 2)
+    setLoading(true)
+    publicSettingsApi.get(locale)
       .then(res => {
         const val = res.data?.page_cookie
         setContent(val && val.trim() ? val : null)
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }, [i18n.language])
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <SEOHead
-        title="Politique de cookies"
-        description="Découvrez comment Mahalo Immobilier utilise les cookies pour améliorer votre expérience sur notre plateforme immobilière au Maroc."
+        title={t('pages.cookie.seoTitle')}
+        description={t('pages.cookie.seoDesc')}
         robots="noindex,follow"
       />
       <Navbar />
 
       <section className="pt-28 pb-14 px-6 bg-navy text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/70 text-xs font-semibold uppercase tracking-widest mb-5">
-          <Cookie size={12} /> Politique de cookies
+          <Cookie size={12} /> {t('pages.cookie.badge')}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Politique de cookies</h1>
-        <p className="text-white/50 text-sm">Dernière mise à jour par l'administrateur</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">{t('pages.cookie.title')}</h1>
+        <p className="text-white/50 text-sm">{t('pages.lastUpdated')}</p>
       </section>
 
       <main className="flex-1 py-14 px-6">
         <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-card p-8 sm:p-10">
           {loading && (
             <div className="flex items-center justify-center gap-3 py-16 text-navy/40">
-              <Loader2 size={20} className="animate-spin" /> Chargement…
+              <Loader2 size={20} className="animate-spin" /> {t('pages.loading')}
             </div>
           )}
 
           {!loading && error && (
             <div className="flex flex-col items-center gap-3 py-16 text-navy/40">
               <AlertCircle size={32} className="opacity-40" />
-              <p className="text-sm">Impossible de charger le contenu.</p>
+              <p className="text-sm">{t('pages.loadError')}</p>
             </div>
           )}
 
           {!loading && !error && !content && (
             <div className="flex flex-col items-center gap-3 py-16 text-navy/40">
               <Cookie size={36} className="opacity-30" />
-              <p className="text-sm font-medium">Contenu non disponible.</p>
+              <p className="text-sm font-medium">{t('pages.noContent')}</p>
               <p className="text-xs text-center max-w-xs">
-                La politique de cookies n'a pas encore été configurée. Veuillez revenir ultérieurement.
+                {t('pages.noContentDesc')}
               </p>
             </div>
           )}

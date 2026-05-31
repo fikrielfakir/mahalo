@@ -1463,7 +1463,9 @@
       "fieldAppStoreHint": "iOS — Lien Apple App Store",
       "fieldPlayStore": "URL Google Play",
       "fieldPlayStoreHint": "Android — Lien Google Play Store",
-      "logoUploadFailed": "Échec du téléchargement du logo"
+      "logoUploadFailed": "Échec du téléchargement du logo",
+      "sectionCookieContent": "Politique de cookies",
+      "cookieContentHint": "Contenu affiché sur la page /cookie-policy. Supporte le Markdown (## titres, - listes, **gras**)."
     },
     "appUpdate": {
       "title": "Gestionnaire de mises à jour",
@@ -1612,6 +1614,56 @@
       "city": {
         "all": "Tous"
       }
+    }
+  },
+  "contact": {
+    "pageTitle": "Contact — Mahalo",
+    "heroBadge": "Contact",
+    "heroTitle": "Contactez-nous",
+    "heroDesc": "Notre équipe est disponible pour répondre à toutes vos questions.",
+    "infoTitle": "Nos coordonnées",
+    "noInfo": "Coordonnées non configurées — veuillez contacter l’administrateur.",
+    "formTitle": "Envoyez-nous un message",
+    "successTitle": "Message envoyé !",
+    "successDesc": "Notre équipe vous répondra dans les plus brefs délais.",
+    "sendAnother": "Envoyer un autre message",
+    "labelName": "Nom complet *",
+    "placeholderName": "Votre nom",
+    "labelPhone": "Téléphone",
+    "labelEmail": "E-mail *",
+    "placeholderEmail": "votre@email.com",
+    "labelMessage": "Message *",
+    "placeholderMessage": "Comment pouvons-nous vous aider ?",
+    "sending": "Envoi en cours…",
+    "send": "Envoyer le message",
+    "infoEmail": "E-mail",
+    "infoPhone": "Téléphone",
+    "infoWhatsapp": "WhatsApp",
+    "infoAddress": "Adresse"
+  },
+  "pages": {
+    "lastUpdated": "Dernière mise à jour par l’administrateur",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger le contenu.",
+    "noContent": "Contenu non disponible.",
+    "noContentDesc": "Cette page n’a pas encore été configurée. Veuillez revenir ultérieurement.",
+    "terms": {
+      "badge": "Conditions d’utilisation",
+      "title": "Conditions d’utilisation",
+      "seoTitle": "Conditions d’utilisation — Mahalo",
+      "seoDesc": "Lisez les conditions générales régissant votre utilisation de la plateforme Mahalo au Maroc."
+    },
+    "privacy": {
+      "badge": "Politique de confidentialité",
+      "title": "Politique de confidentialité",
+      "seoTitle": "Politique de confidentialité — Mahalo",
+      "seoDesc": "Découvrez comment Mahalo Immobilier collecte, utilise et protège vos données personnelles."
+    },
+    "cookie": {
+      "badge": "Politique de cookies",
+      "title": "Politique de cookies",
+      "seoTitle": "Politique de cookies — Mahalo",
+      "seoDesc": "Découvrez comment Mahalo Immobilier utilise les cookies pour améliorer votre expérience."
     }
   }
 }

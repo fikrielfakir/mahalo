@@ -133,7 +133,7 @@ export const userChatsApi = {
 }
 
 export const publicSettingsApi = {
-  get: () => api.get('/public-settings'),
+  get: (locale) => api.get('/public-settings', { params: locale ? { locale } : undefined }),
 }
 
 export const faqsApi = {

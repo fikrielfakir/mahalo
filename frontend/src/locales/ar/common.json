@@ -1463,7 +1463,9 @@
       "fieldAppStoreHint": "iOS — رابط Apple App Store",
       "fieldPlayStore": "رابط Google Play",
       "fieldPlayStoreHint": "Android — رابط Google Play Store",
-      "logoUploadFailed": "فشل رفع الشعار"
+      "logoUploadFailed": "فشل رفع الشعار",
+      "sectionCookieContent": "سياسة الكوكيز",
+      "cookieContentHint": "المحتوى المعروض في صفحة /cookie-policy. يدعم Markdown."
     },
     "appUpdate": {
       "title": "مدير التحديثات",
@@ -1612,6 +1614,56 @@
       "city": {
         "all": "الكل"
       }
+    }
+  },
+  "contact": {
+    "pageTitle": "اتصل بنا — Mahalo",
+    "heroBadge": "اتصل بنا",
+    "heroTitle": "اتصل بنا",
+    "heroDesc": "فريقنا متاح للإجابة على جميع استفساراتكم.",
+    "infoTitle": "معلومات الاتصال",
+    "noInfo": "لم يتم تكوين معلومات الاتصال — يرجى التواصل مع المسؤول.",
+    "formTitle": "أرسل لنا رسالة",
+    "successTitle": "تم إرسال الرسالة!",
+    "successDesc": "سيرد فريقنا في أقرب وقت ممكن.",
+    "sendAnother": "إرسال رسالة أخرى",
+    "labelName": "الاسم الكامل *",
+    "placeholderName": "اسمك",
+    "labelPhone": "الهاتف",
+    "labelEmail": "البريد الإلكتروني *",
+    "placeholderEmail": "بريدك@مثال.com",
+    "labelMessage": "الرسالة *",
+    "placeholderMessage": "كيف يمكننا مساعدتك؟",
+    "sending": "جارى الإرسال…",
+    "send": "إرسال الرسالة",
+    "infoEmail": "البريد الإلكتروني",
+    "infoPhone": "الهاتف",
+    "infoWhatsapp": "واتساب",
+    "infoAddress": "العنوان"
+  },
+  "pages": {
+    "lastUpdated": "آخر تحديث من قبل المسؤول",
+    "loading": "جارى التحميل…",
+    "loadError": "تعذّر تحميل المحتوى.",
+    "noContent": "المحتوى غير متاح.",
+    "noContentDesc": "لم يتم تكوين هذه الصفحة بعد. يرجى المراجعة لاحقًا.",
+    "terms": {
+      "badge": "شروط الاستخدام",
+      "title": "شروط الاستخدام",
+      "seoTitle": "شروط الاستخدام — Mahalo",
+      "seoDesc": "اقرأ شروط وأحكام استخدام منصة Mahalo للعقارات في المغرب."
+    },
+    "privacy": {
+      "badge": "سياسة الخصوصية",
+      "title": "سياسة الخصوصية",
+      "seoTitle": "سياسة الخصوصية — Mahalo",
+      "seoDesc": "تعرّف على كيفية جمع Mahalo لبياناتك الشخصية واستخدامها وحمايتها."
+    },
+    "cookie": {
+      "badge": "سياسة الكوكيز",
+      "title": "سياسة الكوكيز",
+      "seoTitle": "سياسة الكوكيز — Mahalo",
+      "seoDesc": "اكتشف كيف تستخدم Mahalo ملفات تعريف الارتباط لتحسين تجربتك."
     }
   }
 }

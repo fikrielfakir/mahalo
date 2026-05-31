@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Shield, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
@@ -41,40 +42,41 @@ function renderMarkdown(text) {
 }
 
 export default function PrivacyPage() {
+  const { t, i18n } = useTranslation()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    publicSettingsApi.get()
+    const locale = i18n.language?.slice(0, 2)
+    setLoading(true)
+    publicSettingsApi.get(locale)
       .then(res => setContent(res.data?.page_privacy || FALLBACK))
       .catch(() => setContent(FALLBACK))
       .finally(() => setLoading(false))
-  }, [])
+  }, [i18n.language])
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <SEOHead
-        title="Privacy Policy"
-        description="Learn how Mahalo Real Estate collects, uses, and protects your personal data on our Morocco real estate platform."
+        title={t('pages.privacy.seoTitle')}
+        description={t('pages.privacy.seoDesc')}
         robots="noindex,follow"
       />
       <Navbar />
 
-      {/* Hero */}
       <section className="pt-28 pb-14 px-6 bg-navy text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/70 text-xs font-semibold uppercase tracking-widest mb-5">
-          <Shield size={12} /> Politique de confidentialité
+          <Shield size={12} /> {t('pages.privacy.badge')}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Politique de confidentialité</h1>
-        <p className="text-white/50 text-sm">Dernière mise à jour par l'administrateur</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">{t('pages.privacy.title')}</h1>
+        <p className="text-white/50 text-sm">{t('pages.lastUpdated')}</p>
       </section>
 
-      {/* Content */}
       <main className="flex-1 py-14 px-6">
         <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-card p-8 sm:p-10">
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-16 text-navy/40">
-              <Loader2 size={20} className="animate-spin" /> Chargement…
+              <Loader2 size={20} className="animate-spin" /> {t('pages.loading')}
             </div>
           ) : (
             <div className="space-y-0.5">

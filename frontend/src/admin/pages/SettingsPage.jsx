@@ -1105,8 +1105,8 @@ export default function SettingsPage() {
                 <a href="/terms" target="_blank" rel="noreferrer" className="text-[#BA1932] hover:underline inline-flex items-center gap-1">/terms <ExternalLink size={10} /></a>
               </p>
             </Section>
-            <Section title="Politique de cookies" icon={Cookie}>
-              <FormField label={t('admin.settings.fieldContent')} hint={isLocaleMode ? t('admin.settings.leaveEmptyDefault') : 'Contenu affiché sur la page /cookie-policy. Supporte le Markdown (## titres, - listes, **gras**).'}> 
+            <Section title={t('admin.settings.sectionCookieContent')} icon={Cookie}>
+              <FormField label={t('admin.settings.fieldContent')} hint={isLocaleMode ? t('admin.settings.leaveEmptyDefault') : t('admin.settings.cookieContentHint')}>
                 <textarea value={isLocaleMode ? tv('page_cookie') : form.page_cookie} onChange={isLocaleMode ? tf('page_cookie') : f('page_cookie')} rows={14} placeholder={isLocaleMode ? (transDefaults.page_cookie || form.page_cookie || t('admin.settings.leaveEmptyDefault') + '…') : "## 1. Qu'est-ce qu'un cookie ?\nUn cookie est un petit fichier texte…\n\n## 2. Cookies que nous utilisons\n- **Cookies essentiels** : nécessaires au bon fonctionnement du site."} className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#BA1932]/30 focus:border-[#BA1932] font-mono leading-relaxed resize-y" />
               </FormField>
               <p className="text-xs text-gray-400 flex items-center gap-1.5">

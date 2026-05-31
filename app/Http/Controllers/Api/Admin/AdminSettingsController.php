@@ -327,9 +327,11 @@ EOT;
         ]);
 
         $file = $request->file('file');
-        $file->move(public_path(), 'og-image.png');
 
-        // Use FRONTEND_URL, not APP_URL — API is on api.mahalo.ma, image must be on mahalo.ma
+        // Save to the frontend's public directory so Vite can serve it at FRONTEND_URL/og-image.png
+        $frontendPublic = base_path('frontend/public');
+        $file->move($frontendPublic, 'og-image.png');
+
         $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
         $url = $frontendUrl . '/og-image.png';
 

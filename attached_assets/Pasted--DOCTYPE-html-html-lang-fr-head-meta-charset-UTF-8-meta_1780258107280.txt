@@ -23,7 +23,8 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Mahalo Immobilier — Trouvez Votre Bien au Maroc" />
     <meta property="og:description" content="Découvrez des propriétés premium dans les quartiers les plus prestigieux du Maroc." />
-    <!-- og:image fallback for non-JS crawlers; uploading via admin panel replaces the file on disk -->
+    <!-- og:image is injected dynamically by the prerender layer (see <!--app-head-->) -->
+    <!-- Fallback for non-JS crawlers that bypass prerender: -->
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />

@@ -1,0 +1,77 @@
+Now I have the full picture. Let me check the index.html to see the hardcoded fallback:
+
+
+Ran 3 commands
+Ran 3 commands
+Now I have the complete picture of the bug. There are two separate problems. Let me also check the backend uploadOgImage more carefully — specifically where it saves the file on the server:
+
+
+Check if og-image is hardcoded anywhere else in backend
+Check if og-image is hardcoded anywhere else in backend
+I now have everything I need. Here's the full diagnosis and fix:
+
+Root Cause: Two Separate Problems
+Problem 1 — Backend saves the file to the wrong path
+In AdminSettingsController::uploadOgImage():
+
+php
+$frontendPublic = base_path('frontend/public');
+$file->move($frontendPublic, 'og-image.png');
+base_path('frontend/public') resolves to something like /var/www/html/frontend/public — not your web-server's public_html. So the file is uploaded to a directory that the web server never serves, while the old static public_html/og-image.png remains untouched.
+
+Fix: Save directly into public_html (your document root):
+
+php
+// Point at the actual web-served public_html directory
+$publicHtml = public_path();          // resolves to public_html/
+$file->move($publicHtml, 'og-image.png');
+public_path() is the correct Laravel helper — it resolves to the public/ folder that is symlinked or served as public_html on your host.
+
+Problem 2 — index.html has the OG image hardcoded
+The dynamic og_image_url from the DB is read by SEOHead.jsx and injected at runtime by React-Helmet. But crawlers (Facebook, Twitter, Google, WhatsApp) do not execute JavaScript — they read the raw HTML. So they always see:
+
+html
+<meta property="og:image" content="https://mahalo.ma/og-image.png" />
+This static fallback in index.html overrides everything for bots, regardless of what the admin uploads.
+
+The Fixes
+Fix 1 — AdminSettingsController.php — save to the correct directory
+
+Ran a command, edited a file
+Ran a command, edited a file
+Fix 2 — index.html — make the OG image dynamic via the <!--app-head--> injection point
+
+Ran a command, edited a file
+Ran a command, edited a file
+Now let me copy both files to outputs:
+
+
+Ran a command, read a file
+Ran a command, read a file
+What was wrong & what was fixed
+Bug 1 — Wrong save path in uploadOgImage() (backend)
+Before	After
+File	AdminSettingsController.php	same
+Save path	base_path('frontend/public') → resolves to a directory the web server never serves	public_path() → resolves to your actual public_html/ directory
+base_path('frontend/public') points to <laravel-root>/frontend/public, not to public_html. So the uploaded image was always written to the wrong folder while the original public_html/og-image.png stayed untouched.
+
+Bug 2 — index.html had the OG image hardcoded with an absolute URL
+Crawlers (Facebook, Twitter, WhatsApp, Google) don't execute JavaScript — they read raw HTML. Your index.html had:
+
+html
+<meta property="og:image" content="https://mahalo.ma/og-image.png" />
+This is a static string that never changes regardless of what the admin uploads. React-Helmet's dynamic injection only works for regular browser visitors, not for bots.
+
+The fix: Changed the fallback to a root-relative /og-image.png. Since the file is now correctly saved into public_html/, uploading a new OG image via the admin panel physically replaces that file on disk — so crawlers will always get the latest image at the same URL without needing any code deploy.
+
+Deploy steps
+Replace app/Http/Controllers/Api/Admin/AdminSettingsController.php with the fixed file.
+Replace index.html (the Vite entry point at the root of your frontend repo) with the fixed file, then rebuild (npm run build) and redeploy the built public_html/.
+Upload a new OG image once from the admin panel to confirm it lands in public_html/og-image.png.
+Test with the Facebook Sharing Debugger — hit "Scrape Again" to flush the cache.
+
+Adminsettingscontroller
+Code · PHP 
+
+Index
+Code · HTML 

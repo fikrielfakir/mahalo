@@ -1596,6 +1596,8 @@
     "open": "Ouvrir Mahalo AI"
   },
   "home": {
+    "pageTitle": "Trouvez Votre Bien au Maroc",
+    "pageDescription": "La principale plateforme immobilière du Maroc. Des milliers de propriétés vérifiées partout au Maroc.",
     "mapSection": {
       "eyebrow": "Explorer sur la carte",
       "title": "Trouvez des biens près de chez vous",

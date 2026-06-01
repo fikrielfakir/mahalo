@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Hero from '../components/Hero'
@@ -19,13 +20,16 @@ const NAV_SECTIONS = [
   { name: 'Nouveaux projets immobiliers',     url: '/projects' },
   { name: 'Quartiers au Maroc',               url: '/neighborhoods' },
   { name: 'Agents immobiliers',               url: '/agents' },
-  { name: 'Casablanca Immobilier',            url: '/properties?city=casablanca' },
   { name: 'Marrakech Immobilier',             url: '/properties?city=marrakech' },
   { name: 'Rabat Immobilier',                 url: '/properties?city=rabat' },
 ]
 
 export default function Home() {
+  const { t } = useTranslation()
   const settings = useSiteSettings()
+
+  const pageTitle       = t('home.pageTitle')
+  const pageDescription = settings.seo_description || t('home.pageDescription')
 
   const facebookUrl  = settings.facebook_url  || null
   const instagramUrl = settings.instagram_url || null
@@ -53,11 +57,10 @@ export default function Home() {
           'caption': 'Mahalo Immobilier',
         },
         'image': { '@id': `${SITE_URL}/#logo` },
-        'description': settings.seo_description || "La principale plateforme immobilière du Maroc. Des milliers de propriétés et projets vérifiés à Casablanca, Marrakech, Rabat, Tanger, Agadir et partout au Maroc.",
+        'description': pageDescription,
         'address': {
           '@type': 'PostalAddress',
           'addressCountry': 'MA',
-          'addressLocality': 'Casablanca',
         },
         'contactPoint': {
           '@type': 'ContactPoint',
@@ -73,7 +76,7 @@ export default function Home() {
         'url': SITE_URL,
         'name': 'Mahalo Immobilier',
         'alternateName': ['Mahalo Real Estate', 'Mahalo.ma'],
-        'description': settings.seo_description || "La principale plateforme immobilière du Maroc.",
+        'description': pageDescription,
         'publisher': { '@id': `${SITE_URL}/#organization` },
         'inLanguage': ['fr-MA', 'ar-MA', 'en'],
         'potentialAction': {
@@ -89,11 +92,10 @@ export default function Home() {
         '@type': 'WebPage',
         '@id': `${SITE_URL}/#webpage`,
         'url': SITE_URL,
-        'name': 'Mahalo Immobilier — Trouvez Votre Bien au Maroc',
+        'name': `Mahalo Immobilier — ${pageTitle}`,
         'isPartOf': { '@id': `${SITE_URL}/#website` },
         'about': { '@id': `${SITE_URL}/#organization` },
-        'description': "Découvrez des propriétés premium dans les quartiers les plus prestigieux du Maroc.",
-        'inLanguage': 'fr-MA',
+        'description': pageDescription,
         'breadcrumb': {
           '@type': 'BreadcrumbList',
           'itemListElement': [
@@ -113,8 +115,8 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <SEOHead
-        title="Trouvez Votre Bien au Maroc"
-        description="La principale plateforme immobilière du Maroc. Des milliers de propriétés vérifiées à Casablanca, Marrakech, Rabat, Tanger, Agadir et partout au Maroc."
+        title={pageTitle}
+        description={pageDescription}
         canonical={SITE_URL}
         jsonLd={jsonLd}
       />

@@ -6,7 +6,7 @@ import Footer from '../components/Footer'
 import NotFoundState from '../components/NotFoundState'
 import { Toast, useToast } from '../components/Toast'
 import { projectsApi, consultsApi } from '../api/client'
-import { isVideoPath, mediaUrl as imgUrl } from '../utils/media'
+import { isVideoPath, mediaUrl as imgUrl, storagePublicUrl } from '../utils/media'
 import SEOHead from '../components/SEOHead'
 
 function formatPrice(price) {
@@ -117,12 +117,7 @@ export default function ProjectDetail() {
       <SEOHead
         title={`${project.name}${project.city ? ` — ${project.city.name}` : ''}${project.price_from ? ` — À partir de ${project.price_from.toLocaleString()} MAD` : ''}`}
         description={`${project.name}${project.city ? ` à ${project.city.name}` : ''}, Maroc. ${project.description?.slice(0, 200) || 'Découvrez ce projet immobilier premium avec des équipements modernes et un emplacement de choix.'}`.trim()}
-        ogImage={(() => {
-          const img = project.image
-          if (!img) return undefined
-          if (img.startsWith('http')) return img
-          return `${window.location.origin}/storage/${img}`
-        })()}
+        ogImage={storagePublicUrl(project.image)}
         canonical={`${window.location.origin}/projects/${project.slug?.key ?? project.id}`}
         ogType="article"
         alternateLocales

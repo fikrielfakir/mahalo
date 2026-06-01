@@ -2,6 +2,15 @@ export const VIDEO_EXTS = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v']
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
+const STORAGE_BASE = import.meta.env.VITE_STORAGE_URL || 'https://api.mahalo.ma'
+
+export function storagePublicUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const clean = path.replace(/^\/storage\//, '')
+  return `${STORAGE_BASE}/storage/${clean}`
+}
+
 export function isVideoPath(p = '') {
   if (!p) return false
   const ext = p.split('?')[0].split('.').pop().toLowerCase()

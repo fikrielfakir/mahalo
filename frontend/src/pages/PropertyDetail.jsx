@@ -15,7 +15,7 @@ import { useCompare } from '../context/CompareContext'
 import { propertiesApi, consultsApi } from '../api/client'
 import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
-import { isVideoPath, mediaUrl } from '../utils/media'
+import { isVideoPath, mediaUrl, storagePublicUrl } from '../utils/media'
 import SEOHead from '../components/SEOHead'
 
 const FAVORITES_KEY = 'mahalo_favorites'
@@ -265,12 +265,7 @@ export default function PropertyDetail() {
       <SEOHead
         title={`${property.name}${property.city ? ` — ${property.city.name}` : ''}${property.price ? ` — ${formatPrice(property.price)}` : ''}`}
         description={`${property.type === 'sale' ? 'Acheter' : 'Louer'} : ${property.name}${property.city ? ` à ${property.city.name}` : ''}, Maroc.${property.number_bedroom ? ` ${property.number_bedroom} chambres.` : ''}${property.number_bathroom ? ` ${property.number_bathroom} SdB.` : ''} ${property.price ? `À partir de ${formatPrice(property.price)}.` : ''}`.trim()}
-        ogImage={(() => {
-          const img = property.image
-          if (!img) return undefined
-          if (img.startsWith('http')) return img
-          return `${window.location.origin}/storage/${img}`
-        })()}
+        ogImage={storagePublicUrl(property.image)}
         canonical={`${window.location.origin}/properties/${property.slug?.key ?? property.id}`}
         ogType="article"
         alternateLocales

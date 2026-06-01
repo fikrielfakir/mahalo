@@ -118,6 +118,14 @@ function buildOgTags(origin, { title, description, image, url, type = 'website' 
   ].filter(Boolean).join('\n        ')
 }
 
+function buildStorageUrl(imgPath) {
+  if (!imgPath) return ''
+  if (imgPath.startsWith('http')) return imgPath
+  // Remove any leading /storage/ prefix to avoid doubling it
+  const clean = imgPath.replace(/^\/storage\//, '')
+  return `${INTERNAL_API}/storage/${clean}`
+}
+
 async function resolveOgMeta(pathname, origin) {
   const propMatch = pathname.match(PROPERTY_ROUTE)
   if (propMatch) {
@@ -125,16 +133,18 @@ async function resolveOgMeta(pathname, origin) {
     const data = await fetchJson(`${INTERNAL_API}/api/v1/properties/${slug}`)
     if (!data) return null
 
-    const city       = data.city?.name || ''
-    const price      = formatPrice(data.price)
-    const beds       = data.number_bedroom ? `${data.number_bedroom} ch.` : ''
-    const baths      = data.number_bathroom ? `${data.number_bathroom} sdb.` : ''
+    const city        = data.city?.name || ''
+    const price       = formatPrice(data.price)
+    const beds        = data.number_bedroom ? `${data.number_bedroom} ch.` : ''
+    const baths       = data.number_bathroom ? `${data.number_bathroom} sdb.` : ''
     const listingType = data.type === 'sale' ? 'À vendre' : 'À louer'
-    // Pick the best available image: main image → first gallery image → thumbnail
-    const imgPath    = data.image || (Array.isArray(data.images) && data.images[0]) || data.thumbnail_url || ''
-    const image      = imgPath
-      ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
-      : ''
+
+    // Pick best image: main → first gallery → thumbnail. Always resolve via API domain.
+    const rawImg = data.image
+      || (Array.isArray(data.images) && data.images.find(i => !/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(i)))
+      || data.thumbnail_url
+      || ''
+    const image = buildStorageUrl(rawImg)
 
     const titleParts = [data.name, city && `— ${city}`, price && `— ${price}`].filter(Boolean)
     const descParts  = [listingType, data.name, city && `à ${city}`, 'Maroc.', beds, baths, price && `À partir de ${price}.`].filter(Boolean)
@@ -154,13 +164,15 @@ async function resolveOgMeta(pathname, origin) {
     const data = await fetchJson(`${INTERNAL_API}/api/v1/projects/${slug}`)
     if (!data) return null
 
-    const city      = data.city?.name || ''
-    const price     = formatPrice(data.price_from)
-    // Pick the best available image: main image → first gallery image → thumbnail
-    const imgPath   = data.image || (Array.isArray(data.images) && data.images[0]) || data.thumbnail_url || ''
-    const image     = imgPath
-      ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
-      : ''
+    const city  = data.city?.name || ''
+    const price = formatPrice(data.price_from)
+
+    // Pick best image and resolve via API domain.
+    const rawImg = data.image
+      || (Array.isArray(data.images) && data.images.find(i => !/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(i)))
+      || data.thumbnail_url
+      || ''
+    const image = buildStorageUrl(rawImg)
 
     const titleParts = [data.name, city && `— ${city}`, price && `— À partir de ${price}`].filter(Boolean)
     const desc = data.description?.slice(0, 200) || 'Découvrez ce projet immobilier premium.'

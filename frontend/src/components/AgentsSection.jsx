@@ -112,7 +112,28 @@ export default function AgentsSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Mobile: horizontal scroll carousel */}
+        <div className="sm:hidden -mx-4 xs:-mx-5 px-4 xs:px-5">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3">
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="shrink-0 w-[64vw] bg-white rounded-3xl p-5" style={{ boxShadow: '0 4px 24px rgba(115,13,38,0.06)' }}>
+                    <div className="w-16 h-16 skeleton rounded-2xl mx-auto mb-4" />
+                    <div className="h-4 skeleton rounded-xl w-3/4 mx-auto mb-2" />
+                    <div className="h-3 skeleton rounded-xl w-1/2 mx-auto mb-4" />
+                    <div className="h-9 skeleton rounded-xl" />
+                  </div>
+                ))
+              : agents.map((agent, i) => (
+                  <div key={agent.id} className="shrink-0 w-[64vw]">
+                    <AgentCard agent={agent} index={i} t={t} />
+                  </div>
+                ))
+            }
+          </div>
+        </div>
+        {/* Desktop: grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading
             ? Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-3xl p-6" style={{ boxShadow: '0 4px 24px rgba(115,13,38,0.06)' }}>

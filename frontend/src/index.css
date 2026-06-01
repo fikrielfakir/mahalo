@@ -254,6 +254,11 @@
   .touch-manip { touch-action: manipulation; }
 }
 
+/* Show elements on touch-only devices (no hover support) */
+@media (hover: none) {
+  .touch-device-show { opacity: 1 !important; }
+}
+
 /* ── Swiper ── */
 .swiper-pagination-bullet {
   background: #BA1932 !important;

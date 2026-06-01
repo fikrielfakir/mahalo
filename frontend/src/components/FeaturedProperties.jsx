@@ -40,12 +40,28 @@ export default function FeaturedProperties() {
         {!loading && properties.length === 0 ? (
           <div className="text-center py-20" style={{ color: 'rgba(115,13,38,0.35)' }}>{t('sections.noFeatured')}</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => <PropertyCardSkeleton key={i} />)
-              : properties.slice(0, 8).map((p) => <PropertyCard key={p.id} property={p} />)
-            }
-          </div>
+          <>
+            {/* Mobile: horizontal scroll carousel */}
+            <div className="sm:hidden -mx-4 xs:-mx-5 px-4 xs:px-5">
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3">
+                {loading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="shrink-0 w-[76vw]"><PropertyCardSkeleton /></div>
+                    ))
+                  : properties.slice(0, 8).map((p) => (
+                      <div key={p.id} className="shrink-0 w-[76vw]"><PropertyCard property={p} /></div>
+                    ))
+                }
+              </div>
+            </div>
+            {/* Desktop: grid */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => <PropertyCardSkeleton key={i} />)
+                : properties.slice(0, 8).map((p) => <PropertyCard key={p.id} property={p} />)
+              }
+            </div>
+          </>
         )}
 
         <div className="flex sm:hidden justify-center mt-10">

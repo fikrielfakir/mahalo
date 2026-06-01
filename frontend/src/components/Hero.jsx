@@ -213,12 +213,12 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Search button */}
-              <div className="flex justify-end p-2 pr-3">
+              {/* Search button — full width on mobile */}
+              <div className="p-3">
                 <button
                   onClick={handleSearch}
-                  className="flex items-center gap-1.5 text-white font-bold text-sm px-6 py-3 transition-all active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', borderRadius: '999px', boxShadow: '0 4px 20px rgba(186,25,50,0.40)', whiteSpace: 'nowrap' }}
+                  className="flex w-full items-center justify-center gap-2 text-white font-bold text-sm py-3.5 transition-all active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #730D26 0%, #BA1932 100%)', borderRadius: '14px', boxShadow: '0 4px 20px rgba(186,25,50,0.40)' }}
                 >
                   <Search size={15} /> {t('hero.searchBtn')}
                 </button>

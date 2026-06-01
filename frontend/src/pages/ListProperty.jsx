@@ -142,13 +142,14 @@ function Step1({ form, setForm, categories, loading, t }) {
     <div className="space-y-6">
       {/* Property Name */}
       <div>
-        <SectionLabel>{t('listProperty.propertyName')} <span className="normal-case font-normal text-navy/30">({t('listProperty.propertyNameOptional')})</span></SectionLabel>
+        <SectionLabel>{t('listProperty.propertyName')} <span className="text-gold">*</span></SectionLabel>
         <InputWrap icon={Building2}>
           <input
             type="text"
             placeholder={t('listProperty.propertyNamePlaceholder')}
             value={form.property_name}
             onChange={set('property_name')}
+            required
             className={INPUT}
           />
         </InputWrap>
@@ -314,30 +315,30 @@ function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFa
     <div className="space-y-6">
       {/* Specs */}
       <div>
-        <SectionLabel>{t('listProperty.propertySpecs')}</SectionLabel>
+        <SectionLabel>{t('listProperty.propertySpecs')} <span className="text-gold">*</span></SectionLabel>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
           <InputWrap icon={Bed}>
-            <input type="number" placeholder={t('listProperty.bedrooms')} min="0" value={form.bedrooms} onChange={set('bedrooms')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.bedrooms')} min="0" value={form.bedrooms} onChange={set('bedrooms')} required className={INPUT} />
           </InputWrap>
           <InputWrap icon={Bath}>
-            <input type="number" placeholder={t('listProperty.bathrooms')} min="0" value={form.bathrooms} onChange={set('bathrooms')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.bathrooms')} min="0" value={form.bathrooms} onChange={set('bathrooms')} required className={INPUT} />
           </InputWrap>
           <InputWrap icon={Maximize2}>
-            <input type="number" placeholder={t('listProperty.sizeSqm')} min="0" value={form.size} onChange={set('size')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.sizeSqm')} min="0" value={form.size} onChange={set('size')} required className={INPUT} />
           </InputWrap>
           <InputWrap icon={DollarSign}>
-            <input type="number" placeholder={t('listProperty.priceMad')} min="0" value={form.price} onChange={set('price')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.priceMad')} min="0" value={form.price} onChange={set('price')} required className={INPUT} />
           </InputWrap>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <InputWrap icon={Layers}>
-            <input type="number" placeholder={t('listProperty.floorNo')} min="0" value={form.floor_number} onChange={set('floor_number')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.floorNo')} min="0" value={form.floor_number} onChange={set('floor_number')} required className={INPUT} />
           </InputWrap>
           <InputWrap icon={Building2}>
-            <input type="number" placeholder={t('listProperty.totalFloors')} min="0" value={form.total_floors} onChange={set('total_floors')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.totalFloors')} min="0" value={form.total_floors} onChange={set('total_floors')} required className={INPUT} />
           </InputWrap>
           <InputWrap icon={CalendarDays}>
-            <input type="number" placeholder={t('listProperty.yearBuilt')} min="1800" max={new Date().getFullYear()} value={form.year_built} onChange={set('year_built')} className={INPUT} />
+            <input type="number" placeholder={t('listProperty.yearBuilt')} min="1800" max={new Date().getFullYear()} value={form.year_built} onChange={set('year_built')} required className={INPUT} />
           </InputWrap>
         </div>
       </div>
@@ -474,7 +475,7 @@ function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFa
 
       {/* Availability */}
       <div>
-        <SectionLabel>{t('listProperty.availability')}</SectionLabel>
+        <SectionLabel>{t('listProperty.availability')} <span className="text-gold">*</span></SectionLabel>
         {form.listing_intent === 'sale' ? (
           <div className="space-y-3">
             <label className="flex items-center gap-3 cursor-pointer">
@@ -770,7 +771,7 @@ export default function ListProperty() {
     setSubmitting(true)
     try {
       await userListingsApi.store({
-        name:               form.property_name.trim() || `${selectedCity.name} — ${form.listing_intent === 'sale' ? 'For Sale' : 'For Rent'}`,
+        name:               form.property_name.trim(),
         type:               form.listing_intent,
         location:           form.location || '',
         city_id:            parseInt(form.city_id),
@@ -809,11 +810,45 @@ export default function ListProperty() {
 
   const handleNext = () => {
     if (navigating) return
-    if (step === 0 && !form.category_id) {
-      showToast(t('listProperty.selectPropertyTypeError'), 'error'); return
+    if (step === 0) {
+      if (!form.property_name.trim()) {
+        showToast(t('listProperty.propertyNameRequired', 'Property name is required'), 'error'); return
+      }
+      if (!form.category_id) {
+        showToast(t('listProperty.selectPropertyTypeError'), 'error'); return
+      }
     }
     if (step === 1 && !form.city_id) {
       showToast(t('listProperty.selectCityError'), 'error'); return
+    }
+    if (step === 2) {
+      if (!form.bedrooms && form.bedrooms !== 0) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.bathrooms && form.bathrooms !== 0) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.size) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.price) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.floor_number && form.floor_number !== 0) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.total_floors) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      if (!form.year_built) {
+        showToast(t('listProperty.specsRequired', 'Please fill in all property specs (Bedrooms, Bathrooms, Size, Price, Floor no., Total floors, Year built)'), 'error'); return
+      }
+      const availabilityMissing = form.listing_intent === 'rent'
+        ? !form.available_from
+        : (!form.available_immediately && !form.available_from)
+      if (availabilityMissing) {
+        showToast(t('listProperty.availabilityRequired', 'Please set the availability date'), 'error'); return
+      }
     }
     setNavigating(true)
     setStep(s => Math.min(s + 1, STEPS.length - 1))

@@ -13,8 +13,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
 const PORT = process.env.PORT || 3000
 const API_BACKEND = process.env.API_BACKEND_URL || 'http://localhost:8000'
-// Always use the local Laravel API for SSR data fetching (API_BACKEND may point to prod)
-const INTERNAL_API = 'http://localhost:8000'
+// For SSR data fetching (OG tags), use INTERNAL_API env var.
+// In dev: defaults to localhost:8000. In prod: set to https://api.mahalo.ma (or wherever the API lives).
+const INTERNAL_API = process.env.INTERNAL_API || 'http://localhost:8000'
 
 let cachedSiteSettings = null
 let settingsCachedAt   = 0
@@ -129,7 +130,8 @@ async function resolveOgMeta(pathname, origin) {
     const beds       = data.number_bedroom ? `${data.number_bedroom} ch.` : ''
     const baths      = data.number_bathroom ? `${data.number_bathroom} sdb.` : ''
     const listingType = data.type === 'sale' ? 'À vendre' : 'À louer'
-    const imgPath    = data.image
+    // Pick the best available image: main image → first gallery image → thumbnail
+    const imgPath    = data.image || (Array.isArray(data.images) && data.images[0]) || data.thumbnail_url || ''
     const image      = imgPath
       ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
       : ''
@@ -154,7 +156,8 @@ async function resolveOgMeta(pathname, origin) {
 
     const city      = data.city?.name || ''
     const price     = formatPrice(data.price_from)
-    const imgPath   = data.image
+    // Pick the best available image: main image → first gallery image → thumbnail
+    const imgPath   = data.image || (Array.isArray(data.images) && data.images[0]) || data.thumbnail_url || ''
     const image     = imgPath
       ? (imgPath.startsWith('http') ? imgPath : `${origin}/storage/${imgPath}`)
       : ''

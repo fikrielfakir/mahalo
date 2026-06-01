@@ -27,12 +27,13 @@ class TrackPageView
                 }
             }
 
-            $ua  = $request->userAgent() ?? '';
-            $geo = $this->resolveGeo($request);
+            $ua      = $request->userAgent() ?? '';
+            $realIp  = $this->realIp($request);
+            $geo     = $this->resolveGeo($request);
 
             PageView::create([
                 'session_id'   => $this->getSessionId($request),
-                'ip_address'   => $request->ip(),
+                'ip_address'   => $realIp,
                 'page'         => '/' . $path,
                 'referrer'     => $request->header('Referer'),
                 'country'      => $geo['country'],
@@ -52,7 +53,7 @@ class TrackPageView
 
     private function resolveGeo(Request $request): array
     {
-        // 1. Cloudflare headers (production)
+        // 1. Cloudflare headers — most accurate when CF proxy is active
         $cfCountry = $request->header('CF-IPCountry');
         $cfCity    = $request->header('CF-IPCity');
 
@@ -77,38 +78,84 @@ class TrackPageView
             ];
         }
 
-        // 3. IP-based geolocation fallback (cached per IP for 24 h)
-        $ip = $request->ip();
+        // 3. Resolve the real visitor IP (not the proxy/CDN edge IP)
+        $ip = $this->realIp($request);
 
-        // Skip private / loopback addresses
+        // Skip private / loopback / unroutable addresses
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
             return ['country' => null, 'country_code' => null, 'city' => null];
         }
 
-        return Cache::remember("geo:{$ip}", 86400, function () use ($ip) {
-            try {
-                $ctx = stream_context_create(['http' => ['timeout' => 2]]);
-                $raw = @file_get_contents(
-                    "http://ip-api.com/json/{$ip}?fields=status,country,countryCode,city",
-                    false,
-                    $ctx
-                );
-                if (!$raw) {
-                    return ['country' => null, 'country_code' => null, 'city' => null];
+        // 4. Serve from cache if a successful result was stored previously
+        $cacheKey = "geo:{$ip}";
+        $cached   = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // 5. Live ip-api.com lookup — only cache on success so failures are retried
+        $geo = $this->fetchIpApi($ip);
+
+        if ($geo['country'] !== null) {
+            Cache::put($cacheKey, $geo, 86400); // 24 h — only on success
+        }
+
+        return $geo;
+    }
+
+    /**
+     * Extract the real visitor IP, preferring Cloudflare / proxy headers
+     * over the socket-level IP which is often the CDN edge node.
+     */
+    private function realIp(Request $request): string
+    {
+        // CF-Connecting-IP is the most reliable when behind Cloudflare
+        $cfIp = $request->header('CF-Connecting-IP');
+        if ($cfIp && filter_var(trim($cfIp), FILTER_VALIDATE_IP)) {
+            return trim($cfIp);
+        }
+
+        // X-Forwarded-For: take the first public IP in the chain
+        $xff = $request->header('X-Forwarded-For');
+        if ($xff) {
+            foreach (array_map('trim', explode(',', $xff)) as $candidate) {
+                if (filter_var($candidate, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $candidate;
                 }
-                $data = json_decode($raw, true);
-                if (($data['status'] ?? '') !== 'success') {
-                    return ['country' => null, 'country_code' => null, 'city' => null];
-                }
-                return [
-                    'country'      => $data['country']     ?? null,
-                    'country_code' => $data['countryCode'] ?? null,
-                    'city'         => $data['city']        ?? null,
-                ];
-            } catch (\Throwable) {
+            }
+        }
+
+        return $request->ip();
+    }
+
+    private function fetchIpApi(string $ip): array
+    {
+        try {
+            $ctx = stream_context_create(['http' => ['timeout' => 3]]);
+            $raw = @file_get_contents(
+                "http://ip-api.com/json/{$ip}?fields=status,country,countryCode,city",
+                false,
+                $ctx
+            );
+
+            if (!$raw) {
                 return ['country' => null, 'country_code' => null, 'city' => null];
             }
-        });
+
+            $data = json_decode($raw, true);
+
+            if (($data['status'] ?? '') !== 'success') {
+                return ['country' => null, 'country_code' => null, 'city' => null];
+            }
+
+            return [
+                'country'      => $data['country']     ?? null,
+                'country_code' => $data['countryCode'] ?? null,
+                'city'         => $data['city']        ?? null,
+            ];
+        } catch (\Throwable) {
+            return ['country' => null, 'country_code' => null, 'city' => null];
+        }
     }
 
     private function getSessionId(Request $request): string
@@ -117,7 +164,7 @@ class TrackPageView
         if ($cookie) {
             return substr($cookie, 0, 64);
         }
-        return substr(md5($request->ip() . ($request->userAgent() ?? '') . date('Y-m-d')), 0, 32);
+        return substr(md5($this->realIp($request) . ($request->userAgent() ?? '') . date('Y-m-d')), 0, 32);
     }
 
     private function countryName(string $code): string

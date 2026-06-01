@@ -20,6 +20,7 @@ const TAB_AUTO_TRANSLATE_KEYS = {
   site_mode:  ['maintenance_message', 'coming_soon_message'],
   cookies:    ['cookie_consent_title', 'cookie_consent_message', 'cookie_accept_text', 'cookie_decline_text'],
   mobile_app: ['mobile_app_title', 'mobile_app_subtitle', 'mobile_app_description'],
+  pages:      ['page_about', 'page_privacy', 'page_terms', 'page_cookie'],
 }
 
 const LOCALES = [

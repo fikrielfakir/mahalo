@@ -21,7 +21,7 @@ function renderAboutText(text) {
 }
 
 export default function About() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [propertiesCount, setPropertiesCount] = useState(null)
   const [agentsCount, setAgentsCount]         = useState(null)
   const [citiesCount, setCitiesCount]         = useState(null)
@@ -41,10 +41,15 @@ export default function About() {
     propertiesApi.filters()
       .then(r => { if (Array.isArray(r?.data?.cities)) setCitiesCount(r.data.cities.length) })
       .catch(() => {})
+  }, [])
 
-    publicSettingsApi.get()
+  useEffect(() => {
+    setLoading(true)
+    const lang = i18n.language?.split('-')[0] || 'fr'
+    publicSettingsApi.get(lang)
       .then(r => {
         if (r?.data?.page_about) setAboutText(r.data.page_about)
+        else setAboutText('')
         if (r?.data?.team_members) {
           try {
             const parsed = typeof r.data.team_members === 'string'
@@ -56,7 +61,7 @@ export default function About() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [i18n.language])
 
   const VALUES = [
     { icon: Shield,    title: t('about.value1Title'), desc: t('about.value1Desc') },

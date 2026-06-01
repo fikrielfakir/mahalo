@@ -521,7 +521,7 @@ export default function Properties() {
       <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ background: '#F5F5F5' }}>
         <SEOHead
           title={pageTitle}
-          description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+          description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo.`}
           breadcrumbs={[
             { name: 'Home', url: '/' },
             { name: pageTitle, url: '/properties' },
@@ -633,7 +633,7 @@ export default function Properties() {
     <div className="min-h-screen" style={{ background: '#F5F5F5' }}>
       <SEOHead
         title={pageTitle}
-        description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo Real Estate.`}
+        description={`Browse verified ${pageTitle.toLowerCase()} across Morocco. Filter by city, price, bedrooms, and property type. Find your ideal home with Mahalo.`}
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: pageTitle, url: '/properties' },

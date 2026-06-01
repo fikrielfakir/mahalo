@@ -45,7 +45,7 @@ export default function Home() {
         '@type': 'Organization',
         '@id': `${SITE_URL}/#organization`,
         'name': 'Mahalo Immobilier',
-        'alternateName': 'Mahalo Real Estate',
+        'alternateName': 'Mahalo',
         'url': SITE_URL,
         'logo': {
           '@type': 'ImageObject',
@@ -75,7 +75,7 @@ export default function Home() {
         '@id': `${SITE_URL}/#website`,
         'url': SITE_URL,
         'name': 'Mahalo Immobilier',
-        'alternateName': ['Mahalo Real Estate', 'Mahalo.ma'],
+        'alternateName': ['Mahalo', 'Mahalo.ma'],
         'description': pageDescription,
         'publisher': { '@id': `${SITE_URL}/#organization` },
         'inLanguage': ['fr-MA', 'ar-MA', 'en'],

@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 
-export const SITE     = 'Mahalo Real Estate'
+export const SITE     = 'Mahalo'
 export const SITE_URL = 'https://mahalo.ma'
 
 const DEFAULT_DESC = "Discover premium properties across Morocco's most prestigious neighborhoods. Browse apartments, villas, and real estate projects in Casablanca, Marrakech, Rabat, Tanger, Agadir and more."

@@ -1,4 +1,4 @@
-# Mahalo Real Estate — SEO Audit Prompt Pack
+# Mahalo — SEO Audit Prompt Pack
 > Paste any of these prompts directly to an AI agent (Claude, GPT-4, Gemini).  
 > Every prompt is pre-loaded with your actual stack: **React 18 + Vite 5 + react-router-dom v6 + Laravel 11 + Tailwind CSS 3**.  
 > No generic answers — each prompt references your real files, models, and patterns.

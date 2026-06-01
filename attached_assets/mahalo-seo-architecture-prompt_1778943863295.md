@@ -1,4 +1,4 @@
-# 🏠 Mahalo Real Estate — SEO Architecture Master Prompt
+# 🏠 Mahalo — SEO Architecture Master Prompt
 
 > **Stack detected:** React (Vite) SPA + Laravel API backend  
 > **Target search engines:** Google, Yahoo, Bing, Yandex  
@@ -303,7 +303,7 @@ Show before/after Lighthouse score estimates for each optimization.
 ## PROMPT 8 — Local SEO & Google Business (Morocco)
 
 ```
-I am building local SEO for Mahalo Real Estate, a property platform
+I am building local SEO for Mahalo, a property platform
 targeting Moroccan cities: Casablanca, Rabat, Marrakech, Tanger, Agadir, Fes.
 
 Implement local SEO signals:
@@ -357,7 +357,7 @@ Show implementation code for items 1, 2, and 3.
 
 ```
 I want to implement IndexNow protocol to instantly notify Bing and Yandex
-when new properties are listed or updated on my Mahalo real estate platform.
+when new properties are listed or updated on my Mahalo platform.
 
 My backend is Laravel 11. New properties are created via POST /api/properties
 (admin panel) and updated via PUT /api/properties/:id.
@@ -400,7 +400,7 @@ Show all code: service, job, observer, and routes.
 ## PROMPT 10 — Monitoring & Measuring SEO Performance
 
 ```
-I launched SEO for Mahalo real estate platform. Help me set up monitoring
+I launched SEO for Mahalo platform. Help me set up monitoring
 to track organic search performance across Google, Bing, and Yandex.
 
 1. GOOGLE SEARCH CONSOLE SETUP
@@ -494,6 +494,6 @@ composer require spatie/laravel-sitemap    # XML sitemap generation
 
 ---
 
-*Generated for Mahalo Real Estate — React (Vite) + Laravel 11 stack*  
+*Generated for Mahalo — React (Vite) + Laravel 11 stack*  
 *Target markets: Morocco (Casablanca, Rabat, Marrakech, Tanger, Agadir, Fes)*  
 *Search engines: Google, Yahoo (Bing-powered), Bing, Yandex*

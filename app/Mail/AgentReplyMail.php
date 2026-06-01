@@ -22,7 +22,7 @@ class AgentReplyMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reply from ' . $this->agentName . ' – Mahalo Real Estate',
+            subject: 'Reply from ' . $this->agentName . ' – Mahalo',
         );
     }
 

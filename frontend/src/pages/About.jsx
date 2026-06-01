@@ -80,12 +80,12 @@ export default function About() {
   return (
     <div className="min-h-screen bg-surface">
       <SEOHead
-        title="About Mahalo Real Estate"
-        description="Mahalo Real Estate is Morocco's leading property marketplace. We connect buyers, sellers, renters and investors with verified listings and expert local agents."
+        title="About Mahalo"
+        description="Mahalo is Morocco's leading property marketplace. We connect buyers, sellers, renters and investors with verified listings and expert local agents."
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'RealEstateAgent',
-          'name': 'Mahalo Real Estate',
+          'name': 'Mahalo',
           'url': 'https://mahalo.ma',
           'description': 'Morocco\'s premier real estate marketplace connecting buyers, sellers and investors.',
           'areaServed': 'MA',

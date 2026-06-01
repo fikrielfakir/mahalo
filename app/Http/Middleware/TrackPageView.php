@@ -35,7 +35,7 @@ class TrackPageView
                 'referrer'     => $request->header('Referer'),
                 'country'      => $this->detectCountry($request),
                 'country_code' => $this->detectCountryCode($request),
-                'city'         => null,
+                'city'         => $this->detectCity($request),
                 'device_type'  => $this->detectDevice($ua),
                 'browser'      => $this->detectBrowser($ua),
                 'os'           => $this->detectOS($ua),
@@ -55,6 +55,15 @@ class TrackPageView
             return substr($cookie, 0, 64);
         }
         return substr(md5($request->ip() . ($request->userAgent() ?? '') . date('Y-m-d')), 0, 32);
+    }
+
+    private function detectCity(Request $request): ?string
+    {
+        $city = $request->header('CF-IPCity');
+        if ($city && $city !== 'XX' && $city !== '-') {
+            return urldecode($city);
+        }
+        return $request->header('X-City') ?? null;
     }
 
     private function detectCountry(Request $request): ?string

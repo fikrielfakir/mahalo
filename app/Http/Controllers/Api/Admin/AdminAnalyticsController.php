@@ -154,10 +154,28 @@ class AdminAnalyticsController extends Controller
         return response()->json(['data' => $rows, 'error' => false]);
     }
 
+    public function cities(Request $request): JsonResponse
+    {
+        $days = (int) $request->get('days', 30);
+        $from = now()->subDays($days)->startOfDay();
+
+        $rows = PageView::where('created_at', '>=', $from)
+            ->where('is_bot', false)
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->select('city', 'country', DB::raw('COUNT(*) as views'), DB::raw('COUNT(DISTINCT session_id) as visitors'))
+            ->groupBy('city', 'country')
+            ->orderByDesc('views')
+            ->limit(20)
+            ->get();
+
+        return response()->json(['data' => $rows, 'error' => false]);
+    }
+
     public function recentVisitors(Request $request): JsonResponse
     {
         $rows = PageView::where('is_bot', false)
-            ->select('id', 'ip_address', 'page', 'country', 'country_code', 'device_type', 'browser', 'os', 'referrer', 'created_at')
+            ->select('id', 'ip_address', 'page', 'country', 'country_code', 'city', 'device_type', 'browser', 'os', 'referrer', 'created_at')
             ->orderByDesc('created_at')
             ->limit(50)
             ->get();

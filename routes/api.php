@@ -313,6 +313,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/browsers',       [AdminAnalyticsController::class, 'browsers']);
             Route::get('/os',             [AdminAnalyticsController::class, 'os']);
             Route::get('/recent',         [AdminAnalyticsController::class, 'recentVisitors']);
+            Route::get('/live',           [AdminAnalyticsController::class, 'liveVisitors']);
         });
     });
 });

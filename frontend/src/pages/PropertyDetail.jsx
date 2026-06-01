@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2 } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2, Car, Wifi, Tv, UtensilsCrossed, WashingMachine, Eye, Wind, Flower2, CigaretteOff, Languages, ParkingCircle, ChefHat, Thermometer, AirVent, Dumbbell, Waves, Trees, ShieldCheck, Dog, Baby, Accessibility, Coffee, BookOpen, Bike, Fence, Sun, Droplets, Zap, Package, Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import NotFoundState from '../components/NotFoundState'
@@ -17,6 +17,183 @@ import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import { isVideoPath, mediaUrl, storagePublicUrl } from '../utils/media'
 import SEOHead from '../components/SEOHead'
+
+// ─── Facility icon map ────────────────────────────────────────────────────────
+const FACILITY_ICON_MAP = {
+  // Parking
+  'parking': ParkingCircle, 'free parking': ParkingCircle, 'free on-site parking': ParkingCircle,
+  'private parking': Car, 'parking on site': ParkingCircle, 'valet parking': Car,
+  // Kitchen
+  'kitchen': ChefHat, 'kitchenette': UtensilsCrossed, 'washing machine': WashingMachine,
+  'dishwasher': UtensilsCrossed, 'microwave': Thermometer, 'refrigerator': Package,
+  'coffee maker': Coffee, 'coffee machine': Coffee,
+  // Media & Tech
+  'flat-screen tv': Tv, 'flat screen tv': Tv, 'television': Tv, 'tv': Tv,
+  'wifi': Wifi, 'internet': Wifi, 'free wifi': Wifi, 'cable tv': Tv,
+  // View & Outdoor
+  'balcony': Wind, 'view': Eye, 'garden view': Flower2, 'sea view': Waves,
+  'pool view': Waves, 'terrace': Sun, 'garden': Trees, 'outdoor pool': Waves,
+  'indoor pool': Waves, 'swimming pool': Waves, 'hot tub': Droplets,
+  // Fitness
+  'gym': Dumbbell, 'fitness center': Dumbbell, 'sauna': Thermometer,
+  // General
+  'air conditioning': AirVent, 'heating': Thermometer, 'elevator': Accessibility,
+  'concierge': ShieldCheck, 'security': ShieldCheck, '24/7 security': ShieldCheck,
+  'pet friendly': Dog, 'pets allowed': Dog, 'family friendly': Baby,
+  'bicycle rental': Bike, 'storage': Package, 'laundry': WashingMachine,
+  'entire place': Home, 'the entire place is yours': Home,
+}
+
+function getFacilityIcon(name) {
+  if (!name) return Check
+  const key = name.toLowerCase().trim()
+  for (const [k, Icon] of Object.entries(FACILITY_ICON_MAP)) {
+    if (key.includes(k) || k.includes(key)) return Icon
+  }
+  return Check
+}
+
+// ─── Category icon map ────────────────────────────────────────────────────────
+const CATEGORY_ICON_MAP = {
+  'parking': ParkingCircle,
+  'kitchen': ChefHat,
+  'internet': Wifi,
+  'media': Tv,
+  'media & technology': Tv,
+  'technology': Tv,
+  'outdoors': Trees,
+  'outdoor': Trees,
+  'outdoor & view': Eye,
+  'view': Eye,
+  'miscellaneous': Package,
+  'great for your stay': Home,
+  'general': Home,
+  'fitness': Dumbbell,
+  'languages': Languages,
+  'languages spoken': Languages,
+  'safety': ShieldCheck,
+  'accessibility': Accessibility,
+  'bathroom': Droplets,
+  'bedroom': Bed,
+  'living area': Sun,
+}
+
+function getCategoryIcon(name) {
+  if (!name) return Package
+  const key = name.toLowerCase().trim()
+  for (const [k, Icon] of Object.entries(CATEGORY_ICON_MAP)) {
+    if (key === k || key.includes(k) || k.includes(key)) return Icon
+  }
+  return Package
+}
+
+// ─── Facilities Section ───────────────────────────────────────────────────────
+function FacilitiesSection({ facilities, t }) {
+  const [showAll, setShowAll] = useState(false)
+
+  // Group facilities by category
+  const grouped = facilities.reduce((acc, f) => {
+    const cat = f.category || f.pivot?.category || 'General'
+    if (!acc[cat]) acc[cat] = []
+    acc[cat].push(f)
+    return acc
+  }, {})
+
+  const categories = Object.entries(grouped)
+  const highlights = facilities.slice(0, 9)
+
+  return (
+    <div>
+      <h2 className="text-navy font-bold text-xl mb-5">
+        {t('property.facilities') || 'Équipements'}
+      </h2>
+
+      {/* Highlights grid — card style (image 1) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        {highlights.map((f) => {
+          const Icon = getFacilityIcon(f.name)
+          return (
+            <div
+              key={f.id}
+              className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-card transition-shadow"
+            >
+              <div className="w-9 h-9 rounded-xl bg-navy/5 flex items-center justify-center shrink-0">
+                <Icon size={17} className="text-navy/70" strokeWidth={1.5} />
+              </div>
+              <span className="text-navy/80 text-sm font-medium leading-tight">{f.name}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Expandable full grouped list (image 2) */}
+      {facilities.length > 9 && (
+        <>
+          {showAll && (
+            <div className="bg-white rounded-2xl p-6 shadow-card mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                {categories.map(([cat, items]) => {
+                  const CatIcon = getCategoryIcon(cat)
+                  return (
+                    <div key={cat}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <CatIcon size={16} className="text-navy/60" strokeWidth={1.5} />
+                        <h3 className="text-navy font-bold text-sm">{cat}</h3>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {items.map((f) => (
+                          <li key={f.id} className="flex items-center gap-2 text-navy/65 text-sm">
+                            <Check size={13} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+                            {f.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="flex items-center gap-2 text-navy font-semibold text-sm border border-navy/20 rounded-xl px-5 py-2.5 hover:bg-navy hover:text-white transition-all"
+          >
+            {showAll
+              ? (t('property.showLess') || 'Voir moins')
+              : `${t('property.showAllFacilities') || 'Voir tous les équipements'} (${facilities.length})`}
+          </button>
+        </>
+      )}
+
+      {/* If ≤9 facilities, still show grouped view */}
+      {facilities.length <= 9 && categories.length > 1 && (
+        <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            {categories.map(([cat, items]) => {
+              const CatIcon = getCategoryIcon(cat)
+              return (
+                <div key={cat}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <CatIcon size={16} className="text-navy/60" strokeWidth={1.5} />
+                    <h3 className="text-navy font-bold text-sm">{cat}</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {items.map((f) => (
+                      <li key={f.id} className="flex items-center gap-2 text-navy/65 text-sm">
+                        <Check size={13} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+                        {f.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const FAVORITES_KEY = 'mahalo_favorites'
 function getFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [] } catch { return [] } }
@@ -535,6 +712,11 @@ export default function PropertyDetail() {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Facilities */}
+              {property.facilities?.length > 0 && (
+                <FacilitiesSection facilities={property.facilities} t={t} />
               )}
 
               {/* Reviews section */}

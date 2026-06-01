@@ -336,15 +336,15 @@ EOT;
 
         $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
         $baseUrl = $frontendUrl . '/og-image.png';
-        $url = $baseUrl . '?v=' . time();
+        $versionedUrl = $baseUrl . '?v=' . time();
 
         DB::table('site_settings')->updateOrInsert(
             ['key' => 'og_image_url'],
-            ['value' => $baseUrl, 'updated_at' => now(), 'created_at' => now()]
+            ['value' => $versionedUrl, 'updated_at' => now(), 'created_at' => now()]
         );
 
         return response()->json([
-            'url' => $url,
+            'url' => $versionedUrl,
             'path' => 'og-image.png',
             'error' => false,
             'message' => 'OG image uploaded.',

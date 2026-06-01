@@ -65,14 +65,14 @@ function fetch_json(string $url): ?array {
 
 /**
  * Pick the best image URL from a property/project data array.
- * Returns an absolute URL.
+ * Returns an absolute URL. Falls back to $defaultOg if no image found.
  */
-function pick_image(array $data): string {
+function pick_image(array $data, string $defaultOg = DEFAULT_OG): string {
     $img = $data['image']
         ?? (isset($data['images'][0]) ? $data['images'][0] : null)
         ?? ($data['thumbnail_url'] ?? null)
         ?? '';
-    if (!$img) return DEFAULT_OG;
+    if (!$img) return $defaultOg;
     if (str_starts_with($img, 'http')) return $img;
     return SITE_URL . '/storage/' . ltrim($img, '/');
 }
@@ -135,9 +135,16 @@ function build_og_tags(
 $path        = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $requestUrl  = SITE_URL . $path;
 
-$title       = SITE_NAME . ' — Trouvez Votre Bien au Maroc';
-$description = 'Découvrez des propriétés premium dans les quartiers les plus prestigieux du Maroc.';
-$ogImage     = DEFAULT_OG;
+// Fetch site-level OG image from admin settings (versioned URL beats static fallback)
+$siteOgImage = DEFAULT_OG;
+$siteSettings = fetch_json(API_BASE . '/api/v1/public-settings');
+if ($siteSettings && !empty($siteSettings['og_image_url'])) {
+    $siteOgImage = $siteSettings['og_image_url'];
+}
+
+$title       = ($siteSettings['seo_title'] ?? null) ?: SITE_NAME . ' — Trouvez Votre Bien au Maroc';
+$description = ($siteSettings['seo_description'] ?? null) ?: 'Découvrez des propriétés premium dans les quartiers les plus prestigieux du Maroc.';
+$ogImage     = $siteOgImage;
 $ogType      = 'website';
 
 // ── Property page ─────────────────────────────────────────────────────────────
@@ -159,7 +166,7 @@ if (preg_match('~^/properties/([^/?#]+)~', $path, $m)) {
         $descParts  = array_filter([$listType, $name, $city ? "à $city" : '', 'Maroc.', $beds, $baths, $price ? "À partir de $price." : '']);
         $description = implode(' ', $descParts);
 
-        $ogImage  = pick_image($data);
+        $ogImage  = pick_image($data, $siteOgImage);
         $ogType   = 'article';
     }
 }
@@ -181,7 +188,7 @@ elseif (preg_match('~^/projects/([^/?#]+)~', $path, $m)) {
 
         $description = trim($name . ($city ? " à $city" : '') . ', Maroc. ' . ($desc ?: 'Découvrez ce projet immobilier premium.'));
 
-        $ogImage = pick_image($data);
+        $ogImage = pick_image($data, $siteOgImage);
         $ogType  = 'article';
     }
 }

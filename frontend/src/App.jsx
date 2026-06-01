@@ -18,6 +18,7 @@ import { AuthProvider } from './admin/context/AuthContext'
 import CookieBanner from './components/CookieBanner'
 import OfflineBanner from './components/OfflineBanner'
 import GlobalAiChat from './components/GlobalAiChat'
+import { usePageTracking } from './hooks/usePageTracking'
 
 // ── Lazy: Public pages ──────────────────────────────────────────
 const Home               = lazy(() => import('./pages/Home'))
@@ -94,6 +95,8 @@ function LangSync() {
   const { pathname } = useLocation()
   const { i18n } = useTranslation()
   const isAdmin = pathname.startsWith('/admin')
+
+  usePageTracking()
 
   useEffect(() => {
     const key = isAdmin ? ADMIN_LANG_KEY : USER_LANG_KEY

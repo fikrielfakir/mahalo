@@ -46,10 +46,15 @@ class AdminAnalyticsController extends Controller
         $days = (int) $request->get('days', 30);
         $from = now()->subDays($days)->startOfDay();
 
+        $isSqlite = config('database.default') === 'sqlite';
+        $dateFn   = $isSqlite
+            ? DB::raw("strftime('%Y-%m-%d', created_at) as date")
+            : DB::raw("DATE(created_at) as date");
+
         $rows = PageView::where('created_at', '>=', $from)
             ->where('is_bot', false)
             ->select(
-                DB::raw("strftime('%Y-%m-%d', created_at) as date"),
+                $dateFn,
                 DB::raw('COUNT(*) as views'),
                 DB::raw('COUNT(DISTINCT session_id) as visitors')
             )

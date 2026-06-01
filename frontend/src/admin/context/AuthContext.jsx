@@ -1,15 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { adminAuth } from '../api/adminApi'
 
-// Admin token stored in sessionStorage — never persisted to disk.
+// Admin token stored in localStorage for cross-tab and cross-session persistence.
 const AuthContext = createContext(null)
 
 const TOKEN_KEY = 'admin_token'
 
 const ss = {
-  get:    ()  => { try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null } },
-  set:    (v) => { try { sessionStorage.setItem(TOKEN_KEY, v) } catch {} },
-  remove: ()  => { try { sessionStorage.removeItem(TOKEN_KEY) } catch {} },
+  get:    ()  => { try { return localStorage.getItem(TOKEN_KEY) } catch { return null } },
+  set:    (v) => { try { localStorage.setItem(TOKEN_KEY, v) } catch {} },
+  remove: ()  => { try { localStorage.removeItem(TOKEN_KEY) } catch {} },
 }
 
 export function AuthProvider({ children }) {

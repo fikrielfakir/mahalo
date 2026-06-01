@@ -21,20 +21,20 @@ export default function AdminGoogleCallbackPage() {
       return
     }
 
-    try { sessionStorage.setItem('admin_token', token) } catch {}
+    try { localStorage.setItem('admin_token', token) } catch {}
 
     adminAuth.profile()
       .then((res) => {
         const role = res.data?.role
         if (!['admin', 'manager'].includes(role)) {
-          try { sessionStorage.removeItem('admin_token') } catch {}
+          try { localStorage.removeItem('admin_token') } catch {}
           navigate('/admin/login?error=not_admin', { replace: true })
           return
         }
         navigate('/admin/dashboard', { replace: true })
       })
       .catch(() => {
-        try { sessionStorage.removeItem('admin_token') } catch {}
+        try { localStorage.removeItem('admin_token') } catch {}
         navigate('/admin/login?error=google_failed', { replace: true })
       })
   }, [])

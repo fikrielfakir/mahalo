@@ -5,11 +5,11 @@ const BASE = (import.meta.env.VITE_API_URL || '') + '/api/v1'
 const TOKEN_KEY = 'admin_token'
 
 function getToken() {
-  try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null }
+  try { return localStorage.getItem(TOKEN_KEY) } catch { return null }
 }
 
 function removeToken() {
-  try { sessionStorage.removeItem(TOKEN_KEY) } catch {}
+  try { localStorage.removeItem(TOKEN_KEY) } catch {}
 }
 
 const client = axios.create({

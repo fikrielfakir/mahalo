@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\PageView;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrackPageView
@@ -26,16 +27,17 @@ class TrackPageView
                 }
             }
 
-            $ua = $request->userAgent() ?? '';
+            $ua  = $request->userAgent() ?? '';
+            $geo = $this->resolveGeo($request);
 
             PageView::create([
                 'session_id'   => $this->getSessionId($request),
                 'ip_address'   => $request->ip(),
                 'page'         => '/' . $path,
                 'referrer'     => $request->header('Referer'),
-                'country'      => $this->detectCountry($request),
-                'country_code' => $this->detectCountryCode($request),
-                'city'         => $this->detectCity($request),
+                'country'      => $geo['country'],
+                'country_code' => $geo['country_code'],
+                'city'         => $geo['city'],
                 'device_type'  => $this->detectDevice($ua),
                 'browser'      => $this->detectBrowser($ua),
                 'os'           => $this->detectOS($ua),
@@ -48,6 +50,67 @@ class TrackPageView
         return $response;
     }
 
+    private function resolveGeo(Request $request): array
+    {
+        // 1. Cloudflare headers (production)
+        $cfCountry = $request->header('CF-IPCountry');
+        $cfCity    = $request->header('CF-IPCity');
+
+        if ($cfCountry && $cfCountry !== 'XX') {
+            return [
+                'country'      => $this->countryName($cfCountry),
+                'country_code' => strtoupper($cfCountry),
+                'city'         => ($cfCity && $cfCity !== 'XX' && $cfCity !== '-')
+                                  ? urldecode($cfCity)
+                                  : null,
+            ];
+        }
+
+        // 2. Custom headers (X-Country / X-City)
+        $xCountry = $request->header('X-Country');
+        $xCity    = $request->header('X-City');
+        if ($xCountry) {
+            return [
+                'country'      => $xCountry,
+                'country_code' => null,
+                'city'         => $xCity ?: null,
+            ];
+        }
+
+        // 3. IP-based geolocation fallback (cached per IP for 24 h)
+        $ip = $request->ip();
+
+        // Skip private / loopback addresses
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return ['country' => null, 'country_code' => null, 'city' => null];
+        }
+
+        return Cache::remember("geo:{$ip}", 86400, function () use ($ip) {
+            try {
+                $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+                $raw = @file_get_contents(
+                    "http://ip-api.com/json/{$ip}?fields=status,country,countryCode,city",
+                    false,
+                    $ctx
+                );
+                if (!$raw) {
+                    return ['country' => null, 'country_code' => null, 'city' => null];
+                }
+                $data = json_decode($raw, true);
+                if (($data['status'] ?? '') !== 'success') {
+                    return ['country' => null, 'country_code' => null, 'city' => null];
+                }
+                return [
+                    'country'      => $data['country']     ?? null,
+                    'country_code' => $data['countryCode'] ?? null,
+                    'city'         => $data['city']        ?? null,
+                ];
+            } catch (\Throwable) {
+                return ['country' => null, 'country_code' => null, 'city' => null];
+            }
+        });
+    }
+
     private function getSessionId(Request $request): string
     {
         $cookie = $request->cookie('_hvid');
@@ -55,33 +118,6 @@ class TrackPageView
             return substr($cookie, 0, 64);
         }
         return substr(md5($request->ip() . ($request->userAgent() ?? '') . date('Y-m-d')), 0, 32);
-    }
-
-    private function detectCity(Request $request): ?string
-    {
-        $city = $request->header('CF-IPCity');
-        if ($city && $city !== 'XX' && $city !== '-') {
-            return urldecode($city);
-        }
-        return $request->header('X-City') ?? null;
-    }
-
-    private function detectCountry(Request $request): ?string
-    {
-        $cf = $request->header('CF-IPCountry');
-        if ($cf && $cf !== 'XX') {
-            return $this->countryName($cf);
-        }
-        return $request->header('X-Country') ?? null;
-    }
-
-    private function detectCountryCode(Request $request): ?string
-    {
-        $cf = $request->header('CF-IPCountry');
-        if ($cf && $cf !== 'XX') {
-            return strtoupper($cf);
-        }
-        return null;
     }
 
     private function countryName(string $code): string
@@ -100,6 +136,9 @@ class TrackPageView
             'VN' => 'Vietnam', 'TH' => 'Thailand', 'MY' => 'Malaysia', 'SG' => 'Singapore',
             'KR' => 'South Korea', 'HK' => 'Hong Kong', 'TW' => 'Taiwan', 'NZ' => 'New Zealand',
             'AR' => 'Argentina', 'CO' => 'Colombia', 'CL' => 'Chile', 'PE' => 'Peru',
+            'LY' => 'Libya', 'SD' => 'Sudan', 'IQ' => 'Iraq', 'SY' => 'Syria',
+            'JO' => 'Jordan', 'LB' => 'Lebanon', 'KW' => 'Kuwait', 'QA' => 'Qatar',
+            'OM' => 'Oman', 'BH' => 'Bahrain', 'YE' => 'Yemen',
         ];
         return $map[$code] ?? $code;
     }
@@ -117,22 +156,22 @@ class TrackPageView
 
     private function detectBrowser(string $ua): string
     {
-        if (preg_match('/Edg\//i', $ua))    return 'Edge';
-        if (preg_match('/OPR\//i', $ua))    return 'Opera';
-        if (preg_match('/Chrome\//i', $ua)) return 'Chrome';
-        if (preg_match('/Safari\//i', $ua)) return 'Safari';
-        if (preg_match('/Firefox\//i', $ua))return 'Firefox';
+        if (preg_match('/Edg\//i', $ua))        return 'Edge';
+        if (preg_match('/OPR\//i', $ua))        return 'Opera';
+        if (preg_match('/Chrome\//i', $ua))     return 'Chrome';
+        if (preg_match('/Safari\//i', $ua))     return 'Safari';
+        if (preg_match('/Firefox\//i', $ua))    return 'Firefox';
         if (preg_match('/MSIE|Trident/i', $ua)) return 'IE';
         return 'Other';
     }
 
     private function detectOS(string $ua): string
     {
-        if (preg_match('/Windows NT/i', $ua))  return 'Windows';
-        if (preg_match('/Mac OS X/i', $ua))    return 'macOS';
-        if (preg_match('/Android/i', $ua))     return 'Android';
+        if (preg_match('/Windows NT/i', $ua))       return 'Windows';
+        if (preg_match('/Mac OS X/i', $ua))         return 'macOS';
+        if (preg_match('/Android/i', $ua))          return 'Android';
         if (preg_match('/iPhone|iPad|iPod/i', $ua)) return 'iOS';
-        if (preg_match('/Linux/i', $ua))       return 'Linux';
+        if (preg_match('/Linux/i', $ua))            return 'Linux';
         return 'Other';
     }
 }

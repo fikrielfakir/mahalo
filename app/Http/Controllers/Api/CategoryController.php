@@ -65,7 +65,7 @@ class CategoryController extends Controller
         $perPage = min((int) ($request->per_page ?? 10), 100);
         $props   = $category->properties()
             ->with(['city', 'slug'])
-            ->whereIn('status', ['selling', 'renting'])
+            ->where('status', 'published')
             ->paginate($perPage);
 
         return response()->json([
@@ -80,7 +80,7 @@ class CategoryController extends Controller
     {
         $locale     = $this->resolveLocale($request);
         $categories = Category::where('status', 'published')
-            ->withCount(['properties' => fn($q) => $q->whereIn('status', ['selling', 'renting'])])
+            ->withCount(['properties' => fn($q) => $q->where('status', 'published')])
             ->orderBy('order')
             ->get()
             ->map(fn($c) => array_merge(

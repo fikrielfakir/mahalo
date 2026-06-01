@@ -309,7 +309,7 @@ EOT;
 
             // Step 2: query the database
             $query = \App\Models\Property::with(['city', 'features', 'categories', 'agent', 'slug'])
-                ->whereIn('status', ['selling', 'renting'])
+                ->where('status', 'published')
                 ->where('moderation_status', 'approved');
 
             if (!empty($prefs['type'])) {
@@ -359,7 +359,7 @@ EOT;
             // Fallback: broaden search if nothing found
             if ($properties->isEmpty() && !empty($prefs['city'])) {
                 $properties = \App\Models\Property::with(['city', 'features', 'categories', 'agent', 'slug'])
-                    ->whereIn('status', ['selling', 'renting'])
+                    ->where('status', 'published')
                     ->where('moderation_status', 'approved')
                     ->whereHas('city', fn($q) => $q->where('name', 'like', '%' . $prefs['city'] . '%'))
                     ->orderByDesc('is_featured')
@@ -494,15 +494,15 @@ EOT;
         $cityInDb      = false;
 
         // Always fetch platform stats for context
-        $selling = \App\Models\Property::where('status', 'selling')->where('moderation_status', 'approved')->count();
-        $renting = \App\Models\Property::where('status', 'renting')->where('moderation_status', 'approved')->count();
+        $selling = \App\Models\Property::where('status', 'published')->where('type', 'sale')->where('moderation_status', 'approved')->count();
+        $renting = \App\Models\Property::where('status', 'published')->where('type', 'rent')->where('moderation_status', 'approved')->count();
         $cities  = \App\Models\City::pluck('name')->join(', ');
         $stats   = "Platform has {$selling} properties for sale and {$renting} for rent across cities: {$cities}.";
 
         // Fetch relevant properties
         if ($intent['wantsProps'] || $intent['city'] || $intent['type']) {
             $query = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
-                ->whereIn('status', ['selling', 'renting'])
+                ->where('status', 'published')
                 ->where('moderation_status', 'approved');
 
             if ($intent['city']) {
@@ -523,7 +523,7 @@ EOT;
             if ($results->isEmpty() && $intent['city']) {
                 $isFallback = true;
                 $broadQuery = \App\Models\Property::with(['city', 'agent', 'slug', 'features', 'categories'])
-                    ->whereIn('status', ['selling', 'renting'])
+                    ->where('status', 'published')
                     ->where('moderation_status', 'approved')
                     ->orderByDesc('is_featured');
 

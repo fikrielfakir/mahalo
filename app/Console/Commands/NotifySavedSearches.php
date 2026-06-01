@@ -24,7 +24,7 @@ class NotifySavedSearches extends Command
             $prefs = $search->preferences;
 
             $query = Property::with(['city', 'slug'])
-                ->whereIn('status', ['selling', 'renting'])
+                ->where('status', 'published')
                 ->where('moderation_status', 'approved');
 
             if ($search->last_notified_at) {

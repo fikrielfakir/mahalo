@@ -23,7 +23,7 @@ class PropertyController extends Controller
         $locale = $this->resolveLocale($request);
 
         $query = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-            ->whereIn('status', ['selling', 'renting']);
+            ->where('status', 'published');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -133,7 +133,7 @@ class PropertyController extends Controller
         $locale = $this->resolveLocale($request);
         $q      = $request->input('q', '');
         $data   = Property::with(['city', 'slug'])
-            ->whereIn('status', ['selling', 'renting'])
+            ->where('status', 'published')
             ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%$q%")
                       ->orWhere('location', 'like', "%$q%");
@@ -158,7 +158,7 @@ class PropertyController extends Controller
                 ->find($slugModel->reference_id);
         } else {
             $property = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-                ->whereIn('status', ['selling', 'renting'])
+                ->where('status', 'published')
                 ->where('name', 'like', "%$slug%")
                 ->first();
         }
@@ -201,7 +201,7 @@ class PropertyController extends Controller
 
         // Fetch a broad candidate pool from the same status/city
         $candidates = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-            ->whereIn('status', ['selling', 'renting'])
+            ->where('status', 'published')
             ->where('moderation_status', 'approved')
             ->where('id', '!=', $id)
             ->when($property->city_id, fn($q) => $q->where('city_id', $property->city_id))
@@ -211,7 +211,7 @@ class PropertyController extends Controller
         // If same-city pool is too small, broaden to all
         if ($candidates->count() < 8) {
             $candidates = Property::with(['city', 'state', 'features', 'categories', 'agent', 'slug'])
-                ->whereIn('status', ['selling', 'renting'])
+                ->where('status', 'published')
                 ->where('moderation_status', 'approved')
                 ->where('id', '!=', $id)
                 ->limit(50)
@@ -302,7 +302,7 @@ class PropertyController extends Controller
             ->select('id', 'name', 'icon')
             ->get();
 
-        $priceRange = Property::whereIn('status', ['selling', 'renting'])
+        $priceRange = Property::where('status', 'published')
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
 

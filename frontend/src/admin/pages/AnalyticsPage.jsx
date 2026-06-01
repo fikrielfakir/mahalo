@@ -232,6 +232,7 @@ function RecentVisitorsTable({ rows, t }) {
               t('admin.analytics.colIp'),
               t('admin.analytics.colPage'),
               t('admin.analytics.colCountry'),
+              'City',
               t('admin.analytics.colDevice'),
               t('admin.analytics.colBrowser'),
               t('admin.analytics.colOs'),
@@ -253,6 +254,7 @@ function RecentVisitorsTable({ rows, t }) {
                   <span className="truncate block text-gray-700" title={r.page}>{r.page || '/'}</span>
                 </td>
                 <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{r.country || '—'}</td>
+                <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{r.city || '—'}</td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-1 text-gray-500">
                     <DIcon size={13} />
@@ -288,17 +290,18 @@ export default function AnalyticsPage() {
     isRefresh ? setRefreshing(true) : setLoading(true)
     try {
       const params = { days: d }
-      const [overview, timeSeries, topPages, countries, devices, browsers, os, recent] = await Promise.all([
+      const [overview, timeSeries, topPages, countries, cities, devices, browsers, os, recent] = await Promise.all([
         adminApi.get('/admin/analytics/overview', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/time-series', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/top-pages', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/countries', { params }).then(r => r.data),
+        adminApi.get('/admin/analytics/cities', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/devices', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/browsers', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/os', { params }).then(r => r.data),
         adminApi.get('/admin/analytics/recent').then(r => r.data),
       ])
-      setData({ overview, timeSeries, topPages, countries, devices, browsers, os, recent })
+      setData({ overview, timeSeries, topPages, countries, cities, devices, browsers, os, recent })
     } catch (e) {
       console.error(e)
     } finally {
@@ -326,7 +329,7 @@ export default function AnalyticsPage() {
     )
   }
 
-  const { overview, timeSeries, topPages, countries, devices, browsers, os, recent } = data
+  const { overview, timeSeries, topPages, countries, cities, devices, browsers, os, recent } = data
 
   return (
     <div>
@@ -393,6 +396,38 @@ export default function AnalyticsPage() {
             <Map size={16} className="text-[#730D26]" /> {t('admin.analytics.topCountries')}
           </h2>
           <BarList data={countries?.slice(0, 10)} valueKey="views" labelKey="country" emptyLabel={t('admin.analytics.noData')} />
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <h2 className="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2">
+            <Globe size={16} className="text-[#730D26]" /> Top Cities
+          </h2>
+          {cities?.length > 0 ? (
+            <div className="space-y-2">
+              {cities.slice(0, 10).map((row, i) => {
+                const m = Math.max(...cities.slice(0, 10).map(r => Number(r.views)), 1)
+                const pct = (Number(row.views) / m) * 100
+                return (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-sm text-gray-700 truncate font-medium">{row.city}</span>
+                        {row.country && (
+                          <span className="text-xs text-gray-400 shrink-0">· {row.country}</span>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 ml-2 shrink-0">{Number(row.views).toLocaleString()}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#730D26]/70 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm text-center py-6">{t('admin.analytics.noData')}</p>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">

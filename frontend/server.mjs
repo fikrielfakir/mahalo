@@ -206,6 +206,7 @@ async function start() {
   const laravelProxy = createProxyMiddleware({
     target: API_BACKEND,
     changeOrigin: true,
+    secure: false,
     pathFilter: (path) =>
       path.startsWith('/api/') ||
       path.startsWith('/storage/') ||

@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { adminApi } from '../api/adminApi'
 import {
   Eye, Users, Globe, Monitor, Smartphone, Tablet,
   TrendingUp, TrendingDown, Activity, Map, Chrome,
-  BarChart2, Clock, RefreshCw
+  BarChart2, Clock, RefreshCw, Radio
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -159,6 +159,68 @@ function BarList({ data, valueKey = 'views', labelKey, max, emptyLabel }) {
   )
 }
 
+function LiveCounter({ t }) {
+  const [live, setLive] = useState(null)
+  const [pulse, setPulse] = useState(false)
+  const timerRef = useRef(null)
+
+  const fetch = useCallback(async () => {
+    try {
+      const res = await adminApi.get('/admin/analytics/live').then(r => r.data)
+      setLive(res)
+      setPulse(true)
+      setTimeout(() => setPulse(false), 600)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    fetch()
+    timerRef.current = setInterval(fetch, 30_000)
+    return () => clearInterval(timerRef.current)
+  }, [fetch])
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50">
+            <Radio size={18} className="text-emerald-600" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500">
+              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{t('admin.analytics.liveNow')}</p>
+            <div className="flex items-end gap-1.5">
+              <span className={`text-3xl font-bold text-emerald-600 transition-all duration-300 ${pulse ? 'scale-110' : 'scale-100'} inline-block`}>
+                {live?.count ?? '—'}
+              </span>
+              <span className="text-sm text-gray-500 mb-0.5">{t('admin.analytics.liveVisitors')}</span>
+            </div>
+          </div>
+        </div>
+
+        {live?.active_pages?.length > 0 && (
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{t('admin.analytics.liveActivePages')}</p>
+            <div className="flex flex-wrap gap-2">
+              {live.active_pages.map((p, i) => (
+                <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-gray-700 font-medium border border-gray-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <span className="truncate max-w-[160px]" title={p.page}>{p.page || '/'}</span>
+                  <span className="text-gray-400 font-normal">{p.visitors}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-gray-300 whitespace-nowrap self-end">{t('admin.analytics.liveRefresh')}</p>
+      </div>
+    </div>
+  )
+}
+
 function RecentVisitorsTable({ rows, t }) {
   if (!rows?.length) return <p className="text-gray-400 text-sm text-center py-10">{t('admin.analytics.noVisitors')}</p>
   return (
@@ -289,6 +351,8 @@ export default function AnalyticsPage() {
           </button>
         </div>
       </div>
+
+      <LiveCounter t={t} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label={t('admin.analytics.pageViews')} value={overview?.total_views?.toLocaleString()} icon={Eye} color="red" change={overview?.views_change} changeLabel={t('admin.analytics.vsPrevious')} />

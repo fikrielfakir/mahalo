@@ -1201,7 +1201,11 @@
       "refresh": "تحديث",
       "views": "المشاهدات",
       "noData": "لا توجد بيانات",
-      "noVisitors": "لا يوجد زوار بعد"
+      "noVisitors": "لا يوجد زوار بعد",
+      "liveNow": "الآن",
+      "liveVisitors": "زوار نشطون",
+      "liveActivePages": "الصفحات النشطة",
+      "liveRefresh": "يتحدث كل 30 ث"
     },
     "languages": {
       "title": "اللغات",

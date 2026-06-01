@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\Admin\AdminContentTranslationController;
 use App\Http\Controllers\Api\Admin\AdminLanguageController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\SavedSearchController;
+use App\Http\Controllers\Api\TrackViewController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -110,6 +111,9 @@ Route::prefix('v1')->group(function () {
 
     // ── Public: Market Insights ───────────────────────────────────────────────
     Route::get('/market-insights', [\App\Http\Controllers\Api\MarketInsightsController::class, 'index']);
+
+    // ── Public: Page view tracking ────────────────────────────────────────────
+    Route::middleware('throttle:120,1')->post('/track-view', [TrackViewController::class, 'store']);
 
     // ── Public: Newsletter subscription ───────────────────────────────────────
     Route::post('/newsletter/subscribe',   [\App\Http\Controllers\NewsletterController::class, 'subscribe']);
@@ -309,6 +313,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/browsers',       [AdminAnalyticsController::class, 'browsers']);
             Route::get('/os',             [AdminAnalyticsController::class, 'os']);
             Route::get('/recent',         [AdminAnalyticsController::class, 'recentVisitors']);
+            Route::get('/live',           [AdminAnalyticsController::class, 'liveVisitors']);
         });
     });
 });

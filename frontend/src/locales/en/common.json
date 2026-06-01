@@ -1201,7 +1201,11 @@
       "refresh": "Refresh",
       "views": "Views",
       "noData": "No data",
-      "noVisitors": "No visitors yet"
+      "noVisitors": "No visitors yet",
+      "liveNow": "Right now",
+      "liveVisitors": "active visitors",
+      "liveActivePages": "Active pages",
+      "liveRefresh": "Refreshes every 30 s"
     },
     "languages": {
       "title": "Languages",

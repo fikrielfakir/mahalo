@@ -294,7 +294,7 @@ async function start() {
         // correct image. This ensures bots always get a fetchable image URL.
         const rawOgImage = siteSettings.og_image_url || ''
         const siteOgImage = rawOgImage
-          ? rewriteStorageUrl(rawOgImage, origin)
+          ? rewriteStorageUrl(buildStorageUrl(rawOgImage), origin)
           : `${origin}/og-image.png`
 
         let headTags = ''

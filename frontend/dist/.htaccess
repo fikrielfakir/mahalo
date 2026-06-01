@@ -1,10 +1,19 @@
 Options -MultiViews
 RewriteEngine On
 
+# ── Social-media bot detection ───────────────────────────────────────────────
+# Route known crawlers to bot-og.php so they get property-specific OG tags.
+# Regular users are never sent here — they always get the fast static build.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI}      !^/bot-og\.php [NC]
+RewriteCond %{HTTP_USER_AGENT}  "facebookexternalhit|Twitterbot|WhatsApp|LinkedInBot|Slackbot|TelegramBot|Discordbot|Googlebot|bingbot|Pinterest|Snapchat|vkShare|W3C_Validator" [NC]
+RewriteRule ^(.*)$ /bot-og.php [QSA,L]
+
+# ── SPA fallback (regular users) ─────────────────────────────────────────────
 # Serve existing files/directories directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Route everything else to index.html (SPA fallback)
+# Everything else → React SPA
 RewriteRule ^ index.html [QSA,L]

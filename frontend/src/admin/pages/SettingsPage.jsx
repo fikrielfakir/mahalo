@@ -51,7 +51,7 @@ const DEFAULTS = {
   instagram_url: '',
   twitter_url: '',
   youtube_url: '',
-  seo_title: 'Mahalo — Premium Real Estate in Morocco',
+  seo_title: 'Mahalo — Immobilier de luxe au Maroc',
   seo_description: 'Find your dream property in Morocco with Mahalo. Browse thousands of verified listings across Casablanca, Marrakech, Rabat and more.',
   google_analytics_id: '',
   currency: 'MAD',
@@ -579,7 +579,7 @@ export default function SettingsPage() {
                     {t('admin.settings.seoTranslatableNote')}
                   </div>
                   <FormField label={t('admin.settings.fieldSeoTitle')} hint={`${t('admin.settings.defaultHint')}: "${transDefaults.seo_title || form.seo_title}"`}>
-                    <Input value={tv('seo_title')} onChange={tf('seo_title')} placeholder={tp('seo_title', 'Mahalo — Premium Real Estate in Morocco')} />
+                    <Input value={tv('seo_title')} onChange={tf('seo_title')} placeholder={tp('seo_title', 'Mahalo — Immobilier de luxe au Maroc')} />
                   </FormField>
                   <FormField label={t('admin.settings.fieldMetaDesc')} hint={`${t('admin.settings.defaultHint')}: "${(transDefaults.seo_description || form.seo_description)?.substring(0, 60)}…"`}>
                     <Textarea value={tv('seo_description')} onChange={tf('seo_description')} rows={3} placeholder={tp('seo_description', 'Find your dream property in Morocco...')} />
@@ -594,7 +594,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <FormField label={t('admin.settings.fieldSeoTitle')} hint={t('admin.settings.fieldSeoTitleHint')}>
-                    <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Premium Real Estate in Morocco" />
+                    <Input value={form.seo_title} onChange={f('seo_title')} placeholder="Mahalo — Immobilier de luxe au Maroc" />
                   </FormField>
                   <FormField label={t('admin.settings.fieldMetaDesc')}>
                     <Textarea value={form.seo_description} onChange={f('seo_description')} rows={3} placeholder="Find your dream property in Morocco..." />

@@ -2531,7 +2531,7 @@ INSERT INTO `site_settings` (`id`, `key`, `value`, `created_at`, `updated_at`) V
 (8, 'instagram_url', '', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
 (9, 'twitter_url', '', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
 (10, 'youtube_url', '', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
-(11, 'seo_title', 'Mahalo — Premium Real Estate in Morocco', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
+(11, 'seo_title', 'Mahalo — Immobilier de luxe au Maroc', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
 (12, 'seo_description', 'Find your dream property in Morocco with Mahalo. Browse thousands of verified listings across Casablanca, Marrakech, Rabat and more.', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
 (13, 'google_analytics_id', '', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),
 (14, 'currency', 'MAD', '2026-05-14 11:39:18', '2026-05-14 11:39:18'),

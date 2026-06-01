@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { adminProperties, adminCategories, adminFeatures, adminAgents, adminCities } from '../api/adminApi'
+import { adminProperties, adminCategories, adminFeatures, adminAgents, adminCities, adminFacilities } from '../api/adminApi'
 import { DataTable, PageHeader, Badge, Btn } from '../components/DataTable'
 import Modal, { FormField, Input, Textarea, Select, Toggle } from '../components/Modal'
 import ImageUploader from '../components/ImageUploader'
@@ -14,7 +14,7 @@ const EMPTY = {
   images: [], price: '', number_bedroom: '', number_bathroom: '',
   number_floor: '', square: '', city_id: '', agent_id: '', status: 'selling',
   is_featured: false, latitude: '', longitude: '',
-  category_ids: [], feature_ids: [],
+  category_ids: [], feature_ids: [], facility_ids: [],
   condition: '', age_range: '', orientation: '', flooring: '', slug: '',
 }
 
@@ -52,9 +52,10 @@ export default function PropertiesPage() {
   const [saving, setSaving]   = useState(false)
   const [cities, setCities]   = useState([])
   const [agents, setAgents]   = useState([])
-  const [categories, setCategories] = useState([])
-  const [features, setFeatures]     = useState([])
-  const [deleting, setDeleting]     = useState(null)
+  const [categories, setCategories]   = useState([])
+  const [features, setFeatures]       = useState([])
+  const [facilities, setFacilities]   = useState([])
+  const [deleting, setDeleting]       = useState(null)
   const [moderating, setModerating] = useState(null)
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
@@ -125,6 +126,7 @@ export default function PropertiesPage() {
     adminCities.list({ per_page: 500 }).then((r) => setCities(r.data || []))
     adminCategories.list().then((r) => setCategories(r.data || []))
     adminFeatures.list().then((r) => setFeatures(r.data || []))
+    adminFacilities.list({ per_page: 500 }).then((r) => setFacilities(r.data || []))
     adminAgents.list({ per_page: 200 }).then((r) => setAgents(r.data || []))
   }, [])
 
@@ -134,8 +136,9 @@ export default function PropertiesPage() {
     setForm({
       ...row,
       images: Array.isArray(row.images) ? row.images : [],
-      category_ids: row.category_ids || (row.categories?.map(c => c.id)) || [],
-      feature_ids:  row.feature_ids  || (row.features?.map(f => f.id))  || [],
+      category_ids:  row.category_ids  || (row.categories?.map(c => c.id))  || [],
+      feature_ids:   row.feature_ids   || (row.features?.map(f => f.id))   || [],
+      facility_ids:  row.facility_ids  || (row.facilities?.map(f => f.id)) || [],
       latitude: row.latitude || '', longitude: row.longitude || '',
       agent_id: row.agent_id || '', condition: row.condition || '',
       age_range: row.age_range || '', orientation: row.orientation || '',
@@ -450,6 +453,22 @@ export default function PropertiesPage() {
                 </div>
               </FormField>
             </div>
+            {facilities.length > 0 && (
+              <div className="col-span-2">
+                <FormField label={t('admin.properties.facilitiesLabel') || 'Équipements du bien'}>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {facilities.map((fac) => (
+                      <button key={fac.id} type="button" onClick={() => toggleArr('facility_ids', fac.id)}
+                        className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${form.facility_ids.includes(fac.id) ? 'bg-navy text-white border-navy' : 'bg-white text-gray-600 border-gray-200 hover:border-navy'}`}
+                      >
+                        {fac.icon && <i className={`${fac.icon} mr-1`} style={{ fontSize: 11 }} />}
+                        {fac.name}
+                      </button>
+                    ))}
+                  </div>
+                </FormField>
+              </div>
+            )}
             <div className="col-span-2 flex items-center gap-6">
               <Toggle checked={form.is_featured} onChange={(v) => setForm((p) => ({ ...p, is_featured: v }))} label={t('admin.properties.featuredLabel')} />
             </div>

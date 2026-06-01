@@ -7,8 +7,9 @@ import {
   Building2, LogIn, User, ChevronDown, Layers,
   CalendarDays, Link2, PhoneCall, MessageCircle,
   Mail, Sparkles, Loader2, RotateCcw, Check,
-  Hash, Upload, Eye,
+  Hash, Upload, Eye, Package,
 } from 'lucide-react'
+import { getFacilityIcon, getCategoryIcon } from '../utils/facilityIcons'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toast, useToast } from '../components/Toast'
@@ -46,7 +47,7 @@ const EMPTY_FORM = {
   total_floors:       '',
   year_built:         '',
   feature_ids:        [],
-  facility_distances: [],
+  facility_ids:       [],
   titre_foncier:      '',
   available_immediately: false,
   available_from:     '',
@@ -272,6 +273,92 @@ function Step2({ form, setForm, cities, loadingCities, geocoding, t }) {
 
 // ─── Step 3: Property Details ─────────────────────────────────────────────────
 
+function FacilityPicker({ facilities, facilityIds, setForm, loadingFacilities, t }) {
+  const [showAll, setShowAll] = useState(false)
+
+  const toggle = id => {
+    const sid = String(id)
+    setForm(prev => ({
+      ...prev,
+      facility_ids: prev.facility_ids.includes(sid)
+        ? prev.facility_ids.filter(x => x !== sid)
+        : [...prev.facility_ids, sid],
+    }))
+  }
+
+  if (loadingFacilities) {
+    return (
+      <div className="flex items-center gap-2 text-navy/40 text-sm">
+        <Loader2 size={14} className="animate-spin" /> {t('listProperty.loadingFacilities')}
+      </div>
+    )
+  }
+  if (facilities.length === 0) {
+    return <p className="text-navy/30 text-sm">{t('listProperty.noFacilitiesAvailable')}</p>
+  }
+
+  const HIGHLIGHT_COUNT = 9
+  const highlights = facilities.slice(0, HIGHLIGHT_COUNT)
+  const hasMore = facilities.length > HIGHLIGHT_COUNT
+
+  const grouped = facilities.reduce((acc, f) => {
+    const cat = f.category || 'General'
+    if (!acc[cat]) acc[cat] = []
+    acc[cat].push(f)
+    return acc
+  }, {})
+
+  return (
+    <div>
+      {/* Icon card grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {(showAll ? facilities : highlights).map(fac => {
+          const Icon = getFacilityIcon(fac.name)
+          const active = facilityIds.includes(String(fac.id))
+          return (
+            <button
+              key={fac.id}
+              type="button"
+              onClick={() => toggle(fac.id)}
+              className={`relative flex items-center gap-2.5 p-3 rounded-2xl border-2 text-left transition-all
+                ${active
+                  ? 'border-navy bg-navy/5 shadow-sm'
+                  : 'border-gray-100 bg-white hover:border-navy/30 hover:bg-navy/3'}`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors
+                ${active ? 'bg-navy text-white' : 'bg-gray-100 text-gray-500'}`}>
+                <Icon size={16} strokeWidth={1.5} />
+              </div>
+              <span className={`text-xs font-semibold leading-tight ${active ? 'text-navy' : 'text-navy/60'}`}>
+                {fac.name}
+              </span>
+              {active && (
+                <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-navy flex items-center justify-center">
+                  <Check size={9} className="text-white" strokeWidth={3} />
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Show all / collapse toggle */}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setShowAll(v => !v)}
+          className="mt-3 flex items-center gap-2 text-navy/60 hover:text-navy text-xs font-semibold transition-colors"
+        >
+          <Package size={13} />
+          {showAll
+            ? (t('listProperty.showLess') || 'Voir moins')
+            : `${t('listProperty.showAllFacilities') || 'Voir tous les équipements'} (${facilities.length})`}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFacilities, t }) {
   const set = f => e => setForm(prev => ({ ...prev, [f]: e.target.value }))
 
@@ -282,32 +369,6 @@ function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFa
       feature_ids: prev.feature_ids.includes(sid)
         ? prev.feature_ids.filter(x => x !== sid)
         : [...prev.feature_ids, sid],
-    }))
-  }
-
-  const getFacilityEntry = id =>
-    form.facility_distances.find(fd => String(fd.facility_id) === String(id))
-
-  const toggleFacility = id => {
-    const sid = String(id)
-    setForm(prev => {
-      const exists = prev.facility_distances.find(fd => String(fd.facility_id) === sid)
-      return {
-        ...prev,
-        facility_distances: exists
-          ? prev.facility_distances.filter(fd => String(fd.facility_id) !== sid)
-          : [...prev.facility_distances, { facility_id: sid, distance: '' }],
-      }
-    })
-  }
-
-  const setFacilityDistance = (id, distance) => {
-    const sid = String(id)
-    setForm(prev => ({
-      ...prev,
-      facility_distances: prev.facility_distances.map(fd =>
-        String(fd.facility_id) === sid ? { ...fd, distance } : fd
-      ),
     }))
   }
 
@@ -383,66 +444,24 @@ function Step3({ form, setForm, features, loadingFeatures, facilities, loadingFa
         )}
       </div>
 
-      {/* Facilities */}
+      {/* Facilities / Property Amenities */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <SectionLabel>{t('listProperty.nearbyFacilities')}</SectionLabel>
-          {form.facility_distances.length > 0 && (
+        <div className="flex items-center justify-between mb-1">
+          <SectionLabel>{t('listProperty.propertyFacilities') || 'Équipements du bien'}</SectionLabel>
+          {form.facility_ids.length > 0 && (
             <span className="text-[10px] font-bold text-navy bg-navy/10 px-2 py-0.5 rounded-full">
-              {form.facility_distances.length} {t('listProperty.selected')}
+              {form.facility_ids.length} {t('listProperty.selected')}
             </span>
           )}
         </div>
-        <p className="text-xs text-navy/40 mb-3 -mt-1">{t('listProperty.selectNearby')}</p>
-        {loadingFacilities ? (
-          <div className="flex items-center gap-2 text-navy/40 text-sm">
-            <Loader2 size={14} className="animate-spin" /> {t('listProperty.loadingFacilities')}
-          </div>
-        ) : facilities.length === 0 ? (
-          <p className="text-navy/30 text-sm">{t('listProperty.noFacilitiesAvailable')}</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {facilities.map(fac => {
-              const entry  = getFacilityEntry(fac.id)
-              const active = !!entry
-              return (
-                <div
-                  key={fac.id}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all
-                    ${active ? 'border-navy bg-navy/4' : 'border-gray-100 bg-white hover:border-navy/20'}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleFacility(fac.id)}
-                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
-                  >
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all
-                      ${active ? 'border-navy bg-navy' : 'border-gray-300'}`}>
-                      {active && <Check size={11} className="text-white" />}
-                    </div>
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-                      ${active ? 'bg-navy/10 text-navy' : 'bg-gray-100 text-gray-400'}`}>
-                      {fac.icon ? <i className={fac.icon} style={{ fontSize: 15 }} /> : <MapPin size={13} />}
-                    </div>
-                    <span className={`text-sm font-medium truncate ${active ? 'text-navy' : 'text-navy/60'}`}>
-                      {fac.name}
-                    </span>
-                  </button>
-                  {active && (
-                    <input
-                      type="text"
-                      placeholder="e.g. 500m"
-                      value={entry.distance || ''}
-                      onChange={e => setFacilityDistance(fac.id, e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      className="w-20 shrink-0 px-2 py-1 rounded-lg border border-navy/20 bg-white text-xs text-navy outline-none focus:ring-2 focus:ring-navy/20 text-center"
-                    />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
+        <p className="text-xs text-navy/40 mb-3">{t('listProperty.selectFacilities') || 'Sélectionnez les équipements disponibles dans ce bien'}</p>
+        <FacilityPicker
+          facilities={facilities}
+          facilityIds={form.facility_ids}
+          setForm={setForm}
+          loadingFacilities={loadingFacilities}
+          t={t}
+        />
       </div>
 
       {/* Ownership & Legal */}
@@ -776,10 +795,8 @@ export default function ListProperty() {
         location:           form.location || '',
         city_id:            parseInt(form.city_id),
         category_id:        form.category_id ? parseInt(form.category_id) : null,
-        feature_ids:        form.feature_ids.map(id => parseInt(id)).filter(Boolean),
-        facility_distances: form.facility_distances
-          .filter(fd => fd.facility_id)
-          .map(fd => ({ facility_id: parseInt(fd.facility_id), distance: fd.distance || null })),
+        feature_ids:  form.feature_ids.map(id => parseInt(id)).filter(Boolean),
+        facility_ids: form.facility_ids.map(id => parseInt(id)).filter(Boolean),
         number_bedroom:  form.bedrooms     ? parseInt(form.bedrooms)    : null,
         number_bathroom: form.bathrooms    ? parseInt(form.bathrooms)   : null,
         number_floor:    form.floor_number ? parseInt(form.floor_number): null,

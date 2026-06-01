@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2, Car, Wifi, Tv, UtensilsCrossed, WashingMachine, Eye, Wind, Flower2, CigaretteOff, Languages, ParkingCircle, ChefHat, Thermometer, AirVent, Dumbbell, Waves, Trees, ShieldCheck, Dog, Baby, Accessibility, Coffee, BookOpen, Bike, Fence, Sun, Droplets, Zap, Package, Check } from 'lucide-react'
+import { Bed, Bath, Maximize2, MapPin, Heart, Share2, BadgeCheck, ArrowLeft, Phone, Mail, Loader2, Star, BarChart2, Video, Play, Home, Wrench, CalendarDays, Layers, Compass, Grid2X2, Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import NotFoundState from '../components/NotFoundState'
@@ -17,75 +17,7 @@ import { useUserAuth } from '../context/UserAuthContext'
 import { useAuthModal } from '../context/AuthModalContext'
 import { isVideoPath, mediaUrl, storagePublicUrl } from '../utils/media'
 import SEOHead from '../components/SEOHead'
-
-// ─── Facility icon map ────────────────────────────────────────────────────────
-const FACILITY_ICON_MAP = {
-  // Parking
-  'parking': ParkingCircle, 'free parking': ParkingCircle, 'free on-site parking': ParkingCircle,
-  'private parking': Car, 'parking on site': ParkingCircle, 'valet parking': Car,
-  // Kitchen
-  'kitchen': ChefHat, 'kitchenette': UtensilsCrossed, 'washing machine': WashingMachine,
-  'dishwasher': UtensilsCrossed, 'microwave': Thermometer, 'refrigerator': Package,
-  'coffee maker': Coffee, 'coffee machine': Coffee,
-  // Media & Tech
-  'flat-screen tv': Tv, 'flat screen tv': Tv, 'television': Tv, 'tv': Tv,
-  'wifi': Wifi, 'internet': Wifi, 'free wifi': Wifi, 'cable tv': Tv,
-  // View & Outdoor
-  'balcony': Wind, 'view': Eye, 'garden view': Flower2, 'sea view': Waves,
-  'pool view': Waves, 'terrace': Sun, 'garden': Trees, 'outdoor pool': Waves,
-  'indoor pool': Waves, 'swimming pool': Waves, 'hot tub': Droplets,
-  // Fitness
-  'gym': Dumbbell, 'fitness center': Dumbbell, 'sauna': Thermometer,
-  // General
-  'air conditioning': AirVent, 'heating': Thermometer, 'elevator': Accessibility,
-  'concierge': ShieldCheck, 'security': ShieldCheck, '24/7 security': ShieldCheck,
-  'pet friendly': Dog, 'pets allowed': Dog, 'family friendly': Baby,
-  'bicycle rental': Bike, 'storage': Package, 'laundry': WashingMachine,
-  'entire place': Home, 'the entire place is yours': Home,
-}
-
-function getFacilityIcon(name) {
-  if (!name) return Check
-  const key = name.toLowerCase().trim()
-  for (const [k, Icon] of Object.entries(FACILITY_ICON_MAP)) {
-    if (key.includes(k) || k.includes(key)) return Icon
-  }
-  return Check
-}
-
-// ─── Category icon map ────────────────────────────────────────────────────────
-const CATEGORY_ICON_MAP = {
-  'parking': ParkingCircle,
-  'kitchen': ChefHat,
-  'internet': Wifi,
-  'media': Tv,
-  'media & technology': Tv,
-  'technology': Tv,
-  'outdoors': Trees,
-  'outdoor': Trees,
-  'outdoor & view': Eye,
-  'view': Eye,
-  'miscellaneous': Package,
-  'great for your stay': Home,
-  'general': Home,
-  'fitness': Dumbbell,
-  'languages': Languages,
-  'languages spoken': Languages,
-  'safety': ShieldCheck,
-  'accessibility': Accessibility,
-  'bathroom': Droplets,
-  'bedroom': Bed,
-  'living area': Sun,
-}
-
-function getCategoryIcon(name) {
-  if (!name) return Package
-  const key = name.toLowerCase().trim()
-  for (const [k, Icon] of Object.entries(CATEGORY_ICON_MAP)) {
-    if (key === k || key.includes(k) || k.includes(key)) return Icon
-  }
-  return Package
-}
+import { getFacilityIcon, getCategoryIcon } from '../utils/facilityIcons'
 
 // ─── Facilities Section ───────────────────────────────────────────────────────
 function FacilitiesSection({ facilities, t }) {

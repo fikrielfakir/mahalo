@@ -1672,6 +1672,22 @@
       "seoDesc": "Découvrez comment Mahalo Immobilier utilise les cookies pour améliorer votre expérience."
     }
   },
+  "helpCenter": {
+    "seoTitle": "Centre d'aide — Mahalo Immobilier",
+    "seoDesc": "Trouvez des réponses à vos questions sur l'utilisation de la plateforme Mahalo Immobilier au Maroc.",
+    "badge": "Centre d'aide",
+    "title": "Comment pouvons-nous vous aider ?",
+    "searchPlaceholder": "Rechercher une question…",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les FAQs.",
+    "contactUs": "Contactez-nous directement",
+    "noQuestions": "Aucune question disponible pour le moment.",
+    "noResults": "Aucun résultat pour \"{{query}}\"",
+    "noResultsHint": "Essayez d'autres mots-clés ou",
+    "noResultsLink": "contactez-nous",
+    "notFound": "Vous n'avez pas trouvé votre réponse ?",
+    "contactBtn": "Contactez-nous"
+  },
   "marketInsights": {
     "seoTitle": "Insights marché — Mahalo Immobilier",
     "seoDesc": "Découvrez les tendances du marché immobilier marocain : prix, demande et opportunités par ville.",

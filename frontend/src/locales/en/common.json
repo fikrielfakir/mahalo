@@ -1672,6 +1672,22 @@
       "seoDesc": "Discover how Mahalo uses cookies to improve your experience."
     }
   },
+  "helpCenter": {
+    "seoTitle": "Help Center — Mahalo Immobilier",
+    "seoDesc": "Find answers to your questions about using the Mahalo Immobilier platform in Morocco.",
+    "badge": "Help Center",
+    "title": "How can we help you?",
+    "searchPlaceholder": "Search a question…",
+    "loading": "Loading…",
+    "loadError": "Unable to load FAQs.",
+    "contactUs": "Contact us directly",
+    "noQuestions": "No questions available at the moment.",
+    "noResults": "No results for \"{{query}}\"",
+    "noResultsHint": "Try other keywords or",
+    "noResultsLink": "contact us",
+    "notFound": "Didn't find your answer?",
+    "contactBtn": "Contact us"
+  },
   "marketInsights": {
     "seoTitle": "Market Insights — Mahalo Immobilier",
     "seoDesc": "Discover Moroccan real estate market trends: prices, demand and opportunities by city.",

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { HelpCircle, ChevronDown, Search, Phone, Loader2, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Navbar from '../components/Navbar'
 import SEOHead from '../components/SEOHead'
 import Footer from '../components/Footer'
@@ -23,6 +24,7 @@ function FAQItem({ question, answer }) {
 }
 
 export default function HelpCenterPage() {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [grouped, setGrouped] = useState({})
   const [loading, setLoading] = useState(true)
@@ -53,22 +55,22 @@ export default function HelpCenterPage() {
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <SEOHead
-        title="Centre d'aide — Mahalo Immobilier"
-        description="Trouvez des réponses à vos questions sur l'utilisation de la plateforme Mahalo Immobilier au Maroc."
+        title={t('helpCenter.seoTitle')}
+        description={t('helpCenter.seoDesc')}
       />
       <Navbar />
 
       <section className="pt-28 pb-14 px-6 bg-navy text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/70 text-xs font-semibold uppercase tracking-widest mb-5">
-          <HelpCircle size={12} /> Centre d'aide
+          <HelpCircle size={12} /> {t('helpCenter.badge')}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">Comment pouvons-nous vous aider ?</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">{t('helpCenter.title')}</h1>
         <div className="max-w-md mx-auto relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Rechercher une question…"
+            placeholder={t('helpCenter.searchPlaceholder')}
             className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all"
           />
         </div>
@@ -80,31 +82,33 @@ export default function HelpCenterPage() {
           {loading && (
             <div className="flex items-center justify-center gap-3 py-24 text-navy/40">
               <Loader2 size={22} className="animate-spin" />
-              <span className="text-sm">Chargement…</span>
+              <span className="text-sm">{t('helpCenter.loading')}</span>
             </div>
           )}
 
           {!loading && error && (
             <div className="flex flex-col items-center gap-3 py-24 text-navy/40">
               <AlertCircle size={36} className="opacity-40" />
-              <p className="text-sm font-medium">Impossible de charger les FAQs.</p>
-              <Link to="/contact" className="text-[#BA1932] text-sm hover:underline">Contactez-nous directement</Link>
+              <p className="text-sm font-medium">{t('helpCenter.loadError')}</p>
+              <Link to="/contact" className="text-[#BA1932] text-sm hover:underline">{t('helpCenter.contactUs')}</Link>
             </div>
           )}
 
           {!loading && !error && allCategories.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-24 text-navy/40">
               <HelpCircle size={40} className="opacity-30" />
-              <p className="font-medium text-sm">Aucune question disponible pour le moment.</p>
-              <Link to="/contact" className="text-[#BA1932] text-sm hover:underline">Contactez-nous directement</Link>
+              <p className="font-medium text-sm">{t('helpCenter.noQuestions')}</p>
+              <Link to="/contact" className="text-[#BA1932] text-sm hover:underline">{t('helpCenter.contactUs')}</Link>
             </div>
           )}
 
           {!loading && !error && allCategories.length > 0 && query && filtered.length === 0 && (
             <div className="text-center py-16 text-navy/40">
               <HelpCircle size={40} className="mx-auto mb-4 opacity-30" />
-              <p className="font-medium">Aucun résultat pour "{query}"</p>
-              <p className="text-sm mt-1">Essayez d'autres mots-clés ou <Link to="/contact" className="text-[#BA1932] hover:underline">contactez-nous</Link>.</p>
+              <p className="font-medium">{t('helpCenter.noResults', { query })}</p>
+              <p className="text-sm mt-1">
+                {t('helpCenter.noResultsHint')} <Link to="/contact" className="text-[#BA1932] hover:underline">{t('helpCenter.noResultsLink')}</Link>.
+              </p>
             </div>
           )}
 
@@ -124,10 +128,10 @@ export default function HelpCenterPage() {
 
           {!loading && !error && allCategories.length > 0 && (
             <div className="text-center pt-4">
-              <p className="text-navy/50 text-sm mb-3">Vous n'avez pas trouvé votre réponse ?</p>
+              <p className="text-navy/50 text-sm mb-3">{t('helpCenter.notFound')}</p>
               <Link to="/contact"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#BA1932] text-white font-semibold text-sm hover:bg-[#730D26] transition-colors">
-                <Phone size={14} /> Contactez-nous
+                <Phone size={14} /> {t('helpCenter.contactBtn')}
               </Link>
             </div>
           )}
